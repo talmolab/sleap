@@ -64,7 +64,7 @@ def compute_instance_area(points):
 
 def compute_oks(points_gt, points_pr, scale=None, stddev=0.025):
     """Computes the object keypoints similarity between sets of points.
-    
+
     Args:
         points_gt: Ground truth instances of shape (n_gt, n_nodes, n_ed),
             where n_nodes is the number of body parts/keypoint types, and n_ed
@@ -80,12 +80,12 @@ def compute_oks(points_gt, points_pr, scale=None, stddev=0.025):
             localization accuracy of each node/keypoint type. This should be of
             the length n_nodes. "Easier" keypoint types will have lower values
             to reflect the smaller spread expected in localizing it.
-            
+
     Returns:
         The object keypoints similarity between every pair of ground truth and
         predicted instance, a numpy array of of shape (n_gt, n_pr) in the range
         of [0, 1.0], with 1.0 denoting a perfect match.
-        
+
     Notes:
         It's important to set the stddev appropriately when accounting for the
         difficulty of each keypoint type. For reference, the median value for
@@ -94,9 +94,10 @@ def compute_oks(points_gt, points_pr, scale=None, stddev=0.025):
         eyes when labeling. The "hardest" keypoint is the left hip, with stddev
         of 0.107, since it's hard to locate the left hip bone without external
         anatomical features and since it is often occluded by clothing.
-        
+
         The implementation here is based off of the descriptions in:
-        Ronch & Perona. "Benchmarking and Error Diagnosis in Multi-Instance Pose Estimation." ICCV (2017).
+        Ronch & Perona. "Benchmarking and Error Diagnosis in Multi-Instance Pose
+        Estimation." ICCV (2017).
     """
 
     if points_gt.ndim != 3 or points_pr.ndim != 3:

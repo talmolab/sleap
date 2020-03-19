@@ -1,4 +1,4 @@
-from sleap.gui.slider import VideoSlider
+from sleap.gui.widgets.slider import VideoSlider
 
 
 def test_slider(qtbot, centered_pair_predictions):

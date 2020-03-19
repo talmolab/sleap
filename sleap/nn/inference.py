@@ -1,589 +1,787 @@
-"""
-Class and command-line interface for running inference with trained models.
-"""
+"""Inference pipelines and utilities."""
 
-import argparse
 import attr
-import datetime
+import logging
 import os
-import numpy as np
-from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional
-
-import subprocess as sub
-import tempfile
 import time
+from collections import defaultdict
+from typing import Text, Optional, List, Dict
 
-from sleap import Labels, LabeledFrame, util
-from sleap.nn import job
-from sleap.nn import model
-from sleap.nn import utils
+import tensorflow as tf
 
-from sleap.nn import region_proposal
-from sleap.nn import peak_finding
-from sleap.nn import paf_grouping
-from sleap.nn import topdown
-from sleap.nn import tracking
 
-POLICY_CLASSES = dict(
-    centroid=region_proposal.CentroidPredictor,  # requires model
-    region=region_proposal.RegionProposalExtractor,  # no model
-    topdown=topdown.TopDownPeakFinder,  # requires model
-    confmap=peak_finding.ConfmapPeakFinder,  # requires model
-    paf=paf_grouping.PAFGrouper,  # requires model
+import sleap
+from sleap import util
+from sleap.nn.config import TrainingJobConfig
+from sleap.nn.model import Model
+from sleap.nn.tracking import Tracker
+from sleap.nn.data.pipelines import (
+    Provider,
+    Pipeline,
+    LabelsReader,
+    VideoReader,
+    Normalizer,
+    Resizer,
+    Prefetcher,
+    LambdaFilter,
+    KerasModelPredictor,
+    LocalPeakFinder,
+    PredictedInstanceCropper,
+    InstanceCentroidFinder,
+    InstanceCropper,
+    GlobalPeakFinder,
+    MockGlobalPeakFinder,
+    KeyFilter,
+    PredictedCenterInstanceNormalizer,
+    PartAffinityFieldInstanceGrouper,
+    PointsRescaler,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def group_examples(examples):
+    grouped_examples = defaultdict(list)
+    for example in examples:
+        video_ind = example["video_ind"].numpy()
+        frame_ind = example["frame_ind"].numpy()
+        grouped_examples[(video_ind, frame_ind)].append(example)
+    return grouped_examples
+
+
+def safely_generate(ds: tf.data.Dataset, progress: bool = True):
+    """Yields examples from dataset, catching and logging exceptions."""
+
+    # Unsafe generating:
+    # for example in ds:
+    #     yield example
+
+    ds_iter = iter(ds)
+
+    i = 0
+    t0 = time.time()
+    while True:
+        try:
+            yield next(ds_iter)
+        except StopIteration:
+            break
+        except Exception as e:
+            logger.info(f"ERROR in sample index {i}")
+            logger.info(e)
+            logger.info("")
+        finally:
+            i += 1
+            # Show the current progress (frames, time, fps)
+            if progress:
+                if i and i % 1000 == 0:
+                    elapsed_time = time.time() - t0
+                    logger.info(f"Finished {i} frames in {elapsed_time:.2f} seconds")
+                    if elapsed_time:
+                        logger.info(f"FPS={i/elapsed_time}")
 
 
 @attr.s(auto_attribs=True)
-class Predictor:
-    """
-    Encapsulates the inference pipeline.
+class TopdownPredictor:
+    centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
+    centroid_model: Optional[Model] = attr.ib(default=None)
+    confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
+    confmap_model: Optional[Model] = attr.ib(default=None)
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    tracker: Optional[Tracker] = attr.ib(default=None, init=False)
 
-    Attributes:
-        policies: A dictionary with objects for different parts of the pipeline:
+    @classmethod
+    def from_trained_models(
+        cls,
+        centroid_model_path: Optional[Text] = None,
+        confmap_model_path: Optional[Text] = None,
+    ) -> "TopdownPredictor":
+        """Create predictor from saved models.
 
-          * "centroid": Instance of `region_proposal.CentroidPredictor`
-          * "region": Instance of `region_proposal.RegionProposalExtractor`
-          * "confmap": Instance of `peak_finding.ConfmapPeakFinder`
-          * "paf": Instance of `paf_grouping.PAFGrouper`
-          * "tracking": Instance of `tracking.Tracker`
-          * "previous_predictions": `predicted.PredictedInstancePredictor`
+        Args:
+            centroid_model_path: Path to centroid model folder.
+            confmap_model_path: Path to topdown confidence map model folder.
+        
+        Returns:
+            An instance of TopdownPredictor with the loaded models.
 
-    Note: the pipeline will be determined by which policies are given.
-    """
+            One of the two models can be left as None to perform inference with ground
+            truth data. This will only work with LabelsReader as the provider.
+        """
+        if centroid_model_path is None and confmap_model_path is None:
+            raise ValueError(
+                "Either the centroid or topdown confidence map model must be provided."
+            )
 
-    policies: Dict[str, object]
+        if centroid_model_path is not None:
+            # Load centroid model.
+            centroid_config = TrainingJobConfig.load_json(centroid_model_path)
+            centroid_keras_model_path = os.path.join(
+                centroid_model_path, "best_model.h5"
+            )
+            centroid_model = Model.from_config(centroid_config.model)
+            centroid_model.keras_model = tf.keras.models.load_model(
+                centroid_keras_model_path, compile=False
+            )
+        else:
+            centroid_config = None
+            centroid_model = None
 
-    _tracker_takes_img: bool = False
+        if confmap_model_path is not None:
+            # Load confmap model.
+            confmap_config = TrainingJobConfig.load_json(confmap_model_path)
+            confmap_keras_model_path = os.path.join(confmap_model_path, "best_model.h5")
+            confmap_model = Model.from_config(confmap_config.model)
+            confmap_model.keras_model = tf.keras.models.load_model(
+                confmap_keras_model_path, compile=False
+            )
+        else:
+            confmap_config = None
+            confmap_model = None
 
-    def __attrs_post_init__(self):
-        import inspect
-
-        if "tracking" in self.policies:
-            function_sig = inspect.signature(self.policies["tracking"].track)
-            self._tracker_takes_img = "img" in function_sig.parameters
-
-    def predict(
-        self,
-        video_filename: str,
-        frames: Optional[List[int]] = None,
-        video_kwargs: Optional[dict] = None,
-    ) -> List[LabeledFrame]:
-        """Runs entire inference pipeline on frames from a video file."""
-
-        if video_kwargs is None:
-            video_kwargs = dict()
-
-        # Detect whether to use grayscale video by looking at trained models.
-        if self.has_grayscale_models:
-            video_kwargs["grayscale"] = True
-
-        is_dummy_video = False
-        if "tracking" in self.policies and "previous_predictions" in self.policies:
-            if not self.policies["tracking"].uses_image:
-                # We're just running the tracker for previous predictions
-                # and this tracker doesn't use the images, so we'll load
-                # "dummy" images.
-                is_dummy_video = True
-
-        video_ds = utils.VideoLoader(
-            filename=video_filename,
-            frame_inds=frames,
-            dummy=is_dummy_video,
-            **video_kwargs,
+        return cls(
+            centroid_config=centroid_config,
+            centroid_model=centroid_model,
+            confmap_config=confmap_config,
+            confmap_model=confmap_model,
         )
 
+    def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+
+        pipeline = Pipeline()
+        if data_provider is not None:
+            pipeline.providers = [data_provider]
+
+        if self.centroid_config is not None:
+            preprocessing_config = self.centroid_config.data.preprocessing
+        else:
+            preprocessing_config = self.confmap_config.data.preprocessing
+        pipeline += Normalizer.from_config(preprocessing_config)
+        pipeline += Resizer.from_config(
+            preprocessing_config, keep_full_image=True, points_key=None,
+        )
+
+        pipeline += Prefetcher()
+
+        if self.centroid_model is not None:
+            # Predict centroids using model.
+            pipeline += KerasModelPredictor(
+                keras_model=self.centroid_model.keras_model,
+                model_input_keys="image",
+                model_output_keys="predicted_centroid_confidence_maps",
+            )
+
+            pipeline += LocalPeakFinder(
+                confmaps_stride=self.centroid_model.heads[0].output_stride,
+                peak_threshold=0.2,
+                confmaps_key="predicted_centroid_confidence_maps",
+                peaks_key="predicted_centroids",
+                peak_vals_key="predicted_centroid_confidences",
+                peak_sample_inds_key="predicted_centroid_sample_inds",
+                peak_channel_inds_key="predicted_centroid_channel_inds",
+                keep_confmaps=False,
+            )
+
+            pipeline += LambdaFilter(
+                filter_fn=lambda ex: len(ex["predicted_centroids"]) > 0
+            )
+
+            if self.confmap_config is not None:
+                crop_size = self.confmap_config.data.instance_cropping.crop_size
+            else:
+                crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
+                    data_provider.labels
+                )
+
+            pipeline += PredictedInstanceCropper(
+                crop_width=crop_size,
+                crop_height=crop_size,
+                centroids_key="predicted_centroids",
+                centroid_confidences_key="predicted_centroid_confidences",
+                full_image_key="full_image",
+                keep_instances_gt=self.confmap_model is None,
+            )
+
+        else:
+            # Generate ground truth centroids and crops.
+            anchor_part = self.confmap_config.data.instance_cropping.center_on_part
+            pipeline += InstanceCentroidFinder(
+                center_on_anchor_part=True,
+                anchor_part_names=anchor_part,
+                skeletons=data_provider.labels.skeletons,
+            )
+            pipeline += InstanceCropper(
+                crop_width=self.confmap_config.data.instance_cropping.crop_size,
+                crop_height=self.confmap_config.data.instance_cropping.crop_size,
+                keep_full_image=False,
+                mock_centroid_confidence=True,
+            )
+
+        if self.confmap_model is not None:
+            # Predict confidence maps using model.
+            pipeline += KerasModelPredictor(
+                keras_model=self.confmap_model.keras_model,
+                model_input_keys="instance_image",
+                model_output_keys="predicted_instance_confidence_maps",
+            )
+            pipeline += GlobalPeakFinder(
+                confmaps_key="predicted_instance_confidence_maps",
+                peaks_key="predicted_center_instance_points",
+                confmaps_stride=self.confmap_model.heads[0].output_stride,
+                peak_threshold=0.2,
+            )
+
+        else:
+            # Generate ground truth instance points.
+            pipeline += MockGlobalPeakFinder(
+                all_peaks_in_key="instances",
+                peaks_out_key="predicted_center_instance_points",
+                peak_vals_key="predicted_center_instance_confidences",
+                keep_confmaps=False,
+            )
+
+        keep_keys = [
+            "bbox",
+            "center_instance_ind",
+            "centroid",
+            "centroid_confidence",
+            "scale",
+            "video_ind",
+            "frame_ind",
+            "center_instance_ind",
+            "predicted_center_instance_points",
+            "predicted_center_instance_confidences",
+        ]
+
+        if self.tracker and self.tracker.uses_image:
+            keep_keys.append("full_image")
+
+        pipeline += KeyFilter(keep_keys=keep_keys)
+
+        pipeline += PredictedCenterInstanceNormalizer(
+            centroid_key="centroid",
+            centroid_confidence_key="centroid_confidence",
+            peaks_key="predicted_center_instance_points",
+            peak_confidences_key="predicted_center_instance_confidences",
+            new_centroid_key="predicted_centroid",
+            new_centroid_confidence_key="predicted_centroid_confidence",
+            new_peaks_key="predicted_instance",
+            new_peak_confidences_key="predicted_instance_confidences",
+        )
+
+        self.pipeline = pipeline
+
+        return pipeline
+
+    def make_labeled_frames(
+        self, examples: List[Dict[Text, tf.Tensor]], videos: List[sleap.Video]
+    ) -> List[sleap.LabeledFrame]:
+        # Pull out skeleton from the config.
+        if self.confmap_config is not None:
+            skeleton = self.confmap_config.data.labels.skeletons[0]
+        else:
+            skeleton = self.centroid_config.data.labels.skeletons[0]
+
+        # Group the examples by video and frame.
+        grouped_examples = group_examples(examples)
+
+        # Loop through grouped examples.
         predicted_frames = []
+        for (video_ind, frame_ind), frame_examples in grouped_examples.items():
 
-        for chunk_ind, frame_inds, imgs in video_ds:
+            # Create predicted instances from examples in the current frame.
+            predicted_instances = []
+            img = None
+            for example in frame_examples:
+                predicted_instances.append(
+                    sleap.PredictedInstance.from_arrays(
+                        points=example["predicted_instance"],
+                        point_confidences=example["predicted_instance_confidences"],
+                        instance_score=example["predicted_centroid_confidence"],
+                        skeleton=skeleton,
+                    )
+                )
+                img = example["full_image"] if "full_image" in example else None
 
-            predicted_instances_chunk = self.predict_chunk(
-                imgs, chunk_ind, video_ds.chunk_size, frame_inds=frame_inds
-            )
+            if len(predicted_instances) > 0:
+                if self.tracker:
+                    # Set tracks for predicted instances in this frame.
+                    predicted_instances = self.tracker.track(
+                        untracked_instances=predicted_instances, img=img, t=frame_ind,
+                    )
 
-            sample_inds = np.arange(len(imgs))
+                # Create labeled frame from predicted instances.
+                labeled_frame = sleap.LabeledFrame(
+                    video=videos[video_ind],
+                    frame_idx=frame_ind,
+                    instances=predicted_instances,
+                )
 
-            self.track_chunk(predicted_instances_chunk, frame_inds, sample_inds, imgs)
+                predicted_frames.append(labeled_frame)
 
-            frames = self.make_labeled_frames(
-                predicted_instances_chunk, frame_inds, sample_inds, video_ds.video
-            )
-
-            predicted_frames.extend(frames)
-
-        # Postprocessing after we've finished all the chunks
-
-        if "tracking" in self.policies:
-            self.policies["tracking"].final_pass(frames=predicted_frames)
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
 
         return predicted_frames
 
-    def predict_chunk(self, img_chunk, chunk_ind, chunk_size, frame_inds=None):
-        """Runs the inference components of pipeline for a chunk."""
-
-        if "previous_predictions" in self.policies:
-            return self.policies["previous_predictions"].get_chunk(frame_inds)
-
-        if "centroid" in self.policies:
-            # Detect centroids and pull out region proposals.
-            centroid_predictor = self.policies["centroid"]
-            region_proposal_extractor = self.policies["region"]
-
-            centroids, centroid_vals = centroid_predictor.predict(img_chunk)
-
-            region_proposal_sets = region_proposal_extractor.extract(
-                img_chunk, centroids, centroid_vals
-            )
-        else:
-            # We aren't using centroids, so use whole frame as region of interest.
-            region_proposal_sets = [
-                region_proposal.RegionProposalSet.from_uncropped(images=img_chunk)
-            ]
-
-        if "paf" not in self.policies:
-            # If we don't have PAFs, we must be doing topdown or single-instance.
-            if "topdown" in self.policies:
-                topdown_peak_finder = self.policies["topdown"]
+    def predict_generator(self, data_provider: Provider):
+        if self.pipeline is None:
+            if self.centroid_config is not None and self.confmap_config is not None:
+                self.make_pipeline()
             else:
-                topdown_peak_finder = self.policies["confmap"]
+                # Pass in data provider when mocking one of the models.
+                self.make_pipeline(data_provider=data_provider)
 
-            if len(region_proposal_sets) == 0:
-                # No region proposals were found, so just return empty result.
-                return defaultdict(list)
+        self.pipeline.providers = [data_provider]
 
-            # Only one scale region proposals in topdown inference.
-            rps = region_proposal_sets[0]
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
-            # Find peaks in each sample of the region proposal set.
-            sample_peak_pts, sample_peak_vals = topdown_peak_finder.predict_rps(rps)
+    def predict(self, data_provider: Provider, make_instances: bool = True):
+        generator = self.predict_generator(data_provider)
+        examples = list(generator)
 
-            sample_peak_pts = sample_peak_pts.to_tensor(default_value=np.nan).numpy()
-            sample_peak_vals = sample_peak_vals.to_tensor(default_value=np.nan).numpy()
+        if make_instances:
+            return self.make_labeled_frames(examples, videos=data_provider.videos)
 
-            # Gather instances across all region proposals for this chunk.
-            predicted_instances_chunk = topdown.make_sample_grouped_predicted_instances(
-                sample_peak_pts,
-                sample_peak_vals,
-                np.arange(len(sample_peak_vals), dtype=int),
-                topdown_peak_finder.inference_model.skeleton,
-            )
+        return examples
 
-        elif "confmap" in self.policies and "paf" in self.policies:
-            confmap_peak_finder = self.policies["confmap"]
-            paf_grouper = self.policies["paf"]
 
-            # Find multi-instance peaks in each region proposal set.
-            region_peak_sets = []
-            for rps in region_proposal_sets:
-                region_peaks = confmap_peak_finder.predict_rps(rps)
-                region_peak_sets.append(region_peaks)
+@attr.s(auto_attribs=True)
+class BottomupPredictor:
+    bottomup_config: TrainingJobConfig
+    bottomup_model: Model
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    tracker: Optional[Tracker] = attr.ib(default=None, init=False)
 
-            # Group peaks into instances using PAFs.
-            region_instance_sets = []
-            for rps, region_peaks in zip(region_proposal_sets, region_peak_sets):
-                region_instances = paf_grouper.predict_rps(rps, region_peaks)
-                region_instance_sets.append(region_instances)
+    @classmethod
+    def from_trained_models(cls, bottomup_model_path: Text) -> "BottomupPredictor":
+        """Create predictor from saved models."""
+        # Load bottomup model.
+        bottomup_config = TrainingJobConfig.load_json(bottomup_model_path)
+        bottomup_keras_model_path = os.path.join(bottomup_model_path, "best_model.h5")
+        bottomup_model = Model.from_config(bottomup_config.model)
+        bottomup_model.keras_model = tf.keras.models.load_model(
+            bottomup_keras_model_path, compile=False
+        )
 
-            # Gather instances across all region proposals for this chunk.
-            predicted_instances_chunk = defaultdict(list)
-            for region_instance_set in region_instance_sets:
-                for sample, region_instances in region_instance_set.items():
-                    predicted_instances_chunk[sample].extend(region_instances)
+        return cls(bottomup_config=bottomup_config, bottomup_model=bottomup_model,)
 
-        else:
-            raise ValueError(
-                f"Unable to run inference with {list(self.policies.keys())}"
-            )
+    def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+        pipeline = Pipeline()
+        if data_provider is not None:
+            pipeline.providers = [data_provider]
 
-        return predicted_instances_chunk
+        pipeline += Normalizer.from_config(self.bottomup_config.data.preprocessing)
+        pipeline += Resizer.from_config(
+            self.bottomup_config.data.preprocessing,
+            keep_full_image=False,
+            points_key=None,
+        )
 
-    def track_chunk(
-        self, predicted_instances_chunk, frame_inds, sample_inds, img_chunk
-    ):
-        """Runs tracker for each frame in chunk."""
-        for frame_idx, sample_idx, img in zip(frame_inds, sample_inds, img_chunk):
-            frame_idx = int(frame_idx)
-            instances = predicted_instances_chunk[sample_idx]
+        pipeline += Prefetcher()
 
-            predicted_instances_chunk[sample_idx] = self.track_next_sample(
-                untracked_instances=instances, t=frame_idx, img=img
-            )
+        pipeline += KerasModelPredictor(
+            keras_model=self.bottomup_model.keras_model,
+            model_input_keys="image",
+            model_output_keys=[
+                "predicted_confidence_maps",
+                "predicted_part_affinity_fields",
+            ],
+        )
+        pipeline += LocalPeakFinder(
+            confmaps_stride=self.bottomup_model.heads[0].output_stride,
+            peak_threshold=0.2,
+            confmaps_key="predicted_confidence_maps",
+            peaks_key="predicted_peaks",
+            peak_vals_key="predicted_peak_confidences",
+            peak_sample_inds_key="predicted_peak_sample_inds",
+            peak_channel_inds_key="predicted_peak_channel_inds",
+            keep_confmaps=False,
+        )
 
-    def track_next_sample(
-        self, untracked_instances: List["PredictedInstance"], t: int = None, img=None
-    ) -> List["PredictedInstance"]:
-        """Runs tracker for a single frame."""
-        if "tracking" not in self.policies:
-            return untracked_instances
+        pipeline += LambdaFilter(filter_fn=lambda ex: len(ex["predicted_peaks"]) > 0)
 
-        tracker = self.policies["tracking"]
+        pipeline += PartAffinityFieldInstanceGrouper.from_config(
+            self.bottomup_config.model.heads.multi_instance,
+            max_edge_length=128,
+            min_edge_score=0.05,
+            n_points=10,
+            min_instance_peaks=0,
+            peaks_key="predicted_peaks",
+            peak_scores_key="predicted_peak_confidences",
+            channel_inds_key="predicted_peak_channel_inds",
+            pafs_key="predicted_part_affinity_fields",
+            predicted_instances_key="predicted_instances",
+            predicted_peak_scores_key="predicted_peak_scores",
+            predicted_instance_scores_key="predicted_instance_scores",
+            keep_pafs=False,
+        )
 
-        track_args = dict(untracked_instances=untracked_instances, t=t)
-        if self._tracker_takes_img:
-            track_args["img"] = img.numpy()
-        else:
-            track_args["img"] = None
+        keep_keys = [
+            "scale",
+            "video_ind",
+            "frame_ind",
+            "predicted_instances",
+            "predicted_peak_scores",
+            "predicted_instance_scores",
+        ]
 
-        return tracker.track(**track_args)
+        if self.tracker and self.tracker.uses_image:
+            keep_keys.append("image")
+
+        pipeline += KeyFilter(keep_keys=keep_keys)
+
+        pipeline += PointsRescaler(
+            points_key="predicted_instances", scale_key="scale", invert=True
+        )
+
+        self.pipeline = pipeline
+
+        return pipeline
 
     def make_labeled_frames(
-        self,
-        instances_chunk: Dict[int, List["PredictedInstance"]],
-        frame_inds,
-        sample_inds,
-        video: "Video",
-    ) -> List[LabeledFrame]:
-        """Makes LabeledFrame objects for all predictions in chunk."""
+        self, examples: List[Dict[Text, tf.Tensor]], videos: List[sleap.Video]
+    ) -> List[sleap.LabeledFrame]:
+        # Pull out skeleton from the config.
+        skeleton = self.bottomup_config.data.labels.skeletons[0]
 
-        sorted_instances_chunk = sorted(instances_chunk.items())
+        # Group the examples by video and frame.
+        grouped_examples = group_examples(examples)
 
-        frames = []
-        for frame_idx, sample_idx in zip(frame_inds, sample_inds):
-            frame_idx = int(frame_idx)
-            instances = instances_chunk[sample_idx]
-            if instances:
-                frames.append(
-                    LabeledFrame(frame_idx=frame_idx, instances=instances, video=video)
-                )
+        # Loop through grouped examples.
+        predicted_frames = []
+        for (video_ind, frame_ind), frame_examples in grouped_examples.items():
 
-        return frames
-
-    @property
-    def has_grayscale_models(self):
-        for policy_name in ("centroid", "topdown", "confmap"):
-            if policy_name in self.policies:
-                if (
-                    self.policies[policy_name].inference_model.input_tensor.shape[-1]
-                    == 1
+            # Create predicted instances from examples in the current frame.
+            predicted_instances = []
+            img = None
+            for example in frame_examples:
+                for points, confidences, instance_score in zip(
+                    example["predicted_instances"],
+                    example["predicted_peak_scores"],
+                    example["predicted_instance_scores"],
                 ):
-                    return True
-                else:
-                    return False
-        return False
+                    predicted_instances.append(
+                        sleap.PredictedInstance.from_arrays(
+                            points=points,
+                            point_confidences=confidences,
+                            instance_score=instance_score,
+                            skeleton=skeleton,
+                        )
+                    )
+                    img = example["image"] if "image" in example else None
 
-    @classmethod
-    def from_cli_args(cls):
-        parser = cls.make_cli_parser()
-        args, _ = parser.parse_known_args()
-        policies = cls.cli_args_to_policies(args)
-
-        cls.check_valid_policies(policies)
-
-        return cls(policies=policies), args
-
-    @classmethod
-    def make_cli_parser(cls):
-
-        # Helper functions for building parser
-        def add_class_args(parser, attrs_class, arg_scope: str, exclude_args):
-            def is_arg_to_include(arg_name: str):
-                if arg_name.startswith("_"):
-                    return False
-                if arg_name.endswith("_model"):
-                    return False
-                if exclude_args is not None and arg_scope in exclude_args:
-                    if arg_name in exclude_args[arg_scope]:
-                        return False
-                return True
-
-            def arg_docstring(attrs_class, arg_name):
-                # TODO: parse docstring and return text for this attribute
-                return ""
-
-            for attrib in attr.fields(attrs_class):
-                if is_arg_to_include(attrib.name):
-                    help_string = arg_docstring(attrs_class, attrib.name)
-                    if attrib.default is not attr.NOTHING:
-                        help_string += f" (default: {attrib.default})"
-                    parser.add_argument(
-                        f"--{arg_scope}.{attrib.name}",
-                        type=attrib.type,
-                        help=help_string,
+            if len(predicted_instances) > 0:
+                if self.tracker:
+                    # Set tracks for predicted instances in this frame.
+                    predicted_instances = self.tracker.track(
+                        untracked_instances=predicted_instances, img=img, t=frame_ind,
                     )
 
-        def frame_list(frame_str: str):
+                # Create labeled frame from predicted instances.
+                labeled_frame = sleap.LabeledFrame(
+                    video=videos[video_ind],
+                    frame_idx=frame_ind,
+                    instances=predicted_instances,
+                )
 
-            # Handle ranges of frames.
-            # NOTE: Ranges are *inclusive* at both ends.
-            # Must be in format "123-456" or "5,-10" (i.e., 5-10),
-            # and doesn't support list of ranges.
-            if "-" in frame_str:
-                min_max = frame_str.split("-")
-                min_frame = int(min_max[0].rstrip(","))
-                max_frame = int(min_max[1])
-                return list(range(min_frame, max_frame + 1))
+                predicted_frames.append(labeled_frame)
 
-            return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
 
-        # Make the parser
-        parser = argparse.ArgumentParser()
+        return predicted_frames
 
-        # Add args for entire pipeline
-        parser.add_argument("data_path", help="Path to video file")
-        parser.add_argument(
-            "-m",
-            "--model",
-            dest="models",
-            action="append",
-            help="Path to saved model (confmaps, pafs, ...) JSON. "
-            "Multiple models can be specified, each preceded by --model.",
-        )
+    def predict_generator(self, data_provider: Provider):
+        if self.pipeline is None:
+            self.make_pipeline()
 
-        parser.add_argument(
-            "--frames",
-            type=frame_list,
-            default="",
-            help="List of frames to predict. Either comma separated list (e.g. 1,2,3) or "
-            "a range separated by hyphen (e.g. 1-3, for 1,2,3). (default is entire video)",
-        )
-        parser.add_argument(
-            "-o",
-            "--output",
-            type=str,
-            default=None,
-            help="The output filename to use for the predicted data.",
-        )
+        self.pipeline.providers = [data_provider]
 
-        # TODO: better video parameters
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
 
-        parser.add_argument(
-            "--video.dataset", type=str, default="", help="The dataset for HDF5 videos."
-        )
+    def predict(self, data_provider: Provider, make_instances: bool = True):
+        generator = self.predict_generator(data_provider)
+        examples = list(generator)
 
-        parser.add_argument(
-            "--video.input_format",
-            type=str,
-            default="",
-            help="The input_format for HDF5 videos.",
-        )
+        if make_instances:
+            return self.make_labeled_frames(examples, videos=data_provider.videos)
 
-        # Class attributes to exclude from cli
-        exclude_args = dict(region=("merge_overlapping",))
+        return examples
 
-        for name, attrs_class in POLICY_CLASSES.items():
-            add_class_args(parser, attrs_class, name, exclude_args)
 
-        tracking.Tracker.add_cli_parser_args(parser, arg_scope="tracking")
-
-        return parser
+@attr.s(auto_attribs=True)
+class SingleInstancePredictor:
+    confmap_config: TrainingJobConfig
+    confmap_model: Model
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
     @classmethod
-    def cli_args_to_policies(cls, args):
-        policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
-        return cls.from_paths_and_policy_args(
-            model_paths=args.models, policy_args=policy_args, args=args,
+    def from_trained_models(cls, confmap_model_path: Text) -> "SingleInstancePredictor":
+        """Create predictor from saved models."""
+
+        # Load confmap model.
+        confmap_config = TrainingJobConfig.load_json(confmap_model_path)
+        confmap_keras_model_path = os.path.join(confmap_model_path, "best_model.h5")
+        confmap_model = Model.from_config(confmap_config.model)
+        confmap_model.keras_model = tf.keras.models.load_model(
+            confmap_keras_model_path, compile=False
         )
 
-    @classmethod
-    def from_paths_and_policy_args(
-        cls, model_paths: List[str], policy_args: dict, args: dict
-    ):
-        policy_args["region"]["merge_overlapping"] = True
+        return cls(confmap_config=confmap_config, confmap_model=confmap_model,)
 
-        inferred_box_length = 160  # default if not set by user or inferrable
+    def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
-        policies = dict()
+        pipeline = Pipeline()
+        if data_provider is not None:
+            pipeline.providers = [data_provider]
 
-        model_type_policy_key_map = {
-            model.ModelOutputType.CONFIDENCE_MAP: "confmap",
-            model.ModelOutputType.PART_AFFINITY_FIELD: "paf",
-            model.ModelOutputType.CENTROIDS: "centroid",
-            model.ModelOutputType.TOPDOWN_CONFIDENCE_MAP: "topdown",
-        }
-
-        # Load the information for these models
-        loaded_models = dict()
-
-        if model_paths:
-            for model_path in model_paths:
-                training_job = job.TrainingJob.load_json(model_path)
-                inference_model = model.InferenceModel.from_training_job(training_job)
-                policy_key = model_type_policy_key_map[training_job.model.output_type]
-
-                loaded_models[policy_key] = dict(
-                    job=training_job, inference_model=inference_model
-                )
-
-            # Add policy classes which depend on models
-            for policy_key, policy_model in loaded_models.items():
-                training_job = policy_model["job"]
-                inference_model = policy_model["inference_model"]
-
-                if policy_key == "confmap" and "paf" not in loaded_models.keys():
-                    # Use topdown class when we have confmaps and not pafs
-                    policy_class = POLICY_CLASSES["topdown"]
-                else:
-                    policy_class = POLICY_CLASSES[policy_key]
-
-                policy_object = policy_class(
-                    inference_model=inference_model, **policy_args[policy_key]
-                )
-
-                policies[policy_key] = policy_object
-
-                if training_job.trainer.bounding_box_size is not None:
-                    if training_job.trainer.bounding_box_size > 0:
-                        inferred_box_length = training_job.trainer.bounding_box_size
-
-        # No models specified so see if we're using previous predictions
-        else:
-            try:
-                previous_labels = Labels.load_file(
-                    args.data_path, video_callback=[os.path.dirname(args.data_path)],
-                )
-                from .predicted import PredictedInstancePredictor
-
-                policies["previous_predictions"] = PredictedInstancePredictor(
-                    labels=previous_labels,
-                )
-                print(f"Using previous predictions from {args.data_path}")
-                args.data_path = previous_labels.videos[0].filename
-                print(f"Setting video to {args.data_path}")
-            except Exception:
-                # We weren't able to read file as Labels object
-                pass
-
-        if "topdown" in policies:
-            policy_args["region"]["merge_overlapping"] = False
-
-        if "instance_box_length" not in policy_args["region"]:
-            policy_args["region"]["instance_box_length"] = inferred_box_length
-
-        if not policy_args["region"].get("merged_box_length", 0):
-            policy_args["region"]["merged_box_length"] = (
-                policy_args["region"]["instance_box_length"] * 2
-            )
-
-        # Add non-model policy classes
-        non_model_policy_keys = [
-            key
-            for key in POLICY_CLASSES.keys()
-            if key not in model_type_policy_key_map.values()
-        ]
-        for key in non_model_policy_keys:
-            policies[key] = POLICY_CLASSES[key](**policy_args[key])
-
-        tracker_name = "None"
-        if "tracking" in policy_args:
-            tracker_name = policy_args["tracking"].get("tracker", "None")
-
-        if tracker_name.lower() != "none":
-            policies["tracking"] = tracking.Tracker.make_tracker_by_name(
-                **policy_args["tracking"]
-            )
-
-        return policies
-
-    @classmethod
-    def predict_subprocess(
-        cls,
-        video: "Video",
-        trained_job_paths: List[str],
-        kwargs: Dict[str, str],
-        frames: Optional[List[int]] = None,
-        waiting_callback: Optional[Callable] = None,
-        labels_filename: Optional[str] = None,
-    ):
-
-        cli_args = ["python", "-m", "sleap.nn.inference"]
-
-        if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
-            # No models so we must want to re-track previous predictions
-            cli_args.append(labels_filename)
-        else:
-            cli_args.append(video.filename)
-
-        # TODO: better support for video params
-        if hasattr(video.backend, "dataset"):
-            cli_args.extend(("--video.dataset", video.backend.dataset))
-
-        if hasattr(video.backend, "input_format"):
-            cli_args.extend(("--video.input_format", video.backend.input_format))
-
-        # Make path where we'll save predictions
-        output_path = ".".join(
-            (
-                video.filename,
-                datetime.datetime.now().strftime("%y%m%d_%H%M%S"),
-                "predictions.h5",
-            )
+        pipeline += Normalizer.from_config(self.confmap_model.data.preprocessing)
+        pipeline += Resizer.from_config(
+            self.confmap_model.data.preprocessing,
+            # keep_full_image=True,
+            points_key=None,
         )
 
-        for job_path in trained_job_paths:
-            cli_args.extend(("-m", job_path))
+        pipeline += Prefetcher()
 
-        for key, val in kwargs.items():
-            if not key.startswith("_"):
-                cli_args.extend((f"--{key}", str(val)))
+        pipeline += KerasModelPredictor(
+            keras_model=self.confmap_model.keras_model,
+            model_input_keys="image",
+            model_output_keys="predicted_instance_confidence_maps",
+        )
+        pipeline += GlobalPeakFinder(
+            confmaps_key="predicted_instance_confidence_maps",
+            peaks_key="predicted_instance",
+            peak_vals_key="predicted_instance_confidences",
+            confmaps_stride=self.confmap_model.heads[0].output_stride,
+            peak_threshold=0.2,
+        )
 
-        cli_args.extend(("--frames", ",".join(map(str, frames))))
+        pipeline += KeyFilter(
+            keep_keys=[
+                "bbox",
+                "scale",
+                "video_ind",
+                "frame_ind",
+                "predicted_instance_points",
+                "predicted_instance_confidence_maps",
+            ]
+        )
 
-        cli_args.extend(("-o", output_path))
+        self.pipeline = pipeline
 
-        print("Command line call:")
-        print(" \\\n".join(cli_args))
-        print()
+        return pipeline
 
-        with sub.Popen(cli_args) as proc:
-            while proc.poll() is None:
-                if waiting_callback is not None:
+    def make_labeled_frames(
+        self, examples: List[Dict[Text, tf.Tensor]], videos: List[sleap.Video]
+    ) -> List[sleap.LabeledFrame]:
+        # Pull out skeleton from the config.
+        skeleton = self.confmap_config.data.labels.skeletons[0]
 
-                    if waiting_callback() == -1:
-                        # -1 signals user cancellation
-                        return "", False
+        # Group the examples by video and frame.
+        grouped_examples = group_examples(examples)
 
-                time.sleep(0.1)
+        # Loop through grouped examples.
+        predicted_frames = []
+        for (video_ind, frame_ind), frame_examples in grouped_examples.items():
 
-            print(f"Process return code: {proc.returncode}")
-            success = proc.returncode == 0
-
-        return output_path, success
-
-    @classmethod
-    def check_valid_policies(cls, policies: dict) -> bool:
-
-        has_topdown = "topdown" in policies
-        has_previous = "previous_predictions" in policies
-        has_tracker = "tracking" in policies
-        non_topdowns = [key for key in policies.keys() if key in ("confmap", "paf")]
-
-        if has_previous:
-            if not has_tracker:
-                raise ValueError(
-                    f"No tracker specified for running on previous predictions"
+            # Create predicted instances from examples in the current frame.
+            predicted_instances = []
+            for example in frame_examples:
+                predicted_instances.append(
+                    sleap.PredictedInstance.from_arrays(
+                        points=example["predicted_instance"],
+                        point_confidences=example["predicted_instance_confidences"],
+                        skeleton=skeleton,
+                        instance_score=sum(example["predicted_instance_confidences"]),
+                    )
                 )
 
-        else:
-            if has_topdown and non_topdowns:
-                raise ValueError(
-                    f"Cannot combine topdown model with non-topdown model"
-                    f" {non_topdowns}."
+            if len(predicted_instances) > 0:
+                # Create labeled frame from predicted instances.
+                predicted_frames.append(
+                    sleap.LabeledFrame(
+                        video=videos[video_ind],
+                        frame_idx=frame_ind,
+                        instances=predicted_instances,
+                    )
                 )
 
-            if non_topdowns and "confmap" not in non_topdowns:
-                raise ValueError("Must have CONFIDENCE_MAP model.")
+        return predicted_frames
 
-            if not has_topdown and not non_topdowns:
-                raise ValueError(
-                    f"Must have either TOPDOWN or CONFIDENCE_MAP/PART_AFFINITY_FIELD models."
-                )
+    def predict_generator(self, data_provider: Provider):
+        if self.pipeline is None:
+            self.make_pipeline()
 
-        return True
+        self.pipeline.providers = [data_provider]
+
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
+
+    def predict(self, data_provider: Provider, make_instances: bool = True):
+        generator = self.predict_generator(data_provider)
+        examples = list(generator)
+
+        if make_instances:
+            return self.make_labeled_frames(examples, videos=data_provider.videos)
+
+        return examples
 
 
-def main():
-    """CLI for running inference."""
-    predictor, args = Predictor.from_cli_args()
+def make_cli_parser():
+    import argparse
+    from sleap.util import frame_list
 
+    parser = argparse.ArgumentParser()
+
+    # Add args for entire pipeline
+    parser.add_argument("data_path", help="Path to video file")
+    parser.add_argument(
+        "-m",
+        "--model",
+        dest="models",
+        action="append",
+        help="Path to trained model directory (with training_config.json). "
+        "Multiple models can be specified, each preceded by --model.",
+    )
+
+    parser.add_argument(
+        "--frames",
+        type=frame_list,
+        default="",
+        help="List of frames to predict. Either comma separated list (e.g. 1,2,3) or "
+        "a range separated by hyphen (e.g. 1-3, for 1,2,3). (default is entire video)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="The output filename to use for the predicted data.",
+    )
+
+    # TODO: better video parameters
+
+    parser.add_argument(
+        "--video.dataset", type=str, default="", help="The dataset for HDF5 videos."
+    )
+
+    parser.add_argument(
+        "--video.input_format",
+        type=str,
+        default="",
+        help="The input_format for HDF5 videos.",
+    )
+
+    device_group = parser.add_mutually_exclusive_group(required=False)
+    device_group.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Run inference only on CPU. If not specified, will use available GPU.",
+    )
+    device_group.add_argument(
+        "--first-gpu",
+        action="store_true",
+        help="Run inference on the first GPU, if available.",
+    )
+    device_group.add_argument(
+        "--last-gpu",
+        action="store_true",
+        help="Run inference on the last GPU, if available.",
+    )
+    device_group.add_argument(
+        "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
+    )
+
+    # Add args for tracking
+    Tracker.add_cli_parser_args(parser, arg_scope="tracking")
+
+    return parser
+
+
+def make_video_reader_from_cli(args):
     # TODO: better support for video params
     video_kwargs = dict(
         dataset=vars(args).get("video.dataset"),
         input_format=vars(args).get("video.input_format"),
     )
 
-    lfs = predictor.predict(
-        video_filename=args.data_path, frames=args.frames, video_kwargs=video_kwargs
+    video_reader = VideoReader.from_filepath(
+        filename=args.data_path, example_indices=args.frames, **video_kwargs
     )
+
+    return video_reader
+
+
+def make_predictor_from_cli(args):
+    # trained_model_configs = dict()
+    trained_model_paths = dict()
+
+    head_names = (
+        "single_instance",
+        "centroid",
+        "centered_instance",
+        "multi_instance",
+    )
+
+    for model_path in args.models:
+        # Load the model config
+        cfg = TrainingJobConfig.load_json(model_path)
+
+        # Get the head from the model (i.e., what the model will predict)
+        key = cfg.model.heads.which_oneof_attrib_name()
+
+        # If path is to config file json, then get the path to parent dir
+        if model_path.endswith(".json"):
+            model_path = os.path.dirname(model_path)
+
+        trained_model_paths[key] = model_path
+
+    if "multi_instance" in trained_model_paths:
+        predictor = BottomupPredictor.from_trained_models(
+            trained_model_paths["multi_instance"]
+        )
+    elif "single_instance" in trained_model_paths:
+        predictor = SingleInstancePredictor.from_trained_models(
+            confmap_model_path=trained_model_paths["single_instance"]
+        )
+    elif (
+        "centroid" in trained_model_paths and "centered_instance" in trained_model_paths
+    ):
+        predictor = TopdownPredictor.from_trained_models(
+            centroid_model_path=trained_model_paths["centroid"],
+            confmap_model_path=trained_model_paths["centered_instance"],
+        )
+    else:
+        # TODO: support for tracking on previous predictions w/o model
+        raise ValueError(
+            f"Unable to run inference with {list(trained_model_paths.keys())} heads."
+        )
+
+    tracker = make_tracker_from_cli(args)
+    predictor.tracker = tracker
+
+    return predictor
+
+
+def make_tracker_from_cli(args):
+    policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
+
+    tracker_name = "None"
+    if "tracking" in policy_args:
+        tracker_name = policy_args["tracking"].get("tracker", "None")
+
+    if tracker_name.lower() != "none":
+        tracker = Tracker.make_tracker_by_name(**policy_args["tracking"])
+        return tracker
+
+    return None
+
+
+def save_predictions_from_cli(args, predicted_frames):
+    from sleap import Labels
 
     if args.output:
         output_path = args.output
@@ -592,9 +790,44 @@ def main():
         out_name = os.path.basename(args.data_path) + ".predictions.h5"
         output_path = os.path.join(out_dir, out_name)
 
-    labels = Labels(labeled_frames=lfs)
+    labels = Labels(labeled_frames=predicted_frames)
+
     print(f"Saving: {output_path}")
     Labels.save_file(labels, output_path)
+
+
+def main():
+    """CLI for running inference."""
+
+    parser = make_cli_parser()
+    args, _ = parser.parse_known_args()
+    print(args)
+
+    if args.cpu or not sleap.nn.system.is_gpu_system():
+        sleap.nn.system.use_cpu_only()
+    else:
+        if args.first_gpu:
+            sleap.nn.system.use_first_gpu()
+        elif args.last_gpu:
+            sleap.nn.system.use_last_gpu()
+        else:
+            sleap.nn.system.use_gpu(args.gpu)
+    sleap.nn.system.disable_preallocation()
+
+    print("System:")
+    sleap.nn.system.summary()
+
+    video_reader = make_video_reader_from_cli(args)
+    print("Frames:", len(video_reader))
+
+    predictor = make_predictor_from_cli(args)
+
+    # Run inference!
+    t0 = time.time()
+    predicted_frames = predictor.predict(video_reader)
+
+    save_predictions_from_cli(args, predicted_frames)
+    print(f"Total Time: {time.time() - t0}")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import yaml
 
-from sleap.gui import formbuilder
+from sleap.gui.dialogs import formbuilder
 
 
 def test_formbuilder(qtbot):
@@ -55,3 +55,70 @@ def test_formbuilder(qtbot):
 
     form_data = layout.get_form_data()
     assert form_data["node"] == "new option"
+
+
+def test_optional_spin_widget(qtbot):
+    widget = formbuilder.OptionalSpinWidget()
+
+    widget.setValue(3)
+    assert widget.value() == 3
+
+    widget.check_widget.setChecked(True)
+    assert widget.value() is None
+
+    widget.check_widget.setChecked(False)
+    assert widget.value() == 3
+
+    widget.setValue("none")
+    assert widget.value() is None
+
+
+def test_auto_double_widget(qtbot):
+    widget = formbuilder.OptionalSpinWidget(type="double", none_string="auto")
+
+    widget.setValue(3.2)
+    assert widget.value() == 3.2
+
+    widget.check_widget.setChecked(True)
+    assert widget.value() is "auto"
+
+    widget.check_widget.setChecked(False)
+    assert widget.value() == 3.2
+
+    widget.setValue("auto")
+    assert widget.value() == "auto"
+
+    widget.setValue(3.2)
+    assert widget.value() == 3.2
+
+    widget.setValue(None)
+    assert widget.value() == "auto"
+
+
+def test_text_or_list_widget(qtbot):
+    widget = formbuilder.TextOrListWidget()
+
+    widget.setValue("foo")
+    assert widget.value() == "foo"
+    assert widget.mode == "text"
+
+    widget.set_options(["a", "b", "c"])
+    assert widget.mode == "list"
+
+    widget.setValue("b")
+    assert widget.value() == "b"
+
+    widget.setMode("text")
+    assert widget.value() == "b"
+
+
+def test_string_list_widget(qtbot):
+    widget = formbuilder.StringListWidget()
+
+    widget.setValue("foo bar")
+    x = widget.getValue()
+    print(x)
+    assert x == ["foo", "bar"]
+
+    widget.setValue(["zip", "cab"])
+    assert widget.text() == "zip cab"
