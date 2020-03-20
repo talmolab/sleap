@@ -14,11 +14,11 @@ Command Line Interfaces
 
 :code:`python -m sleap.nn.tracking` allows you to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. You give it a prediction file.
 
-:code:`python -m sleap.info.trackcleaner` is an experimental script which tries to clean the resuls of cross-frame identity tracking by connecting "breaks" where we lose one identity and spawn another. You specify how many identities there should be in a frame (i.e., the number of animals).
-
-:code:`python -m sleap.gui.training_editor` allows you to view and create new training profiles. These are the files which specify what the model will be used for (confidence maps, part affinity fields, centroids, or top-down confidence maps), the network architecture (e.g., UNet), and the other training parameters (e.g., learning rate, image rescaling, image augmentation methods). If you want to view an existing profile—including a `training_job.json` file associated with a trained model—you can specify it's path as the first command-line parameter. You can also do this if you want to use an exiting profile as a template for creating a new training profile.
+:code:`python -m sleap.info.trackcleaner` tries to clean the resuls of cross-frame identity tracking by connecting "breaks" where we lose one identity and spawn another. You specify how many identities there should be in a frame (i.e., the number of animals).
 
 :code:`python -m sleap.info.write_tracking_h5` allows you to export the tracking data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB).
+
+There's also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with :code:`sleap-diagnostic`. Otherwise, you can download `diagnostic.py <https://raw.githubusercontent.com/murthylab/sleap/master/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY>`_ and run :code:`python diagnostic.py`.
 
 **Note**: For more details about any command, run with the :code:`--help` argument (e.g., :code:`sleap-track --help`).
 
@@ -32,14 +32,18 @@ File
 
 "**New...**", "**Open...**", "Save, and "**Save As...**" have their usual behavior.
 
-"**Import...**" allows you to import the data external formats into a new SLEAP dataset. This includes COCO_ keypoint detection and DeepPoseKit_.
+"**Import...**" allows you to import the data external formats into a new SLEAP dataset. This includes COCO_ keypoint detection (:code:`.json` files), DeepLabCut_ (:code:`.csv`), DeepPoseKit_ (:code:`.h5`), and LEAP_ (:code:`.mat`).
 
 .. _COCO: http://cocodataset.org/#format-data
 .. _DeepPoseKit: http://deepposekit.org
+.. _DeepLabCut: http://deeplabcut.org
+.. _LEAP: https://github.com/talmo/leap
 
 "**Merge Data From...**" allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you've trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you'd like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.
 
 "**Add Videos...**" allows you to add videos to your currently open project.
+
+"**Replace Videos...**" allows you to *swap* the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn't affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).
 
 Go
 ~~
@@ -55,6 +59,8 @@ Go
 "**Next Video**" will show the next video in the project (if your project has multiple videos). All the videos are listed in the "Videos" window.
 
 "**Go to Frame...**" allows you to go to a specific frame (in the current video) by frame number. It's also handy if you want to copy the current frame number to the clipboard.
+
+"**Select to Frame...**" allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use **Go to** to go to X then **Select to** to select from X to Y.
 
 .. _view:
 
@@ -77,15 +83,13 @@ View
 
 "**Show Edges**" allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.
 
-"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the :ref:`orientation` of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes).
+"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the :ref:`orientation` of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
 
-"**Show Trails**" allows you to toggle the visibility of trail lines, which show where each node was located in recent prior frames. This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames.
-
-"**Trail Length**" allows you to control how many prior frames to include in the trails.
+"**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames.
 
 "**Fit Instances to View**" allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.
 
-"**Seekbar Header**" allows you to plot relevant information above the seekbar. Note that this doesn't currently work well for very long videos since you can't zoom the seekbar. Also note that the seekbar is not updated when you modify instances; it only updates when you select a new seekbar header. (These issues will be fixed in a future version.)
+"**Seekbar Header**" allows you to plot relevant information above the seekbar. Note that the seekbar is not updated when you modify instances; it only updates when you select a new seekbar header.
 
 "**Videos**", "**Skeleton**", "**Instances**", and "**Labeling Suggestions**" allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).
 
@@ -94,7 +98,7 @@ Labels
 
 "**Add Instance**" will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also "convert" the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won't be shown unless you delete the editable instance you just created).
 
-"**Instance Placement Method**" allows you to pick how we determine where to place the instance and its nodes on the video frame. "Best" (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will locate the nodes randomly (somewhere within the currently visible portion of the current video frame, so you can zoom in to where you want the instance to be place).
+"**Instance Placement Method**" allows you to pick how we determine where to place the instance and its nodes on the video frame. "Best" (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the "average" method which creates an "average" instance from the instances you've already labeled.
 
 "**Delete Instance**" will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the "Instances" window).
 
@@ -104,7 +108,9 @@ Labels
 
 "**Delete Instance and Track**" deletes all instances in the track of the currently selected instance. This applied to *all* frames in the current video.
 
-"**Select Next Instance**" allows you to cycle through the instances.
+"**Custom Instance Delete...**" allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.
+
+"**Select Next Instance**" allows you to cycle through the instances in the current frame.
 
 "**Clear Selection**" allows you to deselect the selected instance.
 
@@ -112,11 +118,7 @@ Predict
 ~~~~~~~
 "**Run Training...**" allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.
 
-"**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed.
-
-"**Expert Controls...**" is a less-friendly interface for running training and/or inference, and allows you to select and create custom training profiles.
-
-"**Visualize Model Outputs...**" allows you to load a single trained model and see visualize its output—i.e., confidence maps, centroids, or part affinity fields—on frames of your current video. This is useful for understanding where your individuals models are doing well and where they're doing poorly. This feature is slower but usable without a GPU. Also note that you can only visualize one model at a time, and you have to quit when you want to stop visualizing model outputs.
+"**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed, and you also have the option to select models saved elsewhere.
 
 "**Delete All Predictions...**" deletes *all* predicted instances across *all* frames in the current video. (You'll be asked to confirm before the instances are deleted.)
 
@@ -134,7 +136,7 @@ Predict
 
 Help
 ~~~~
-"**Keyboard Reference**" allows you to view and change keyboard shortcuts for common menu and GUI actions.
+"**Keyboard Shortcuts**" allows you to view and change keyboard shortcuts for common menu and GUI actions.
 
 Main GUI Window
 ---------------
@@ -171,17 +173,21 @@ Navigation Keys
 
 **Left arrow** key: Move one frame back
 
-**Down arrow** key: Move 50 frames forward
+**Down arrow** key: Move a *medium* step forward (4 frames by default)
 
-**Up arrow** key: Move 50 frames back
+**Up arrow** key: Move a *medium* step backward (4 frames by default)
 
-**Space** key: Move 500 frames forward
+**Space** key: Move a *large* step forward (100 frames by default)
+
+**/** key: Move a *large* step backward (100 frames by default)
 
 **Home** key: Move to the first frame of the video
 
 **End** key: Move to the last frame of the video
 
 **Shift** + *any navigation key*: Select the frames over which you've moved
+
+(Note that these keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.)
 
 Selection Keys
 ~~~~~~~~~~~~~~
@@ -196,3 +202,7 @@ Seekbar
 **Shift + drag**: Select a range of frames
 
 **Shift + click**: Clear frame selection
+
+**Alt + drag**: Zoom into a range of frames
+
+**Alt + click**: Zoom out so that all frames are visible in seekbar

@@ -75,9 +75,9 @@ But in most cases it's best to create a training package and just use that for r
 
 **Training profile**:
 
-SLEAP comes with "default" training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the `training_profiles <https://github.com/murthylab/sleap/tree/master/sleap/training_profiles>`_ directory of the SLEAP package can be used by specifying it's filename (e.g., :code:`default_confmaps.json`) as the training profile—the full path isn't required.
+SLEAP comes with "default" training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the `training_profiles <https://github.com/murthylab/sleap/tree/master/sleap/training_profiles>`_ directory of the SLEAP package can be used by specifying it's filename (e.g., :code:`baseline.bottomup.json`) as the training profile—the full path isn't required.
 
-You can also use a custom training profile. There's a GUI **training editor** which gives you access to many of the profile parameters (:code:`python -m sleap.gui.training_editor`, as described in the :ref:`reference`), or you can directly edit a profile :code:`.json` file in a text editor. To use a custom training profile, you'll need to specify the full path to the file when you run training.
+You can also use the :code:`initial_config.json` file saved from previous training run as a template for a new training config. You can copy the :code:`json` file and edit it in any text editor. When you run training, specify the full path to the :code:`json` file.
 
 **Command-line training**:
 
@@ -87,7 +87,7 @@ Once you have your training package (or labels project file) and training profil
 
   sleap-train path/to/your/training_profile.json another/path/to/training_package.h5
 
-The model will be saved in the :code:`models/` directory within the same directory as the **training package** (in this case, :code:`another/path/to/models/run_name/`). You can specify the :code:`run_name` to use when saving the model with the :code:`-o` argument, otherwise the run name will include a timestamp, the output type and model architecture.
+The model will be saved in the :code:`models/` directory within the same directory as the **training package** (in this case, :code:`another/path/to/models/run_name/`). You can specify the :code:`run_name` to use when saving the model with the :code:`-o` argument, otherwise the run name will be the date and time of the run (or whatever is specified as the run path inside the config file).
 
 .. _remote_inference:
 
@@ -108,18 +108,20 @@ See the :ref:`installation` instructions.
 
 **Trained models**
 
-When you train a model, you'll get a directory with the `run_name` of the model. This will typically be something like :code:`191205_162402.UNet.confmaps` (i.e., :code:`<timestamp>.<architecture>.<output type>`), although you can also specify the run name in the training command-line interface.
+When you train a model, you'll get a directory with the `run_name` of the model.
 
-The model directory will contain two or three files:
+The model directory will contain at least these two files:
 
-- :code:`training_job.json` is the training profile used to train the model, together with some additional information about the trained model. Amongst other things, this specifies the network architecture of the model.
-- :code:`best_model.h5` and/or :code:`final_model.h5` are the weights for the trained model.
+- :code:`training_config.json` is the training profile used to train the model, together with some additional information about the trained model. Amongst other things, this specifies the network architecture of the model.
+- :code:`best_model.h5` (and/or :code:`final_model.h5`) contains the weights for the trained model.
 
-You'll need this entire directory for each model you're going to use for inference.
+You'll need both of these files for each model you're going to use for inference.
+
+The directory may also contains other files with optional outputs from the training run (e.g., :code:`training_log.csv` or a :code:`viz/` subdirectory).
 
 Inference will run in different modes depending on the output types of the models you supply. See the instructions for :ref:`choosing_models`.
 
-For this example, let's suppose you have three models: confidence maps (confmaps), part affinity fields (pafs), and centroids. This is the typical case for multi-instance predictions.
+For this example, let's suppose you have two models: centroids and instance-centered confidence maps. This is the typical "top-down" case for multi-instance predictions.
 
 **Video**
 
@@ -137,9 +139,8 @@ To run inference, you'll call :code:`sleap-track` with the paths to each trained
 
   sleap-track path/to/video.h5 \
   --video.dataset video --video.input_format channels_last \
-  -m path/to/models/191205_162402.UNet.confmaps \
-  -m path/to/models/191205_163413.LeapCNN.pafs \
-  -m path/to/models/191205_170118.UNet.centroids \
+  -m path/to/models/191205_162402 \
+  -m path/to/models/191205_163413
 
 (The order of the models doesn't matter.)
 
@@ -147,7 +148,7 @@ This will run inference on the entire video. If you only want to run inference o
 
 This will give you predictions frame-by-frame, but will not connect those predictions across frames into `tracks`. If you want cross-frame identity tracking, you'll need to choose a tracker and specify this from the command-line with the :code:`--tracking.tracker` argument. For optical flow, use :code:`--tracking.tracker flow`. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use :code:`--tracking.tracker simple --tracking.similarity centroid`.
 
-It's also possible to run tracking separately after you've generated a predictions file (see :ref:`reference`). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.
+**In future versions** it will also be possible to run tracking separately after you've generated a predictions file (see :ref:`reference`). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.
 
 When inference is finished, it will save the predictions in a new HDF5 file. This file has the same format as a standard SLEAP project file, and you can use the GUI to proofread this file or merge the predictions into an existing SLEAP project. The file will be in the same directory as the video and the filename will be :code:`{video filename}.predictions.h5`.
 
@@ -156,31 +157,13 @@ When inference is finished, it will save the predictions in a new HDF5 file. Thi
 Choosing a set of models
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Inference will run in different modes depending on the output types of the models you supply. SLEAP currently support four different output types:
+Inference will run in different modes depending on the output types of the models you supply. SLEAP currently support two distinct modes for multi-animal inference.
 
-1. **Confidence maps** (confmaps) are used to predict point locations.
+1. The "**bottom-up**" approach uses a single model which outputs **confidence maps** and **part affinity fields** for all instances in a given frame. The confidence maps are used to predict node locations and the part affinity fields are used to group nodes into distinct animal instances.
 
-2. **Part affinity fields** (pafs) are used to connect points which belong to the same animal instance.
+2. The "**top-down**" approach starts by using a **centroid** model to predict the location of each animal in a given frame, and then a **instance centered confidence map** model is used to predict the locations of all the nodes for each animal separately.
 
-3. **Centroids** are used to crop the video frame around each animal instance.
-
-4. **Top-down confidence maps** (topdown) are used to predict point locations for a *single* instance at the center of a cropped image.
-
-When there's only a **single** instance in the video, run with confidence maps. Centroids are optional.
-
-When there are **multiple** instances in the video, you have two options:
-
-1. Confidence maps (*required*) and part affinity fields (*required*), with centroids *optional*.
-2. Top-down confidence maps and centroids (*required*).
-
-Note that top-down confidence maps rely on centroid cropping, since they're trained to give predictions for the single instance centered in the (cropped) image.
-
-Inference (when run from the GUI or the command-line interface) will deduce the correct mode from the set of models it's given:
-
-- Confidence maps => single-instance mode on full images
-- Confidence maps + part affinity fields => multi-instance mode on full images
-- Confidence maps + part affinity fields + centroids => multi-instance mode on centroid crops
-- Top-down confidence maps + centroids => multi-instance mode on centroid crops
+Each approach has its advantages, and you may wish to try out both to see which gives you better results.
 
 Improving predictions
 ----------------------------
