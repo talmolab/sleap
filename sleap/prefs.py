@@ -24,6 +24,8 @@ class Preferences(object):
     def load_(self):
         try:
             self._prefs = util.get_config_yaml(self._filename)
+            if not hasattr(self._prefs, "get"):
+                self._prefs = self._defaults
         except FileNotFoundError:
             self._prefs = self._defaults
 
