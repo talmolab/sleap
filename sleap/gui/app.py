@@ -595,7 +595,7 @@ class MainWindow(QMainWindow):
         ############
 
         helpMenu = self.menuBar().addMenu("Help")
-        helpMenu.addAction("Keyboard Reference", self.openKeyRef)
+        helpMenu.addAction("Keyboard Shortcuts", self.openKeyRef)
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""
