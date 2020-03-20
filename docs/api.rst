@@ -7,11 +7,13 @@ Developer API
     :caption: API
     :maxdepth: 3
 
-    skeleton
-    instance
-    dataset
-    video
-    training
-    inference
-    gui
-    misc
+    api/diagnostic
+    api/instance
+    api/prefs
+    api/rangelist
+    api/skeleton
+    api/util
+
+    api/gui
+    api/io
+    api/nn

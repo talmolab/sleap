@@ -1,14 +1,19 @@
-GUI
-========
+sleap.gui
+================
 
 sleap.gui.app
--------------
+-----------------
 .. automodule:: sleap.gui.app
    :members:
 
-sleap.gui.video
--------------
-.. automodule:: sleap.gui.video
+sleap.gui.color
+-----------------
+.. automodule:: sleap.gui.color
+   :members:
+
+sleap.gui.commands
+----------------
+.. automodule:: sleap.gui.commands
    :members:
 
 Dialogs
