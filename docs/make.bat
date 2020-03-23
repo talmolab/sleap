@@ -11,7 +11,9 @@ set SOURCEDIR=.
 set BUILDDIR=../../sleap-docs
 
 if "%1" == "" goto help
-if "%2" == "api.rst" goto apidocs
+
+echo "Building api docs..."
+python make_api_doctree.py
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -31,10 +33,6 @@ goto end
 
 :help
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
-goto end
-
-:apidocs
-python make_api_doctree.py
 goto end
 
 :end

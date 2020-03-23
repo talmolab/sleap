@@ -9,7 +9,7 @@ for root, dirs, files in os.walk("../sleap"):
     for file in sorted(files):
         if file.endswith(".py") and not file.startswith("_"):
             full = os.path.join(root, file)
-            full = full[:-3].replace("/", ".")
+            full = full[:-3].replace(os.sep, ".")
             doctree += f"   {full}\n"
 
 # get the api doc header
