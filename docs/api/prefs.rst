@@ -1,5 +1,0 @@
-sleap.prefs
-=================
-
-.. automodule:: sleap.prefs
-   :members:
