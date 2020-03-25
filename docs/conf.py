@@ -13,6 +13,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -21,13 +22,19 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "SLEAP"
-copyright = "2019, Murthy Lab @ Princeton"
+copyright = "2019–2020, Murthy Lab @ Princeton"
 author = "Talmo D. Pereira, Nat Tabris, David M. Turner"
 
 # The short X.Y version
-version = ""
+version = "0.2.0"
 # The full version, including alpha/beta/rc tags
 release = ""
+
+
+# Get the sleap version
+# with open("../sleap/version.py") as f:
+#     version_file = f.read()
+#     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 
 # -- General configuration ---------------------------------------------------

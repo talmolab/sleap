@@ -1,23 +1,4 @@
-.. _tutorial:
-
-Tutorial
-========
-
-Before you can use SLEAP, you’ll need to install it. Follow the
-instructions at :ref:`Installation` to install SLEAP and
-start the GUI app.
-
-There are three main stages of using SLEAP:
-
-1. Creating a project, opening a movie and defining the skeleton;
-
-2. Labeling and learning, labeling of video frames assisted by network
-   predictions;
-
-3. Prediction and proofreading, final network predictions of body-part
-   positions and proofreading of track identities in full videos.
-
-This tutorial covers stage 1 and the first half of stage 2. For the rest of the process, see :ref:`part2`.
+.. _new-project:
 
 Stage 1: Creating a project
 ---------------------------
@@ -128,36 +109,16 @@ When you label a frame, it’s best if you can label all the instances of
 your animal in the frame. Otherwise, the models may learn to not
 identify things that look like the instances you didn’t label.
 
-Quick Training and Inference
-----------------------------
-
-Let's see how quickly we can train models and start getting some predictions.
-
-Start by labeling about 10 frames—this should be enough to at least get some initial results. Once you have the frames labeled, save your project.
-
-Now you're ready to train some models! To run training, select “**Run Training…**” from the “Predict”
-menu. For this tutorial, let's use the default settings for training and predict on 20 random frames.
-
-|image6|
-
-The default settings will train two models: one for locating each instance in the frame confidence maps, and one for locating the parts for each of those instances. The models will be trained in that order.
-
-For this "topdown" prediction approach, it's a good idea to choose an **anchor** part which has a relatively stable position near the center of your animal. You may also want to turn on the option to "**Visualize Predictions During Training**" (although this will make training run a bit more slowly).
-
-Once you hit the **Run** button, you should see a window which shows you a graph of training and validation loss for each model as it trains.
-
-Just for this tutorial, let's stop each training session after about 10 epochs. This should take a minute or two for each model (assuming you have a usable GPU!), and should be good enough to get some initial predictions.
-
-After each model is trained, inference will run and if everything is successful, you should get a dialog telling you how many frames got predictions. Frames with labels will be marked in the seekbar, so try clicking on the newly marked frames or use the "**Next Labeled Frame**" command in the "Go" menu to step through frames with labels.
-
-For the next steps, continue on to :ref:`part2`.
-
-
-.. |image0| image:: docs/_static/add-video.gif
-.. |image1| image:: docs/_static/video-options.gif
-.. |image2| image:: docs/_static/add-skeleton.gif
-.. |image3| image:: docs/_static/suggestions.jpg
-.. |image4| image:: docs/_static/labeling.gif
-.. |image5| image:: docs/_static/toggle-visibility.gif
-.. |image6| image:: docs/_static/training-dialog.jpg
-
+.. |image0| image:: ../_static/add-video.gif
+.. |image1| image:: ../_static/video-options.gif
+.. |image2| image:: ../_static/add-skeleton.gif
+.. |image3| image:: ../_static/suggestions.jpg
+.. |image4| image:: ../_static/labeling.gif
+.. |image5| image:: ../_static/toggle-visibility.gif
+.. |image6| image:: ../_static/training-dialog.jpg
+.. |model| image:: ../_static/training-model-dialog.jpg
+.. |receptive-field| image:: ../_static/receptive-field.jpg
+.. |imagefix| image:: ../_static/fixing-predictions.gif
+.. |tracker| image:: ../_static/tracker.jpg
+.. |model-selection| image:: ../_static/model-selection.jpg
+.. |image9| image:: ../_static/fixing-track.gif
