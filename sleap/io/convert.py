@@ -15,7 +15,7 @@ def main():
         "--format",
         default="slp",
         help="Output format. Default ('slp') is SLEAP dataset; "
-        "'tracking' results in tracking.h5 file; "
+        "'analysis' results in analysis.h5 file; "
         "'h5' or 'json' results in SLEAP dataset "
         "with specified file format.",
     )
@@ -36,17 +36,17 @@ def main():
             video_callback=video_callback,
         )
 
-    if args.format == "tracking":
-        from sleap.info.write_tracking_h5 import main as write_tracking
+    if args.format == "analysis":
+        from sleap.info.write_tracking_h5 import main as write_analysis
 
         if args.output:
             output_path = args.output
         else:
             output_path = args.input_path
             output_path = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", output_path)
-            output_path = output_path + ".tracking.h5"
+            output_path = output_path + ".analysis.h5"
 
-        write_tracking(labels, output_path=output_path, all_frames=True)
+        write_analysis(labels, output_path=output_path, all_frames=True)
 
     elif args.output:
         print(f"Output SLEAP dataset: {args.output}")
