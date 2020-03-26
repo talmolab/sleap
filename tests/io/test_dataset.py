@@ -820,3 +820,7 @@ def test_local_path_save(tmpdir, monkeypatch):
     Labels.save_file(filename=filename, labels=Labels())
 
     assert os.path.exists(os.path.join(tmpdir, filename))
+
+
+def test_slp_file(min_labels_slp, min_labels):
+    assert min_labels.videos[0].filename == min_labels_slp.videos[0].filename

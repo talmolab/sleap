@@ -28,6 +28,7 @@ def fit_tracks(filename: Text, instance_count: int):
 
     # Save new file
     save_filename = filename
+    save_filename = save_filename.replace(".slp", ".cleaned.slp")
     save_filename = save_filename.replace(".h5", ".cleaned.h5")
     save_filename = save_filename.replace(".json", ".cleaned.json")
     Labels.save_file(labels, save_filename)

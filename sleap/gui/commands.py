@@ -460,9 +460,8 @@ class OpenProject(AppCommand):
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
         filters = [
-            "HDF5 dataset (*.h5 *.hdf5)",
+            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
             "JSON labels (*.json *.json.zip)",
-            "DeepLabCut csv (*.csv)",
         ]
 
         filename, selected_filter = FileDialog.open(
@@ -605,9 +604,7 @@ class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_deeplabcut_csv(
-            filename=params["filename"]
-        )
+        labels = Labels.load_deeplabcut_csv(filename=params["filename"])
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -666,8 +663,8 @@ class SaveProjectAs(AppCommand):
         default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
 
         filters = [
-            "HDF5 dataset (*.h5)",
-            "JSON labels (*.json)",
+            "SLEAP HDF5 dataset (*.slp)",
+            "SLEAP JSON dataset (*.json)",
             "Compressed JSON (*.zip)",
         ]
         filename, selected_filter = FileDialog.save(
@@ -753,17 +750,20 @@ class ExportLabeledFrames(AppCommand):
         Labels.save_file(
             context.state["labels"],
             params["filename"],
-            default_suffix="h5",
+            default_suffix="slp",
             save_frame_data=True,
         )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        filters = ["HDF5 dataset (*.h5)", "Compressed JSON dataset (*.json *.json.zip)"]
+        filters = [
+            "SLEAP HDF5 dataset (*.slp *.h5)",
+            "Compressed JSON dataset (*.json *.json.zip)",
+        ]
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Labeled Frames As...",
-            dir=context.state["filename"] + ".h5",
+            dir=context.state["filename"] + ".slp",
             filters=";;".join(filters),
         )
         if len(filename) == 0:
@@ -1586,7 +1586,10 @@ class MergeProject(EditCommand):
 
     @classmethod
     def ask_and_do(cls, context: CommandContext, params: dict):
-        filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
+        filters = [
+            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
+            "SLEAP JSON dataset (*.json *.json.zip)",
+        ]
 
         filenames, selected_filter = FileDialog.openMultiple(
             context.app,

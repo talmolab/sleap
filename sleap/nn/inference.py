@@ -873,7 +873,7 @@ def save_predictions_from_cli(args, predicted_frames):
         output_path = args.output
     else:
         out_dir = os.path.dirname(args.data_path)
-        out_name = os.path.basename(args.data_path) + ".predictions.h5"
+        out_name = os.path.basename(args.data_path) + ".predictions.slp"
         output_path = os.path.join(out_dir, out_name)
 
     labels = Labels(labeled_frames=predicted_frames)
