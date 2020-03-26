@@ -53,7 +53,13 @@ def read(
         return disp.read(filename, *args, **kwargs)
 
     if for_object == "labels" or hasattr(for_object, "labeled_frames"):
-        disp.register_list(default_labels_adaptors)
+        if as_format == "*":
+            for format_name, adaptor in all_labels_adaptors.items():
+                disp.register(adaptor)
+                # print(f"[registering format adaptor for {format_name}]")
+        else:
+            disp.register_list(default_labels_adaptors)
+
         return disp.read(filename, *args, **kwargs)
 
     raise NotImplementedError("No adaptors for this object type.")
