@@ -227,6 +227,10 @@ class CommandContext(object):
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
 
+    def exportAnalysisFile(self):
+        """Shows gui for exporting analysis h5 file."""
+        self.execute(ExportAnalysisFile)
+
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
         self.execute(ExportLabeledClip)
@@ -678,6 +682,35 @@ class SaveProjectAs(AppCommand):
             return False
 
         params["filename"] = filename
+        return True
+
+
+class ExportAnalysisFile(AppCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        from sleap.info.write_tracking_h5 import main as write_analysis
+
+        write_analysis(
+            context.labels, output_path=params["output_path"], all_frames=True
+        )
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        default_name = context.state["filename"] or "untitled"
+        p = PurePath(default_name)
+        default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
+
+        filename, selected_filter = FileDialog.save(
+            context.app,
+            caption="Export Analysis File...",
+            dir=default_name,
+            filter="SLEAP Analysis HDF5 (*.h5)",
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["output_path"] = filename
         return True
 
 
