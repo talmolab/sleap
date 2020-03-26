@@ -722,6 +722,8 @@ class TrackCleaner:
         Returns:
             None; modifies frames in place.
         """
+        if not frames:
+            return
 
         frames.sort(key=lambda lf: lf.frame_idx)
 
