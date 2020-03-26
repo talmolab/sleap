@@ -17,10 +17,11 @@ There are three main stages of using SLEAP:
 3. Prediction and proofreading, final network predictions of body-part
    positions and proofreading of track identities in full videos.
 
-:ref:`new-project`
+.. toctree::
+    :caption: Tutorials
 
-:ref:`initial-training`
-
-:ref:`assisted-labeling`
-
-:ref:`proofreading-tutorial`
+    ../guides/installation
+    new-project
+    initial-training
+    assisted-labeling
+    proofreading

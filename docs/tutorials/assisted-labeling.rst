@@ -44,4 +44,6 @@ train a new model, predict on more frames, correct those predictions,
 and so on. You’ll want to regularly generate new frame suggestions,
 since active learning will return predictions for just these frames.
 
+Continue to :ref:`proofreading-tutorial`.
+
 .. |imagefix| image:: ../_static/fixing-predictions.gif

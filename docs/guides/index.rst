@@ -27,3 +27,12 @@ Running remotely
 :ref:`remote_inference` when you trained models and you want to run inference on a different machine using a **command-line interface**.
 
 :ref:`pretrained_weights_remote` explains how to download pretrained weights if you're training a network with pretrained weights on a machine without internet access.
+
+All Guides
+----------
+
+.. toctree::
+    :caption: Guides
+    :glob:
+
+    *

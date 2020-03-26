@@ -22,5 +22,6 @@ Just for this tutorial, let's stop each training session after about 10 epochs. 
 
 After each model is trained, inference will run and if everything is successful, you should get a dialog telling you how many frames got predictions. Frames with labels will be marked in the seekbar, so try clicking on the newly marked frames or use the "**Next Labeled Frame**" command in the "Go" menu to step through frames with labels.
 
+Continue to :ref:`assisted-labeling`.
 
 .. |image6| image:: ../_static/training-dialog.jpg

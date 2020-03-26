@@ -1,6 +1,6 @@
 .. _proofreading-tutorial:
 
-Stage 3: Tracking instances across frames
+Tracking instances across frames
 -----------------------------------------
 
 When you’re satisfied with the predictions you’re getting, you can use your models to predict on more frames by selecting
@@ -67,7 +67,7 @@ instance track to the track from previous frames. The “Next Track Spawn
 Frame” command in the “Labels” menu will take you to the next frame in
 which a new track is spawned.
 
-For more tools and tips, see the :ref:`proofreading` how-to.
+For more tools and tips, see the :ref:`proofreading` guide.
 
 .. |image0| image:: ../_static/add-video.gif
 .. |image1| image:: ../_static/video-options.gif
