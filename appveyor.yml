@@ -133,7 +133,7 @@ for:
   branches:
     only:
       - develop
-  after_deploy:
+  deploy_script:
     - cmd: cd ..\
     # Deploy wheel to PyPi
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (python setup.py bdist_wheel)
