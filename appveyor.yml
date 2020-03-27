@@ -134,7 +134,6 @@ for:
     only:
       - develop
   deploy_script:
-    - cmd: cd ..\
     # Deploy wheel to PyPi
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (python setup.py bdist_wheel)
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (python -m twine upload dist/* --non-interactive --skip-existing --disable-progress-bar)
