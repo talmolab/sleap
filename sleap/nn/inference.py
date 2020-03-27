@@ -80,6 +80,94 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
                         logger.info(f"FPS={i/elapsed_time}")
 
 
+def get_keras_model_path(path: Text) -> Text:
+    if path.endswith(".json"):
+        path = os.path.dirname(path)
+    return os.path.join(path, "best_model.h5")
+
+
+@attr.s(auto_attribs=True)
+class VisualPredictor:
+    config: TrainingJobConfig
+    model: Model
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+
+    @classmethod
+    def from_trained_models(cls, model_path: Text) -> "VisualPredictor":
+        cfg = TrainingJobConfig.load_json(model_path)
+        keras_model_path = get_keras_model_path(model_path)
+        model = Model.from_config(cfg.model)
+        model.keras_model = tf.keras.models.load_model(keras_model_path, compile=False)
+
+        return cls(config=cfg, model=model)
+
+    def head_specific_output_keys(self) -> List[Text]:
+        keys = []
+
+        key = self.confidence_maps_key_name()
+        if key:
+            keys.append(key)
+
+        key = self.part_affinity_fields_key_name()
+        if key:
+            keys.append(key)
+
+        return keys
+
+    def confidence_maps_key_name(self) -> Optional[Text]:
+        head_key = self.config.model.heads.which_oneof_attrib_name()
+
+        if head_key in ("multi_instance", "single_instance"):
+            return "predicted_confidence_maps"
+
+        if head_key == "centroid":
+            return "predicted_centroid_confidence_maps"
+
+        # todo: centered_instance
+
+        return None
+
+    def part_affinity_fields_key_name(self) -> Optional[Text]:
+        head_key = self.config.model.heads.which_oneof_attrib_name()
+
+        if head_key == "multi_instance":
+            return "predicted_part_affinity_fields"
+
+        return None
+
+    def make_pipeline(self):
+        pipeline = Pipeline()
+
+        pipeline += Normalizer.from_config(self.config.data.preprocessing)
+        pipeline += Resizer.from_config(
+            self.config.data.preprocessing, keep_full_image=False, points_key=None,
+        )
+
+        pipeline += KerasModelPredictor(
+            keras_model=self.model.keras_model,
+            model_input_keys="image",
+            model_output_keys=self.head_specific_output_keys(),
+        )
+
+        self.pipeline = pipeline
+
+    def predict_generator(self, data_provider: Provider):
+        if self.pipeline is None:
+            # Pass in data provider when mocking one of the models.
+            self.make_pipeline()
+
+        self.pipeline.providers = [data_provider]
+
+        # Yield each example from dataset, catching and logging exceptions
+        return safely_generate(self.pipeline.make_dataset())
+
+    def predict(self, data_provider: Provider):
+        generator = self.predict_generator(data_provider)
+        examples = list(generator)
+
+        return examples
+
+
 @attr.s(auto_attribs=True)
 class TopdownPredictor:
     centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
@@ -115,9 +203,7 @@ class TopdownPredictor:
         if centroid_model_path is not None:
             # Load centroid model.
             centroid_config = TrainingJobConfig.load_json(centroid_model_path)
-            centroid_keras_model_path = os.path.join(
-                centroid_model_path, "best_model.h5"
-            )
+            centroid_keras_model_path = get_keras_model_path(centroid_model_path)
             centroid_model = Model.from_config(centroid_config.model)
             centroid_model.keras_model = tf.keras.models.load_model(
                 centroid_keras_model_path, compile=False
@@ -129,7 +215,7 @@ class TopdownPredictor:
         if confmap_model_path is not None:
             # Load confmap model.
             confmap_config = TrainingJobConfig.load_json(confmap_model_path)
-            confmap_keras_model_path = os.path.join(confmap_model_path, "best_model.h5")
+            confmap_keras_model_path = get_keras_model_path(confmap_model_path)
             confmap_model = Model.from_config(confmap_config.model)
             confmap_model.keras_model = tf.keras.models.load_model(
                 confmap_keras_model_path, compile=False
@@ -358,7 +444,7 @@ class BottomupPredictor:
         """Create predictor from saved models."""
         # Load bottomup model.
         bottomup_config = TrainingJobConfig.load_json(bottomup_model_path)
-        bottomup_keras_model_path = os.path.join(bottomup_model_path, "best_model.h5")
+        bottomup_keras_model_path = get_keras_model_path(bottomup_model_path)
         bottomup_model = Model.from_config(bottomup_config.model)
         bottomup_model.keras_model = tf.keras.models.load_model(
             bottomup_keras_model_path, compile=False
@@ -523,7 +609,7 @@ class SingleInstancePredictor:
 
         # Load confmap model.
         confmap_config = TrainingJobConfig.load_json(confmap_model_path)
-        confmap_keras_model_path = os.path.join(confmap_model_path, "best_model.h5")
+        confmap_keras_model_path = get_keras_model_path(confmap_model_path)
         confmap_model = Model.from_config(confmap_config.model)
         confmap_model.keras_model = tf.keras.models.load_model(
             confmap_keras_model_path, compile=False
@@ -787,7 +873,7 @@ def save_predictions_from_cli(args, predicted_frames):
         output_path = args.output
     else:
         out_dir = os.path.dirname(args.data_path)
-        out_name = os.path.basename(args.data_path) + ".predictions.h5"
+        out_name = os.path.basename(args.data_path) + ".predictions.slp"
         output_path = os.path.join(out_dir, out_name)
 
     labels = Labels(labeled_frames=predicted_frames)

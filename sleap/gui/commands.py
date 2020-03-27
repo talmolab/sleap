@@ -227,6 +227,10 @@ class CommandContext(object):
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
 
+    def exportAnalysisFile(self):
+        """Shows gui for exporting analysis h5 file."""
+        self.execute(ExportAnalysisFile)
+
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
         self.execute(ExportLabeledClip)
@@ -460,9 +464,8 @@ class OpenProject(AppCommand):
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
         filters = [
-            "HDF5 dataset (*.h5 *.hdf5)",
+            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
             "JSON labels (*.json *.json.zip)",
-            "DeepLabCut csv (*.csv)",
         ]
 
         filename, selected_filter = FileDialog.open(
@@ -605,9 +608,7 @@ class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_deeplabcut_csv(
-            filename=params["filename"]
-        )
+        labels = Labels.load_deeplabcut_csv(filename=params["filename"])
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -666,8 +667,8 @@ class SaveProjectAs(AppCommand):
         default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
 
         filters = [
-            "HDF5 dataset (*.h5)",
-            "JSON labels (*.json)",
+            "SLEAP HDF5 dataset (*.slp)",
+            "SLEAP JSON dataset (*.json)",
             "Compressed JSON (*.zip)",
         ]
         filename, selected_filter = FileDialog.save(
@@ -681,6 +682,35 @@ class SaveProjectAs(AppCommand):
             return False
 
         params["filename"] = filename
+        return True
+
+
+class ExportAnalysisFile(AppCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        from sleap.info.write_tracking_h5 import main as write_analysis
+
+        write_analysis(
+            context.labels, output_path=params["output_path"], all_frames=True
+        )
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        default_name = context.state["filename"] or "untitled"
+        p = PurePath(default_name)
+        default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
+
+        filename, selected_filter = FileDialog.save(
+            context.app,
+            caption="Export Analysis File...",
+            dir=default_name,
+            filter="SLEAP Analysis HDF5 (*.h5)",
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["output_path"] = filename
         return True
 
 
@@ -753,17 +783,20 @@ class ExportLabeledFrames(AppCommand):
         Labels.save_file(
             context.state["labels"],
             params["filename"],
-            default_suffix="h5",
+            default_suffix="slp",
             save_frame_data=True,
         )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        filters = ["HDF5 dataset (*.h5)", "Compressed JSON dataset (*.json *.json.zip)"]
+        filters = [
+            "SLEAP HDF5 dataset (*.slp *.h5)",
+            "Compressed JSON dataset (*.json *.json.zip)",
+        ]
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Labeled Frames As...",
-            dir=context.state["filename"] + ".h5",
+            dir=context.state["filename"] + ".slp",
             filters=";;".join(filters),
         )
         if len(filename) == 0:
@@ -1586,7 +1619,10 @@ class MergeProject(EditCommand):
 
     @classmethod
     def ask_and_do(cls, context: CommandContext, params: dict):
-        filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
+        filters = [
+            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
+            "SLEAP JSON dataset (*.json *.json.zip)",
+        ]
 
         filenames, selected_filter = FileDialog.openMultiple(
             context.app,

@@ -1053,14 +1053,9 @@ class Video:
         else:
             raise ValueError("Could not detect backend for specified filename.")
 
-        # Only pass through the kwargs that match attributes for the backend
-        attribute_kwargs = {
-            key: val
-            for (key, val) in kwargs.items()
-            if key in attr.fields_dict(backend_class).keys()
-        }
+        kwargs["filename"] = filename
 
-        return cls(backend=backend_class(filename=filename, **attribute_kwargs))
+        return cls(backend=cls.make_specific_backend(backend_class, kwargs))
 
     @classmethod
     def imgstore_from_filenames(
@@ -1266,6 +1261,17 @@ class Video:
         )
 
     @staticmethod
+    def make_specific_backend(backend_class, kwargs):
+        # Only pass through the kwargs that match attributes for the backend
+        attribute_kwargs = {
+            key: val
+            for (key, val) in kwargs.items()
+            if key in attr.fields_dict(backend_class).keys()
+        }
+
+        return backend_class(**attribute_kwargs)
+
+    @staticmethod
     def cattr():
         """
         Returns a cattr converter for serialiazing/deserializing Video objects.
@@ -1281,7 +1287,8 @@ class Video:
                 x["filename"] = Video.fixup_path(x["filename"])
             if "file" in x:
                 x["file"] = Video.fixup_path(x["file"])
-            return cl(**x)
+
+            return Video.make_specific_backend(cl, x)
 
         vid_cattr = cattr.Converter()
 

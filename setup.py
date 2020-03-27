@@ -49,6 +49,7 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
+            "sleap-convert=sleap.io.convert:main",
             "sleap-label=sleap.gui.app:main",
             "sleap-train=sleap.nn.training:main",
             "sleap-track=sleap.nn.inference:main",

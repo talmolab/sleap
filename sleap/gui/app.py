@@ -293,6 +293,14 @@ class MainWindow(QMainWindow):
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
 
         fileMenu.addSeparator()
+        add_menu_item(
+            fileMenu,
+            "export analysis",
+            "Export Analysis HDF5...",
+            self.commands.exportAnalysisFile,
+        )
+
+        fileMenu.addSeparator()
         add_menu_item(fileMenu, "close", "Quit", self.close)
 
         ### Go Menu ###

@@ -10,7 +10,17 @@ from sleap.gui.color import ColorManager
 import attr
 import itertools
 import numpy as np
+from enum import Enum
 from typing import Dict, Iterable, List, Optional, Tuple, Union
+
+
+# Map meaning of mark to the type of mark
+class SemanticMarkType(Enum):
+    user = "simple"
+    predicted_no_track = "simple_thin"
+    suggested_with_user = "filled"
+    suggested_with_nothing = "open"
+    suggested_with_predicted = "predicted"
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -172,6 +182,9 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
+        self.setMouseTracking(True)
+
+        self._get_val_tooltip = None
         self._color_manager = color_manager
 
         self.tick_index_offset = 1
@@ -260,6 +273,49 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if self._color_manager is None:
             self._color_manager = ColorManager(labels=labels)
 
+        def get_val_tooltip(idx: int) -> str:
+            tooltip = f"Frame {idx+1}"
+
+            frame_mark_types = {mark.type for mark in self.getMarksAtVal(idx)}
+
+            # if (SemanticMarkType.suggested_with_user.value in frame_mark_types
+            #         or SemanticMarkType.suggested_with_predicted.value in frame_mark_types
+            #         or SemanticMarkType.suggested_with_nothing.value in frame_mark_types ):
+            #     tooltip += "\nsuggested frame"
+
+            if SemanticMarkType.user.value in frame_mark_types:
+                tooltip += "\nuser labeled"
+            elif SemanticMarkType.predicted_no_track.value in frame_mark_types:
+                tooltip += "\nprediction without track identity"
+            elif SemanticMarkType.suggested_with_user.value in frame_mark_types:
+                tooltip += "\nsuggested frame with user labels"
+            elif SemanticMarkType.suggested_with_nothing.value in frame_mark_types:
+                tooltip += "\nsuggested frame (no labels)"
+            elif SemanticMarkType.suggested_with_predicted.value in frame_mark_types:
+                tooltip += "\nsuggested frame with prediction"
+            elif "track" in frame_mark_types:
+                tooltip += "\nprediction with track identity"
+
+            lf = labels.find(video, idx)
+            if lf:
+                lf = lf[0]
+                user_instance_count = len(lf.user_instances)
+                pred_instance_count = len(lf.predicted_instances)
+
+                if pred_instance_count:
+                    tooltip += f"\n{pred_instance_count} predicted instance"
+                    if pred_instance_count > 1:
+                        tooltip += "s"
+
+                if user_instance_count:
+                    tooltip += f"\n{user_instance_count} user instance"
+                    if user_instance_count > 1:
+                        tooltip += "s"
+
+            return tooltip
+
+        self._get_val_tooltip = get_val_tooltip
+
         lfs = labels.find(video)
 
         slider_marks = []
@@ -304,19 +360,22 @@ class VideoSlider(QtWidgets.QGraphicsView):
             if frame_idx in suggested_frames:
                 if frame_idx in user_labeled:
                     # suggested frame with user labeled instances
-                    mark_type = "filled"
+                    mark_type = SemanticMarkType.suggested_with_user
                 elif frame_idx in labeled_marks:
                     # suggested frame with only predicted instances
-                    mark_type = "predicted"
+                    mark_type = SemanticMarkType.suggested_with_predicted
                 else:
                     # suggested frame without any instances
-                    mark_type = "open"
+                    mark_type = SemanticMarkType.suggested_with_nothing
             elif frame_idx in user_labeled:
                 # frame with user labeled instances
-                mark_type = "simple"
+                mark_type = SemanticMarkType.user
             else:
                 # no user instances, predicted instance without track identity
-                mark_type = "simple_thin"
+                mark_type = SemanticMarkType.predicted_no_track
+
+            mark_type = mark_type.value
+
             slider_marks.append(SliderMark(mark_type, val=frame_idx))
 
         self.setTracks(track_row)  # total number of tracks to show
@@ -900,6 +959,12 @@ class VideoSlider(QtWidgets.QGraphicsView):
         points = list(itertools.starmap(QtCore.QPointF, points))
         self.poly.setPath(self._pointsToPath(points))
 
+    def mapMouseXToHandleX(self, x) -> float:
+        x -= self.handle.rect().width() / 2.0
+        x = max(x, 0)
+        x = min(x, self.getBoxRect().width() - self.handle.rect().width())
+        return x
+
     def moveHandle(self, x, y):
         """Move handle in response to mouse position.
 
@@ -909,9 +974,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
             x: x position of mouse
             y: y position of mouse
         """
-        x -= self.handle.rect().width() / 2.0
-        x = max(x, 0)
-        x = min(x, self.getBoxRect().width() - self.handle.rect().width())
+        x = self.mapMouseXToHandleX(x)
 
         val = self._toVal(x)
 
@@ -960,15 +1023,20 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         return inc_val
 
+    def getMarksAtVal(self, val):
+        if val is None:
+            return []
+
+        return [
+            mark
+            for mark in self._marks
+            if (mark.val == val and mark.type not in ("tick", "tick_column"))
+            or (mark.type == "track" and mark.val <= val < mark.end_val)
+        ]
+
     def isMarkedVal(self, val):
         """Returns whether value has mark."""
-        if val in [mark.val for mark in self._marks]:
-            return True
-        if any(
-            mark.val <= val < mark.end_val
-            for mark in self._marks
-            if mark.type == "track"
-        ):
+        if self.getMarksAtVal(val):
             return True
         return False
 
@@ -1099,16 +1167,21 @@ class VideoSlider(QtWidgets.QGraphicsView):
         move_function = None
         release_function = None
 
+        self.updateCursorForEvent(event)
+
+        # Shift : selection
         if event.modifiers() == QtCore.Qt.ShiftModifier:
             move_function = self.moveSelectionAnchor
             release_function = self.releaseSelectionAnchor
 
             self.clearSelection()
 
+        # No modifier : go to frame
         elif event.modifiers() == QtCore.Qt.NoModifier:
             move_function = self.moveHandle
             release_function = None
 
+        # Alt (option) : zoom
         elif event.modifiers() == QtCore.Qt.AltModifier:
             move_function = self.moveZoomDrag
             release_function = self.releaseZoomDrag
@@ -1121,6 +1194,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
             self.mouseMoved.connect(move_function)
 
         def done(x, y):
+            self.unsetCursor()
             if release_function is not None:
                 release_function(x, y)
             if move_function is not None:
@@ -1136,11 +1210,22 @@ class VideoSlider(QtWidgets.QGraphicsView):
     def mouseMoveEvent(self, event):
         """Override method to emid mouseMoved signal on drag."""
         scenePos = self.mapToScene(event.pos())
+
+        # Update cursor type based on current modifier key
+        self.updateCursorForEvent(event)
+
+        # Show tooltip with information about frame under mouse
+        if self._get_val_tooltip:
+            hover_frame_idx = self._toVal(self.mapMouseXToHandleX(scenePos.x()))
+            tooltip = self._get_val_tooltip(hover_frame_idx)
+            QtWidgets.QToolTip.showText(event.globalPos(), tooltip)
+
         self.mouseMoved.emit(scenePos.x(), scenePos.y())
 
     def mouseReleaseEvent(self, event):
         """Override method to emit mouseReleased signal on release."""
         scenePos = self.mapToScene(event.pos())
+
         self.mouseReleased.emit(scenePos.x(), scenePos.y())
 
     def mouseDoubleClickEvent(self, event):
@@ -1161,13 +1246,26 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if event.modifiers() == QtCore.Qt.ShiftModifier:
             self.contiguousSelectionMarksAroundVal(self._toVal(scenePos.x()))
 
+    def updateCursorForEvent(self, event):
+        if event.modifiers() == QtCore.Qt.ShiftModifier:
+            self.setCursor(QtCore.Qt.CrossCursor)
+        elif event.modifiers() == QtCore.Qt.AltModifier:
+            self.setCursor(QtCore.Qt.SizeHorCursor)
+        else:
+            self.unsetCursor()
+
+    def leaveEvent(self, event):
+        self.unsetCursor()
+
     def keyPressEvent(self, event):
         """Catch event and emit signal so something else can handle event."""
+        self.updateCursorForEvent(event)
         self.keyPress.emit(event)
         event.accept()
 
     def keyReleaseEvent(self, event):
         """Catch event and emit signal so something else can handle event."""
+        self.unsetCursor()
         self.keyRelease.emit(event)
         event.accept()
 

@@ -333,7 +333,7 @@ def predict_subprocess(
 
     # Make path where we'll save predictions
     output_path = ".".join(
-        (video.filename, datetime.now().strftime("%y%m%d_%H%M%S"), "predictions.h5",)
+        (video.filename, datetime.now().strftime("%y%m%d_%H%M%S"), "predictions.slp",)
     )
 
     for job_path in trained_job_paths:
