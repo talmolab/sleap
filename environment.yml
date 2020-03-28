@@ -5,8 +5,8 @@ dependencies:
 - attrs
 - jsonpickle=1.2
 - networkx
-- cudatoolkit=10.1.*
-- cudnn
+- tensorflow=2.1
+- tensorboard=2.1
 - scikit-learn
 - h5py
 - pandas
@@ -18,7 +18,6 @@ dependencies:
 - python-rapidjson
 - pip
 - pip:
-    - tensorflow==2.1
     - opencv-python-headless==3.4.1.15
     - PySide2>=5.12.0
     - imgaug==0.3.0

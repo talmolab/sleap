@@ -23,7 +23,6 @@ requirements:
     - attrs
     - jsonpickle=1.2
     - networkx
-    - tensorflow-gpu=2.0
     - scikit-learn
     - h5py
     - pandas
@@ -41,7 +40,6 @@ requirements:
     - attrs
     - jsonpickle=1.2
     - networkx
-    - tensorflow-gpu=2.0
     - scikit-learn
     - h5py
     - pandas
