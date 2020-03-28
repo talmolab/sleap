@@ -5,7 +5,7 @@ dependencies:
 - attrs
 - jsonpickle=1.2
 - networkx
-- tensorflow=2.1
+- tensorflow-gpu=2.1
 - tensorboard=2.1
 - scikit-learn
 - h5py
