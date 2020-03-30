@@ -1181,9 +1181,9 @@ class MainWindow(QMainWindow):
             values are {video: list of frame indices} dictionaries.
         """
 
-        def remove_user_labeled(
-            video, frame_idxs, user_labeled_frames=self.labels.user_labeled_frames
-        ):
+        user_labeled_frames = self.labels.user_labeled_frames
+
+        def remove_user_labeled(video, frame_idxs):
             if len(frame_idxs) == 0:
                 return frame_idxs
             video_user_labeled_frame_idxs = {
@@ -1215,6 +1215,19 @@ class MainWindow(QMainWindow):
             )
             for video in self.labels.videos
         }
+
+        if len(self.labels.videos) > 1:
+            selection["random_video"] = {
+                current_video: remove_user_labeled(
+                    current_video, random.sample(range(current_video.frames), min(20, current_video.frames))
+                )
+            }
+
+        if user_labeled_frames:
+            selection["user"] = {
+                video: [lf.frame_idx for lf in user_labeled_frames if lf.video == video]
+                for video in self.labels.videos
+            }
 
         return selection
 

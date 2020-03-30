@@ -143,15 +143,23 @@ class LearningDialog(QtWidgets.QDialog):
 
             total_random = 0
             total_suggestions = 0
+            total_user = 0
+            random_video = 0
             clip_length = 0
             video_length = 0
 
             # Determine which options are available given _frame_selection
             if "random" in self._frame_selection:
                 total_random = count_total_frames(self._frame_selection["random"])
+            if "random_video" in self._frame_selection:
+                random_video = count_total_frames(self._frame_selection["random_video"])
             if "suggestions" in self._frame_selection:
                 total_suggestions = count_total_frames(
                     self._frame_selection["suggestions"]
+                )
+            if "user" in self._frame_selection:
+                total_user = count_total_frames(
+                    self._frame_selection["user"]
                 )
             if "clip" in self._frame_selection:
                 clip_length = count_total_frames(self._frame_selection["clip"])
@@ -168,10 +176,18 @@ class LearningDialog(QtWidgets.QDialog):
             prediction_options.append(option)
             default_option = option
 
+            if random_video > 0:
+                option = f"random frames in current video ({random_video} frames)"
+                prediction_options.append(option)
+
             if total_suggestions > 0:
                 option = f"suggested frames ({total_suggestions} total frames)"
                 prediction_options.append(option)
                 default_option = option
+
+            if total_user > 0:
+                option = f"user labeled frames ({total_user} total frames)"
+                prediction_options.append(option)
 
             if clip_length > 0:
                 option = f"selected clip ({clip_length} frames)"
