@@ -127,4 +127,17 @@ for:
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda upload --force %BUILD_DIR%\win-64\*.tar.bz2)
     - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda logout)
 #    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-   
+
+# Deploy "dev" builds if develop branch is tagged
+-
+  branches:
+    only:
+      - develop
+  deploy_script:
+    # Deploy wheel to PyPi
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (python setup.py bdist_wheel)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (python -m twine upload dist/* --non-interactive --skip-existing --disable-progress-bar)
+    # Deploy (Windows) Conda package to anaconda sleap channel
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (conda build .conda --output-folder %BUILD_DIR%)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda upload --force %BUILD_DIR%\win-64\*.tar.bz2 --label dev)
+    - cmd: IF "%APPVEYOR_REPO_TAG%" == "true" (anaconda logout)

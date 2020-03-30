@@ -118,3 +118,25 @@ def test_json_v1(tmpdir, centered_pair_labels):
     # Make sure we can read the file we just wrote
     y = disp.read(filename)
     assert len(y.labeled_frames) == len(centered_pair_labels.labeled_frames)
+
+
+def test_matching_adaptor():
+    from sleap.io.format import read
+
+    read(
+        "tests/data/hdf5_format_v1/centered_pair_predictions.h5",
+        for_object="labels",
+        as_format="*"
+    )
+
+    read(
+        "tests/data/json_format_v1/centered_pair.json",
+        for_object="labels",
+        as_format="*"
+    )
+
+    # read(
+    #     "tests/data/mat/labels.mat",
+    #     for_object="labels",
+    #     as_format="*"
+    # )

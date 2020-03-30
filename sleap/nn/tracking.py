@@ -722,6 +722,8 @@ class TrackCleaner:
         Returns:
             None; modifies frames in place.
         """
+        if not frames:
+            return
 
         frames.sort(key=lambda lf: lf.frame_idx)
 
@@ -847,7 +849,7 @@ def retrack():
         output_path = args.output
     else:
         out_dir = os.path.dirname(args.data_path)
-        out_name = os.path.basename(args.data_path) + f".{tracker.get_name()}.h5"
+        out_name = os.path.basename(args.data_path) + f".{tracker.get_name()}.slp"
         output_path = os.path.join(out_dir, out_name)
 
     print(f"Saving: {output_path}")

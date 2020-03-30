@@ -32,11 +32,11 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
     @property
     def default_ext(self):
-        return "h5"
+        return "slp"
 
     @property
     def all_exts(self):
-        return ["h5", "hdf5"]
+        return ["slp", "h5", "hdf5"]
 
     @property
     def name(self):

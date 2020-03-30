@@ -20,28 +20,15 @@ source:
 requirements:
   host:
     - python=3.6
-    - attrs
-    - jsonpickle=1.2
-    - networkx
-    - tensorflow-gpu=2.0
-    - scikit-learn
-    - h5py
-    - pandas
-    - Pillow
-    - Shapely
-    - psutil
-    - pyzmq
-    - pyyaml
-    - python-rapidjson
     - pip
-
 
   run:
     - python=3.6
     - attrs
     - jsonpickle=1.2
     - networkx
-    - tensorflow-gpu=2.0
+    - tensorflow-gpu=2.1
+    - tensorboard=2.1
     - scikit-learn
     - h5py
     - pandas
