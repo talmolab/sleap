@@ -1857,7 +1857,14 @@ class AddMissingInstanceNodes(EditCommand):
 
     @classmethod
     def add_best_nodes(cls, context, instance, visible):
+        # Try placing missing nodes using a "template" instance
         cls.add_nodes_from_template(context, instance, visible)
+
+        # If the "template" instance has missing nodes (i.e., a node that isn't
+        # labeled on any of the instances we used to generate the template),
+        # then adding nodes from the template may still result in missing nodes.
+        # So we'll use random placement for anything that's still missing.
+        cls.add_random_nodes(context, instance, visible)
 
     @classmethod
     def add_random_nodes(cls, context, instance, visible):

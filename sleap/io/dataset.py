@@ -763,26 +763,38 @@ class Labels(MutableSequence):
 
     def get_template_instance_points(self, skeleton: Skeleton):
         if not hasattr(self, "_template_instance_points"):
-            self._template_instance_points = None
+            self._template_instance_points = dict()
 
-        # Use cache unless there are a small number of labeled frames so far
-        # or we don't have a cached template instance yet.
-        if self._template_instance_points is None or len(self.labeled_frames) < 100:
+        # Use cache unless there are a small number of labeled frames so far, or
+        # we don't have a cached template instance yet or the skeleton has changed.
 
+        rebuild_template = False
+        if len(self.labeled_frames) < 100:
+            rebuild_template = True
+        elif skeleton not in self._template_instance_points:
+            rebuild_template = True
+        elif skeleton.nodes != self._template_instance_points[skeleton]["nodes"]:
+            rebuild_template = True
+
+        if rebuild_template:
             # Make sure there are some labeled frames
             if self.labeled_frames and any(self.instances()):
                 from sleap.info import align
 
-                first_n_instances = itertools.islice(self.instances(), 1000)
+                first_n_instances = itertools.islice(
+                    self.instances(skeleton=skeleton), 1000
+                )
                 template_points = align.get_template_points_array(first_n_instances)
-                self._template_instance_points = template_points
+                self._template_instance_points[skeleton] = dict(
+                    points=template_points, nodes=skeleton.nodes,
+                )
             else:
                 # No labeled frames so use force-directed graph layout
                 import networkx as nx
 
                 node_positions = nx.spring_layout(G=skeleton.graph, scale=50)
 
-                self._template_instance_points = np.stack(
+                template_points = np.stack(
                     [
                         node_positions[node]
                         if node in node_positions
@@ -790,8 +802,11 @@ class Labels(MutableSequence):
                         for node in skeleton.nodes
                     ]
                 )
+                self._template_instance_points[skeleton] = dict(
+                    points=template_points, nodes=skeleton.nodes,
+                )
 
-        return self._template_instance_points
+        return self._template_instance_points[skeleton]["points"]
 
     # Methods for tracks
 
