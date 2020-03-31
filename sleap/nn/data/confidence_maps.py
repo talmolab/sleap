@@ -273,3 +273,82 @@ class InstanceConfidenceMapGenerator:
             generate_confmaps, num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
         return output_ds
+
+
+@attr.s(auto_attribs=True)
+class SingleInstanceConfidenceMapGenerator:
+    """Transformer to generate single-instance confidence maps.
+
+    Attributes:
+        sigma: Standard deviation of the 2D Gaussian distribution sampled to generate
+            confidence maps. This defines the spread in units of the input image's grid,
+            i.e., it does not take scaling in previous steps into account.
+        output_stride: Relative stride of the generated confidence maps. This is
+            effectively the reciprocal of the output scale, i.e., increase this to
+            generate confidence maps that are smaller than the input images.
+    """
+
+    sigma: float = 1.0
+    output_stride: int = 1
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return ["image", "instances"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return self.input_keys + ["points", "confidence_maps"]
+
+    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains the generated confidence maps.
+
+        Args:
+            input_ds: A dataset with elements that contain the keys "instances" and
+            "image".
+
+        Returns:
+            A `tf.data.Dataset` with the same keys as the input, as well as
+            "confidence_maps" containing the generated confidence maps.
+
+        Notes:
+            The output stride is relative to the current scale of the image. To map
+            points on the confidence maps to the raw image, first multiply them by the
+            output stride, and then scale the x- and y-coordinates by the "scale" key.
+
+            Importantly, the sigma will be proportional to the current image grid, not
+            the original grid prior to scaling operations.
+        """
+        # Infer image dimensions to generate sampling grid.
+        test_example = next(iter(input_ds))
+        image_height = test_example["image"].shape[0]
+        image_width = test_example["image"].shape[1]
+
+        # Generate sampling grid vectors.
+        xv, yv = make_grid_vectors(
+            image_height=image_height,
+            image_width=image_width,
+            output_stride=self.output_stride,
+        )
+
+        def generate_confmaps(example):
+            """Local processing function for dataset mapping."""
+            # Pull out first instance as (n_nodes, 2) tensor.
+            example["points"] = tf.gather(example["instance"], 0, axis=0)
+
+            # Generate confidence maps.
+            example["confidence_maps"] = make_confmaps(
+                example["points"],
+                xv=xv,
+                yv=yv,
+                sigma=self.sigma,
+            )
+
+            return example
+
+        # Map transformation.
+        output_ds = input_ds.map(
+            generate_confmaps, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return output_ds
