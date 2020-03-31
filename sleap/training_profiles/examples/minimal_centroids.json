@@ -1,0 +1,73 @@
+{
+    // "labels_filename": null,
+    // "save_dir": null,
+    // "run_name": null,
+
+    "model": {
+        "output_type": 2, // Centroid
+        "backbone_name": "UDenseNet",
+        "backbone": {
+            "stem_stride": 1,
+            "dense_blocks": [2, 4],
+            "output_scale": 1.0,
+            "n_heads": 1,
+            "head_filters": 32
+        }
+    },
+    "trainer": {
+        // Data generation:
+        // "val_size": 0.1,
+        "shuffle": true,
+        "shuffle_buffer_size": 256,
+        "scale": 0.25,
+        // "sigma": 5.0,
+        // "instance_crop": false,
+        // "bounding_box_size": 0,
+        // "instance_crop_use_ctr_node": false,
+        // "instance_crop_ctr_node_ind": 0,
+        // "instance_crop_padding": 0,
+        
+        // Training loop:
+        "batch_size": 8,
+        "num_epochs": 100,
+        // "steps_per_epoch": -1,
+        // "val_steps_per_epoch": -1,
+        
+        // Augmentation:
+        "augment_rotate": true,
+        "augment_rotation": 180.0,
+        // "augment_scale": false,
+        // "augment_scale_min": 0.9,
+        // "augment_scale_max": 1.1,
+        // "augment_uniform_noise": false,
+        // "augment_uniform_noise_min_val": 0.0,
+        // "augment_uniform_noise_max_val": 0.1,
+        // "augment_gaussian_noise": false,
+        // "augment_gaussian_noise_mean": 0.05,
+        // "augment_gaussian_noise_stddev": 0.1,
+        
+        // Optimization:
+        // "optimizer": "adam",
+        // "amsgrad": true,
+        "learning_rate": 1e-3,
+
+        // Training callbacks:
+        // "reduce_lr_on_plateau": true,
+        // "reduce_lr_min_delta": 1e-6,
+        // "reduce_lr_factor": 0.5,
+        // "reduce_lr_patience": 5,
+        // "reduce_lr_cooldown": 3,
+        // "reduce_lr_min_lr": 1e-8,
+        "early_stopping": true,
+        "early_stopping_min_delta": 1e-8,
+        "early_stopping_patience": 10,
+        // "monitor_metric_name": "val_loss",
+        
+        // Checkpointing callbacks:
+        "csv_logging": true,
+        // "csv_log_filename": "training_log.csv",
+        // "save_every_epoch": false,
+        "save_best_val": true,
+        "save_final_model": false
+    }
+}

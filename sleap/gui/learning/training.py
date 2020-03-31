@@ -143,16 +143,22 @@ class LearningDialog(QtWidgets.QDialog):
 
             total_random = 0
             total_suggestions = 0
+            total_user = 0
+            random_video = 0
             clip_length = 0
             video_length = 0
 
             # Determine which options are available given _frame_selection
             if "random" in self._frame_selection:
                 total_random = count_total_frames(self._frame_selection["random"])
+            if "random_video" in self._frame_selection:
+                random_video = count_total_frames(self._frame_selection["random_video"])
             if "suggestions" in self._frame_selection:
                 total_suggestions = count_total_frames(
                     self._frame_selection["suggestions"]
                 )
+            if "user" in self._frame_selection:
+                total_user = count_total_frames(self._frame_selection["user"])
             if "clip" in self._frame_selection:
                 clip_length = count_total_frames(self._frame_selection["clip"])
             if "video" in self._frame_selection:
@@ -168,10 +174,18 @@ class LearningDialog(QtWidgets.QDialog):
             prediction_options.append(option)
             default_option = option
 
+            if random_video > 0:
+                option = f"random frames in current video ({random_video} frames)"
+                prediction_options.append(option)
+
             if total_suggestions > 0:
                 option = f"suggested frames ({total_suggestions} total frames)"
                 prediction_options.append(option)
                 default_option = option
+
+            if total_user > 0:
+                option = f"user labeled frames ({total_user} total frames)"
+                prediction_options.append(option)
 
             if clip_length > 0:
                 option = f"selected clip ({clip_length} frames)"
@@ -264,7 +278,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     def get_most_recent_pipeline_trained(self) -> Text:
         recent_cfg_info = self._cfg_getter.get_first()
-        if recent_cfg_info:
+        if recent_cfg_info and recent_cfg_info.head_name:
             if recent_cfg_info.head_name in ("centroid", "centered_instance"):
                 return "top-down"
             if recent_cfg_info.head_name in ("multi_instance"):
@@ -633,11 +647,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         model_cfg = utils.make_model_config_from_key_val_dict(
             key_val_dict=self.form_widgets["model"].get_form_data()
         )
-        rf_size = utils.receptive_field_size_from_model_cfg(model_cfg)
+
         rf_image_scale = data_form_data.get("data.preprocessing.input_scaling", 1.0)
 
         if self._receptive_field_widget:
-            self._receptive_field_widget.setFieldSize(rf_size, scale=rf_image_scale)
+            self._receptive_field_widget.setModelConfig(model_cfg, scale=rf_image_scale)
             self._receptive_field_widget.repaint()
 
     def update_file_list(self):

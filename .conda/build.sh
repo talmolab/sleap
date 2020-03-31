@@ -11,7 +11,8 @@ export PIP_NO_INDEX=False
 export PIP_NO_DEPENDENCIES=False
 export PIP_IGNORE_INSTALLED=False
 
-pip install cattrs==1.0.0rc opencv-python-headless==3.4.1.15 PySide2==5.12.0 imgaug==0.3.0 qimage2ndarray==1.8 imgstore jsmin
+pip install cattrs==1.0.0rc0 opencv-python-headless==3.4.1.15 "PySide2>=5.12.0,<=5.14.1" imgaug==0.3.0 qimage2ndarray==1.8 imgstore jsmin seaborn
+#pip install tensorflow==2.1
 
 pip install setuptools-scm
 

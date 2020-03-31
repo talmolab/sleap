@@ -39,11 +39,11 @@ from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
-
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
-from sleap.gui.overlays.anchors import NegativeAnchorOverlay
+
+from sleap.prefs import prefs
 
 
 class MainWindow(QMainWindow):
@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = "Line"
         self.state["fit"] = False
-        self.state["color predicted"] = False
+        self.state["color predicted"] = prefs["color predicted"]
 
         self._initialize_gui()
 
@@ -258,6 +258,12 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
+            "import_dlc",
+            "DeepLabCut dataset...",
+            self.commands.importDLC,
+        )
+        add_menu_item(
+            import_types_menu,
             "import_dpk",
             "DeepPoseKit dataset...",
             self.commands.importDPK,
@@ -285,6 +291,14 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
+
+        fileMenu.addSeparator()
+        add_menu_item(
+            fileMenu,
+            "export analysis",
+            "Export Analysis HDF5...",
+            self.commands.exportAnalysisFile,
+        )
 
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "close", "Quit", self.close)
@@ -372,7 +386,7 @@ class MainWindow(QMainWindow):
             key="distinctly_color",
         )
 
-        self.state["palette"] = "standard"
+        self.state["palette"] = prefs["palette"]
         self.state["distinctly_color"] = "instances"
 
         viewMenu.addSeparator()
@@ -525,20 +539,6 @@ class MainWindow(QMainWindow):
             lambda: self.showLearningDialog("inference"),
         )
 
-        # predictionMenu.addSeparator()
-        # add_menu_item(
-        #     predictionMenu,
-        #     "negative sample",
-        #     "Mark Negative Training Sample...",
-        #     self.commands.markNegativeAnchor,
-        # )
-        # add_menu_item(
-        #     predictionMenu,
-        #     "clear negative samples",
-        #     "Clear Current Frame Negative Samples",
-        #     self.commands.clearFrameNegativeAnchors,
-        # )
-
         predictionMenu.addSeparator()
         add_menu_item(
             predictionMenu,
@@ -603,7 +603,7 @@ class MainWindow(QMainWindow):
         ############
 
         helpMenu = self.menuBar().addMenu("Help")
-        helpMenu.addAction("Keyboard Reference", self.openKeyRef)
+        helpMenu.addAction("Keyboard Shortcuts", self.openKeyRef)
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""
@@ -813,7 +813,6 @@ class MainWindow(QMainWindow):
     def load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
-        self.overlays["negative"] = NegativeAnchorOverlay(self.labels, self.player)
         self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
         self.overlays["instance"] = InstanceOverlay(
             self.labels, self.player, self.state
@@ -843,7 +842,7 @@ class MainWindow(QMainWindow):
             )
 
         # Set defaults
-        self.state["trail_length"] = 0
+        self.state["trail_length"] = prefs["trail length"]
 
         # Emit signals for default that may have been set earlier
         self.state.emit("palette")
@@ -1055,6 +1054,7 @@ class MainWindow(QMainWindow):
                     message += (
                         f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
                     )
+                    message += " in video"
 
         self.statusBar().showMessage(message)
 
@@ -1181,9 +1181,9 @@ class MainWindow(QMainWindow):
             values are {video: list of frame indices} dictionaries.
         """
 
-        def remove_user_labeled(
-            video, frame_idxs, user_labeled_frames=self.labels.user_labeled_frames
-        ):
+        user_labeled_frames = self.labels.user_labeled_frames
+
+        def remove_user_labeled(video, frame_idxs):
             if len(frame_idxs) == 0:
                 return frame_idxs
             video_user_labeled_frame_idxs = {
@@ -1215,6 +1215,19 @@ class MainWindow(QMainWindow):
             )
             for video in self.labels.videos
         }
+
+        if len(self.labels.videos) > 1:
+            selection["random_video"] = {
+                current_video: remove_user_labeled(
+                    current_video, random.sample(range(current_video.frames), min(20, current_video.frames))
+                )
+            }
+
+        if user_labeled_frames:
+            selection["user"] = {
+                video: [lf.frame_idx for lf in user_labeled_frames if lf.video == video]
+                for video in self.labels.videos
+            }
 
         return selection
 

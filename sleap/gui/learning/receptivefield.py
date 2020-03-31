@@ -1,4 +1,6 @@
 from sleap import Video
+from sleap.gui.learning import utils
+from sleap.nn.config import ModelConfig
 from sleap.gui.widgets.video import GraphicsView
 
 from typing import Optional, Text
@@ -14,11 +16,12 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
 
         self._field_image_widget = ReceptiveFieldImageWidget()
 
-        self._info_text = (
-            f"Receptive Field for {head_name}:<br />"
+        self._info_text_header = (
+            f"<p>Receptive Field for {head_name}:</p>"
             if head_name
-            else "Receptive Field:<br />"
+            else "<p>Receptive Field:</p>"
         )
+
         self._info_widget = QtWidgets.QLabel("")
 
         self.layout.addWidget(self._field_image_widget)
@@ -27,9 +30,50 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
-    def setFieldSize(self, size, scale):
-        self._info_widget.setText(self._info_text + f"{size} pixels")
-        self._field_image_widget.setFieldSize(size, scale)
+    def getInfoText(
+        self, size, scale, max_stride, down_blocks, convs_per_block, kernel_size
+    ) -> Text:
+        result = self._info_text_header
+        if size:
+            result += f"<p><i>{size} pixels</i></p>"
+        else:
+            result += f"<p><i>Unable to determine size</i></p>"
+
+        result += f"""
+        <p>Receptive field size is a function<br />
+        of the number of down blocks ({down_blocks}), the<br />
+        number of convolutions per block ({convs_per_block}),<br />
+        and the convolution kernel size ({kernel_size}).</p>
+
+        <p>You can control the number of down<br />
+        blocks by setting the <b>Max Stride</b> ({max_stride}).</p>
+
+        <p>The number of convolutions per block<br />
+        and the kernel size are currently fixed<br />
+        by your choice of backbone.</p>
+
+        <p>You can also control the receptive<br />
+        field size relative to the original<br />
+        image by adjusting the <b>Input Scaling</b> ({scale}).</p>
+        """
+
+        return result
+
+    def setModelConfig(self, model_cfg: ModelConfig, scale: float):
+        rf_info = utils.receptive_field_info_from_model_cfg(model_cfg)
+
+        self._info_widget.setText(
+            self.getInfoText(
+                size=rf_info["size"],
+                scale=scale,
+                max_stride=rf_info["max_stride"],
+                down_blocks=rf_info["down_blocks"],
+                convs_per_block=rf_info["convs_per_block"],
+                kernel_size=rf_info["kernel_size"],
+            )
+        )
+
+        self._field_image_widget.setFieldSize(rf_info["size"] or 0, scale)
 
     def setImage(self, *args, **kwargs):
         self._field_image_widget.setImage(*args, **kwargs)
@@ -64,7 +108,7 @@ class ReceptiveFieldImageWidget(GraphicsView):
         # Now draw the viewport
         return super(ReceptiveFieldImageWidget, self).viewportEvent(event)
 
-    def setFieldSize(self, size: Optional[int] = None, scale: int = 1.0):
+    def setFieldSize(self, size: Optional[int] = None, scale: float = 1.0):
         if size is not None:
             self._box_size = size
             self._scale = scale

@@ -31,3 +31,9 @@ show edges: Ctrl+Shift+Tab
 show labels: Ctrl+Tab
 show trails: 
 transpose: Ctrl+T
+frame next: Right
+frame prev: Left
+frame next medium step: Down
+frame prev medium step: Up
+frame next large step: Space
+frame prev large step: /

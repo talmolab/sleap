@@ -129,26 +129,39 @@ def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3)
     return int(rf)
 
 
-def receptive_field_size_from_model_cfg(model_cfg: ModelConfig) -> Optional[int]:
+def receptive_field_info_from_model_cfg(model_cfg: ModelConfig) -> dict:
+    rf_info = dict(
+        size=None,
+        max_stride=None,
+        down_blocks=None,
+        convs_per_block=None,
+        kernel_size=None,
+    )
+
     try:
         model = Model.from_config(model_cfg, Skeleton())
     except ZeroDivisionError:
-        return None
+        # Unable to create model from these config parameters
+        return rf_info
+
+    if hasattr(model_cfg.backbone.which_oneof(), "max_stride"):
+        rf_info["max_stride"] = model_cfg.backbone.which_oneof().max_stride
 
     if hasattr(model.backbone, "down_convs_per_block"):
-        convs_per_block = model.backbone.down_convs_per_block
+        rf_info["convs_per_block"] = model.backbone.down_convs_per_block
     elif hasattr(model.backbone, "convs_per_block"):
-        convs_per_block = model.backbone.convs_per_block
-    else:
-        return None
+        rf_info["convs_per_block"] = model.backbone.convs_per_block
 
     if hasattr(model.backbone, "kernel_size"):
-        kernel_size = model.backbone.kernel_size
-    else:
-        return None
+        rf_info["kernel_size"] = model.backbone.kernel_size
 
-    return compute_rf(
-        down_blocks=model.backbone.down_blocks,
-        convs_per_block=convs_per_block,
-        kernel_size=kernel_size,
-    )
+    rf_info["down_blocks"] = model.backbone.down_blocks
+
+    if rf_info["down_blocks"] and rf_info["convs_per_block"] and rf_info["kernel_size"]:
+        rf_info["size"] = compute_rf(
+            down_blocks=rf_info["down_blocks"],
+            convs_per_block=rf_info["convs_per_block"],
+            kernel_size=rf_info["kernel_size"],
+        )
+
+    return rf_info

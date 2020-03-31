@@ -20,13 +20,15 @@ Social LEAP Estimates Animal Pose (SLEAP)
 
 **S**\ ocial **L**\ EAP **E**\ stimates **A**\ nimal **P**\ ose (**SLEAP**) is a framework for multi-animal
 body part position estimation via deep learning. It is the successor to LEAP_. **SLEAP** is written entirely in
-Python, supports multi-animal pose estimation, animal instance tracking, and a labeling/training GUI that
+Python, supports multi-animal pose estimation, animal instance tracking, and comes with a labeling/training GUI that
 supports active learning.
 
 .. _LEAP: https://github.com/talmo/leap
 
-Research
---------
-If you use **SLEAP** in your research please acknowledge ... 
+SLEAP is released under the following license:
 
+If you use **SLEAP** in your research, cite `Pereira et al. Nature Methods 2019`_ and `sleap.ai`_.
+
+.. _Pereira et al. Nature Methods 2019: https://www.nature.com/articles/s41592-018-0234-5
+.. _sleap.ai: https://sleap.ai
 

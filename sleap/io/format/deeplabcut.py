@@ -89,6 +89,7 @@ class LabelsDeepLabCutAdaptor(Adaptor):
         # the image filenames in the csv may not match where the user has them
         # so we'll change the directory to match where the user has the csv
         def fix_img_path(img_dir, img_filename):
+            img_filename = img_filename.replace("\\", "/")
             img_filename = os.path.basename(img_filename)
             img_filename = os.path.join(img_dir, img_filename)
             return img_filename
@@ -96,14 +97,8 @@ class LabelsDeepLabCutAdaptor(Adaptor):
         img_dir = os.path.dirname(filename)
         img_files = list(map(lambda f: fix_img_path(img_dir, f), img_files))
 
-        # we'll put the new imgstore in the same directory as the current csv
-        imgstore_name = os.path.join(os.path.dirname(filename), "sleap_video")
-
         # create the imgstore (or open if it already exists)
-        if os.path.exists(imgstore_name):
-            video = Video.from_filename(imgstore_name)
-        else:
-            video = Video.imgstore_from_filenames(img_files, imgstore_name)
+        video = Video.from_image_filenames(img_files)
 
         labels = []
 

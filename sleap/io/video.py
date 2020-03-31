@@ -10,8 +10,11 @@ import numpy as np
 import attr
 import cattr
 import logging
+import multiprocessing
 
 from typing import Iterable, List, Optional, Tuple, Union
+
+from sleap.util import json_loads, json_dumps
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +47,7 @@ class HDF5Video:
     def __attrs_post_init__(self):
         """Called by attrs after __init__()."""
 
+        self.enable_source_video = True
         self._test_frame_ = None
 
         self.__original_to_current_frame_idx = dict()
@@ -82,6 +86,13 @@ class HDF5Video:
                     original_idx = original_idx_lists[current_idx]
                     self.__original_to_current_frame_idx[original_idx] = current_idx
 
+            source_video_group = f"{base_dataset_path}/source_video"
+            if source_video_group in self.__file_h5:
+                d = json_loads(
+                    self.__file_h5.require_group(source_video_group).attrs["json"]
+                )
+                self._source_video_ = Video.cattr().structure(d, Video)
+
         else:
             self.__dataset_h5 = None
 
@@ -110,6 +121,14 @@ class HDF5Video:
         # Return stored test frame
         return self._test_frame_
 
+    @property
+    def enable_source_video(self):
+        return self._enable_source_video
+
+    @enable_source_video.setter
+    def enable_source_video(self, val):
+        self._enable_source_video = val
+
     def matches(self, other: "HDF5Video") -> bool:
         """
         Check if attributes match those of another video.
@@ -129,12 +148,11 @@ class HDF5Video:
 
     def close(self):
         """Closes the HDF5 file object (if it's open)."""
-        if self.__file_h5:
-            try:
-                self.__file_h5.close()
-            except:
-                pass
-            self.__file_h5 = None
+        try:
+            self.__file_h5.close()
+        except:
+            pass
+        self.__file_h5 = None
 
     def __del__(self):
         """Releases file object."""
@@ -193,6 +211,18 @@ class HDF5Video:
         # TODO
         pass
 
+    def _try_frame_from_source_video(self, idx) -> np.ndarray:
+        try:
+            return self._source_video.get_frame(idx)
+        except:
+            raise ValueError(f"Frame index {idx} not in original index.")
+
+    @property
+    def _source_video(self) -> "HDF5Video":
+        if self.enable_source_video and hasattr(self, "_source_video_"):
+            return self._source_video_
+        return None
+
     def get_frame(self, idx) -> np.ndarray:
         """
         Get a frame from the underlying HDF5 video data.
@@ -208,7 +238,7 @@ class HDF5Video:
             if idx in self.__original_to_current_frame_idx:
                 idx = self.__original_to_current_frame_idx[idx]
             else:
-                raise ValueError(f"Frame index {idx} not in original index.")
+                return self._try_frame_from_source_video(idx)
 
         frame = self.__dataset_h5[idx]
 
@@ -254,6 +284,12 @@ class MediaVideo:
     _detect_grayscale = False
     _reader_ = None
     _test_frame_ = None
+
+    @property
+    def __lock(self):
+        if not hasattr(self, "_lock"):
+            self._lock = multiprocessing.RLock()
+        return self._lock
 
     @grayscale.default
     def __grayscale_default__(self):
@@ -355,10 +391,12 @@ class MediaVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
-            self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
-        ret, frame = self.__reader.read()
+        with self.__lock:
+            if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
+                self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
+
+            ret, frame = self.__reader.read()
 
         if grayscale is None:
             grayscale = self.grayscale
@@ -672,12 +710,25 @@ class SingleImageVideo:
         self.test_frame = None
 
     def _load_idx(self, idx):
-        img = cv2.imread(self.filenames[idx])
+        img = cv2.imread(self._get_filename(idx))
 
         if img.shape[2] == 3:
             # OpenCV channels are in BGR order, so we should convert to RGB
             img = img[:, :, ::-1]
         return img
+
+    def _get_filename(self, idx: int) -> str:
+        f = self.filenames[idx]
+        if os.path.exists(f):
+            return f
+
+        # Try the directory from the "video" file (this works if all the images
+        # are in the same directory with distinctive filenames).
+        f = os.path.join(os.path.dirname(self.filename), os.path.basename(f))
+        if os.path.exists(f):
+            return f
+
+        raise FileNotFoundError(f"Unable to locate file {idx}: {self.filenames[idx]}")
 
     def _load_test_frame(self):
         if self.test_frame is None:
@@ -1002,14 +1053,9 @@ class Video:
         else:
             raise ValueError("Could not detect backend for specified filename.")
 
-        # Only pass through the kwargs that match attributes for the backend
-        attribute_kwargs = {
-            key: val
-            for (key, val) in kwargs.items()
-            if key in attr.fields_dict(backend_class).keys()
-        }
+        kwargs["filename"] = filename
 
-        return cls(backend=backend_class(filename=filename, **attribute_kwargs))
+        return cls(backend=cls.make_specific_backend(backend_class, kwargs))
 
     @classmethod
     def imgstore_from_filenames(
@@ -1201,6 +1247,10 @@ class Video:
             if index_by_original:
                 f.create_dataset(dataset + "/frame_numbers", data=frame_numbers_data)
 
+            source_video_group = f.require_group(dataset + "/source_video")
+            source_video_dict = Video.cattr().unstructure(self)
+            source_video_group.attrs["json"] = json_dumps(source_video_dict)
+
         return self.__class__(
             backend=HDF5Video(
                 filename=path,
@@ -1209,6 +1259,17 @@ class Video:
                 convert_range=False,
             )
         )
+
+    @staticmethod
+    def make_specific_backend(backend_class, kwargs):
+        # Only pass through the kwargs that match attributes for the backend
+        attribute_kwargs = {
+            key: val
+            for (key, val) in kwargs.items()
+            if key in attr.fields_dict(backend_class).keys()
+        }
+
+        return backend_class(**attribute_kwargs)
 
     @staticmethod
     def cattr():
@@ -1227,7 +1288,7 @@ class Video:
             if "file" in x:
                 x["file"] = Video.fixup_path(x["file"])
 
-            return cl(**x)
+            return Video.make_specific_backend(cl, x)
 
         vid_cattr = cattr.Converter()
 

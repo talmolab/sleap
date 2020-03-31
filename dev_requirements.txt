@@ -8,3 +8,4 @@ coveralls
 black
 pre-commit
 jupyterlab
+twine

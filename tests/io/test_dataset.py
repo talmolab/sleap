@@ -581,20 +581,6 @@ def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):
     ]
 
 
-def test_negative_anchors():
-    video = Video.from_filename("foo.mp4")
-    labels = Labels()
-
-    labels.add_negative_anchor(video, 1, (3, 4))
-    labels.add_negative_anchor(video, 1, (7, 8))
-    labels.add_negative_anchor(video, 2, (5, 9))
-
-    assert len(labels.negative_anchors[video]) == 3
-
-    labels.remove_negative_anchors(video, 1)
-    assert len(labels.negative_anchors[video]) == 1
-
-
 def test_load_labels_mat(mat_labels):
     assert len(mat_labels.nodes) == 6
     assert len(mat_labels) == 43
@@ -834,3 +820,7 @@ def test_local_path_save(tmpdir, monkeypatch):
     Labels.save_file(filename=filename, labels=Labels())
 
     assert os.path.exists(os.path.join(tmpdir, filename))
+
+
+def test_slp_file(min_labels_slp, min_labels):
+    assert min_labels.videos[0].filename == min_labels_slp.videos[0].filename
