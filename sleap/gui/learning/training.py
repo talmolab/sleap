@@ -158,9 +158,7 @@ class LearningDialog(QtWidgets.QDialog):
                     self._frame_selection["suggestions"]
                 )
             if "user" in self._frame_selection:
-                total_user = count_total_frames(
-                    self._frame_selection["user"]
-                )
+                total_user = count_total_frames(self._frame_selection["user"])
             if "clip" in self._frame_selection:
                 clip_length = count_total_frames(self._frame_selection["clip"])
             if "video" in self._frame_selection:
@@ -649,11 +647,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         model_cfg = utils.make_model_config_from_key_val_dict(
             key_val_dict=self.form_widgets["model"].get_form_data()
         )
-        rf_size = utils.receptive_field_size_from_model_cfg(model_cfg)
+
         rf_image_scale = data_form_data.get("data.preprocessing.input_scaling", 1.0)
 
         if self._receptive_field_widget:
-            self._receptive_field_widget.setFieldSize(rf_size, scale=rf_image_scale)
+            self._receptive_field_widget.setModelConfig(model_cfg, scale=rf_image_scale)
             self._receptive_field_widget.repaint()
 
     def update_file_list(self):
