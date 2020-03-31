@@ -933,8 +933,8 @@ class SingleInstanceModelTrainer(Trainer):
 
         def visualize_example(example):
             img = example["image"].numpy()
-            cms = example["confidence_maps"].numpy()
-            pts_gt = example["points"].numpy()
+            cms = example["predicted_confidence_maps"].numpy()
+            pts_gt = example["instances"].numpy()[0]
             pts_pr = example["predicted_points"].numpy()
 
             scale = 1.0

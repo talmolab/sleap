@@ -761,6 +761,7 @@ class SingleInstanceConfmapsPipeline:
         pipeline += GlobalPeakFinder(
             confmaps_key="predicted_confidence_maps",
             peaks_key="predicted_points",
+            peak_vals_key="predicted_confidences",
             confmaps_stride=self.single_instance_confmap_head.output_stride,
             peak_threshold=0.2,
         )

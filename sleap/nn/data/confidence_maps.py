@@ -335,7 +335,7 @@ class SingleInstanceConfidenceMapGenerator:
         def generate_confmaps(example):
             """Local processing function for dataset mapping."""
             # Pull out first instance as (n_nodes, 2) tensor.
-            example["points"] = tf.gather(example["instance"], 0, axis=0)
+            example["points"] = tf.gather(example["instances"], 0, axis=0)
 
             # Generate confidence maps.
             example["confidence_maps"] = make_confmaps(
