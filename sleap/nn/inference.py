@@ -623,9 +623,9 @@ class SingleInstancePredictor:
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
-        pipeline += Normalizer.from_config(self.confmap_model.data.preprocessing)
+        pipeline += Normalizer.from_config(self.confmap_config.data.preprocessing)
         pipeline += Resizer.from_config(
-            self.confmap_model.data.preprocessing,
+            self.confmap_config.data.preprocessing,
             # keep_full_image=True,
             points_key=None,
         )
@@ -647,12 +647,11 @@ class SingleInstancePredictor:
 
         pipeline += KeyFilter(
             keep_keys=[
-                "bbox",
                 "scale",
                 "video_ind",
                 "frame_ind",
-                "predicted_instance_points",
-                "predicted_instance_confidence_maps",
+                "predicted_instance",
+                "predicted_instance_confidences",
             ]
         )
 
