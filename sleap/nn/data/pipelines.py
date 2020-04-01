@@ -22,6 +22,7 @@ from sleap.nn.data.instance_cropping import InstanceCropper, PredictedInstanceCr
 from sleap.nn.data.confidence_maps import (
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
+    SingleInstanceConfidenceMapGenerator
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
 from sleap.nn.data.dataset_ops import (
@@ -51,6 +52,7 @@ from sleap.nn.heads import (
     PartAffinityFieldsHead,
     CentroidConfmapsHead,
     CenteredInstanceConfmapsHead,
+    SingleInstanceConfmapsHead
 )
 
 
@@ -64,6 +66,7 @@ TRANSFORMERS = (
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
     PartAffinityFieldsGenerator,
+    SingleInstanceConfidenceMapGenerator,
     Shuffler,
     Batcher,
     Unbatcher,
@@ -644,6 +647,122 @@ class TopdownConfmapsPipeline:
             confmaps_key="predicted_instance_confidence_maps",
             peaks_key="predicted_center_instance_points",
             confmaps_stride=self.instance_confmap_head.output_stride,
+            peak_threshold=0.2,
+        )
+        return pipeline
+
+
+@attr.s(auto_attribs=True)
+class SingleInstanceConfmapsPipeline:
+    """Pipeline builder for single-instance confidence map models.
+
+    Attributes:
+        data_config: Data-related configuration.
+        optimization_config: Optimization-related configuration.
+        single_instance_confmap_head: Instantiated head describing the output confidence
+            maps tensor.
+    """
+
+    data_config: DataConfig
+    optimization_config: OptimizationConfig
+    single_instance_confmap_head: SingleInstanceConfmapsHead
+
+    def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create base pipeline with input data only.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+
+        Returns:
+            A `Pipeline` instance configured to produce input examples.
+        """
+        pipeline = Pipeline(providers=data_provider)
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+        return pipeline
+
+    def make_training_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create full training pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+
+        Returns:
+            A `Pipeline` instance configured to produce all data keys required for
+            training.
+
+        Notes:
+            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys
+            with the appropriate format for the instantiated `tf.keras.Model`.
+        """
+        pipeline = Pipeline(providers=data_provider)
+
+        if self.optimization_config.preload_data:
+            pipeline += Preloader()
+
+        if self.optimization_config.online_shuffling:
+            pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
+
+        pipeline += ImgaugAugmenter.from_config(
+            self.optimization_config.augmentation_config
+        )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+
+        pipeline += SingleInstanceConfidenceMapGenerator(
+            sigma=self.single_instance_confmap_head.sigma,
+            output_stride=self.single_instance_confmap_head.output_stride,
+        )
+
+        if len(data_provider) >= self.optimization_config.batch_size:
+            # Batching before repeating is preferred since it preserves epoch boundaries
+            # such that no sample is repeated within the epoch. But this breaks if there
+            # are fewer samples than the batch size.
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
+            pipeline += Repeater()
+
+        else:
+            pipeline += Repeater()
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size, drop_remainder=True
+            )
+
+        if self.optimization_config.prefetch:
+            pipeline += Prefetcher()
+
+        return pipeline
+
+    def make_viz_pipeline(
+        self, data_provider: Provider, keras_model: tf.keras.Model
+    ) -> Pipeline:
+        """Create visualization pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+            keras_model: A `tf.keras.Model` that can be used for inference.
+
+        Returns:
+            A `Pipeline` instance configured to fetch data and run inference to generate
+            predictions useful for visualization during training.
+        """
+        pipeline = self.make_base_pipeline(data_provider=data_provider)
+        pipeline += Prefetcher()
+        pipeline += Repeater()
+        pipeline += KerasModelPredictor(
+            keras_model=keras_model,
+            model_input_keys="image",
+            model_output_keys="predicted_confidence_maps",
+        )
+        pipeline += GlobalPeakFinder(
+            confmaps_key="predicted_confidence_maps",
+            peaks_key="predicted_points",
+            peak_vals_key="predicted_confidences",
+            confmaps_stride=self.single_instance_confmap_head.output_stride,
             peak_threshold=0.2,
         )
         return pipeline

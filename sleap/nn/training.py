@@ -23,6 +23,7 @@ from sleap.util import get_package_file
 # Config
 from sleap.nn.config import (
     TrainingJobConfig,
+    SingleInstanceConfmapsHeadConfig,
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
@@ -36,6 +37,7 @@ from sleap.nn.config import LabelsConfig
 from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.data.pipelines import (
     Pipeline,
+    SingleInstanceConfmapsPipeline,
     CentroidConfmapsPipeline,
     TopdownConfmapsPipeline,
     BottomUpPipeline,
@@ -439,6 +441,7 @@ PipelineBuilder = TypeVar(
     CentroidConfmapsPipeline,
     TopdownConfmapsPipeline,
     BottomUpPipeline,
+    SingleInstanceConfmapsPipeline,
 )
 
 
@@ -538,41 +541,35 @@ class Trainer(ABC):
 
         # Determine output type to create type-specific model trainer.
         head_config = config.model.heads.which_oneof()
+        trainer_cls = None
         if isinstance(head_config, CentroidsHeadConfig):
-            return CentroidConfmapsModelTrainer(
-                config=config,
-                initial_config=initial_config,
-                data_readers=data_readers,
-                model=model,
-            )
+            trainer_cls = CentroidConfmapsModelTrainer
         elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
-            return TopdownConfmapsModelTrainer(
-                config=config,
-                initial_config=initial_config,
-                data_readers=data_readers,
-                model=model,
-            )
+            trainer_cls = TopdownConfmapsModelTrainer
         elif isinstance(head_config, MultiInstanceConfig):
-            return BottomUpModelTrainer(
-                config=config,
-                initial_config=initial_config,
-                data_readers=data_readers,
-                model=model,
-            )
+            trainer_cls = BottomUpModelTrainer
+        elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
+            trainer_cls = SingleInstanceModelTrainer
         else:
-            # TODO: Trainer for SingleInstanceConfmapsHeadConfig
             raise ValueError(
                 "Model head not specified or configured. Check the config.model.heads"
                 " setting."
             )
 
+        return trainer_cls(
+            config=config,
+            initial_config=initial_config,
+            data_readers=data_readers,
+            model=model,
+        )
+
     @abstractmethod
-    def _update_config():
+    def _update_config(self):
         """Implement in subclasses."""
         pass
 
     @abstractmethod
-    def _setup_pipeline_builder():
+    def _setup_pipeline_builder(self):
         """Implement in subclasses."""
         pass
 
@@ -613,7 +610,6 @@ class Trainer(ABC):
         logger.info(f"  Backbone: {self.model.backbone}")
         logger.info(f"  Max stride: {self.model.maximum_stride}")
         logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
-        # logger.info("  Heads: " + ", ".join([type(head).__name__ for head in self.model.heads]))
         logger.info("  Heads: ")
         for i, head in enumerate(self.model.heads):
             logger.info(f"  heads[{i}] = {head}")
@@ -850,6 +846,105 @@ class CentroidConfmapsModelTrainer(Trainer):
             fig = plot_img(img, dpi=72 * scale, scale=scale)
             plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
             plot_peaks(pts_gt, pts_pr, paired=False)
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(training_viz_ds_iter)),
+                name=f"train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(validation_viz_ds_iter)),
+                name=f"validation",
+            )
+        )
+
+
+@attr.s(auto_attribs=True)
+class SingleInstanceModelTrainer(Trainer):
+    """Trainer for models that output single-instance confidence maps."""
+
+    pipeline_builder: SingleInstanceConfmapsPipeline = attr.ib(init=False)
+
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = 1
+
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(
+                self.data_readers.training_labels_reader.labels.user_instances
+            )
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
+
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(
+                self.data_readers.validation_labels_reader.labels.user_instances
+            )
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
+
+    def _setup_pipeline_builder(self):
+        # Initialize pipeline builder.
+        self.pipeline_builder = SingleInstanceConfmapsPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            single_instance_confmap_head=self.model.heads[0],
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        return ["confidence_maps"]
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader, self.keras_model
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader, self.keras_model
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        def visualize_example(example):
+            img = example["image"].numpy()
+            cms = example["predicted_confidence_maps"].numpy()
+            pts_gt = example["instances"].numpy()[0]
+            pts_pr = example["predicted_points"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plot_peaks(pts_gt, pts_pr, paired=True)
             return fig
 
         self.visualization_callbacks.extend(
