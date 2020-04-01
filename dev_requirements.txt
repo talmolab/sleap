@@ -9,3 +9,4 @@ black
 pre-commit
 jupyterlab
 twine
+PyGithub
