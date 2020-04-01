@@ -8,7 +8,7 @@ from collections import defaultdict
 from typing import Text, Optional, List, Dict
 
 import tensorflow as tf
-
+import numpy as np
 
 import sleap
 from sleap import util
@@ -60,20 +60,23 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
 
     i = 0
     t0 = time.time()
-    while True:
+    done = False
+    while not done:
         try:
             yield next(ds_iter)
         except StopIteration:
-            break
+            done = True
         except Exception as e:
             logger.info(f"ERROR in sample index {i}")
             logger.info(e)
             logger.info("")
         finally:
-            i += 1
+            if not done:
+                i += 1
+
             # Show the current progress (frames, time, fps)
             if progress:
-                if i and i % 1000 == 0:
+                if (i and i % 1000 == 0) or done:
                     elapsed_time = time.time() - t0
                     logger.info(f"Finished {i} frames in {elapsed_time:.2f} seconds")
                     if elapsed_time:
@@ -675,12 +678,15 @@ class SingleInstancePredictor:
             # Create predicted instances from examples in the current frame.
             predicted_instances = []
             for example in frame_examples:
+                points = example["predicted_instance"].numpy()
+                point_confidences = example["predicted_instance_confidences"].numpy()
+
                 predicted_instances.append(
                     sleap.PredictedInstance.from_arrays(
-                        points=example["predicted_instance"],
-                        point_confidences=example["predicted_instance_confidences"],
+                        points=points,
+                        point_confidences=point_confidences,
                         skeleton=skeleton,
-                        instance_score=sum(example["predicted_instance_confidences"]),
+                        instance_score=np.nansum(point_confidences),
                     )
                 )
 
