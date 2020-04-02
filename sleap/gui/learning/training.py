@@ -367,6 +367,8 @@ class LearningDialog(QtWidgets.QDialog):
             predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
             if predict_frames_choice.startswith("current frame"):
                 frames_to_predict = self._frame_selection["frame"]
+            elif predict_frames_choice.startswith("random frames in current video"):
+                frames_to_predict = self._frame_selection["random_video"]
             elif predict_frames_choice.startswith("random"):
                 frames_to_predict = self._frame_selection["random"]
             elif predict_frames_choice.startswith("selected clip"):
@@ -375,6 +377,8 @@ class LearningDialog(QtWidgets.QDialog):
                 frames_to_predict = self._frame_selection["suggestions"]
             elif predict_frames_choice.startswith("entire video"):
                 frames_to_predict = self._frame_selection["video"]
+            elif predict_frames_choice.startswith("user"):
+                frames_to_predict = self._frame_selection["user"]
 
             # Convert [X, Y+1) ranges to [X, Y] ranges for learning cli
             for video, frame_list in frames_to_predict.items():
