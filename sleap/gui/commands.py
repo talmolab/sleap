@@ -219,6 +219,10 @@ class CommandContext(object):
         """Imports LEAP matlab datasets."""
         self.execute(ImportLEAP)
 
+    def importAnalysisFile(self):
+        """Imports SLEAP analysis hdf5 files."""
+        self.execute(ImportAnalysisFile)
+
     def saveProject(self):
         """Show gui to save project (or save as if not yet saved)."""
         self.execute(SaveProject)
@@ -633,6 +637,47 @@ class ImportDeepLabCut(AppCommand):
         return True
 
 
+class ImportAnalysisFile(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+        from sleap.io.format import read
+
+        labels = read(
+            params["filename"],
+            for_object="labels",
+            as_format="analysis",
+            video=params["video"],
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import SLEAP Analysis HDF5...",
+            filter="SLEAP Analysis HDF5 (*.h5 *.hdf5)",
+        )
+
+        if len(filename) == 0:
+            return False
+
+        QtWidgets.QMessageBox(text="Please locate the video for this dataset.").exec_()
+
+        video_param_list = ImportVideos().ask()
+
+        if not video_param_list:
+            return False
+
+        params["filename"] = filename
+        params["video"] = ImportVideos.create_video(video_param_list[0])
+
+        return True
+
+
 class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
@@ -688,11 +733,9 @@ class SaveProjectAs(AppCommand):
 class ExportAnalysisFile(AppCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        from sleap.info.write_tracking_h5 import main as write_analysis
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
-        write_analysis(
-            context.labels, output_path=params["output_path"], all_frames=True
-        )
+        SleapAnalysisAdaptor.write(params["output_path"], context.labels)
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -986,10 +1029,9 @@ class AddVideo(EditCommand):
     def do_action(context: CommandContext, params: dict):
         import_list = params["import_list"]
 
+        new_videos = ImportVideos.create_videos(import_list)
         video = None
-        for import_item in import_list:
-            # Create Video object
-            video = Video.from_filename(**import_item["params"])
+        for video in new_videos:
             # Add to labels
             context.labels.add_video(video)
             context.changestack_push("add video")
@@ -1001,7 +1043,7 @@ class AddVideo(EditCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for adding video to project."""
-        params["import_list"] = ImportVideos().go()
+        params["import_list"] = ImportVideos().ask()
 
         return len(params["import_list"]) > 0
 

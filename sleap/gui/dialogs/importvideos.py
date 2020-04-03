@@ -3,7 +3,7 @@ Interface to handle the UI for importing videos.
 
 Usage:
 
->>> import_list = ImportVideos().go()
+>>> import_list = ImportVideos().ask()
 
 This will show the user a file-selection dialog, and then a second dialog
 to select the import parameters for each file.
@@ -38,6 +38,8 @@ from sleap.gui.dialogs.filedialog import FileDialog
 import h5py
 import qimage2ndarray
 
+from typing import Any, Dict, List
+
 
 class ImportVideos:
     """Class to handle video importing UI."""
@@ -45,7 +47,7 @@ class ImportVideos:
     def __init__(self):
         self.result = []
 
-    def go(self):
+    def ask(self):
         """Runs the import UI.
         
         1. Show file selection dialog.
@@ -67,6 +69,14 @@ class ImportVideos:
             importer.accepted.connect(lambda: importer.get_data(self.result))
             importer.exec_()
         return self.result
+
+    @classmethod
+    def create_videos(cls, import_param_list: List[Dict[str, Any]]) -> List[Video]:
+        return [cls.create_video(import_item) for import_item in import_param_list]
+
+    @staticmethod
+    def create_video(import_item: Dict[str, Any]) -> Video:
+        return Video.from_filename(**import_item["params"])
 
 
 class ImportParamDialog(QDialog):
@@ -531,7 +541,7 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
-    import_list = ImportVideos().go()
+    import_list = ImportVideos().ask()
 
     for import_item in import_list:
         vid = import_item["video_class"](**import_item["params"])

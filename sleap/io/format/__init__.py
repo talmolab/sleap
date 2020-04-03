@@ -4,6 +4,7 @@ from .deepposekit import LabelsDeepPoseKitAdaptor
 from .hdf5 import LabelsV1Adaptor
 from .labels_json import LabelsJsonAdaptor
 from .leap_matlab import LabelsLeapMatlabAdaptor
+from .sleap_analysis import SleapAnalysisAdaptor
 
 from . import adaptor, dispatch, filehandle
 
@@ -18,6 +19,7 @@ all_labels_adaptors = {
     "deeplabcut": LabelsDeepLabCutAdaptor,
     "deepposekit": LabelsDeepPoseKitAdaptor,
     "coco": LabelsCocoAdaptor,
+    "analysis": SleapAnalysisAdaptor,
 }
 
 
