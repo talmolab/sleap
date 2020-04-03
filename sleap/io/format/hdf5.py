@@ -49,6 +49,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             return False
         if file.format_id is not None and file.format_id >= 2:
             return False
+        if "metadata" not in file.file:
+            return False
         return True
 
     def can_write_filename(self, filename: str):
