@@ -773,7 +773,7 @@ class TextOrListWidget(QtWidgets.QWidget):
             return self.list_widget.value()
 
     def setValue(self, val):
-        self.text_widget.setText(val)
+        self.text_widget.setText(str(val))
         self.list_widget.setValue(val)
 
     def set_options(self, *args, **kwargs):

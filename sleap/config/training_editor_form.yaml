@@ -30,7 +30,8 @@ model:
       receptive field size at the cost of network size.
     label: Max Stride
     name: model.backbone.hourglass.max_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   - default: 4
     help: Determines the number of upsampling blocks in the network.
     label: Output Stride
@@ -63,7 +64,8 @@ model:
       receptive field size at the cost of network size.
     label: Max Stride
     name: model.backbone.leap.max_stride
-    type: int
+    type: list
+    options: 2,4,8,16,32,64
   - default: 1
     help: Determines the number of upsampling blocks in the network.
     label: Output Stride
@@ -169,7 +171,8 @@ model:
     help: Stride of the backbone feature activations. These should be <= 32.
     label: Max Stride
     name: model.backbone.resnet.max_stride
-    type: int
+    type: list
+    options: 2,4,8,16,32,64
   - default: 4
     help: Stride of the final output. If the upsampling branch is not defined, the
       output stride is controlled via dilated convolutions or reduced pooling in the
@@ -191,7 +194,8 @@ model:
       receptive field size at the cost of network size.
     label: Max Stride
     name: model.backbone.unet.max_stride
-    type: int
+    type: list
+    options: 2,4,8,16,32,64
   - default: 1
     help: Determines the number of upsampling blocks in the network.
     label: Output Stride
