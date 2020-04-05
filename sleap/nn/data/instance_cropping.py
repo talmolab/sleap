@@ -9,11 +9,32 @@ from sleap.nn.config import InstanceCroppingConfig
 
 
 def find_instance_crop_size(
-    labels: sleap.Labels, padding: int = 0, maximum_stride: int = 2
+    labels: sleap.Labels,
+    padding: int = 0,
+    maximum_stride: int = 2,
+    input_scaling: float = 1.0,
 ) -> int:
+    """Compute the size of the largest instance bounding box from labels.
+
+    Args:
+        labels: A `sleap.Labels` containing user-labeled instances.
+        padding: Integer number of pixels to add to the bounds as margin padding.
+        maximum_stride: Ensure that the returned crop size is divisible by this value.
+            Useful for ensuring that the crop size will not be truncated in a given
+            architecture.
+        input_scaling: Float factor indicating the scale of the input images if any
+            scaling will be done before cropping.
+
+    Returns:
+        An integer crop size denoting the length of the side of the bounding boxes that
+        will contain the instances when cropped.
+
+        This accounts for stride, padding and scaling when ensuring divisibility.
+    """
     max_length = 0.0
     for inst in labels.user_instances:
         pts = inst.points_array
+        pts *= input_scaling
         max_length = np.maximum(max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0]))
         max_length = np.maximum(max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1]))
 

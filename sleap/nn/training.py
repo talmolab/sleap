@@ -981,6 +981,7 @@ class TopdownConfmapsModelTrainer(Trainer):
                 self.data_readers.training_labels,
                 padding=self.config.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=self.model.maximum_stride,
+                input_scaling=self.config.data.preprocessing.input_scaling,
             )
 
         if self.config.optimization.batches_per_epoch is None:
