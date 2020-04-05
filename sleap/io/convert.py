@@ -19,6 +19,9 @@ def main():
         "'h5' or 'json' results in SLEAP dataset "
         "with specified file format.",
     )
+    parser.add_argument(
+        "--video", default="", help="Path to video (if needed for conversion)."
+    )
 
     args = parser.parse_args()
 
@@ -29,11 +32,14 @@ def main():
         print("Input file isn't SLEAP dataset so attempting other importers...")
         from sleap.io.format import read
 
+        video_path = args.video if args.video else None
+
         labels = read(
             args.input_path,
             for_object="labels",
             as_format="*",
             video_callback=video_callback,
+            video=video_path,
         )
 
     if args.format == "analysis":

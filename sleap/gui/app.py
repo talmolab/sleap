@@ -274,6 +274,12 @@ class MainWindow(QMainWindow):
             "LEAP Matlab dataset...",
             self.commands.importLEAP,
         )
+        add_menu_item(
+            import_types_menu,
+            "import_analysis",
+            "SLEAP Analysis HDF5...",
+            self.commands.importAnalysisFile,
+        )
 
         add_menu_item(
             fileMenu,
@@ -1219,7 +1225,10 @@ class MainWindow(QMainWindow):
         if len(self.labels.videos) > 1:
             selection["random_video"] = {
                 current_video: remove_user_labeled(
-                    current_video, random.sample(range(current_video.frames), min(20, current_video.frames))
+                    current_video,
+                    random.sample(
+                        range(current_video.frames), min(20, current_video.frames)
+                    ),
                 )
             }
 

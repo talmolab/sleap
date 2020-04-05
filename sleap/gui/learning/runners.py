@@ -274,9 +274,7 @@ def train_subprocess(
 
         # Build CLI arguments for training
         cli_args = [
-            "python",
-            "-m",
-            "sleap.nn.training",
+            "sleap-train",
             training_job_path,
             labels_filename,
             "--zmq",
@@ -316,7 +314,7 @@ def predict_subprocess(
     waiting_callback: Optional[Callable] = None,
     labels_filename: Optional[str] = None,
 ):
-    cli_args = ["python", "-m", "sleap.nn.inference"]
+    cli_args = ["sleap-track"]
 
     if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
         # No models so we must want to re-track previous predictions

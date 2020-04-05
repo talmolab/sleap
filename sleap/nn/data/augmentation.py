@@ -62,7 +62,7 @@ class ImgaugAugmenter:
         if config.uniform_noise:
             aug_stack.append(
                 iaa.AddElementwise(
-                    value=(config.uniform_noise_min_noise, config.uniform_noise_max_val)
+                    value=(config.uniform_noise_min_val, config.uniform_noise_max_val)
                 )
             )
         if config.gaussian_noise:
