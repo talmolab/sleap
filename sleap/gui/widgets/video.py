@@ -35,7 +35,7 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
 from PySide2.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
-from PySide2.QtGui import QKeyEvent, QMouseEvent
+from PySide2.QtGui import QKeyEvent, QMouseEvent, QKeySequence
 from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import atexit
@@ -225,6 +225,8 @@ class QtVideoPlayer(QWidget):
         self.layout.addWidget(self.splitter)
         self.setLayout(self.layout)
 
+        self._register_shortcuts()
+
         if self.context:
             self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self.show_contextual_menu)
@@ -288,6 +290,48 @@ class QtVideoPlayer(QWidget):
 
             # Display image
             self.view.setImage(qimage)
+
+    def _register_shortcuts(self):
+        self._shortcut_triggers = dict()
+
+        def frame_step(step, enable_shift_selection):
+            if self.video:
+                before_frame_idx = self.state["frame_idx"]
+                self.state.increment("frame_idx", step=step, mod=self.video.frames)
+                # only use shift for selection if not part of shortcut
+                if enable_shift_selection and self._shift_key_down:
+                    self._select_on_possible_frame_movement(before_frame_idx)
+
+        def add_shortcut(key, step):
+            # Register shortcut and have it trigger frame_step action
+            shortcut = QtWidgets.QShortcut(self.shortcuts[key], self)
+            shortcut.activated.connect(lambda x=step: frame_step(x, False))
+            self._shortcut_triggers[key] = shortcut
+
+            # If shift isn't part of shortcut, then we want to allow
+            # shift + shortcut for movement + selection.
+
+            # We use hack of convert to/from the string representation of
+            # shortcut to determine if shift is in shortcut and to add it.
+            no_shift = "Shift" not in shortcut.key().toString()
+
+            if no_shift:
+                # Make shortcut + shift key sequence
+                shortcut_seq_with_shift = QKeySequence(
+                    f"Shift+{shortcut.key().toString()}"
+                )
+
+                # Register this new shortcut, enabling shift selection
+                shortcut = QtWidgets.QShortcut(shortcut_seq_with_shift, self)
+                shortcut.activated.connect(lambda x=step: frame_step(x, True))
+                self._shortcut_triggers[key + "_shift_selection"] = shortcut
+
+        add_shortcut("frame next", 1)
+        add_shortcut("frame prev", -1)
+        add_shortcut("frame next medium step", prefs["medium step size"])
+        add_shortcut("frame prev medium step", -prefs["medium step size"])
+        add_shortcut("frame next large step", prefs["large step size"])
+        add_shortcut("frame prev large step", -prefs["large step size"])
 
     def setSeekbarSelection(self, a: int, b: int):
         self.seekbar.setSelection(a, b)
@@ -599,31 +643,6 @@ class QtVideoPlayer(QWidget):
 
         if event.key() == Qt.Key.Key_Shift:
             self._shift_key_down = True
-        elif event.key() == self.shortcuts["frame prev"] and self.video:
-            self.state.increment("frame_idx", step=-1, mod=self.video.frames)
-
-        elif event.key() == self.shortcuts["frame next"] and self.video:
-            self.state.increment("frame_idx", step=1, mod=self.video.frames)
-
-        elif event.key() == self.shortcuts["frame prev medium step"] and self.video:
-            self.state.increment(
-                "frame_idx", step=-prefs["medium step size"], mod=self.video.frames
-            )
-
-        elif event.key() == self.shortcuts["frame next medium step"] and self.video:
-            self.state.increment(
-                "frame_idx", step=prefs["medium step size"], mod=self.video.frames
-            )
-
-        elif event.key() == self.shortcuts["frame prev large step"] and self.video:
-            self.state.increment(
-                "frame_idx", step=-prefs["large step size"], mod=self.video.frames
-            )
-
-        elif event.key() == self.shortcuts["frame next large step"] and self.video:
-            self.state.increment(
-                "frame_idx", step=prefs["large step size"], mod=self.video.frames
-            )
 
         elif event.key() == Qt.Key.Key_Home:
             self.state["frame_idx"] = 0
@@ -655,11 +674,15 @@ class QtVideoPlayer(QWidget):
             event.ignore()  # Kicks the event up to parent
 
         # If user is holding down shift and action resulted in moving to another frame
-        if self._shift_key_down and frame_t0 != self.state["frame_idx"]:
+        if self._shift_key_down:
+            self._select_on_possible_frame_movement(frame_t0)
+
+    def _select_on_possible_frame_movement(self, before_frame_idx: int):
+        if before_frame_idx != self.state["frame_idx"]:
             # If there's no select, start seekbar selection at frame before action
             start, end = self.seekbar.getSelection()
             if start == end:
-                self.seekbar.startSelection(frame_t0)
+                self.seekbar.startSelection(before_frame_idx)
             # Set endpoint to frame after action
             self.seekbar.endSelection(self.state["frame_idx"], update=True)
 
