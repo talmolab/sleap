@@ -11,6 +11,10 @@ class Preferences(object):
         "color predicted": False,
         "palette": "standard",
         "trail length": 0,
+        "hide videos dock": False,
+        "hide skeleton dock": False,
+        "hide instances dock": False,
+        "hide labeling suggestions dock": False,
     }
     _filename = "preferences.yaml"
 
@@ -35,6 +39,9 @@ class Preferences(object):
     def _validate_key(self, key):
         if key not in self._defaults:
             raise KeyError(f"No preference matching '{key}'")
+
+    def __contains__(self, item) -> bool:
+        return item in self._defaults
 
     def __getitem__(self, key):
         self.load()

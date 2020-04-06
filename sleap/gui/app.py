@@ -625,17 +625,28 @@ class MainWindow(QMainWindow):
 
         def _make_dock(name, widgets=[], tab_with=None):
             dock = QDockWidget(name)
+
             dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+
             dock_widget = QWidget()
             layout = QVBoxLayout()
+
             for widget in widgets:
                 layout.addWidget(widget)
+
             dock_widget.setLayout(layout)
             dock.setWidget(dock_widget)
+
+            key = f"hide {name.lower()} dock"
+            if key in prefs and prefs[key]:
+                dock.hide()
+
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
             self.viewMenu.addAction(dock.toggleViewAction())
+
             if tab_with is not None:
                 self.tabifyDockWidget(tab_with, dock)
+
             return layout
 
         def _add_button(to, label, action, key=None):
