@@ -340,7 +340,6 @@ class TopdownPredictor:
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
         keep_full_image = self.tracker and self.tracker.uses_image
-        print(f"keep_full_image={keep_full_image}")
 
         pipeline = Pipeline()
         if data_provider is not None:
