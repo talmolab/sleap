@@ -249,6 +249,13 @@ class FlowCandidateMaker:
         ref_img = ensure_int(ref_img)
         new_img = ensure_int(new_img)
 
+        # Convert tensors to ndarays
+        if hasattr(ref_img, "numpy"):
+            ref_img = ref_img.numpy()
+
+        if hasattr(new_img, "numpy"):
+            new_img = new_img.numpy()
+
         # Convert RGB to grayscale.
         if ref_img.ndim > 2 and ref_img.shape[-1] == 3:
             ref_img = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
