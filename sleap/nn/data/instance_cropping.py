@@ -424,6 +424,7 @@ class PredictedInstanceCropper:
     centroids_key: Text = "predicted_centroids"
     centroid_confidences_key: Text = "predicted_centroid_confidences"
     full_image_key: Text = "full_image"
+    full_image_scale_key: Text = "full_image_scale"
     keep_full_image: bool = False
     keep_instances_gt: bool = False
 
@@ -432,9 +433,9 @@ class PredictedInstanceCropper:
         """Return the keys that incoming elements are expected to have."""
         input_keys = [
             self.full_image_key,
+            self.full_image_scale_key,
             self.centroids_key,
             self.centroid_confidences_key,
-            "scale",
             "video_ind",
             "frame_ind",
         ]
@@ -466,6 +467,7 @@ class PredictedInstanceCropper:
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         """Create a dataset that contains instance cropped data."""
         keys_to_expand = ["scale", "video_ind", "frame_ind"]
+        # keys_to_expand = ["video_ind", "frame_ind"]
         if self.keep_full_image:
             keys_to_expand.append(self.full_image_key)
         if self.keep_instances_gt:
@@ -475,9 +477,12 @@ class PredictedInstanceCropper:
             """Local processing function for dataset mapping."""
             # Make bounding boxes from centroids.
             full_centroids = frame_data[self.centroids_key] / frame_data["scale"]
+            full_centroids = full_centroids * frame_data[self.full_image_scale_key]
             bboxes = make_centered_bboxes(
                 full_centroids, box_height=self.crop_height, box_width=self.crop_width
             )
+
+            frame_data["scale"] = frame_data[self.full_image_scale_key]
 
             # Crop images from bounding boxes.
             instance_images = crop_bboxes(frame_data[self.full_image_key], bboxes)
@@ -488,7 +493,7 @@ class PredictedInstanceCropper:
                 "instance_image": instance_images,
                 "bbox": bboxes,
                 "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
-                "centroid": frame_data[self.centroids_key],
+                "centroid": full_centroids,
                 "centroid_confidence": frame_data[self.centroid_confidences_key],
                 "full_image_height": tf.repeat(
                     tf.shape(frame_data[self.full_image_key])[0], n_instances

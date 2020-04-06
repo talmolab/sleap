@@ -105,6 +105,7 @@ class Resizer:
 
     Attributes:
         image_key: String name of the key containing the images to resize.
+        scale_key: String name of the key containing the scale of the images.
         points_key: String name of the key containing points to adjust for the resizing
             operation.
         scale: Scalar float specifying scaling factor to resize images by.
@@ -118,6 +119,7 @@ class Resizer:
     """
 
     image_key: Text = "image"
+    scale_key: Text = "scale"
     points_key: Optional[Text] = "instances"
     scale: float = 1.0
     pad_to_stride: int = 1
@@ -128,6 +130,8 @@ class Resizer:
     def from_config(
         cls,
         config: PreprocessingConfig,
+        image_key: Text = "image",
+        scale_key: Text = "scale",
         pad_to_stride: Optional[int] = None,
         keep_full_image: bool = False,
         full_image_key: Text = "full_image",
@@ -139,6 +143,8 @@ class Resizer:
             config: An `PreprocessingConfig` instance with the desired parameters. If
                 `config.pad_to_stride` is not an explicit integer, the `pad_to_stride`
                 parameter must be provided.
+            image_key: String name of the key containing the images to resize.
+            scale_key: String name of the key containing the scale of the images.
             pad_to_stride: An integer specifying the `pad_to_stride` if
                 `config.pad_to_stride` is not an explicit integer (e.g., set to None).
             keep_full_image: If True, keeps the (original size) full image in the
@@ -163,8 +169,9 @@ class Resizer:
             )
 
         return cls(
-            image_key="image",
+            image_key=image_key,
             points_key=points_key,
+            scale_key=scale_key,
             scale=config.input_scaling,
             pad_to_stride=pad_to_stride,
             keep_full_image=keep_full_image,
@@ -174,7 +181,7 @@ class Resizer:
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        input_keys = [self.image_key, "scale"]
+        input_keys = [self.image_key, self.scale_key]
         if self.points_key is not None:
             input_keys.append(self.points_key)
         return input_keys
@@ -222,7 +229,7 @@ class Resizer:
                 )
                 if self.points_key:
                     example[self.points_key] = example[self.points_key] * self.scale
-                example["scale"] = example["scale"] * self.scale
+                example[self.scale_key] = example[self.scale_key] * self.scale
 
             if self.pad_to_stride > 1:
                 example[self.image_key] = pad_to_stride(

@@ -556,6 +556,7 @@ class PredictedCenterInstanceNormalizer:
 
             pts = example[self.peaks_key]
             pts += bboxes_x1y1
+            pts /= example["scale"]
 
             example[self.new_centroid_key] = centroids
             example[self.new_centroid_confidence_key] = example[

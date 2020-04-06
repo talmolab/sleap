@@ -32,6 +32,7 @@ from sleap.nn.data.pipelines import (
     GlobalPeakFinder,
     MockGlobalPeakFinder,
     KeyFilter,
+    KeyRenamer,
     PredictedCenterInstanceNormalizer,
     PartAffinityFieldInstanceGrouper,
     PointsRescaler,
@@ -240,18 +241,23 @@ class TopdownPredictor:
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
-        if self.centroid_config is not None:
-            preprocessing_config = self.centroid_config.data.preprocessing
-        else:
-            preprocessing_config = self.confmap_config.data.preprocessing
-        pipeline += Normalizer.from_config(preprocessing_config)
-        pipeline += Resizer.from_config(
-            preprocessing_config, keep_full_image=True, points_key=None,
-        )
-
         pipeline += Prefetcher()
 
+        pipeline += KeyRenamer(old_key_names=["image", "scale"], new_key_names=["full_image", "full_image_scale"], drop_old=False)
+        if self.confmap_config is not None:
+            pipeline += Normalizer.from_config(self.confmap_config.data.preprocessing, image_key="full_image")
+
+            points_key = "instances" if self.centroid_model is None else None
+            pipeline += Resizer.from_config(
+                self.confmap_config.data.preprocessing, keep_full_image=False, points_key=points_key, image_key="full_image", scale_key="full_image_scale"
+            )
+
         if self.centroid_model is not None:
+            pipeline += Normalizer.from_config(self.centroid_config.data.preprocessing, image_key="image")
+            pipeline += Resizer.from_config(
+                self.centroid_config.data.preprocessing, keep_full_image=False, points_key=None,
+            )
+
             # Predict centroids using model.
             pipeline += KerasModelPredictor(
                 keras_model=self.centroid_model.keras_model,
@@ -287,6 +293,7 @@ class TopdownPredictor:
                 centroids_key="predicted_centroids",
                 centroid_confidences_key="predicted_centroid_confidences",
                 full_image_key="full_image",
+                full_image_scale_key="full_image_scale",
                 keep_instances_gt=self.confmap_model is None,
             )
 
@@ -298,6 +305,7 @@ class TopdownPredictor:
                 anchor_part_names=anchor_part,
                 skeletons=data_provider.labels.skeletons,
             )
+            pipeline += KeyRenamer(old_key_names=["full_image", "full_image_scale"], new_key_names=["image", "scale"], drop_old=True)
             pipeline += InstanceCropper(
                 crop_width=self.confmap_config.data.instance_cropping.crop_size,
                 crop_height=self.confmap_config.data.instance_cropping.crop_size,

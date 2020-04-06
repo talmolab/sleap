@@ -305,17 +305,18 @@ class Normalizer:
     )
 
     @classmethod
-    def from_config(cls, config: PreprocessingConfig) -> "Normalizer":
+    def from_config(cls, config: PreprocessingConfig, image_key: Text = "image") -> "Normalizer":
         """Build an instance of this class from its configuration options.
 
         Args:
             config: An `PreprocessingConfig` instance with the desired parameters.
+            image_key: String name of the key containing the images to normalize.
 
         Returns:
             An instance of this class.
         """
         return cls(
-            image_key="image",
+            image_key=image_key,
             ensure_float=True,
             ensure_rgb=config.ensure_rgb,
             ensure_grayscale=config.ensure_grayscale,
