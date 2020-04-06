@@ -90,11 +90,15 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
     ds_iter = iter(ds)
 
     i = 0
-    t0 = time.time()
+    wall_t0 = time.time()
+    inf_duration = 0
     done = False
     while not done:
         try:
-            yield next(ds_iter)
+            inf_t0 = time.time()
+            next_val = next(ds_iter)
+            inf_duration += time.time() - inf_t0
+            yield next_val
         except StopIteration:
             done = True
         except Exception as e:
@@ -108,10 +112,14 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
             # Show the current progress (frames, time, fps)
             if progress:
                 if (i and i % 1000 == 0) or done:
-                    elapsed_time = time.time() - t0
-                    logger.info(f"Finished {i} frames in {elapsed_time:.2f} seconds")
-                    if elapsed_time:
-                        logger.info(f"FPS={i/elapsed_time}")
+                    elapsed_time = time.time() - wall_t0
+                    logger.info(
+                        f"Finished {i} frames in {elapsed_time:.2f} seconds, {inf_duration:.2f} s. for inference."
+                    )
+                    if elapsed_time and inf_duration:
+                        logger.info(
+                            f"FPS={i/elapsed_time}, {i/inf_duration} for inference"
+                        )
 
 
 def make_grouped_labeled_frame(
