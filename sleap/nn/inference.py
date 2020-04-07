@@ -750,6 +750,10 @@ class SingleInstancePredictor:
             ]
         )
 
+        pipeline += PointsRescaler(
+            points_key="predicted_instance", scale_key="scale", invert=True
+        )
+
         self.pipeline = pipeline
 
         return pipeline
