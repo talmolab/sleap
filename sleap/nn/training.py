@@ -890,7 +890,7 @@ class SingleInstanceModelTrainer(Trainer):
     def _update_config(self):
         """Update the configuration with inferred values."""
         if self.config.data.preprocessing.pad_to_stride is None:
-            self.config.data.preprocessing.pad_to_stride = 1
+            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
 
         if self.config.optimization.batches_per_epoch is None:
             n_training_examples = len(
