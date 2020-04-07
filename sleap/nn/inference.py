@@ -142,7 +142,7 @@ def make_grouped_labeled_frame(
     img = None
     for example in frame_examples:
         if instance_score_key is None:
-            instance_scores = example[point_confidences_key].numpy().nansum()
+            instance_scores = np.nansum(example[point_confidences_key].numpy())
         else:
             instance_scores = example[instance_score_key]
 
