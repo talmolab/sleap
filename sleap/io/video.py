@@ -707,7 +707,7 @@ class SingleImageVideo:
             self.filenames = [self.filename]
 
         self.__data = dict()
-        self.test_frame = None
+        self.test_frame_ = None
 
     def _load_idx(self, idx):
         img = cv2.imread(self._get_filename(idx))
@@ -731,8 +731,8 @@ class SingleImageVideo:
         raise FileNotFoundError(f"Unable to locate file {idx}: {self.filenames[idx]}")
 
     def _load_test_frame(self):
-        if self.test_frame is None:
-            self.test_frame = self._load_idx(0)
+        if self.test_frame_ is None:
+            self.test_frame_ = self._load_idx(0)
 
             if self.height_ is None:
                 self.height_ = self.test_frame.shape[0]
@@ -750,7 +750,12 @@ class SingleImageVideo:
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
-    def matches(self, other: "SingleImageVideo") -> np.ndarray:
+    @property
+    def test_frame(self) -> np.ndarray:
+        self._load_test_frame()
+        return self.test_frame_
+
+    def matches(self, other: "SingleImageVideo") -> bool:
         """
         Check if attributes match those of another video.
 
