@@ -1,15 +1,24 @@
 import os
+import re
+import yaml
 
 import pandas as pd
 
+from typing import List, Optional
+
 from sleap import Labels, Video, Skeleton
 from sleap.instance import Instance, LabeledFrame, Point
+from sleap.util import find_files_by_suffix
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
 
-class LabelsDeepLabCutAdaptor(Adaptor):
+class LabelsDeepLabCutCsvAdaptor(Adaptor):
+    """
+    Reads DeepLabCut csv file with labeled frames for single video.
+    """
+
     @property
     def handles(self):
         return SleapObjectType.labels
@@ -42,49 +51,14 @@ class LabelsDeepLabCutAdaptor(Adaptor):
         return False
 
     @classmethod
-    def read(cls, file: FileHandle, *args, **kwargs,) -> Labels:
-        filename = file.filename
+    def read(
+        cls, file: FileHandle, full_video: Optional[Video] = None, *args, **kwargs,
+    ) -> Labels:
+        return Labels(labeled_frames=cls.read_frames(file, full_video, *args, **kwargs))
 
-        # At the moment we don't need anything from the config file,
-        # but the code to read it is here in case we do in the future.
-
-        # # Try to find the config file by walking up file path starting at csv file looking for config.csv
-        # last_dir = None
-        # file_dir = os.path.dirname(filename)
-        # config_filename = ""
-
-        # while file_dir != last_dir:
-        #     last_dir = file_dir
-        #     file_dir = os.path.dirname(file_dir)
-        #     config_filename = os.path.join(file_dir, 'config.yaml')
-        #     if os.path.exists(config_filename):
-        #         break
-
-        # # If we couldn't find a config file, give up
-        # if not os.path.exists(config_filename): return
-
-        # with open(config_filename, 'r') as f:
-        #     config = yaml.load(f, Loader=yaml.SafeLoader)
-
-        # x1 = config['x1']
-        # y1 = config['y1']
-        # x2 = config['x2']
-        # y2 = config['y2']
-
-        data = pd.read_csv(filename, header=[1, 2])
-
-        # Create the skeleton from the list of nodes in the csv file
-        # Note that DeepLabCut doesn't have edges, so these will have to be added by user later
-        node_names = [n[0] for n in list(data)[1::2]]
-
-        skeleton = Skeleton()
-        skeleton.add_nodes(node_names)
-
-        # Create an imagestore `Video` object from frame images.
-        # This may not be ideal for large projects, since we're reading in
-        # each image and then writing it out in a new directory.
-
-        img_files = data.iloc[:, 0]  # get list of all images
+    @classmethod
+    def make_video_for_image_list(cls, image_dir, filenames) -> Video:
+        """Creates a Video object from frame images."""
 
         # the image filenames in the csv may not match where the user has them
         # so we'll change the directory to match where the user has the csv
@@ -94,24 +68,169 @@ class LabelsDeepLabCutAdaptor(Adaptor):
             img_filename = os.path.join(img_dir, img_filename)
             return img_filename
 
-        img_dir = os.path.dirname(filename)
-        img_files = list(map(lambda f: fix_img_path(img_dir, f), img_files))
+        filenames = list(map(lambda f: fix_img_path(image_dir, f), filenames))
 
-        # create the imgstore (or open if it already exists)
-        video = Video.from_image_filenames(img_files)
+        return Video.from_image_filenames(filenames)
 
-        labels = []
+    @classmethod
+    def read_frames(
+        cls,
+        file: FileHandle,
+        skeleton: Optional[Skeleton] = None,
+        full_video: Optional[Video] = None,
+        *args,
+        **kwargs,
+    ) -> List[LabeledFrame]:
+        filename = file.filename
 
+        data = pd.read_csv(filename, header=[1, 2])
+
+        # Create the skeleton from the list of nodes in the csv file.
+        # Note that DeepLabCut doesn't have edges, so these will need to be
+        # added by user later.
+        node_names = [n[0] for n in list(data)[1::2]]
+
+        if skeleton is None:
+            skeleton = Skeleton()
+            skeleton.add_nodes(node_names)
+
+        img_files = data.iloc[:, 0]  # get list of all images
+
+        if full_video:
+            video = full_video
+            index_frames_by_original_index = True
+        else:
+            # Create the Video object
+            img_dir = os.path.dirname(filename)
+            video = cls.make_video_for_image_list(img_dir, img_files)
+
+            # The frames in the video we created will be indexed from 0 to N
+            # rather than having their index from the original source video.
+            index_frames_by_original_index = False
+
+        frames = []
         for i in range(len(data)):
             # get points for each node
             instance_points = dict()
             for node in node_names:
                 x, y = data[(node, "x")][i], data[(node, "y")][i]
                 instance_points[node] = Point(x, y)
-            # create instance with points (we can assume there's only one instance per frame)
-            instance = Instance(skeleton=skeleton, points=instance_points)
-            # create labeledframe and add it to list
-            label = LabeledFrame(video=video, frame_idx=i, instances=[instance])
-            labels.append(label)
 
-        return Labels(labeled_frames=labels)
+            # Create instance with points.
+            # For DeepLabCut we're assuming there's a single instance per frame.
+            instance = Instance(skeleton=skeleton, points=instance_points)
+
+            if index_frames_by_original_index:
+                # extract "0123" from "path/img0123.png" as original frame index
+                frame_idx_match = re.search("(?<=img)(\\d+)(?=\.png)", img_files[i])
+
+                if frame_idx_match is not None:
+                    frame_idx = int(frame_idx_match.group(0))
+                else:
+                    raise ValueError(
+                        f"Unable to determine frame index for image {img_files[i]}"
+                    )
+
+            else:
+                frame_idx = i
+
+            # create labeledframe and add it to list
+            frames.append(
+                LabeledFrame(video=video, frame_idx=frame_idx, instances=[instance])
+            )
+
+        return frames
+
+
+class LabelsDeepLabCutYamlAdaptor(Adaptor):
+    @property
+    def handles(self):
+        return SleapObjectType.labels
+
+    @property
+    def default_ext(self):
+        return "yaml"
+
+    @property
+    def all_exts(self):
+        return ["yaml", "yml"]
+
+    @property
+    def name(self):
+        return "DeepLabCut Dataset YAML"
+
+    def can_read_file(self, file: FileHandle):
+        if not self.does_match_ext(file.filename):
+            return False
+        if "video_sets" not in file.text:
+            return False
+        return True
+
+    def can_write_filename(self, filename: str):
+        return False
+
+    def does_read(self) -> bool:
+        return True
+
+    def does_write(self) -> bool:
+        return False
+
+    @classmethod
+    def read(cls, file: FileHandle, *args, **kwargs,) -> Labels:
+        filename = file.filename
+
+        # Load data from the YAML file
+        project_data = yaml.load(file.text, Loader=yaml.SafeLoader)
+
+        # Create skeleton which we'll use for each video
+        skeleton = Skeleton()
+        skeleton.add_nodes(project_data["bodyparts"])
+
+        # Get subdirectories of videos and labeled data
+        root_dir = os.path.dirname(filename)
+        videos_dir = os.path.join(root_dir, "videos")
+        labeled_data_dir = os.path.join(root_dir, "labeled-data")
+
+        with os.scandir(labeled_data_dir) as file_iterator:
+            data_subdirs = [file.path for file in file_iterator if file.is_dir()]
+
+        labeled_frames = []
+
+        # Each subdirectory of labeled data corresponds to a video.
+        # We'll go through each and import the labeled frames.
+
+        for data_subdir in data_subdirs:
+            csv_files = find_files_by_suffix(
+                data_subdir, prefix="CollectedData", suffix=".csv"
+            )
+
+            if csv_files:
+                csv_path = csv_files[0]
+
+                # Try to find a full video corresponding to this subdir.
+                # If subdirectory is foo, we look for foo.mp4 in videos dir.
+
+                shortname = os.path.split(data_subdir)[-1]
+                video_path = os.path.join(videos_dir, f"{shortname}.mp4")
+
+                if os.path.exists(video_path):
+                    video = Video.from_filename(video_path)
+                else:
+                    # When no video is found, the individual frame images
+                    # stored in the labeled data subdir will be used.
+                    print(
+                        f"Unable to find {video_path} so using individual frame images."
+                    )
+                    video = None
+
+                # Import the labeled fraems
+                labeled_frames.extend(
+                    LabelsDeepLabCutCsvAdaptor.read_frames(
+                        FileHandle(csv_path), full_video=video, skeleton=skeleton
+                    )
+                )
+
+            else:
+                print(f"No csv data file found in {data_subdir}")
+
+        return Labels(labeled_frames=labeled_frames)

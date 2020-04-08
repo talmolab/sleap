@@ -10,15 +10,19 @@ class Dispatch(object):
 
     _adaptors: List[Adaptor] = attr.ib(default=attr.Factory(list))
 
-    def register(self, adaptor: Union[Adaptor, type]):
+    def register(self, adaptor: Union[Adaptor, type, List[Adaptor]]):
         """
         Registers the class which reads/writes specific file format.
         """
         # If given a class, then instantiate it since we want the object
-        if type(adaptor) == type:
-            adaptor = adaptor()
+        if hasattr(adaptor, "__iter__"):
+            self.register_list(adaptor)
 
-        self._adaptors.append(adaptor)
+        else:
+            if type(adaptor) == type:
+                adaptor = adaptor()
+
+            self._adaptors.append(adaptor)
 
     def register_list(self, adaptor_list: List[Union[Adaptor, type]]):
         for adaptor in adaptor_list:
@@ -82,11 +86,11 @@ class Dispatch(object):
         if object_type == SleapObjectType.labels:
             from .hdf5 import LabelsV1Adaptor
             from .labels_json import LabelsJsonAdaptor
-            from .deeplabcut import LabelsDeepLabCutAdaptor
+            from .deeplabcut import LabelsDeepLabCutCsvAdaptor
 
             dispatcher.register(LabelsV1Adaptor())
             dispatcher.register(LabelsJsonAdaptor())
-            dispatcher.register(LabelsDeepLabCutAdaptor())
+            dispatcher.register(LabelsDeepLabCutCsvAdaptor())
 
         elif object_type == SleapObjectType.misc:
             from .text import TextAdaptor

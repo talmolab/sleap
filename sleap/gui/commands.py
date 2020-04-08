@@ -612,7 +612,7 @@ class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_deeplabcut_csv(filename=params["filename"])
+        labels = Labels.load_deeplabcut(filename=params["filename"])
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -620,7 +620,7 @@ class ImportDeepLabCut(AppCommand):
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["CSV (*.csv)"]
+        filters = ["DeepLabCut dataset (*.yaml *.csv)"]
 
         filename, selected_filter = FileDialog.open(
             context.app,

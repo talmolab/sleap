@@ -1,5 +1,5 @@
 from .coco import LabelsCocoAdaptor
-from .deeplabcut import LabelsDeepLabCutAdaptor
+from .deeplabcut import LabelsDeepLabCutCsvAdaptor, LabelsDeepLabCutYamlAdaptor
 from .deepposekit import LabelsDeepPoseKitAdaptor
 from .hdf5 import LabelsV1Adaptor
 from .labels_json import LabelsJsonAdaptor
@@ -16,7 +16,9 @@ all_labels_adaptors = {
     "hdf5_v1": LabelsV1Adaptor,
     "json": LabelsJsonAdaptor,
     "leap": LabelsLeapMatlabAdaptor,
-    "deeplabcut": LabelsDeepLabCutAdaptor,
+    # "deeplabcut_csv": LabelsDeepLabCutCsvAdaptor,
+    # "deeplabcut_yaml": LabelsDeepLabCutYamlAdaptor,
+    "deeplabcut": (LabelsDeepLabCutYamlAdaptor, LabelsDeepLabCutCsvAdaptor),
     "deepposekit": LabelsDeepPoseKitAdaptor,
     "coco": LabelsCocoAdaptor,
     "analysis": SleapAnalysisAdaptor,
@@ -51,6 +53,7 @@ def read(
     disp = dispatch.Dispatch()
 
     if as_format in all_labels_adaptors:
+
         disp.register(all_labels_adaptors[as_format])
         return disp.read(filename, *args, **kwargs)
 

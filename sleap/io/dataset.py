@@ -1387,11 +1387,10 @@ class Labels(MutableSequence):
         return read(filename, for_object="labels", as_format="leap", *args, **kwargs)
 
     @classmethod
-    def load_deeplabcut_csv(cls, filename: str) -> "Labels":
-        from sleap.io.format.deeplabcut import LabelsDeepLabCutAdaptor
-        from sleap.io.format.filehandle import FileHandle
+    def load_deeplabcut(cls, filename: str) -> "Labels":
+        from .format import read
 
-        return LabelsDeepLabCutAdaptor.read(FileHandle(filename))
+        return read(filename, for_object="labels", as_format="deeplabcut")
 
     @classmethod
     def load_coco(
