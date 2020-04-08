@@ -343,7 +343,7 @@ def make_scoped_dictionary(
 
 
 def find_files_by_suffix(
-    root_dir: str, suffix: str, depth: int = 0
+    root_dir: str, suffix: str, prefix: str = "", depth: int = 0
 ) -> List[os.DirEntry]:
     """
     Returns list of files matching suffix, optionally searching in subdirs.
@@ -351,6 +351,7 @@ def find_files_by_suffix(
     Args:
         root_dir: Path to directory where we start searching
         suffix: File suffix to match (e.g., '.json')
+        prefix: Optional file prefix to match
         depth: How many subdirectories deep to keep searching
 
     Returns:
@@ -362,11 +363,14 @@ def find_files_by_suffix(
 
     subdir_paths = [file.path for file in files if file.is_dir()]
     matching_files = [
-        file for file in files if file.is_file() and file.name.endswith(suffix)
+        file for file in files
+        if file.is_file()
+        and file.name.endswith(suffix)
+        and (not prefix or file.name.startswith(prefix))
     ]
 
     if depth:
         for subdir in subdir_paths:
-            matching_files.extend(find_files_by_suffix(subdir, suffix, depth=depth - 1))
+            matching_files.extend(find_files_by_suffix(subdir, suffix, prefix, depth=depth - 1))
 
     return matching_files
