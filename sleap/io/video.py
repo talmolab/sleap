@@ -49,8 +49,27 @@ class HDF5Video:
 
         self.enable_source_video = True
         self._test_frame_ = None
-
         self.__original_to_current_frame_idx = dict()
+        self.__dataset_h5 = None
+        self.__tried_to_load = False
+
+    @input_format.validator
+    def check(self, attribute, value):
+        """Called by attrs to validates input format."""
+        if value not in ["channels_first", "channels_last"]:
+            raise ValueError(f"HDF5Video input_format={value} invalid.")
+
+        if value == "channels_first":
+            self.__channel_idx = 1
+            self.__width_idx = 2
+            self.__height_idx = 3
+        else:
+            self.__channel_idx = 3
+            self.__width_idx = 2
+            self.__height_idx = 1
+
+    def _load(self):
+        self.__tried_to_load = True
 
         # Handle cases where the user feeds in h5.File objects instead of filename
         if isinstance(self.filename, h5.File):
@@ -93,23 +112,15 @@ class HDF5Video:
                 )
                 self._source_video_ = Video.cattr().structure(d, Video)
 
-        else:
-            self.__dataset_h5 = None
+    @property
+    def __dataset_h5(self) -> h5.Dataset:
+        if self.__loaded_dataset is None and not self.__tried_to_load:
+            self._load()
+        return self.__loaded_dataset
 
-    @input_format.validator
-    def check(self, attribute, value):
-        """Called by attrs to validates input format."""
-        if value not in ["channels_first", "channels_last"]:
-            raise ValueError(f"HDF5Video input_format={value} invalid.")
-
-        if value == "channels_first":
-            self.__channel_idx = 1
-            self.__width_idx = 2
-            self.__height_idx = 3
-        else:
-            self.__channel_idx = 3
-            self.__width_idx = 2
-            self.__height_idx = 1
+    @__dataset_h5.setter
+    def __dataset_h5(self, val):
+        self.__loaded_dataset = val
 
     @property
     def test_frame(self):
@@ -158,6 +169,18 @@ class HDF5Video:
         """Releases file object."""
         self.close()
 
+    def _try_frame_from_source_video(self, idx) -> np.ndarray:
+        try:
+            return self._source_video.get_frame(idx)
+        except:
+            raise ValueError(f"Frame index {idx} not in original index.")
+
+    @property
+    def _source_video(self) -> "HDF5Video":
+        if self.enable_source_video and hasattr(self, "_source_video_"):
+            return self._source_video_
+        return None
+
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
@@ -201,6 +224,9 @@ class HDF5Video:
         select frames indexed by number from original video, since the last
         frame index here will not match the number of frames in video.
         """
+        # Ensure that video is loaded since we'll need data from loading
+        self._load()
+
         if self.__original_to_current_frame_idx:
             last_key = sorted(self.__original_to_current_frame_idx.keys())[-1]
             return last_key
@@ -210,18 +236,6 @@ class HDF5Video:
         """Reloads the video."""
         # TODO
         pass
-
-    def _try_frame_from_source_video(self, idx) -> np.ndarray:
-        try:
-            return self._source_video.get_frame(idx)
-        except:
-            raise ValueError(f"Frame index {idx} not in original index.")
-
-    @property
-    def _source_video(self) -> "HDF5Video":
-        if self.enable_source_video and hasattr(self, "_source_video_"):
-            return self._source_video_
-        return None
 
     def get_frame(self, idx) -> np.ndarray:
         """
@@ -233,6 +247,9 @@ class HDF5Video:
         Returns:
             The numpy.ndarray representing the video frame data.
         """
+        # Ensure that video is loaded since we'll need data from loading
+        self._load()
+
         # If we only saved some frames from a video, map to idx in dataset.
         if self.__original_to_current_frame_idx:
             if idx in self.__original_to_current_frame_idx:

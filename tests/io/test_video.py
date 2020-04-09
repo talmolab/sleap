@@ -56,7 +56,7 @@ def test_hdf5_get_item(hdf5_vid):
 
 def test_hd5f_file_not_found():
     with pytest.raises(FileNotFoundError):
-        Video.from_hdf5("non-existent-filename.h5", "dataset_name")
+        Video.from_hdf5("non-existent-filename.h5", "dataset_name").height
 
 
 def test_mp4_get_shape(small_robot_mp4_vid):
