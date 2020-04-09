@@ -474,7 +474,7 @@ class ItemStack(object):
         # Make list of the items in each cluster
         item_labels = kmeans.labels_
         for cluster_idx in range(n_clusters):
-            cluster_item_idxs, = np.where(item_labels == cluster_idx)
+            (cluster_item_idxs,) = np.where(item_labels == cluster_idx)
             for data_row_idx in cluster_item_idxs:
                 item = self.get_item_by_data_row(data_row_idx)
                 cluster_groupset.append_to_group(cluster_idx, item)

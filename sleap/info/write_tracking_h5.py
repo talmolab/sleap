@@ -227,7 +227,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
-    labels = Labels.load_file(args.data_path, video_callback=video_callback)
+    labels = Labels.load_file(args.data_path, video_search=video_callback)
 
     output_path = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", args.data_path)
     output_path = output_path + ".tracking.h5"

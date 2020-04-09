@@ -1320,11 +1320,19 @@ class Labels(MutableSequence):
         return json_dumps(self.to_dict())
 
     @classmethod
-    def load_file(cls, filename: str, *args, **kwargs):
+    def load_file(
+        cls,
+        filename: str,
+        video_search: Union[Callable, List[Text], None] = None,
+        *args,
+        **kwargs,
+    ):
         """Load file, detecting format from filename."""
         from .format import read
 
-        return read(filename, for_object="labels", *args, **kwargs)
+        return read(
+            filename, for_object="labels", video_search=video_search, *args, **kwargs
+        )
 
     @classmethod
     def save_file(

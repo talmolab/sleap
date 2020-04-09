@@ -57,7 +57,7 @@ def legacy_grid_labels_path():
 @pytest.fixture
 def legacy_grid_labels():
     return Labels.load_file(
-        TEST_LEGACY_GRID_LABELS, video_callback=["tests/data/test_grid"]
+        TEST_LEGACY_GRID_LABELS, video_search=TEST_LEGACY_GRID_LABELS
     )
 
 
@@ -69,7 +69,7 @@ def midpoint_grid_labels_path():
 @pytest.fixture
 def midpoint_grid_labels():
     return Labels.load_file(
-        TEST_MIDPOINT_GRID_LABELS, video_callback=["tests/data/test_grid"]
+        TEST_MIDPOINT_GRID_LABELS, video_search=TEST_MIDPOINT_GRID_LABELS
     )
 
 

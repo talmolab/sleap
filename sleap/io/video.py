@@ -1336,7 +1336,7 @@ class Video:
 
         Note that when loading videos during the process of deserializing a
         saved :class:`Labels` dataset, it's usually preferable to fix video
-        paths using a `video_callback`.
+        paths using a `video_search` callback or path list.
 
         Args:
             path: The path the video asset.

@@ -802,7 +802,7 @@ def test_path_fix(tmpdir):
     Labels.save_hdf5(filename=filename, labels=labels)
 
     # Pass the path to the directory with the video
-    labels = Labels.load_file(filename, video_callback=["tests/data/videos/"])
+    labels = Labels.load_file(filename, video_search="tests/data/videos/")
 
     # Make sure we got the actual video path by searching that directory
     assert len(labels.videos) == 1

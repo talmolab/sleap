@@ -1681,7 +1681,7 @@ class MergeProject(EditCommand):
                 search_paths=[os.path.dirname(filename)]
             )
 
-            new_labels = Labels.load_file(filename, video_callback=gui_video_callback)
+            new_labels = Labels.load_file(filename, video_search=gui_video_callback)
 
             # Merging data is handled by MergeDialog
             MergeDialog(base_labels=context.labels, new_labels=new_labels).exec_()

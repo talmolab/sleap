@@ -1101,7 +1101,7 @@ class MainWindow(QMainWindow):
             has_loaded = True
         else:
             try:
-                labels = Labels.load_file(filename, video_callback=gui_video_callback)
+                labels = Labels.load_file(filename, video_search=gui_video_callback)
                 has_loaded = True
             except ValueError as e:
                 print(e)
