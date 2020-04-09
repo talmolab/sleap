@@ -15,6 +15,48 @@ from sleap.nn.config import TrainingJobConfig
 SKIP_TRAINING = False
 
 
+def write_pipeline_files(
+    output_dir: str,
+    labels_filename: str,
+    config_info_list: List[ConfigFileInfo],
+    inference_params: Dict[str, Any],
+    frames_to_predict: Dict[Video, List[int]] = None,
+):
+    """Writes the config files and scripts for manually running pipeline."""
+
+    new_cfg_filenames = []
+    train_script = ""
+
+    for cfg_info in config_info_list:
+        if cfg_info.dont_retrain:
+            new_cfg_filenames.append(cfg_info.path)
+
+        else:
+            new_cfg_filename = f"{cfg_info.head_name}.json"
+            new_cfg_path = os.path.join(output_dir, new_cfg_filename)
+            cfg_info.config.save_json(new_cfg_path)
+
+            new_cfg_filenames.append(new_cfg_filename)
+            train_script += f"sleap-train {new_cfg_filename} {labels_filename}\n"
+
+    with open(os.path.join(output_dir, "train-script.sh"), "w") as f:
+        f.write(train_script)
+
+    inference_script = ""
+    for video, video_frames in frames_to_predict.items():
+        cli_args, _ = make_predict_cli_call(
+            video=video,
+            trained_job_paths=new_cfg_filenames,
+            kwargs=inference_params,
+            frames=video_frames,
+            labels_filename=labels_filename,
+        )
+        inference_script += " ".join(cli_args) + "\n"
+
+    with open(os.path.join(output_dir, "inference-script.sh"), "w") as f:
+        f.write(inference_script)
+
+
 def run_learning_pipeline(
     labels_filename: str,
     labels: Labels,
@@ -22,7 +64,7 @@ def run_learning_pipeline(
     inference_params: Dict[str, Any],
     frames_to_predict: Dict[Video, List[int]] = None,
 ) -> int:
-    """Run training (as needed) and inference.
+    """Runs training (as needed) and inference.
 
     Args:
         labels_filename: Path to already saved current labels object.
@@ -69,7 +111,7 @@ def run_gui_training(
     save_viz: bool = False,
 ) -> Dict[Text, Text]:
     """
-    Run training for each training job.
+    Runs training for each training job.
 
     Args:
         labels: Labels object from which we'll get training data.
@@ -306,12 +348,11 @@ def train_subprocess(
     return run_path, success
 
 
-def predict_subprocess(
+def make_predict_cli_call(
     video: "Video",
     trained_job_paths: List[str],
     kwargs: Dict[str, str],
     frames: Optional[List[int]] = None,
-    waiting_callback: Optional[Callable] = None,
     labels_filename: Optional[str] = None,
 ):
     cli_args = ["sleap-track"]
@@ -323,10 +364,10 @@ def predict_subprocess(
         cli_args.append(video.filename)
 
     # TODO: better support for video params
-    if hasattr(video.backend, "dataset"):
+    if hasattr(video.backend, "dataset") and video.backend.dataset:
         cli_args.extend(("--video.dataset", video.backend.dataset))
 
-    if hasattr(video.backend, "input_format"):
+    if hasattr(video.backend, "input_format") and video.backend.input_format:
         cli_args.extend(("--video.input_format", video.backend.input_format))
 
     # Make path where we'll save predictions
@@ -344,6 +385,21 @@ def predict_subprocess(
     cli_args.extend(("--frames", ",".join(map(str, frames))))
 
     cli_args.extend(("-o", output_path))
+
+    return cli_args, output_path
+
+
+def predict_subprocess(
+    video: "Video",
+    trained_job_paths: List[str],
+    kwargs: Dict[str, str],
+    frames: Optional[List[int]] = None,
+    waiting_callback: Optional[Callable] = None,
+    labels_filename: Optional[str] = None,
+):
+    cli_args, output_path = make_predict_cli_call(
+        video, trained_job_paths, kwargs, frames, labels_filename
+    )
 
     print("Command line call:")
     print(" \\\n".join(cli_args))

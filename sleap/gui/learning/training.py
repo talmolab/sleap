@@ -1,6 +1,8 @@
 import cattr
+import os
 
 from sleap import Labels, Video
+from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import runners, utils, configs, datagen, receptivefield
 
@@ -58,6 +60,9 @@ class LearningDialog(QtWidgets.QDialog):
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
         self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.save_button = buttons.addButton(
+            "Save configuration files...", QtWidgets.QDialogButtonBox.ApplyRole
+        )
         self.run_button = buttons.addButton(
             "Run", QtWidgets.QDialogButtonBox.AcceptRole
         )
@@ -101,6 +106,7 @@ class LearningDialog(QtWidgets.QDialog):
         # Connect actions for buttons
         buttons.accepted.connect(self.run)
         buttons.rejected.connect(self.reject)
+        buttons.clicked.connect(self.on_button_click)
 
         # Connect button for previewing the training data
         if "_view_datagen" in self.pipeline_form_widget.buttons:
@@ -334,7 +340,9 @@ class LearningDialog(QtWidgets.QDialog):
                     continue
             head_data[key] = val
 
-    def get_every_head_config_data(self, pipeline_form_data):
+    def get_every_head_config_data(
+        self, pipeline_form_data
+    ) -> List[configs.ConfigFileInfo]:
         cfg_info_list = []
 
         for tab_name in self.shown_tab_names:
@@ -408,6 +416,10 @@ class LearningDialog(QtWidgets.QDialog):
         datagen.show_datagen_preview(self.labels, config_info_list)
         self.hide()
 
+    def on_button_click(self, button):
+        if button == self.save_button:
+            self.save()
+
     def run(self):
         """Run with current dialog settings."""
 
@@ -434,6 +446,28 @@ class LearningDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox(
                 text=f"Inference has finished. Instances were predicted on {new_counts} frames."
             ).exec_()
+
+    def save(self):
+        models_dir = os.path.join(os.path.dirname(self.labels_filename), "/models")
+        output_dir = FileDialog.openDir(
+            None, directory=models_dir, caption="Select directory to save scripts"
+        )
+
+        if not output_dir:
+            return
+
+        pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        frames_to_predict = self.get_selected_frames_to_predict(pipeline_form_data)
+
+        config_info_list = self.get_every_head_config_data(pipeline_form_data)
+
+        runners.write_pipeline_files(
+            output_dir=output_dir,
+            labels_filename=self.labels_filename,
+            config_info_list=config_info_list,
+            inference_params=pipeline_form_data,
+            frames_to_predict=frames_to_predict,
+        )
 
 
 class TrainingPipelineWidget(QtWidgets.QWidget):
