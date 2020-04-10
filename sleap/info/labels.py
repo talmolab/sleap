@@ -42,3 +42,6 @@ if __name__ == "__main__":
         print(f"    max instances in frame: {concurrent_count}")
 
     print(f"Total user labeled frames: {total_user_frames}")
+
+    for key, value in labels.provenance.items():
+        print(f"Provenance for {key}: {value}")

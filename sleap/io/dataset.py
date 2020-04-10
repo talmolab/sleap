@@ -371,6 +371,9 @@ class Labels(MutableSequence):
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
     suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
+        default=attr.Factory(dict)
+    )
 
     def __attrs_post_init__(self):
         """
@@ -1300,6 +1303,7 @@ class Labels(MutableSequence):
             "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
+            "provenance": label_cattr.unstructure(self.provenance),
         }
 
         if not skip_labels:

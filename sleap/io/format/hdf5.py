@@ -77,6 +77,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             f.require_group("metadata").attrs["json"].tostring().decode()
         )
 
+        # These items are stored in separate lists because the metadata group
+        # got to be too big.
         for key in ("videos", "tracks", "suggestions"):
             hdf5_key = f"{key}_json"
             if hdf5_key in f:
@@ -290,6 +292,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                 d = labels.to_dict(skip_labels=True)
 
             if not append:
+                # These items are stored in separate lists because the metadata
+                # group got to be too big.
                 for key in ("videos", "tracks", "suggestions"):
                     # Convert for saving in hdf5 dataset
                     data = [np.string_(json_dumps(item)) for item in d[key]]

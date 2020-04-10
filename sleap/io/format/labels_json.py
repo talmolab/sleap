@@ -452,6 +452,11 @@ class LabelsJsonAdaptor(Adaptor):
         else:
             negative_anchors = dict()
 
+        if "provenance" in dicts:
+            provenance = dicts["provenance"]
+        else:
+            provenance = dict()
+
         # If there is actual labels data, get it.
         if "labels" in dicts:
             label_cattr = make_instance_cattr()
@@ -478,4 +483,5 @@ class LabelsJsonAdaptor(Adaptor):
             suggestions=suggestions,
             negative_anchors=negative_anchors,
             tracks=tracks,
+            provenance=provenance,
         )
