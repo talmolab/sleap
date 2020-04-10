@@ -223,11 +223,7 @@ def run_gui_training(
 
             # Run training
             trained_job_path, success = train_subprocess(
-                job,
-                labels_filename,
-                waiting_callback=waiting,
-                update_run_name=False,
-                save_viz=save_viz,
+                job, labels_filename, waiting_callback=waiting, save_viz=save_viz,
             )
 
             if success:
@@ -264,6 +260,7 @@ def run_gui_inference(
         trained_job_paths: List of paths to TrainingJobs with trained models.
         frames_to_predict: Dict that gives list of frame indices for each video.
         inference_params: Parameters to pass to inference.
+        labels_filename: Path to labels dataset
         gui: Whether to show gui windows and process gui events.
 
     Returns:
@@ -339,7 +336,6 @@ def train_subprocess(
     job_config: TrainingJobConfig,
     labels_filename: str,
     waiting_callback: Optional[Callable] = None,
-    update_run_name: bool = True,
     save_viz: bool = False,
 ):
     """Runs training inside subprocess."""
@@ -419,8 +415,24 @@ def make_predict_cli_call(
 
     # Make path where we'll save predictions (if not specified)
     if output_path is None:
+
+        if labels_filename:
+            # Make a predictions directory next to the labels dataset file
+            predictions_dir = os.path.join(
+                os.path.dirname(labels_filename), "predictions"
+            )
+            os.makedirs(predictions_dir, exist_ok=True)
+        else:
+            # Dataset filename wasn't given, so save predictions in same dir
+            # as the video
+            predictions_dir = os.path.dirname(video.filename)
+
+        # Build filename with video name and timestamp
         timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-        output_path = f"{video.filename}.{timestamp}.predictions.slp"
+        output_path = os.path.join(
+            predictions_dir,
+            f"{os.path.basename(video.filename)}.{timestamp}.predictions.slp",
+        )
 
     for job_path in trained_job_paths:
         cli_args.extend(("-m", job_path))

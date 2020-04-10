@@ -878,16 +878,8 @@ def make_video_reader_from_cli(args):
     return video_reader
 
 
-def make_predictor_from_cli(args):
-    # trained_model_configs = dict()
+def find_models_from_cli(args) -> Dict[str, str]:
     trained_model_paths = dict()
-
-    head_names = (
-        "single_instance",
-        "centroid",
-        "centered_instance",
-        "multi_instance",
-    )
 
     for model_path in args.models:
         # Load the model config
@@ -902,6 +894,10 @@ def make_predictor_from_cli(args):
 
         trained_model_paths[key] = model_path
 
+    return trained_model_paths
+
+
+def make_predictor_from_models(trained_model_paths: Dict[str, str]):
     if "multi_instance" in trained_model_paths:
         predictor = BottomupPredictor.from_trained_models(
             trained_model_paths["multi_instance"]
@@ -923,9 +919,6 @@ def make_predictor_from_cli(args):
             f"Unable to run inference with {list(trained_model_paths.keys())} heads."
         )
 
-    tracker = make_tracker_from_cli(args)
-    predictor.tracker = tracker
-
     return predictor
 
 
@@ -943,7 +936,7 @@ def make_tracker_from_cli(args):
     return None
 
 
-def save_predictions_from_cli(args, predicted_frames):
+def save_predictions_from_cli(args, predicted_frames, prediction_metadata=None):
     from sleap import Labels
 
     if args.output:
@@ -953,7 +946,7 @@ def save_predictions_from_cli(args, predicted_frames):
         out_name = os.path.basename(args.data_path) + ".predictions.slp"
         output_path = os.path.join(out_dir, out_name)
 
-    labels = Labels(labeled_frames=predicted_frames)
+    labels = Labels(labeled_frames=predicted_frames, provenance=prediction_metadata,)
 
     print(f"Saving: {output_path}")
     Labels.save_file(labels, output_path)
@@ -983,13 +976,27 @@ def main():
     video_reader = make_video_reader_from_cli(args)
     print("Frames:", len(video_reader))
 
-    predictor = make_predictor_from_cli(args)
+    # Find the specified models
+    model_paths_by_head = find_models_from_cli(args)
+
+    # Create appropriate predictor given these models
+    predictor = make_predictor_from_models(model_paths_by_head)
+
+    # Make the tracker
+    tracker = make_tracker_from_cli(args)
+    predictor.tracker = tracker
 
     # Run inference!
     t0 = time.time()
     predicted_frames = predictor.predict(video_reader)
 
-    save_predictions_from_cli(args, predicted_frames)
+    # Create dictionary of metadata we want to save with predictions
+    prediction_metadata = dict()
+    for head, path in model_paths_by_head.items():
+        prediction_metadata[f"model.{head}.path"] = os.path.abspath(path)
+    prediction_metadata["video.path"] = args.data_path
+
+    save_predictions_from_cli(args, predicted_frames, prediction_metadata)
     print(f"Total Time: {time.time() - t0}")
 
 
