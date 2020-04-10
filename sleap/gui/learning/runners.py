@@ -24,37 +24,80 @@ def write_pipeline_files(
 ):
     """Writes the config files and scripts for manually running pipeline."""
 
+    # Use absolute path for all files that aren't contained in the output dir.
+    labels_filename = os.path.abspath(labels_filename)
+
+    video_path_map = {
+        video: os.path.abspath(video.filename) for video in frames_to_predict
+    }
+
+    # Preserve current working directory and change working directory to the
+    # output directory, so we can set local paths relative to that.
+    old_cwd = os.getcwd()
+    os.chdir(output_dir)
+
     new_cfg_filenames = []
-    train_script = ""
+    train_script = "#!/bin/bash\n"
 
     for cfg_info in config_info_list:
         if cfg_info.dont_retrain:
-            new_cfg_filenames.append(cfg_info.path)
+            # Use full absolute path to already training model
+            trained_path = os.path.normpath(os.path.join(old_cwd, cfg_info.path))
+            new_cfg_filenames.append(trained_path)
 
         else:
-            new_cfg_filename = f"{cfg_info.head_name}.json"
-            new_cfg_path = os.path.join(output_dir, new_cfg_filename)
-            cfg_info.config.save_json(new_cfg_path)
+            # We're training this model, so save config file...
 
-            new_cfg_filenames.append(new_cfg_filename)
+            # First we want to set the run folder so that we know where to find
+            # the model after it's trained.
+            # We'll use local path to the output directory (cwd).
+            # Note that setup_new_run_folder does things relative to cwd which
+            # is the main reason we're setting it to the output directory rather
+            # than just using normpath.
+            cfg_info.config.outputs.runs_folder = ""
+            training.setup_new_run_folder(cfg_info.config.outputs)
+
+            # Now we set the filename for the training config file
+            new_cfg_filename = f"{cfg_info.head_name}.json"
+
+            # Save the config file
+            cfg_info.config.save_json(new_cfg_filename)
+
+            # Keep track of the path where we'll find the trained model
+            new_cfg_filenames.append(cfg_info.config.outputs.run_name)
+
+            # Add a line to the script for training this model
             train_script += f"sleap-train {new_cfg_filename} {labels_filename}\n"
 
+    # Write the script to train the models which need to be trained
     with open(os.path.join(output_dir, "train-script.sh"), "w") as f:
         f.write(train_script)
 
-    inference_script = ""
+    # Build the script for running inference
+    inference_script = "#!/bin/bash\n"
     for video, video_frames in frames_to_predict.items():
+        # We want to save predictions in output dir so use local path
+        prediction_output_path = f"{os.path.basename(video.filename)}.predictions.slp"
+
+        # Get list of cli args
         cli_args, _ = make_predict_cli_call(
             video=video,
+            video_path=video_path_map[video],
             trained_job_paths=new_cfg_filenames,
             kwargs=inference_params,
             frames=video_frames,
             labels_filename=labels_filename,
+            output_path=prediction_output_path,
         )
+        # And join them into a single call to inference
         inference_script += " ".join(cli_args) + "\n"
 
+    # And write it
     with open(os.path.join(output_dir, "inference-script.sh"), "w") as f:
         f.write(inference_script)
+
+    # Restore the working directory
+    os.chdir(old_cwd)
 
 
 def run_learning_pipeline(
@@ -354,12 +397,16 @@ def make_predict_cli_call(
     kwargs: Dict[str, str],
     frames: Optional[List[int]] = None,
     labels_filename: Optional[str] = None,
+    video_path: Optional[str] = None,
+    output_path: Optional[str] = None,
 ):
     cli_args = ["sleap-track"]
 
     if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
         # No models so we must want to re-track previous predictions
         cli_args.append(labels_filename)
+    elif video_path is not None:
+        cli_args.append(video_path)
     else:
         cli_args.append(video.filename)
 
@@ -370,16 +417,16 @@ def make_predict_cli_call(
     if hasattr(video.backend, "input_format") and video.backend.input_format:
         cli_args.extend(("--video.input_format", video.backend.input_format))
 
-    # Make path where we'll save predictions
-    output_path = ".".join(
-        (video.filename, datetime.now().strftime("%y%m%d_%H%M%S"), "predictions.slp",)
-    )
+    # Make path where we'll save predictions (if not specified)
+    if output_path is None:
+        timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+        output_path = f"{video.filename}.{timestamp}.predictions.slp"
 
     for job_path in trained_job_paths:
         cli_args.extend(("-m", job_path))
 
     for key, val in kwargs.items():
-        if not key.startswith("_"):
+        if not key.startswith(("_", "outputs.", "model.")):
             cli_args.extend((f"--{key}", str(val)))
 
     cli_args.extend(("--frames", ",".join(map(str, frames))))
