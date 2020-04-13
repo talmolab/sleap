@@ -143,7 +143,7 @@ def make_grouped_labeled_frame(
 
         if example[points_key].ndim == 3:
             for points, confidences, instance_score in zip(
-                example[points_key], example[point_confidences_key], instance_scores,
+                example[points_key], example[point_confidences_key], instance_scores
             ):
                 predicted_instances.append(
                     sleap.PredictedInstance.from_arrays(
@@ -176,12 +176,12 @@ def make_grouped_labeled_frame(
         if tracker:
             # Set tracks for predicted instances in this frame.
             predicted_instances = tracker.track(
-                untracked_instances=predicted_instances, img=img, t=frame_ind,
+                untracked_instances=predicted_instances, img=img, t=frame_ind
             )
 
         # Create labeled frame from predicted instances.
         labeled_frame = sleap.LabeledFrame(
-            video=videos[video_ind], frame_idx=frame_ind, instances=predicted_instances,
+            video=videos[video_ind], frame_idx=frame_ind, instances=predicted_instances
         )
 
         predicted_frames.append(labeled_frame)
@@ -249,7 +249,7 @@ class VisualPredictor:
 
         pipeline += Normalizer.from_config(self.config.data.preprocessing)
         pipeline += Resizer.from_config(
-            self.config.data.preprocessing, keep_full_image=False, points_key=None,
+            self.config.data.preprocessing, keep_full_image=False, points_key=None
         )
 
         pipeline += KerasModelPredictor(
@@ -285,12 +285,18 @@ class TopdownPredictor:
     confmap_model: Optional[Model] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
+    integral_refinement: bool = True
+    integral_patch_size: int = 7
 
     @classmethod
     def from_trained_models(
         cls,
         centroid_model_path: Optional[Text] = None,
         confmap_model_path: Optional[Text] = None,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 7,
     ) -> "TopdownPredictor":
         """Create predictor from saved models.
 
@@ -338,6 +344,9 @@ class TopdownPredictor:
             centroid_model=centroid_model,
             confmap_config=confmap_config,
             confmap_model=confmap_model,
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
         )
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
@@ -450,8 +459,10 @@ class TopdownPredictor:
                 confmaps_key="predicted_instance_confidence_maps",
                 peaks_key="predicted_center_instance_points",
                 confmaps_stride=self.confmap_model.heads[0].output_stride,
-                peak_threshold=0.2,
-            )
+                peak_threshold=self.peak_threshold,
+                integral=self.integral_refinement,
+                integral_patch_size=self.integral_patch_size,
+        )
 
         else:
             # Generate ground truth instance points.
@@ -566,7 +577,7 @@ class BottomupPredictor:
             bottomup_keras_model_path, compile=False
         )
 
-        return cls(bottomup_config=bottomup_config, bottomup_model=bottomup_model,)
+        return cls(bottomup_config=bottomup_config, bottomup_model=bottomup_model)
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         pipeline = Pipeline()
@@ -692,11 +703,19 @@ class SingleInstancePredictor:
     confmap_config: TrainingJobConfig
     confmap_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
+    integral_refinement: bool = True
+    integral_patch_size: int = 7
 
     @classmethod
-    def from_trained_models(cls, confmap_model_path: Text) -> "SingleInstancePredictor":
+    def from_trained_models(
+        cls,
+        confmap_model_path: Text,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 7,
+    ) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
-
         # Load confmap model.
         confmap_config = TrainingJobConfig.load_json(confmap_model_path)
         confmap_keras_model_path = get_keras_model_path(confmap_model_path)
@@ -705,7 +724,13 @@ class SingleInstancePredictor:
             confmap_keras_model_path, compile=False
         )
 
-        return cls(confmap_config=confmap_config, confmap_model=confmap_model,)
+        return cls(
+            confmap_config=confmap_config,
+            confmap_model=confmap_model,
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
+        )
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
@@ -715,9 +740,7 @@ class SingleInstancePredictor:
 
         pipeline += Normalizer.from_config(self.confmap_config.data.preprocessing)
         pipeline += Resizer.from_config(
-            self.confmap_config.data.preprocessing,
-            # keep_full_image=True,
-            points_key=None,
+            self.confmap_config.data.preprocessing, points_key=None
         )
 
         pipeline += Prefetcher()
@@ -732,7 +755,9 @@ class SingleInstancePredictor:
             peaks_key="predicted_instance",
             peak_vals_key="predicted_instance_confidences",
             confmaps_stride=self.confmap_model.heads[0].output_stride,
-            peak_threshold=0.2,
+            peak_threshold=self.peak_threshold,
+            integral=self.integral_refinement,
+            integral_patch_size=self.integral_patch_size,
         )
 
         pipeline += KeyFilter(
@@ -944,7 +969,7 @@ def save_predictions_from_cli(args, predicted_frames, prediction_metadata=None):
         out_name = os.path.basename(args.data_path) + ".predictions.slp"
         output_path = os.path.join(out_dir, out_name)
 
-    labels = Labels(labeled_frames=predicted_frames, provenance=prediction_metadata,)
+    labels = Labels(labeled_frames=predicted_frames, provenance=prediction_metadata)
 
     print(f"Saving: {output_path}")
     Labels.save_file(labels, output_path)
