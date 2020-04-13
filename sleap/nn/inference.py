@@ -922,9 +922,7 @@ def make_predictor_from_models(trained_model_paths: Dict[str, str]):
     return predictor
 
 
-def make_tracker_from_cli(args):
-    policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
-
+def make_tracker_from_cli(policy_args):
     tracker_name = "None"
     if "tracking" in policy_args:
         tracker_name = policy_args["tracking"].get("tracker", "None")
@@ -983,7 +981,8 @@ def main():
     predictor = make_predictor_from_models(model_paths_by_head)
 
     # Make the tracker
-    tracker = make_tracker_from_cli(args)
+    policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
+    tracker = make_tracker_from_cli(policy_args)
     predictor.tracker = tracker
 
     # Run inference!
@@ -994,7 +993,11 @@ def main():
     prediction_metadata = dict()
     for head, path in model_paths_by_head.items():
         prediction_metadata[f"model.{head}.path"] = os.path.abspath(path)
+    if "tracking" in policy_args:
+        for key, val in policy_args["tracking"].items():
+            prediction_metadata[f"tracking.{key}"] = val
     prediction_metadata["video.path"] = args.data_path
+    prediction_metadata["sleap.version"] = sleap.__version__
 
     save_predictions_from_cli(args, predicted_frames, prediction_metadata)
     print(f"Total Time: {time.time() - t0}")
