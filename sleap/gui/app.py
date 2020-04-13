@@ -7,7 +7,7 @@ import re
 import os
 import random
 
-from typing import Callable, Dict, Iterator, List, Optional
+from typing import Callable, List, Optional
 
 from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
@@ -23,7 +23,7 @@ from sleap.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.dataviews import (
     GenericTableView,
     VideosTableModel,
@@ -34,11 +34,11 @@ from sleap.gui.dataviews import (
     SkeletonNodeModel,
 )
 
-from sleap.gui.filedialog import FileDialog
-from sleap.gui.formbuilder import YamlFormWidget
-from sleap.gui.shortcuts import Shortcuts, ShortcutDialog
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.formbuilder import YamlFormWidget
+from sleap.gui.shortcuts import Shortcuts
+from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
-
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
@@ -274,6 +274,12 @@ class MainWindow(QMainWindow):
             "LEAP Matlab dataset...",
             self.commands.importLEAP,
         )
+        add_menu_item(
+            import_types_menu,
+            "import_analysis",
+            "SLEAP Analysis HDF5...",
+            self.commands.importAnalysisFile,
+        )
 
         add_menu_item(
             fileMenu,
@@ -291,6 +297,14 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
+
+        fileMenu.addSeparator()
+        add_menu_item(
+            fileMenu,
+            "export analysis",
+            "Export Analysis HDF5...",
+            self.commands.exportAnalysisFile,
+        )
 
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "close", "Quit", self.close)
@@ -491,6 +505,14 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
+            "custom delete",
+            "Custom Instance Delete...",
+            self.commands.deleteDialog,
+        )
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
             "select next",
             "Select Next Instance",
             lambda: self.state.increment_in_list(
@@ -514,19 +536,13 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "training",
             "Run Training...",
-            lambda: self.showLearningDialog("learning"),
+            lambda: self.showLearningDialog("training"),
         )
         add_menu_item(
             predictionMenu,
             "inference",
             "Run Inference...",
             lambda: self.showLearningDialog("inference"),
-        )
-        add_menu_item(
-            predictionMenu,
-            "learning expert",
-            "Expert Controls...",
-            lambda: self.showLearningDialog("expert"),
         )
 
         predictionMenu.addSeparator()
@@ -593,7 +609,7 @@ class MainWindow(QMainWindow):
         ############
 
         helpMenu = self.menuBar().addMenu("Help")
-        helpMenu.addAction("Keyboard Reference", self.openKeyRef)
+        helpMenu.addAction("Keyboard Shortcuts", self.openKeyRef)
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""
@@ -609,17 +625,28 @@ class MainWindow(QMainWindow):
 
         def _make_dock(name, widgets=[], tab_with=None):
             dock = QDockWidget(name)
+
             dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+
             dock_widget = QWidget()
             layout = QVBoxLayout()
+
             for widget in widgets:
                 layout.addWidget(widget)
+
             dock_widget.setLayout(layout)
             dock.setWidget(dock_widget)
+
+            key = f"hide {name.lower()} dock"
+            if key in prefs and prefs[key]:
+                dock.hide()
+
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
             self.viewMenu.addAction(dock.toggleViewAction())
+
             if tab_with is not None:
                 self.tabifyDockWidget(tab_with, dock)
+
             return layout
 
         def _add_button(to, label, action, key=None):
@@ -1074,7 +1101,7 @@ class MainWindow(QMainWindow):
             has_loaded = True
         else:
             try:
-                labels = Labels.load_file(filename, video_callback=gui_video_callback)
+                labels = Labels.load_file(filename, video_search=gui_video_callback)
                 has_loaded = True
             except ValueError as e:
                 print(e)
@@ -1171,9 +1198,9 @@ class MainWindow(QMainWindow):
             values are {video: list of frame indices} dictionaries.
         """
 
-        def remove_user_labeled(
-            video, frame_idxs, user_labeled_frames=self.labels.user_labeled_frames
-        ):
+        user_labeled_frames = self.labels.user_labeled_frames
+
+        def remove_user_labeled(video, frame_idxs):
             if len(frame_idxs) == 0:
                 return frame_idxs
             video_user_labeled_frame_idxs = {
@@ -1206,6 +1233,22 @@ class MainWindow(QMainWindow):
             for video in self.labels.videos
         }
 
+        if len(self.labels.videos) > 1:
+            selection["random_video"] = {
+                current_video: remove_user_labeled(
+                    current_video,
+                    random.sample(
+                        range(current_video.frames), min(20, current_video.frames)
+                    ),
+                )
+            }
+
+        if user_labeled_frames:
+            selection["user"] = {
+                video: [lf.frame_idx for lf in user_labeled_frames if lf.video == video]
+                for video in self.labels.videos
+            }
+
         return selection
 
     def showLearningDialog(self, mode: str):
@@ -1213,14 +1256,13 @@ class MainWindow(QMainWindow):
 
         Args:
             mode: A string representing mode for dialog, which could be:
-            * "active"
+            * "training"
             * "inference"
-            * "expert"
 
         Returns:
             None.
         """
-        from sleap.gui.inference import InferenceDialog
+        from sleap.gui.learning.training import LearningDialog
 
         if "inference" in self.overlays:
             QMessageBox(
@@ -1237,10 +1279,12 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
-            self._child_windows[mode] = InferenceDialog(
-                self.state["filename"], self.labels, mode
+            self._child_windows[mode] = LearningDialog(
+                mode, self.state["filename"], self.labels,
             )
             self._child_windows[mode].learningFinished.connect(self.learningFinished)
+
+        self._child_windows[mode].update_file_lists()
 
         self._child_windows[mode].frame_selection = self._frames_for_prediction()
         self._child_windows[mode].open()

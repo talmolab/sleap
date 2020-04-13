@@ -17,7 +17,7 @@ import h5py
 import numpy as np
 import os
 
-from typing import Optional
+from typing import Optional, Callable, List, Text, Union
 
 
 class LabelsV1Adaptor(format.adaptor.Adaptor):
@@ -32,11 +32,11 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
     @property
     def default_ext(self):
-        return "h5"
+        return "slp"
 
     @property
     def all_exts(self):
-        return ["h5", "hdf5"]
+        return ["slp", "h5", "hdf5"]
 
     @property
     def name(self):
@@ -48,6 +48,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         if not file.is_hdf5:
             return False
         if file.format_id is not None and file.format_id >= 2:
+            return False
+        if "metadata" not in file.file:
             return False
         return True
 
@@ -64,7 +66,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
     def read_headers(
         cls,
         file: format.filehandle.FileHandle,
-        video_callback=None,
+        video_search: Union[Callable, List[Text], None] = None,
         match_to: Optional[Labels] = None,
     ):
         f = file.file
@@ -75,6 +77,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             f.require_group("metadata").attrs["json"].tostring().decode()
         )
 
+        # These items are stored in separate lists because the metadata group
+        # got to be too big.
         for key in ("videos", "tracks", "suggestions"):
             hdf5_key = f"{key}_json"
             if hdf5_key in f:
@@ -87,17 +91,31 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             if video_item["backend"]["filename"] == ".":
                 video_item["backend"]["filename"] = file.filename
 
-        if hasattr(video_callback, "__iter__"):
+        # Use the video_callback for finding videos with broken paths:
+
+        # 1. Accept single string as video search path
+        if isinstance(video_search, str):
+            video_search = [video_search]
+
+        # 2. Accept list of strings as video search paths
+        if hasattr(video_search, "__iter__"):
             # If the callback is an iterable, then we'll expect it to be a
             # list of strings and build a non-gui callback with those as
             # the search paths.
-            search_paths = [path for path in video_callback]
-            video_callback = Labels.make_video_callback(search_paths)
+            # When path is to a file, use the path of parent directory.
+            search_paths = [
+                os.path.dirname(path) if os.path.isfile(path) else path
+                for path in video_search
+            ]
 
-        # Use the callback if given to handle missing videos
-        if callable(video_callback):
-            video_callback(dicts["videos"])
+            # Make the search function from list of paths
+            video_search = Labels.make_video_callback(search_paths)
 
+        # 3. Use the callback function (either given as arg or build from paths)
+        if callable(video_search):
+            video_search(dicts["videos"])
+
+        # Create the Labels object with the header data we've loaded
         labels = labels_json.LabelsJsonAdaptor.from_json_data(dicts, match_to=match_to)
 
         return labels
@@ -106,14 +124,14 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
     def read(
         cls,
         file: format.filehandle.FileHandle,
-        video_callback=None,
+        video_search: Union[Callable, List[Text], None] = None,
         match_to: Optional[Labels] = None,
         *args,
         **kwargs,
     ):
 
         f = file.file
-        labels = cls.read_headers(file, video_callback, match_to)
+        labels = cls.read_headers(file, video_search, match_to)
 
         frames_dset = f["frames"][:]
         instances_dset = f["instances"][:]
@@ -274,6 +292,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                 d = labels.to_dict(skip_labels=True)
 
             if not append:
+                # These items are stored in separate lists because the metadata
+                # group got to be too big.
                 for key in ("videos", "tracks", "suggestions"):
                     # Convert for saving in hdf5 dataset
                     data = [np.string_(json_dumps(item)) for item in d[key]]

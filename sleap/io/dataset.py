@@ -1,9 +1,35 @@
 """
-A SLEAP dataset collects labeled video frames.
+A SLEAP dataset collects labeled video frames, together with required metadata.
 
 This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
-(videos, skeletons, negative training sample anchors, etc.).
+(videos, skeletons, etc.).
+
+To load a labels dataset file from disk:
+
+> labels = Labels.load_file(filename)
+
+If you're opening a dataset file created on a different computer (or if you've
+moved the video files), it's likely that the paths to the original videos will
+not work. We automatically check for the videos in the same directory as the
+labels file, but if the videos aren't there, you can tell `load_file` where
+to seach for the videos. There are various ways to do this:
+
+> Labels.load_filename(filename, single_path_to_search)
+> Labels.load_filename(filename, [path_a, path_b])
+> Labels.load_filename(filename, callback_function)
+> Labels.load_filename(filename, video_search=...)
+
+The callback_function can be created via `make_video_callback()` and has the
+option to make a callback with a GUI window so the user can locate the videos.
+
+To save a labels dataset file, run:
+
+> Labels.save_file(labels, filename)
+
+If the filename has a supported extension (e.g., ".slp", ".h5", ".json") then
+the file will be saved in the corresponding format. You can also specify the
+default extension to use if none is provided in the filename.
 """
 import itertools
 import os
@@ -26,15 +52,13 @@ from sleap.instance import (
     LabeledFrame,
     Track,
     make_instance_cattr,
-    PointArray,
-    PredictedPointArray,
     PredictedInstance,
 )
 
 from sleap.io import pathutils
 from sleap.io.video import Video
 from sleap.gui.suggestions import SuggestionFrame
-from sleap.gui.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps
 
@@ -373,6 +397,9 @@ class Labels(MutableSequence):
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
     suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
+    provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
+        default=attr.Factory(dict)
+    )
 
     def __attrs_post_init__(self):
         """
@@ -765,35 +792,50 @@ class Labels(MutableSequence):
 
     def get_template_instance_points(self, skeleton: Skeleton):
         if not hasattr(self, "_template_instance_points"):
-            self._template_instance_points = None
+            self._template_instance_points = dict()
 
-        # Use cache unless there are a small number of labeled frames so far
-        # or we don't have a cached template instance yet.
-        if self._template_instance_points is None or len(self.labeled_frames) < 100:
+        # Use cache unless there are a small number of labeled frames so far, or
+        # we don't have a cached template instance yet or the skeleton has changed.
 
+        rebuild_template = False
+        if len(self.labeled_frames) < 100:
+            rebuild_template = True
+        elif skeleton not in self._template_instance_points:
+            rebuild_template = True
+        elif skeleton.nodes != self._template_instance_points[skeleton]["nodes"]:
+            rebuild_template = True
+
+        if rebuild_template:
             # Make sure there are some labeled frames
             if self.labeled_frames and any(self.instances()):
                 from sleap.info import align
 
-                first_n_instances = itertools.islice(self.instances(), 1000)
+                first_n_instances = itertools.islice(
+                    self.instances(skeleton=skeleton), 1000
+                )
                 template_points = align.get_template_points_array(first_n_instances)
-                self._template_instance_points = template_points
+                self._template_instance_points[skeleton] = dict(
+                    points=template_points, nodes=skeleton.nodes,
+                )
             else:
-                # No labeled frames so use force-directed graph layou
+                # No labeled frames so use force-directed graph layout
                 import networkx as nx
 
                 node_positions = nx.spring_layout(G=skeleton.graph, scale=50)
 
-                self._template_instance_points = np.stack(
+                template_points = np.stack(
                     [
                         node_positions[node]
                         if node in node_positions
-                        else np.random.random_integers(0, 50, 2)
+                        else np.random.randint(0, 50, size=2)
                         for node in skeleton.nodes
                     ]
                 )
+                self._template_instance_points[skeleton] = dict(
+                    points=template_points, nodes=skeleton.nodes,
+                )
 
-        return self._template_instance_points
+        return self._template_instance_points[skeleton]["points"]
 
     # Methods for tracks
 
@@ -933,7 +975,7 @@ class Labels(MutableSequence):
 
     # Methods for suggestions
 
-    def get_video_suggestions(self, video: Video) -> list:
+    def get_video_suggestions(self, video: Video) -> List[int]:
         """
         Returns the list of suggested frames for the specified video
         or suggestions for all videos (if no video specified).
@@ -1287,6 +1329,7 @@ class Labels(MutableSequence):
             "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
+            "provenance": label_cattr.unstructure(self.provenance),
         }
 
         if not skip_labels:
@@ -1307,11 +1350,19 @@ class Labels(MutableSequence):
         return json_dumps(self.to_dict())
 
     @classmethod
-    def load_file(cls, filename: str, *args, **kwargs):
+    def load_file(
+        cls,
+        filename: str,
+        video_search: Union[Callable, List[Text], None] = None,
+        *args,
+        **kwargs,
+    ):
         """Load file, detecting format from filename."""
         from .format import read
 
-        return read(filename, for_object="labels", *args, **kwargs)
+        return read(
+            filename, for_object="labels", video_search=video_search, *args, **kwargs
+        )
 
     @classmethod
     def save_file(
@@ -1374,11 +1425,10 @@ class Labels(MutableSequence):
         return read(filename, for_object="labels", as_format="leap", *args, **kwargs)
 
     @classmethod
-    def load_deeplabcut_csv(cls, filename: str) -> "Labels":
-        from sleap.io.format.deeplabcut import LabelsDeepLabCutAdaptor
-        from sleap.io.format.filehandle import FileHandle
+    def load_deeplabcut(cls, filename: str) -> "Labels":
+        from .format import read
 
-        return LabelsDeepLabCutAdaptor.read(FileHandle(filename))
+        return read(filename, for_object="labels", as_format="deeplabcut")
 
     @classmethod
     def load_coco(

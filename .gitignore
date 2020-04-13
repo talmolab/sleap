@@ -65,6 +65,8 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/_autosummary/
+docs/api.rst  # this is created when making docs
 
 # PyBuilder
 target/
@@ -105,3 +107,9 @@ venv.bak/
 
 # Pycharm Files
 .idea/
+
+# Sublime files
+*.sublime-*
+
+# VSCode files
+.vscode/

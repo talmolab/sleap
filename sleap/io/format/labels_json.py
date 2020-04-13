@@ -4,7 +4,7 @@ import re
 import shutil
 import tempfile
 import zipfile
-from typing import Optional, Union, Dict, List, Callable
+from typing import Optional, Union, Dict, List, Callable, Text
 
 import cattr
 
@@ -70,7 +70,7 @@ class LabelsJsonAdaptor(Adaptor):
     def read(
         cls,
         file: FileHandle,
-        video_callback: Optional[Callable] = None,
+        video_search: Union[Callable, List[Text], None] = None,
         match_to: Optional[Labels] = None,
         *args,
         **kwargs,
@@ -169,16 +169,29 @@ class LabelsJsonAdaptor(Adaptor):
                             tmp_dir, vid["backend"]["filename"]
                         )
 
-                if hasattr(video_callback, "__iter__"):
+                # Use the video_callback for finding videos with broken paths:
+
+                # 1. Accept single string as video search path
+                if isinstance(video_search, str):
+                    video_search = [video_search]
+
+                # 2. Accept list of strings as video search paths
+                if hasattr(video_search, "__iter__"):
                     # If the callback is an iterable, then we'll expect it to be a
                     # list of strings and build a non-gui callback with those as
                     # the search paths.
-                    search_paths = [path for path in video_callback]
-                    video_callback = Labels.make_video_callback(search_paths)
+                    # When path is to a file, use the path of parent directory.
+                    search_paths = [
+                        os.path.dirname(path) if os.path.isfile(path) else path
+                        for path in video_search
+                    ]
 
-                # Use the callback if given to handle missing videos
-                if callable(video_callback):
-                    abort = video_callback(dicts["videos"])
+                    # Make the search function from list of paths
+                    video_search = Labels.make_video_callback(search_paths)
+
+                # 3. Use the callback function (either given as arg or build from paths)
+                if callable(video_search):
+                    abort = video_search(dicts["videos"])
                     if abort:
                         raise FileNotFoundError
 
@@ -439,6 +452,11 @@ class LabelsJsonAdaptor(Adaptor):
         else:
             negative_anchors = dict()
 
+        if "provenance" in dicts:
+            provenance = dicts["provenance"]
+        else:
+            provenance = dict()
+
         # If there is actual labels data, get it.
         if "labels" in dicts:
             label_cattr = make_instance_cattr()
@@ -465,4 +483,5 @@ class LabelsJsonAdaptor(Adaptor):
             suggestions=suggestions,
             negative_anchors=negative_anchors,
             tracks=tracks,
+            provenance=provenance,
         )

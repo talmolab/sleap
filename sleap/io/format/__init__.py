@@ -1,9 +1,10 @@
 from .coco import LabelsCocoAdaptor
-from .deeplabcut import LabelsDeepLabCutAdaptor
+from .deeplabcut import LabelsDeepLabCutCsvAdaptor, LabelsDeepLabCutYamlAdaptor
 from .deepposekit import LabelsDeepPoseKitAdaptor
 from .hdf5 import LabelsV1Adaptor
 from .labels_json import LabelsJsonAdaptor
 from .leap_matlab import LabelsLeapMatlabAdaptor
+from .sleap_analysis import SleapAnalysisAdaptor
 
 from . import adaptor, dispatch, filehandle
 
@@ -15,9 +16,12 @@ all_labels_adaptors = {
     "hdf5_v1": LabelsV1Adaptor,
     "json": LabelsJsonAdaptor,
     "leap": LabelsLeapMatlabAdaptor,
-    "deeplabcut": LabelsDeepLabCutAdaptor,
+    # "deeplabcut_csv": LabelsDeepLabCutCsvAdaptor,
+    # "deeplabcut_yaml": LabelsDeepLabCutYamlAdaptor,
+    "deeplabcut": (LabelsDeepLabCutYamlAdaptor, LabelsDeepLabCutCsvAdaptor),
     "deepposekit": LabelsDeepPoseKitAdaptor,
     "coco": LabelsCocoAdaptor,
+    "analysis": SleapAnalysisAdaptor,
 }
 
 
@@ -49,11 +53,18 @@ def read(
     disp = dispatch.Dispatch()
 
     if as_format in all_labels_adaptors:
+
         disp.register(all_labels_adaptors[as_format])
         return disp.read(filename, *args, **kwargs)
 
     if for_object == "labels" or hasattr(for_object, "labeled_frames"):
-        disp.register_list(default_labels_adaptors)
+        if as_format == "*":
+            for format_name, adaptor in all_labels_adaptors.items():
+                disp.register(adaptor)
+                # print(f"[registering format adaptor for {format_name}]")
+        else:
+            disp.register_list(default_labels_adaptors)
+
         return disp.read(filename, *args, **kwargs)
 
     raise NotImplementedError("No adaptors for this object type.")

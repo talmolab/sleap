@@ -403,7 +403,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     labels = Labels.load_file(
-        args.data_path, video_callback=[os.path.dirname(args.data_path)]
+        args.data_path, video_search=[os.path.dirname(args.data_path)]
     )
 
     vid = labels.videos[0]

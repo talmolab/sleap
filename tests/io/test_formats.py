@@ -1,4 +1,4 @@
-from sleap.io.format import dispatch, adaptor, text, genericjson, hdf5, filehandle
+from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 import pytest
 import os
 
@@ -109,6 +109,21 @@ def test_hdf5_v1():
     )
 
 
+def test_analysis_hdf5(tmpdir, centered_pair_predictions):
+    from sleap.info.write_tracking_h5 import main as write_analysis
+
+    filename = os.path.join(tmpdir, "analysis.h5")
+    video = centered_pair_predictions.videos[0]
+
+    write_analysis(centered_pair_predictions, output_path=filename, all_frames=True)
+
+    labels = read(filename, for_object="labels", as_format="analysis", video=video,)
+
+    assert len(labels) == len(centered_pair_predictions)
+    assert len(labels.tracks) == len(centered_pair_predictions.tracks)
+    assert len(labels.all_instances) == len(centered_pair_predictions.all_instances)
+
+
 def test_json_v1(tmpdir, centered_pair_labels):
     filename = os.path.join(tmpdir, "test.json")
     disp = dispatch.Dispatch.make_dispatcher(adaptor.SleapObjectType.labels)
@@ -118,3 +133,25 @@ def test_json_v1(tmpdir, centered_pair_labels):
     # Make sure we can read the file we just wrote
     y = disp.read(filename)
     assert len(y.labeled_frames) == len(centered_pair_labels.labeled_frames)
+
+
+def test_matching_adaptor():
+    from sleap.io.format import read
+
+    read(
+        "tests/data/hdf5_format_v1/centered_pair_predictions.h5",
+        for_object="labels",
+        as_format="*",
+    )
+
+    read(
+        "tests/data/json_format_v1/centered_pair.json",
+        for_object="labels",
+        as_format="*",
+    )
+
+    # read(
+    #     "tests/data/mat/labels.mat",
+    #     for_object="labels",
+    #     as_format="*"
+    # )

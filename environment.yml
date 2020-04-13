@@ -5,8 +5,8 @@ dependencies:
 - attrs
 - jsonpickle=1.2
 - networkx
-- tensorflow-gpu=2.0
-- tensorboard=2.0
+- tensorflow-gpu=2.1
+- tensorboard=2.1
 - scikit-learn
 - h5py
 - pandas
@@ -19,9 +19,12 @@ dependencies:
 - pip
 - pip:
     - opencv-python-headless==3.4.1.15
-    - PySide2>=5.12.0
+    - PySide2>=5.12.0,<=5.14.1
     - imgaug==0.3.0
     - cattrs==1.0.0rc0
     - qimage2ndarray==1.8
     - imgstore
     - jsmin
+    - seaborn
+    - "--editable=./"
+    - "--requirement=./dev_requirements.txt"

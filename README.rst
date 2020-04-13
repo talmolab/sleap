@@ -13,8 +13,7 @@
 Social LEAP Estimates Animal Pose (SLEAP)
 =========================================
 
-.. image:: https://sleap.ai/docs/_static/sleap_movie.gif
-    :alt: SLEAP demo movie
+.. image:: docs/_static/sleap_movie.gif
     :width: 600px
 
 |
@@ -32,5 +31,4 @@ If you use **SLEAP** in your research, cite `Pereira et al. Nature Methods 2019`
 
 .. _Pereira et al. Nature Methods 2019: https://www.nature.com/articles/s41592-018-0234-5
 .. _sleap.ai: https://sleap.ai
-
 

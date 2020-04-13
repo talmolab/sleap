@@ -3,7 +3,7 @@ import os
 import scipy.io as sio
 
 from sleap import Labels, Video, Skeleton
-from sleap.gui.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import (
     Instance,
     LabeledFrame,

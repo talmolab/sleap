@@ -4,37 +4,36 @@ from PySide2 import QtWidgets
 
 import attr
 import numpy as np
-from typing import Any, Sequence, Union
+from typing import Sequence, Union
 
-import sleap
 from sleap.io.video import Video
-from sleap.gui.video import QtVideoPlayer
+from sleap.gui.widgets.video import QtVideoPlayer
+from sleap.nn.data.providers import VideoReader
+from sleap.nn.inference import VisualPredictor
 
 
 @attr.s(auto_attribs=True)
 class ModelData:
-    inference_object: Union[
-        "sleap.nn.peak_finding.ConfmapPeakFinder", "sleap.nn.paf_grouping.PAFGrouper"
-    ]
+    predictor: VisualPredictor
     video: Video
     do_rescale: bool = False
     output_scale: float = 1.0
     adjust_vals: bool = True
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: int):
         """Data data for frame i from predictor."""
-        frame_img = self.video[i]
-
-        frame_result = self.inference_object.inference(
-            self.inference_object.preproc(frame_img)
-        ).numpy()
+        # Get predictions for frame i
+        frame_result = self.predictor.predict(VideoReader(self.video, [i]))
 
         # We just want the single image results
-        if type(i) != slice:
-            frame_result = frame_result[0]
+        # todo: support for pafs
+        frame_result = frame_result[0][self.predictor.confidence_maps_key_name()]
 
         if self.adjust_vals:
             frame_result = np.clip(frame_result, 0, 1)
+
+        # Determine output scale by comparing original image with model output
+        self.output_scale = self.video.height / frame_result.shape[0]
 
         return frame_result
 
@@ -44,17 +43,20 @@ class DataOverlay:
 
     data: Sequence = None
     player: QtVideoPlayer = None
-    overlay_class: QtWidgets.QGraphicsObject = None
+    overlay_class: Union["ConfMapsPlot", "MultiQuiverPlot", None] = None
 
     def add_to_scene(self, video, frame_idx):
         if self.data is None:
             return
 
+        if self.overlay_class is None:
+            return
+
         img_data = self.data[frame_idx]
-        # print(img_data.shape, np.ptp(img_data))
+
         self._add(
-            self.player.view.scene,
-            self.overlay_class(img_data, scale=1.0 / self.data.output_scale),
+            to=self.player.view.scene,
+            what=self.overlay_class(img_data, scale=self.data.output_scale),
         )
 
     def _add(
@@ -68,38 +70,21 @@ class DataOverlay:
 
     @classmethod
     def from_model(cls, filename, video, **kwargs):
-        from sleap.nn.model import ModelOutputType, InferenceModel
-        from sleap.nn import job
-
-        # Load the trained model
-        trained_job = job.TrainingJob.load_json(filename)
-        inference_model = InferenceModel.from_training_job(trained_job)
-        model_output_type = trained_job.model.output_type
-
-        if trained_job.model.output_type == ModelOutputType.PART_AFFINITY_FIELD:
-            from sleap.nn import paf_grouping
-
-            inference_object = paf_grouping.PAFGrouper(inference_model=inference_model)
-        else:
-            from sleap.nn import peak_finding
-
-            inference_object = peak_finding.ConfmapPeakFinder(
-                inference_model=inference_model
-            )
-
         # Construct the ModelData object that runs inference
         data_object = ModelData(
-            inference_object, video, output_scale=inference_model.output_scale
+            predictor=VisualPredictor.from_trained_models(filename), video=video
         )
 
         # Determine whether to use confmap or paf overlay
+        # todo: make this selectable by user for bottom up model w/ both outputs
         from sleap.gui.overlays.confmaps import ConfMapsPlot
         from sleap.gui.overlays.pafs import MultiQuiverPlot
 
-        if model_output_type == ModelOutputType.PART_AFFINITY_FIELD:
-            overlay_class = MultiQuiverPlot
-        else:
-            overlay_class = ConfMapsPlot
+        # todo: support for pafs
+        # if model_output_type == ModelOutputType.PART_AFFINITY_FIELD:
+        #     overlay_class = MultiQuiverPlot
+        # else:
+        overlay_class = ConfMapsPlot
 
         return cls(data=data_object, overlay_class=overlay_class, **kwargs)
 

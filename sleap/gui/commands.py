@@ -17,15 +17,16 @@ from PySide2 import QtCore, QtWidgets
 
 from PySide2.QtWidgets import QMessageBox
 
+from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
-from sleap.gui.importvideos import ImportVideos
-from sleap.gui.filedialog import FileDialog
-from sleap.gui.missingfiles import MissingFilesDialog
-from sleap.gui.merge import MergeDialog
-from sleap.gui.message import MessageDialog
+from sleap.gui.dialogs.importvideos import ImportVideos
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.merge import MergeDialog
+from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
@@ -120,6 +121,11 @@ class AppCommand(ABC):
             context.changestack_push(cls.__name__)
 
 
+@attr.s(auto_attribs=True)
+class FakeApp(object):
+    labels: Labels
+
+
 @attr.s(auto_attribs=True, eq=False)
 class CommandContext(object):
     """
@@ -137,6 +143,12 @@ class CommandContext(object):
 
     update_callback: Optional[Callable] = None
     _change_stack: List = attr.ib(default=attr.Factory(list))
+
+    @classmethod
+    def from_labels(cls, labels: Labels):
+        state = GuiState()
+        app = FakeApp(labels)
+        return cls(state=state, app=app)
 
     @property
     def labels(self):
@@ -207,6 +219,10 @@ class CommandContext(object):
         """Imports LEAP matlab datasets."""
         self.execute(ImportLEAP)
 
+    def importAnalysisFile(self):
+        """Imports SLEAP analysis hdf5 files."""
+        self.execute(ImportAnalysisFile)
+
     def saveProject(self):
         """Show gui to save project (or save as if not yet saved)."""
         self.execute(SaveProject)
@@ -214,6 +230,10 @@ class CommandContext(object):
     def saveProjectAs(self):
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
+
+    def exportAnalysisFile(self):
+        """Shows gui for exporting analysis h5 file."""
+        self.execute(ExportAnalysisFile)
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -390,6 +410,10 @@ class CommandContext(object):
         """Deletes all instances from track of currently selected instance."""
         self.execute(DeleteSelectedInstanceTrack)
 
+    def deleteDialog(self):
+        """Deletes using options selected in a dialog."""
+        self.execute(DeleteDialogCommand)
+
     def addTrack(self):
         """Creates new track and moves selected instance into this track."""
         self.execute(AddTrack)
@@ -444,9 +468,8 @@ class OpenProject(AppCommand):
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
         filters = [
-            "HDF5 dataset (*.h5 *.hdf5)",
+            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
             "JSON labels (*.json *.json.zip)",
-            "DeepLabCut csv (*.csv)",
         ]
 
         filename, selected_filter = FileDialog.open(
@@ -589,9 +612,7 @@ class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_deeplabcut_csv(
-            filename=params["filename"]
-        )
+        labels = Labels.load_deeplabcut(filename=params["filename"])
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -599,7 +620,7 @@ class ImportDeepLabCut(AppCommand):
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["CSV (*.csv)"]
+        filters = ["DeepLabCut dataset (*.yaml *.csv)"]
 
         filename, selected_filter = FileDialog.open(
             context.app,
@@ -612,6 +633,47 @@ class ImportDeepLabCut(AppCommand):
             return False
 
         params["filename"] = filename
+
+        return True
+
+
+class ImportAnalysisFile(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+        from sleap.io.format import read
+
+        labels = read(
+            params["filename"],
+            for_object="labels",
+            as_format="analysis",
+            video=params["video"],
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import SLEAP Analysis HDF5...",
+            filter="SLEAP Analysis HDF5 (*.h5 *.hdf5)",
+        )
+
+        if len(filename) == 0:
+            return False
+
+        QtWidgets.QMessageBox(text="Please locate the video for this dataset.").exec_()
+
+        video_param_list = ImportVideos().ask()
+
+        if not video_param_list:
+            return False
+
+        params["filename"] = filename
+        params["video"] = ImportVideos.create_video(video_param_list[0])
 
         return True
 
@@ -650,8 +712,8 @@ class SaveProjectAs(AppCommand):
         default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
 
         filters = [
-            "HDF5 dataset (*.h5)",
-            "JSON labels (*.json)",
+            "SLEAP HDF5 dataset (*.slp)",
+            "SLEAP JSON dataset (*.json)",
             "Compressed JSON (*.zip)",
         ]
         filename, selected_filter = FileDialog.save(
@@ -665,6 +727,33 @@ class SaveProjectAs(AppCommand):
             return False
 
         params["filename"] = filename
+        return True
+
+
+class ExportAnalysisFile(AppCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+
+        SleapAnalysisAdaptor.write(params["output_path"], context.labels)
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        default_name = context.state["filename"] or "untitled"
+        p = PurePath(default_name)
+        default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
+
+        filename, selected_filter = FileDialog.save(
+            context.app,
+            caption="Export Analysis File...",
+            dir=default_name,
+            filter="SLEAP Analysis HDF5 (*.h5)",
+        )
+
+        if len(filename) == 0:
+            return False
+
+        params["output_path"] = filename
         return True
 
 
@@ -737,17 +826,20 @@ class ExportLabeledFrames(AppCommand):
         Labels.save_file(
             context.state["labels"],
             params["filename"],
-            default_suffix="h5",
+            default_suffix="slp",
             save_frame_data=True,
         )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        filters = ["HDF5 dataset (*.h5)", "Compressed JSON dataset (*.json *.json.zip)"]
+        filters = [
+            "SLEAP HDF5 dataset (*.slp *.h5)",
+            "Compressed JSON dataset (*.json *.json.zip)",
+        ]
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Labeled Frames As...",
-            dir=context.state["filename"] + ".h5",
+            dir=context.state["filename"] + ".slp",
             filters=";;".join(filters),
         )
         if len(filename) == 0:
@@ -937,10 +1029,9 @@ class AddVideo(EditCommand):
     def do_action(context: CommandContext, params: dict):
         import_list = params["import_list"]
 
+        new_videos = ImportVideos.create_videos(import_list)
         video = None
-        for import_item in import_list:
-            # Create Video object
-            video = Video.from_filename(**import_item["params"])
+        for video in new_videos:
             # Add to labels
             context.labels.add_video(video)
             context.changestack_push("add video")
@@ -952,7 +1043,7 @@ class AddVideo(EditCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for adding video to project."""
-        params["import_list"] = ImportVideos().go()
+        params["import_list"] = ImportVideos().ask()
 
         return len(params["import_list"]) > 0
 
@@ -1269,20 +1360,6 @@ class DeleteClipPredictions(InstanceDeleteCommand):
             for inst in lf
             if type(inst) == PredictedInstance
         ]
-
-        # If user selected an instance, then only delete for that track.
-        selected_inst = context.state["instance"]
-        if selected_inst is not None:
-            track = selected_inst.track
-            if track is None:
-                # If user selected an instance without a track, delete only
-                # that instance and only on the current frame.
-                predicted_instances = [(context.state["labeled_frame"], selected_inst)]
-            else:
-                # Filter by track
-                predicted_instances = list(
-                    filter(lambda x: x[1].track == track, predicted_instances)
-                )
         return predicted_instances
 
 
@@ -1470,6 +1547,17 @@ class DeleteSelectedInstanceTrack(EditCommand):
                     context.labels.remove_instance(lf, inst)
 
 
+class DeleteDialogCommand(EditCommand):
+    topics = [
+        UpdateTopic.project_instances,
+    ]
+
+    @staticmethod
+    def ask_and_do(context: CommandContext, params: dict):
+        if DeleteDialog(context).exec_():
+            context.signal_update([UpdateTopic.project_instances])
+
+
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
 
@@ -1573,7 +1661,10 @@ class MergeProject(EditCommand):
 
     @classmethod
     def ask_and_do(cls, context: CommandContext, params: dict):
-        filters = ["HDF5 dataset (*.h5 *.hdf5)", "JSON labels (*.json *.json.zip)"]
+        filters = [
+            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
+            "SLEAP JSON dataset (*.json *.json.zip)",
+        ]
 
         filenames, selected_filter = FileDialog.openMultiple(
             context.app,
@@ -1590,7 +1681,7 @@ class MergeProject(EditCommand):
                 search_paths=[os.path.dirname(filename)]
             )
 
-            new_labels = Labels.load_file(filename, video_callback=gui_video_callback)
+            new_labels = Labels.load_file(filename, video_search=gui_video_callback)
 
             # Merging data is handled by MergeDialog
             MergeDialog(base_labels=context.labels, new_labels=new_labels).exec_()
@@ -1808,7 +1899,14 @@ class AddMissingInstanceNodes(EditCommand):
 
     @classmethod
     def add_best_nodes(cls, context, instance, visible):
+        # Try placing missing nodes using a "template" instance
         cls.add_nodes_from_template(context, instance, visible)
+
+        # If the "template" instance has missing nodes (i.e., a node that isn't
+        # labeled on any of the instances we used to generate the template),
+        # then adding nodes from the template may still result in missing nodes.
+        # So we'll use random placement for anything that's still missing.
+        cls.add_random_nodes(context, instance, visible)
 
     @classmethod
     def add_random_nodes(cls, context, instance, visible):

@@ -1,275 +1,272 @@
+"""This module provides a generalized implementation of UNet.
+
+See the `UNet` class docstring for more information.
+"""
+
 import attr
-from sleap.nn.architectures.common import conv, expand_to_n
-from tensorflow.keras.layers import Conv2DTranspose, Concatenate, MaxPool2D, UpSampling2D
+from typing import List, Optional, Text
+from sleap.nn.architectures import encoder_decoder
+from sleap.nn.config import UNetConfig
+import numpy as np
+import tensorflow as tf
 
 
 @attr.s(auto_attribs=True)
-class UNet:
-    """U-net block.
+class PoolingBlock(encoder_decoder.EncoderBlock):
+    """Pooling-only encoder block.
 
-    Implementation based off of `CARE
-    <https://github.com/CSBDeep/CSBDeep/blob/master/csbdeep/internals/nets.py>`_.
+    Used to compensate for UNet having a skip source before the pooling, so the blocks
+    need to end with a conv, not the pooling layer. This is added to the end of the
+    encoder stack to ensure that the number of down blocks is equal to the number of
+    pooling steps.
 
-    Args:
-        x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
-            that are divisible by `2^depth`.
-        num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
-        down_blocks: The number of pooling steps applied to the input. The input
-            must be a tensor with `2^depth` height and width to allow for
-            symmetric pooling and upsampling with skip connections.
-        up_blocks: The number of upsampling steps applied after downsampling.
-        convs_per_depth: The number of convolutions applied before pooling or
-            after upsampling.
-        num_filters: The base number feature channels of the block. The number of
-            filters is doubled at each pooling step.
-        kernel_size: Size of the convolutional kernels for each filter.
-        upsampling_layers: Use upsampling instead of transposed convolutions.
-        interp: Method to use for interpolation when upsampling smaller features.
-
+    Attributes:
+        pool: If True, applies max pooling at the end of the block.
+        pooling_stride: Stride of the max pooling operation. If 1, the output of this
+            block will be at the same stride (== 1/scale) as the input.
     """
 
-    down_blocks: int = 3
-    up_blocks: int = 3
-    convs_per_depth: int = 2
-    num_filters: int = 16
-    kernel_size: int = 5
-    upsampling_layers: bool = True
-    interp: str = "bilinear"
+    pool: bool = True
+    pooling_stride: int = 2
 
-    def output(self, x_in, num_output_channels):
-        """
-        Generate a tensorflow graph for the backbone and return the output tensor.
-
-        Args:
-            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
-            that are divisible by `2^down_blocks.
-            num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
-        Returns:
-            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.
-        """
-        return unet(x_in, num_output_channels, **attr.asdict(self))
-
-
-@attr.s(auto_attribs=True)
-class StackedUNet:
-    """Stacked U-net block.
-
-    See `unet` for more specifics on the implementation.
-
-    Args:
-        x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
-           that are divisible by `2^depth`.
-        num_output_channels: The number of output channels of the block. These
-           are the final output tensors on which intermediate supervision may be
-           applied.
-        num_stacks: The number of blocks to stack on top of each other.
-        depth: The number of pooling steps applied to the input. The input must
-           be a tensor with `2^depth` height and width to allow for symmetric
-           pooling and upsampling with skip connections.
-        convs_per_depth: The number of convolutions applied before pooling or
-           after upsampling.
-        num_filters: The base number feature channels of the block. The number of
-           filters is doubled at each pooling step.
-        kernel_size: Size of the convolutional kernels for each filter.
-        intermediate_inputs: Re-introduce the input tensor `x_in` after each block
-           by concatenating with intermediate outputs
-        upsampling_layers: Use upsampling instead of transposed convolutions.
-        interp: Method to use for interpolation when upsampling smaller features.
-    """
-
-    num_stacks: int = 3
-    depth: int = 3
-    convs_per_depth: int = 2
-    num_filters: int = 16
-    kernel_size: int = 5
-    upsampling_layers: bool = True
-    intermediate_inputs: bool = True
-    interp: str = "bilinear"
-
-    def output(self, x_in, num_output_channels):
-        """
-        Generate a tensorflow graph for the backbone and return the output tensor.
-
-        Args:
-            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
-            that are divisible by `2^down_blocks.
-            num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
-        Returns:
-            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.
-        """
-        return stacked_unet(x_in, num_output_channels, **attr.asdict(self))
-
-
-def unet(
-    x_in,
-    num_output_channels,
-    down_blocks=3,
-    up_blocks=3,
-    convs_per_depth=2,
-    num_filters=16,
-    kernel_size=5,
-    upsampling_layers=True,
-    interp="bilinear",
-):
-    """U-net block.
-
-    Implementation based off of `CARE
-    <https://github.com/CSBDeep/CSBDeep/blob/master/csbdeep/internals/nets.py>`_.
-
-    Args:
-        x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
-            that are divisible by `2^depth`.
-        num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
-        down_blocks: The number of pooling steps applied to the input. The input
-            must be a tensor with `2^depth` height and width to allow for
-            symmetric pooling and upsampling with skip connections.
-        up_blocks: The number of upsampling steps applied after downsampling.
-        convs_per_depth: The number of convolutions applied before pooling or
-            after upsampling.
-        num_filters: The base number feature channels of the block. The number of
-            filters is doubled at each pooling step.
-        kernel_size: Size of the convolutional kernels for each filter.
-        upsampling_layers: Use upsampling instead of transposed convolutions.
-        interp: Method to use for interpolation when upsampling smaller features.
-
-    Returns:
-        x_out: tf.Tensor of the output of the block of the same width and height
-            as the input with `num_output_channels` channels.
-
-    """
-
-    # Check if input tensor has the right height/width for pooling given depth
-    if (
-        x_in.shape[-2] % (2 ** down_blocks) != 0
-        or x_in.shape[-2] % (2 ** down_blocks) != 0
-    ):
-        raise ValueError(
-            "Input tensor must have width and height dimensions divisible by %d."
-            % (2 ** down_blocks)
-        )
-
-    # Ensure we have a tuple in case scalar provided
-    kernel_size = expand_to_n(kernel_size, 2)
-
-    # Input tensor
-    x = x_in
-
-    # Downsampling
-    skip_layers = []
-    for n in range(down_blocks):
-        for i in range(convs_per_depth):
-            x = conv(num_filters * 2 ** n, kernel_size=kernel_size)(x)
-        skip_layers.append(x)
-        x = MaxPool2D(pool_size=(2, 2))(x)
-
-    # Middle
-    for i in range(convs_per_depth - 1):
-        x = conv(num_filters * 2 ** down_blocks, kernel_size=kernel_size)(x)
-    x = conv(num_filters * 2 ** max(0, down_blocks - 1), kernel_size=kernel_size)(x)
-
-    # Upsampling (with skips)
-    for n in range(down_blocks - 1, down_blocks - up_blocks - 1, -1):
-        if upsampling_layers:
-            x = UpSampling2D(size=(2, 2), interpolation=interp)(x)
-        else:
-            x = Conv2DTranspose(
-                num_filters * 2 ** n,
-                kernel_size=kernel_size,
-                strides=2,
+    def make_block(self, x_in: tf.Tensor, prefix: Text = "conv_block") -> tf.Tensor:
+        """Instantiate the encoder block from an input tensor."""
+        x = x_in
+        if self.pool:
+            x = tf.keras.layers.MaxPool2D(
+                pool_size=2,
+                strides=self.pooling_stride,
                 padding="same",
-                activation="relu",
-                kernel_initializer="glorot_normal",
+                name=f"{prefix}_last_pool",
             )(x)
-
-        x = Concatenate(axis=-1)([x, skip_layers[n]])
-
-        for i in range(convs_per_depth - 1):
-            x = conv(num_filters * 2 ** n, kernel_size=kernel_size)(x)
-
-        x = conv(num_filters * 2 ** max(0, n - 1), kernel_size=kernel_size)(x)
-
-    # Final layer
-    x_out = conv(num_output_channels, activation="linear")(x)
-
-    return x_out
+        return x
 
 
-def stacked_unet(
-    x_in,
-    num_output_channels,
-    num_stacks=3,
-    depth=3,
-    convs_per_depth=2,
-    num_filters=16,
-    kernel_size=5,
-    upsampling_layers=True,
-    intermediate_inputs=True,
-    interp="bilinear",
-):
-    """Stacked U-net block.
+@attr.s(auto_attribs=True)
+class UNet(encoder_decoder.EncoderDecoder):
+    """UNet encoder-decoder architecture for fully convolutional networks.
 
-    See `unet` for more specifics on the implementation.
+    This is the canonical architecture described in `Ronneberger et al., 2015
+    <https://arxiv.org/abs/1505.04597>`_.
 
-    Args:
-        x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width
-            that are divisible by `2^depth`.
-        num_output_channels: The number of output channels of the block. These
-            are the final output tensors on which intermediate supervision may be
-            applied.
-        num_stacks: The number of blocks to stack on top of each other.
-        depth: The number of pooling steps applied to the input. The input must
-            be a tensor with `2^depth` height and width to allow for symmetric
-            pooling and upsampling with skip connections.
-        convs_per_depth: The number of convolutions applied before pooling or
-            after upsampling.
-        num_filters: The base number feature channels of the block. The number of
-            filters is doubled at each pooling step.
-        kernel_size: Size of the convolutional kernels for each filter.
-        intermediate_inputs: Re-introduce the input tensor `x_in` after each block
-            by concatenating with intermediate outputs
-        upsampling_layers: Use upsampling instead of transposed convolutions.
-        interp: Method to use for interpolation when upsampling smaller features.
+    The default configuration with 4 down/up blocks and 64 base filters has ~34.5M
+    parameters.
 
-    Returns:
-        x_outs: tf.Tensor of the output of the block of the same width and height
-            as the input with `num_output_channels` channels.
+    Attributes:
+        filters: Base number of filters in the first encoder block. More filters will
+            increase the representational capacity of the network at the cost of memory
+            and runtime.
+        filters_rate: Factor to increase the number of filters by in each block.
+        kernel_size: Size of convolutional kernels (== height == width).
+        stem_kernel_size: Size of convolutional kernels in stem blocks.
+        stem_blocks: If >0, will create additional "down" blocks for initial
+            downsampling. These will be configured identically to the down blocks below.
+        down_blocks: Number of blocks with pooling in the encoder. More down blocks will
+        convs_per_block: Number of convolutions in each block. More convolutions per
+            block will increase the representational capacity of the network at the cost
+            of memory and runtime.
+            increase the effective maximum receptive field.
+        up_blocks: Number of blocks with upsampling in the decoder. If this is equal to
+            `down_blocks`, the output of this network will be at the same stride (scale)
+            as the input.
+        middle_block: If True, add an additional block at the end of the encoder.
+        up_interpolate: If True, use bilinear interpolation instead of transposed
+            convolutions for upsampling. Interpolation is faster but transposed
+            convolutions may be able to learn richer or more complex upsampling to
+            recover details from higher scales. If using transposed convolutions, the
+            number of filters are determined by `filters` and `filters_rate` to
+            progressively decrease the number of filters at each step.
+        block_contraction: If True, reduces the number of filters at the end of middle
+            and decoder blocks. This has the effect of introducing an additional
+            bottleneck before each upsampling step. The original implementation does not
+            do this, but the CARE implementation does.
 
+    Note:
+        This bears some differences with other implementations, particularly with
+        respect to the skip connection source tensors in the encoder. In the original,
+        the skip connection is formed from the output of the convolutions in each
+        encoder block, not the pooling step. This results in skip connections starting
+        at the first stride level as well as subsequent ones.
     """
 
-    # Expand block-specific parameters if scalars provided
-    depth = expand_to_n(depth, num_stacks)
-    convs_per_depth = expand_to_n(convs_per_depth, num_stacks)
-    num_filters = expand_to_n(num_filters, num_stacks)
-    kernel_size = expand_to_n(kernel_size, num_stacks)
-    upsampling_layers = expand_to_n(upsampling_layers, num_stacks)
-    interp = expand_to_n(interp, num_stacks)
+    filters: int = 64
+    filters_rate: float = 2
+    kernel_size: int = 3
+    stem_kernel_size: int = 3
+    convs_per_block: int = 2
+    stem_blocks: int = 0
+    down_blocks: int = 4
+    middle_block: bool = True
+    up_blocks: int = 4
+    up_interpolate: bool = False
+    block_contraction: bool = False
 
-    # Create individual blocks and collect intermediate outputs
-    x = x_in
-    x_outs = []
-    for i in range(num_stacks):
-        if i > 0 and intermediate_inputs:
-            x = Concatenate()([x, x_in])
+    @property
+    def stem_stack(self) -> Optional[List[encoder_decoder.SimpleConvBlock]]:
+        """Define the downsampling stem."""
+        if self.stem_blocks == 0:
+            return None
 
-        x_out = unet(
-            x,
-            num_output_channels,
-            depth=depth[i],
-            convs_per_depth=convs_per_depth[i],
-            num_filters=num_filters[i],
-            kernel_size=kernel_size[i],
-            upsampling_layers=upsampling_layers[i],
-            interp=interp[i],
+        blocks = []
+        for block in range(self.stem_blocks):
+            block_filters = int(self.filters * (self.filters_rate ** block))
+            blocks.append(
+                encoder_decoder.SimpleConvBlock(
+                    pool=(block > 0),
+                    pool_before_convs=True,
+                    pooling_stride=2,
+                    num_convs=self.convs_per_block,
+                    filters=block_filters,
+                    kernel_size=self.stem_kernel_size,
+                    use_bias=True,
+                    batch_norm=False,
+                    activation="relu",
+                )
+            )
+
+        # Always finish with a pooling block to account for pooling before convs.
+        blocks.append(PoolingBlock(pool=True, pooling_stride=2))
+
+        return blocks
+
+    @property
+    def encoder_stack(self) -> List[encoder_decoder.SimpleConvBlock]:
+        """Define the encoder stack."""
+        blocks = []
+        for block in range(self.down_blocks):
+            block_filters = int(
+                self.filters * (self.filters_rate ** (block + self.stem_blocks))
+            )
+            blocks.append(
+                encoder_decoder.SimpleConvBlock(
+                    pool=(block > 0),
+                    pool_before_convs=True,
+                    pooling_stride=2,
+                    num_convs=self.convs_per_block,
+                    filters=block_filters,
+                    kernel_size=self.kernel_size,
+                    use_bias=True,
+                    batch_norm=False,
+                    activation="relu",
+                )
+            )
+
+        # Always finish with a pooling block to account for pooling before convs.
+        blocks.append(PoolingBlock(pool=True, pooling_stride=2))
+
+        # Create a middle block (like the CARE implementation).
+        if self.middle_block:
+            if self.convs_per_block > 1:
+                # First convs are one exponent higher than the last encoder block.
+                block_filters = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks))
+                )
+                blocks.append(
+                    encoder_decoder.SimpleConvBlock(
+                        pool=False,
+                        pool_before_convs=False,
+                        pooling_stride=2,
+                        num_convs=self.convs_per_block - 1,
+                        filters=block_filters,
+                        kernel_size=self.kernel_size,
+                        use_bias=True,
+                        batch_norm=False,
+                        activation="relu",
+                        block_prefix="_middle_expand"
+                    )
+                )
+
+            if self.block_contraction:
+                # Contract the channels with an exponent lower than the last encoder block.
+                block_filters = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1))
+                )
+            else:
+                # Keep the block output filters the same.
+                block_filters = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks))
+                )
+            blocks.append(
+                encoder_decoder.SimpleConvBlock(
+                    pool=False,
+                    pool_before_convs=False,
+                    pooling_stride=2,
+                    num_convs=1,
+                    filters=block_filters,
+                    kernel_size=self.kernel_size,
+                    use_bias=True,
+                    batch_norm=False,
+                    activation="relu",
+                    block_prefix="_middle_contract"
+                )
+            )
+
+        return blocks
+
+    @property
+    def decoder_stack(self) -> List[encoder_decoder.SimpleUpsamplingBlock]:
+        """Define the decoder stack."""
+        blocks = []
+        for block in range(self.up_blocks):
+            block_filters_in = int(
+                self.filters
+                * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1 - block))
+            )
+            if self.block_contraction:
+                block_filters_out = int(
+                    self.filters
+                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 2 - block))
+                )
+            else:
+                block_filters_out = block_filters_in
+            blocks.append(
+                encoder_decoder.SimpleUpsamplingBlock(
+                    upsampling_stride=2,
+                    transposed_conv=(not self.up_interpolate),
+                    transposed_conv_filters=block_filters_in,
+                    transposed_conv_kernel_size=self.kernel_size,
+                    transposed_conv_batch_norm=False,
+                    interp_method="bilinear",
+                    skip_connection=True,
+                    skip_add=False,
+                    refine_convs=self.convs_per_block,
+                    refine_convs_first_filters=block_filters_in,
+                    refine_convs_filters=block_filters_out,
+                    refine_convs_kernel_size=self.kernel_size,
+                    refine_convs_batch_norm=False,
+                )
+            )
+        return blocks
+
+    @classmethod
+    def from_config(cls, config: UNetConfig) -> "UNet":
+        """Create a model from a set of configuration parameters.
+
+        Args:
+            config: An `UNetConfig` instance with the desired parameters.
+
+        Returns:
+            An instance of this class with the specified configuration.
+        """
+        stem_blocks = 0
+        if config.stem_stride is not None:
+            stem_blocks = np.log2(config.stem_stride).astype(int)
+        down_blocks = np.log2(config.max_stride).astype(int) - stem_blocks
+        up_blocks = np.log2(config.max_stride / config.output_stride).astype(int)
+
+        return cls(
+            filters=config.filters,
+            filters_rate=config.filters_rate,
+            kernel_size=3,
+            stem_kernel_size=7,
+            convs_per_block=2,
+            stem_blocks=stem_blocks,
+            down_blocks=down_blocks,
+            middle_block=config.middle_block,
+            up_blocks=up_blocks,
+            up_interpolate=config.up_interpolate,
+            stacks=config.stacks,
         )
-        x_outs.append(x_out)
-        x = x_out
-
-    return x_outs

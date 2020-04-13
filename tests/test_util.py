@@ -47,6 +47,7 @@ def test_attr_to_dtype():
 
 def test_frame_list():
     assert frame_list("3-5") == [3, 4, 5]
+    assert frame_list("3,-5") == [3, 4, 5]
     assert frame_list("7,10") == [7, 10]
 
 
@@ -99,3 +100,49 @@ def test_find_files_by_suffix():
 
     files = find_files_by_suffix("tests/data", ".json", depth=1)
     assert "centered_pair.json" in [file.name for file in files]
+
+
+def test_uniquify():
+    assert uniquify([2, 3, 4, 3]) == [2, 3, 4]
+    assert uniquify([2, 4, 3]) == [2, 4, 3]
+    assert uniquify([2, 4, 3, 1, 3]) == [2, 4, 3, 1]
+
+
+def test_dict_cut():
+    d = dict(foo="foo", bar="bar", cab="cab")
+
+    d2 = dict_cut(d, 0, 3)
+    assert len(d2.keys()) == 3
+    assert "foo" in d2
+    assert "bar" in d2
+    assert "cab" in d2
+
+    d2 = dict_cut(d, 1, 2)
+    assert len(d2.keys()) == 1
+    assert "bar" in d2
+
+    d2 = dict_cut(d, 1, 3)
+    assert len(d2.keys()) == 2
+    assert "bar" in d2
+    assert "cab" in d2
+
+
+def test_save_dict_to_hdf5(tmpdir):
+    import h5py
+
+    filename = os.path.join(tmpdir, "test.h5")
+    d = dict(foo=[2, 4, 8], bar=["zip", "zop"], cab=dict(a=2, b=3))
+
+    # Write the dict to an hdf5 file
+    with h5py.File(filename, "w") as f:
+        save_dict_to_hdf5(f, "", d)
+
+    with h5py.File(filename, "r") as f:
+        assert "foo" in f
+        assert "bar" in f
+        assert "cab" in f
+
+        assert f["foo"][-1] == 8
+        assert f["bar"][-1].decode() == "zop"
+
+        assert f["cab"]["a"][()] == 2

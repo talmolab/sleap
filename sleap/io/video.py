@@ -10,6 +10,7 @@ import numpy as np
 import attr
 import cattr
 import logging
+import multiprocessing
 
 from typing import Iterable, List, Optional, Tuple, Union
 
@@ -48,8 +49,27 @@ class HDF5Video:
 
         self.enable_source_video = True
         self._test_frame_ = None
-
         self.__original_to_current_frame_idx = dict()
+        self.__dataset_h5 = None
+        self.__tried_to_load = False
+
+    @input_format.validator
+    def check(self, attribute, value):
+        """Called by attrs to validates input format."""
+        if value not in ["channels_first", "channels_last"]:
+            raise ValueError(f"HDF5Video input_format={value} invalid.")
+
+        if value == "channels_first":
+            self.__channel_idx = 1
+            self.__width_idx = 2
+            self.__height_idx = 3
+        else:
+            self.__channel_idx = 3
+            self.__width_idx = 2
+            self.__height_idx = 1
+
+    def _load(self):
+        self.__tried_to_load = True
 
         # Handle cases where the user feeds in h5.File objects instead of filename
         if isinstance(self.filename, h5.File):
@@ -92,26 +112,18 @@ class HDF5Video:
                 )
                 self._source_video_ = Video.cattr().structure(d, Video)
 
-        else:
-            self.__dataset_h5 = None
+    @property
+    def __dataset_h5(self) -> h5.Dataset:
+        if self.__loaded_dataset is None and not self.__tried_to_load:
+            self._load()
+        return self.__loaded_dataset
 
-    @input_format.validator
-    def check(self, attribute, value):
-        """Called by attrs to validates input format."""
-        if value not in ["channels_first", "channels_last"]:
-            raise ValueError(f"HDF5Video input_format={value} invalid.")
-
-        if value == "channels_first":
-            self.__channel_idx = 1
-            self.__width_idx = 2
-            self.__height_idx = 3
-        else:
-            self.__channel_idx = 3
-            self.__width_idx = 2
-            self.__height_idx = 1
+    @__dataset_h5.setter
+    def __dataset_h5(self, val):
+        self.__loaded_dataset = val
 
     @property
-    def __test_frame(self):
+    def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
             # Lets grab a test frame to help us figure things out about the video
@@ -157,6 +169,18 @@ class HDF5Video:
         """Releases file object."""
         self.close()
 
+    def _try_frame_from_source_video(self, idx) -> np.ndarray:
+        try:
+            return self._source_video.get_frame(idx)
+        except:
+            raise ValueError(f"Frame index {idx} not in original index.")
+
+    @property
+    def _source_video(self) -> "HDF5Video":
+        if self.enable_source_video and hasattr(self, "_source_video_"):
+            return self._source_video_
+        return None
+
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
@@ -189,7 +213,7 @@ class HDF5Video:
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__test_frame.dtype
+        return self.test_frame.dtype
 
     @property
     def last_frame_idx(self) -> int:
@@ -200,6 +224,9 @@ class HDF5Video:
         select frames indexed by number from original video, since the last
         frame index here will not match the number of frames in video.
         """
+        # Ensure that video is loaded since we'll need data from loading
+        self._load()
+
         if self.__original_to_current_frame_idx:
             last_key = sorted(self.__original_to_current_frame_idx.keys())[-1]
             return last_key
@@ -209,18 +236,6 @@ class HDF5Video:
         """Reloads the video."""
         # TODO
         pass
-
-    def _try_frame_from_source_video(self, idx) -> np.ndarray:
-        try:
-            return self._source_video.get_frame(idx)
-        except:
-            raise ValueError(f"Frame index {idx} not in original index.")
-
-    @property
-    def _source_video(self) -> "HDF5Video":
-        if self.enable_source_video and hasattr(self, "_source_video_"):
-            return self._source_video_
-        return None
 
     def get_frame(self, idx) -> np.ndarray:
         """
@@ -232,6 +247,9 @@ class HDF5Video:
         Returns:
             The numpy.ndarray representing the video frame data.
         """
+        # Ensure that video is loaded since we'll need data from loading
+        self._load()
+
         # If we only saved some frames from a video, map to idx in dataset.
         if self.__original_to_current_frame_idx:
             if idx in self.__original_to_current_frame_idx:
@@ -284,6 +302,12 @@ class MediaVideo:
     _reader_ = None
     _test_frame_ = None
 
+    @property
+    def __lock(self):
+        if not hasattr(self, "_lock"):
+            self._lock = multiprocessing.RLock()
+        return self._lock
+
     @grayscale.default
     def __grayscale_default__(self):
         self._detect_grayscale = True
@@ -305,14 +329,14 @@ class MediaVideo:
             # the first frame of data.
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(self.__test_frame[..., 0] == self.__test_frame[..., -1])
+                    np.alltrue(self.test_frame[..., 0] == self.test_frame[..., -1])
                 )
 
         # Return cached reader
         return self._reader_
 
     @property
-    def __test_frame(self):
+    def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
             # Lets grab a test frame to help us figure things out about the video
@@ -361,22 +385,22 @@ class MediaVideo:
         if self.grayscale:
             return 1
         else:
-            return self.__test_frame.shape[2]
+            return self.test_frame.shape[2]
 
     @property
     def width(self):
         """See :class:`Video`."""
-        return self.__test_frame.shape[1]
+        return self.test_frame.shape[1]
 
     @property
     def height(self):
         """See :class:`Video`."""
-        return self.__test_frame.shape[0]
+        return self.test_frame.shape[0]
 
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__test_frame.dtype
+        return self.test_frame.dtype
 
     def reset(self):
         """Reloads the video."""
@@ -384,10 +408,12 @@ class MediaVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
-            self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
-        ret, frame = self.__reader.read()
+        with self.__lock:
+            if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
+                self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
+
+            ret, frame = self.__reader.read()
 
         if grayscale is None:
             grayscale = self.grayscale
@@ -698,26 +724,39 @@ class SingleImageVideo:
             self.filenames = [self.filename]
 
         self.__data = dict()
-        self.__test_frame = None
+        self.test_frame_ = None
 
     def _load_idx(self, idx):
-        img = cv2.imread(self.filenames[idx])
+        img = cv2.imread(self._get_filename(idx))
 
         if img.shape[2] == 3:
             # OpenCV channels are in BGR order, so we should convert to RGB
             img = img[:, :, ::-1]
         return img
 
+    def _get_filename(self, idx: int) -> str:
+        f = self.filenames[idx]
+        if os.path.exists(f):
+            return f
+
+        # Try the directory from the "video" file (this works if all the images
+        # are in the same directory with distinctive filenames).
+        f = os.path.join(os.path.dirname(self.filename), os.path.basename(f))
+        if os.path.exists(f):
+            return f
+
+        raise FileNotFoundError(f"Unable to locate file {idx}: {self.filenames[idx]}")
+
     def _load_test_frame(self):
-        if self.__test_frame is None:
-            self.__test_frame = self._load_idx(0)
+        if self.test_frame_ is None:
+            self.test_frame_ = self._load_idx(0)
 
             if self.height_ is None:
-                self.height_ = self.__test_frame.shape[0]
+                self.height_ = self.test_frame.shape[0]
             if self.width_ is None:
-                self.width_ = self.__test_frame.shape[1]
+                self.width_ = self.test_frame.shape[1]
             if self.channels_ is None:
-                self.channels_ = self.__test_frame.shape[2]
+                self.channels_ = self.test_frame.shape[2]
 
     def get_idx_from_filename(self, filename: str) -> int:
         try:
@@ -728,7 +767,12 @@ class SingleImageVideo:
     # The properties and methods below complete our contract with the
     # higher level Video interface.
 
-    def matches(self, other: "SingleImageVideo") -> np.ndarray:
+    @property
+    def test_frame(self) -> np.ndarray:
+        self._load_test_frame()
+        return self.test_frame_
+
+    def matches(self, other: "SingleImageVideo") -> bool:
         """
         Check if attributes match those of another video.
 
@@ -944,7 +988,7 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
-    def from_numpy(cls, filename: str, *args, **kwargs) -> "Video":
+    def from_numpy(cls, filename: Union[str, np.ndarray], *args, **kwargs) -> "Video":
         """
         Create an instance of a video object from a numpy array.
 
@@ -1031,14 +1075,9 @@ class Video:
         else:
             raise ValueError("Could not detect backend for specified filename.")
 
-        # Only pass through the kwargs that match attributes for the backend
-        attribute_kwargs = {
-            key: val
-            for (key, val) in kwargs.items()
-            if key in attr.fields_dict(backend_class).keys()
-        }
+        kwargs["filename"] = filename
 
-        return cls(backend=backend_class(filename=filename, **attribute_kwargs))
+        return cls(backend=cls.make_specific_backend(backend_class, kwargs))
 
     @classmethod
     def imgstore_from_filenames(
@@ -1244,6 +1283,17 @@ class Video:
         )
 
     @staticmethod
+    def make_specific_backend(backend_class, kwargs):
+        # Only pass through the kwargs that match attributes for the backend
+        attribute_kwargs = {
+            key: val
+            for (key, val) in kwargs.items()
+            if key in attr.fields_dict(backend_class).keys()
+        }
+
+        return backend_class(**attribute_kwargs)
+
+    @staticmethod
     def cattr():
         """
         Returns a cattr converter for serialiazing/deserializing Video objects.
@@ -1259,7 +1309,8 @@ class Video:
                 x["filename"] = Video.fixup_path(x["filename"])
             if "file" in x:
                 x["file"] = Video.fixup_path(x["file"])
-            return cl(**x)
+
+            return Video.make_specific_backend(cl, x)
 
         vid_cattr = cattr.Converter()
 
@@ -1285,7 +1336,7 @@ class Video:
 
         Note that when loading videos during the process of deserializing a
         saved :class:`Labels` dataset, it's usually preferable to fix video
-        paths using a `video_callback`.
+        paths using a `video_search` callback or path list.
 
         Args:
             path: The path the video asset.

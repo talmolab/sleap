@@ -802,7 +802,7 @@ def test_path_fix(tmpdir):
     Labels.save_hdf5(filename=filename, labels=labels)
 
     # Pass the path to the directory with the video
-    labels = Labels.load_file(filename, video_callback=["tests/data/videos/"])
+    labels = Labels.load_file(filename, video_search="tests/data/videos/")
 
     # Make sure we got the actual video path by searching that directory
     assert len(labels.videos) == 1
@@ -820,3 +820,21 @@ def test_local_path_save(tmpdir, monkeypatch):
     Labels.save_file(filename=filename, labels=Labels())
 
     assert os.path.exists(os.path.join(tmpdir, filename))
+
+
+def test_slp_file(min_labels_slp, min_labels):
+    assert min_labels.videos[0].filename == min_labels_slp.videos[0].filename
+
+
+def test_provenance(tmpdir):
+    labels = Labels(provenance=dict(source="test_provenance"))
+    filename = os.path.join(tmpdir, "test.slp")
+
+    # Add a video without a full path
+    labels.add_video(Video.from_filename("small_robot.mp4"))
+
+    Labels.save_file(filename=filename, labels=labels)
+
+    labels = Labels.load_file(filename)
+    print(labels.provenance)
+    assert labels.provenance["source"] == "test_provenance"
