@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.gui.overlays.pafs &#8212; SLEAP  documentation</title>
@@ -37,8 +37,7 @@
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span><span class="p">,</span> <span class="n">HDF5Video</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.multicheck</span> <span class="kn">import</span> <span class="n">MultiCheckWidget</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">HDF5Video</span>
 
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
 
@@ -51,7 +50,7 @@
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="MultiQuiverPlot"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.pafs.MultiQuiverPlot">[docs]</a><span class="k">class</span> <span class="nc">MultiQuiverPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiQuiverPlot"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.MultiQuiverPlot">[docs]</a><span class="k">class</span> <span class="nc">MultiQuiverPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.</span>
 
 <span class="sd">    Args:</span>
@@ -105,18 +104,18 @@
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">affinity_field</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aff_field_item</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MultiQuiverPlot.boundingRect"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.pafs.MultiQuiverPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
+<div class="viewcode-block" id="MultiQuiverPlot.boundingRect"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.MultiQuiverPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Method required by Qt.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="MultiQuiverPlot.paint"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.pafs.MultiQuiverPlot.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiQuiverPlot.paint"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.MultiQuiverPlot.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Method required by Qt.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div></div>
 
 
-<div class="viewcode-block" id="QuiverPlot"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.pafs.QuiverPlot">[docs]</a><span class="k">class</span> <span class="nc">QuiverPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
+<div class="viewcode-block" id="QuiverPlot"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.QuiverPlot">[docs]</a><span class="k">class</span> <span class="nc">QuiverPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;QtWidgets.QGraphicsObject for drawing single quiver plot.</span>
 
 <span class="sd">    Args:</span>
@@ -250,11 +249,11 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tiles</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
-<div class="viewcode-block" id="QuiverPlot.boundingRect"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.pafs.QuiverPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
+<div class="viewcode-block" id="QuiverPlot.boundingRect"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.QuiverPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Method called by Qt in order to determine whether object is in visible frame.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rect</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="QuiverPlot.paint"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.pafs.QuiverPlot.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="QuiverPlot.paint"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.QuiverPlot.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Method called by Qt to draw object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">painter</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="p">)</span>
@@ -275,7 +274,7 @@
 
 
 <span class="k">def</span> <span class="nf">demo_pafs</span><span class="p">(</span><span class="n">pafs</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">decimation</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
+    <span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
 
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span>
         <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
@@ -337,12 +336,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
 </ul>
 
@@ -378,10 +375,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

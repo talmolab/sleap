@@ -1,0 +1,5 @@
+sleap.nn.monitor
+================
+
+.. automodule:: sleap.nn.monitor
+   :members:

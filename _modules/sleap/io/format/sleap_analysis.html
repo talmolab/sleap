@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.io.format.sleap_analysis &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.io.format.sleap_analysis</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span><span class="p">,</span> <span class="n">Skeleton</span>
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">PredictedInstance</span><span class="p">,</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Track</span>
+
+<span class="kn">from</span> <span class="nn">.adaptor</span> <span class="kn">import</span> <span class="n">Adaptor</span><span class="p">,</span> <span class="n">SleapObjectType</span>
+<span class="kn">from</span> <span class="nn">.filehandle</span> <span class="kn">import</span> <span class="n">FileHandle</span>
+
+
+<div class="viewcode-block" id="SleapAnalysisAdaptor"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.sleap_analysis.html#sleap.io.format.sleap_analysis.SleapAnalysisAdaptor">[docs]</a><span class="k">class</span> <span class="nc">SleapAnalysisAdaptor</span><span class="p">(</span><span class="n">Adaptor</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">handles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SleapObjectType</span><span class="o">.</span><span class="n">labels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;h5&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_exts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;h5&quot;</span><span class="p">,</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;SLEAP Analysis HDF5&quot;</span>
+
+<div class="viewcode-block" id="SleapAnalysisAdaptor.can_read_file"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.sleap_analysis.html#sleap.io.format.sleap_analysis.SleapAnalysisAdaptor.can_read_file">[docs]</a>    <span class="k">def</span> <span class="nf">can_read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">does_match_ext</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_hdf5</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s2">&quot;track_occupancy&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="SleapAnalysisAdaptor.can_write_filename"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.sleap_analysis.html#sleap.io.format.sleap_analysis.SleapAnalysisAdaptor.can_write_filename">[docs]</a>    <span class="k">def</span> <span class="nf">can_write_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">does_match_ext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SleapAnalysisAdaptor.does_read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.sleap_analysis.html#sleap.io.format.sleap_analysis.SleapAnalysisAdaptor.does_read">[docs]</a>    <span class="k">def</span> <span class="nf">does_read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="SleapAnalysisAdaptor.does_write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.sleap_analysis.html#sleap.io.format.sleap_analysis.SleapAnalysisAdaptor.does_write">[docs]</a>    <span class="k">def</span> <span class="nf">does_write</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="SleapAnalysisAdaptor.read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.sleap_analysis.html#sleap.io.format.sleap_analysis.SleapAnalysisAdaptor.read">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Labels</span><span class="p">:</span>
+        <span class="n">connect_adj_nodes</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot read analysis hdf5 if no video specified.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">Video</span><span class="p">):</span>
+            <span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">file</span>
+        <span class="n">tracks_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">track_names_list</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;track_names&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">node_names_list</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;node_names&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># shape: frames * nodes * 2 * tracks</span>
+        <span class="n">frame_count</span><span class="p">,</span> <span class="n">node_count</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">track_count</span> <span class="o">=</span> <span class="n">tracks_matrix</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">Track</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">track_name</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span> <span class="k">for</span> <span class="n">track_name</span> <span class="ow">in</span> <span class="n">track_names_list</span><span class="p">]</span>
+
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
+        <span class="n">last_node_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">node_names_list</span><span class="p">:</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="n">node_name</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+            <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">connect_adj_nodes</span> <span class="ow">and</span> <span class="n">last_node_name</span><span class="p">:</span>
+                <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">last_node_name</span><span class="p">,</span> <span class="n">node_name</span><span class="p">)</span>
+            <span class="n">last_node_name</span> <span class="o">=</span> <span class="n">node_name</span>
+
+        <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">frame_count</span><span class="p">):</span>
+            <span class="n">instances</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">track_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">track_count</span><span class="p">):</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">tracks_matrix</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">track_idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">points</span><span class="p">)):</span>
+                    <span class="n">point_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+                    <span class="c1"># make everything a PredictedInstance since the usual use</span>
+                    <span class="c1"># case is to export predictions for analysis</span>
+                    <span class="n">instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">PredictedInstance</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+                            <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+                            <span class="n">point_confidences</span><span class="o">=</span><span class="n">point_scores</span><span class="p">,</span>
+                            <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span>
+                            <span class="n">track</span><span class="o">=</span><span class="n">tracks</span><span class="p">[</span><span class="n">track_idx</span><span class="p">],</span>
+                            <span class="n">instance_score</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">if</span> <span class="n">instances</span><span class="p">:</span>
+                <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">instances</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">frames</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SleapAnalysisAdaptor.write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.sleap_analysis.html#sleap.io.format.sleap_analysis.SleapAnalysisAdaptor.write">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source_object</span><span class="p">:</span> <span class="n">Labels</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sleap.info.write_tracking_h5</span> <span class="kn">import</span> <span class="n">main</span> <span class="k">as</span> <span class="n">write_analysis</span>
+
+        <span class="n">write_analysis</span><span class="p">(</span><span class="n">source_object</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">all_frames</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.io.visuals &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.io.format.adaptor" href="sleap.io.format.adaptor.html" />
+    <link rel="prev" title="sleap.io.video" href="sleap.io.video.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.io.visuals">
+<span id="sleap-io-visuals"></span><h1>sleap.io.visuals<a class="headerlink" href="#module-sleap.io.visuals" title="Permalink to this headline">¶</a></h1>
+<p>Module for generating videos with visual annotation overlays.</p>
+<dl class="py function">
+<dt id="sleap.io.visuals.get_frame_image">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">get_frame_image</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video_frame</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#get_frame_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.get_frame_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns single annotated frame image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video_frame</strong> – The ndarray of the frame image.</p></li>
+<li><p><strong>video_idx</strong> – Index of video in <a href="#id1"><span class="problematic" id="id2">:attribute:`Labels.videos`</span></a> list.</p></li>
+<li><p><strong>frame_idx</strong> – Index of frame in video.</p></li>
+<li><p><strong>labels</strong> – The dataset from which to get data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ndarray of frame image with visual annotations added.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.visuals.img_to_cv">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">img_to_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#img_to_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.img_to_cv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares frame image as needed for opencv.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.visuals.marker">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">marker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#marker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.marker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Annotate frame images (draw instances).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_q</strong> – Queue with (list of frame indexes, ndarray of frame images).</p></li>
+<li><p><strong>out_q</strong> – Queue to send annotated images as
+(images, h, w, channels) ndarray.</p></li>
+<li><p><strong>labels</strong> – the <cite>Labels</cite> object from which to get data for annotating.</p></li>
+<li><p><strong>video_idx</strong> – index of <cite>Video</cite> in <cite>labels.videos</cite> list.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.visuals.plot_instance_cv">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instance_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span></em>, <em class="sig-param"><span class="n">color</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">, </span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">marker_radius</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">4</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instance_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instance_cv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add visual annotations for single instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – The ndarray of the frame image.</p></li>
+<li><p><strong>instance</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> to add to frame image.</p></li>
+<li><p><strong>color</strong> – (r, g, b) color for this instance.</p></li>
+<li><p><strong>marker_radius</strong> – Radius of marker for instance points (nodes).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ndarray of frame image with visual annotations for instance added.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.visuals.plot_instances_cv">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instances_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instances_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instances_cv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds visuals annotations to single frame image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – The ndarray of the frame image.</p></li>
+<li><p><strong>video_idx</strong> – Index of video in <a href="#id3"><span class="problematic" id="id4">:attribute:`Labels.videos`</span></a> list.</p></li>
+<li><p><strong>frame_idx</strong> – Index of frame in video.</p></li>
+<li><p><strong>labels</strong> – The dataset from which to get data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ndarray of frame image with visual annotations added.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.visuals.reader">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">reader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read frame images from video and send them into queue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_q</strong> – Queue to send (list of frame indexes, ndarray of frame images)
+for chunks of video.</p></li>
+<li><p><strong>video</strong> – The <cite>Video</cite> object to read.</p></li>
+<li><p><strong>frames</strong> – Full list frame indexes we want to read.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.visuals.save_labeled_video">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">save_labeled_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">15</span></em>, <em class="sig-param"><span class="n">gui_progress</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#save_labeled_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.save_labeled_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to generate and save video with annotations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – Output filename.</p></li>
+<li><p><strong>labels</strong> – The dataset from which to get data.</p></li>
+<li><p><strong>video</strong> – The source <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> we want to annotate.</p></li>
+<li><p><strong>frames</strong> – List of frames to include in output video.</p></li>
+<li><p><strong>fps</strong> – Frames per second for output video.</p></li>
+<li><p><strong>gui_progress</strong> – Whether to show Qt GUI progress dialog.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.visuals.writer">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">writer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">progress_queue</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">img_w_h</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#writer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.writer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write annotated images to video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_q</strong> – Queue with annotated images as (images, h, w, channels) ndarray</p></li>
+<li><p><strong>progress_queue</strong> – Queue to send progress as
+(total frames written: int, elapsed time: float).
+Send (-1, elapsed time) when done.</p></li>
+<li><p><strong>filename</strong> – full path to output video</p></li>
+<li><p><strong>fps</strong> – frames per second for output video</p></li>
+<li><p><strong>img_w_h</strong> – (w, h) for output video (note width first for opencv)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.training.html">sleap.gui.learning.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.io.video.html" title="previous chapter">sleap.io.video</a></li>
+      <li>Next: <a href="sleap.io.format.adaptor.html" title="next chapter">sleap.io.format.adaptor</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.io.visuals.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

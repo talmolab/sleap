@@ -1,0 +1,782 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.architectures.encoder_decoder &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.architectures.encoder_decoder</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Generic encoder-decoder fully convolutional backbones.</span>
+
+<span class="sd">This module contains building blocks for creating encoder-decoder architectures of</span>
+<span class="sd">general form.</span>
+
+<span class="sd">The encoder branch of the network forms the initial multi-scale feature extraction via</span>
+<span class="sd">repeated blocks of convolutions and pooling steps.</span>
+
+<span class="sd">The decoder branch is then responsible for upsampling the low resolution feature maps</span>
+<span class="sd">to achieve the target output stride.</span>
+
+<span class="sd">This pattern is generalizable and describes most fully convolutional architectures. For</span>
+<span class="sd">example:</span>
+<span class="sd">    - simple convolutions with pooling form the structure in `LEAP CNN</span>
+<span class="sd">&lt;https://www.nature.com/articles/s41592-018-0234-5&gt;`_;</span>
+<span class="sd">    - adding skip connections forms `U-Net &lt;https://arxiv.org/pdf/1505.04597.pdf&gt;`_;</span>
+<span class="sd">    - using residual blocks with skip connections forms the base module in `stacked</span>
+<span class="sd">    hourglass &lt;https://arxiv.org/pdf/1603.06937.pdf&gt;`_;</span>
+<span class="sd">    - using dense blocks with skip connections forms `FC-DenseNet</span>
+<span class="sd">&lt;https://arxiv.org/pdf/1611.09326.pdf&gt;`_.</span>
+
+<span class="sd">This module implements blocks used in all of these variants on top of a generic base</span>
+<span class="sd">classes.</span>
+
+<span class="sd">See the `EncoderDecoder` base class for requirements for creating new architectures.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Text</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.common</span> <span class="kn">import</span> <span class="n">IntermediateFeature</span>
+
+
+<div class="viewcode-block" id="EncoderBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">EncoderBlock</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class for encoder blocks.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        pool: If True, applies max pooling at the end of the block.</span>
+<span class="sd">        pooling_stride: Stride of the max pooling operation. If 1, the output of this</span>
+<span class="sd">            block will be at the same stride (== 1/scale) as the input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pool</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">pooling_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="EncoderBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the encoder block from an input tensor.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Subclasses of EncoderBlock must implement make_block.&quot;</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SimpleConvBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SimpleConvBlock</span><span class="p">(</span><span class="n">EncoderBlock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Flexible block of convolutions and max pooling.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        pool: If True, applies max pooling at the end of the block.</span>
+<span class="sd">        pooling_stride: Stride of the max pooling operation. If 1, the output of this</span>
+<span class="sd">            block will be at the same stride (== 1/scale) as the input.</span>
+<span class="sd">        pool_before_convs: If True, max pooling is performed before convolutions.</span>
+<span class="sd">        num_convs: Number of convolution layers with activation. All attributes below</span>
+<span class="sd">            are the same for all convolution layers within the block.</span>
+<span class="sd">        filters: Number of convolutional kernel filters.</span>
+<span class="sd">        kernel_size: Size of convolutional kernels (== height == width).</span>
+<span class="sd">        use_bias: If False, convolution layers will not have a bias term.</span>
+<span class="sd">        batch_norm: If True, applies batch normalization after each convolution.</span>
+<span class="sd">        batch_norm_before_activation: If True, batch normalization is applied to the</span>
+<span class="sd">            features computed from the linear convolution operation before the</span>
+<span class="sd">            activation function, i.e.:</span>
+<span class="sd">                conv -&gt; BN -&gt; activation function</span>
+<span class="sd">            If False, the mini-block will look like:</span>
+<span class="sd">                conv -&gt; activation function -&gt; BN</span>
+<span class="sd">        activation: Name of activation function (typically &quot;relu&quot; or &quot;linear&quot;).</span>
+<span class="sd">        block_prefix: String to append to the prefix provided at block creation time.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This block is used in LeapCNN and UNet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pool_before_convs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">num_convs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">use_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">batch_norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">batch_norm_before_activation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">activation</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span>
+    <span class="n">block_prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<div class="viewcode-block" id="SimpleConvBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;conv_block&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create the block from an input tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input tensor to the block.</span>
+<span class="sd">            prefix: String that will be added to the name of every layer in the block.</span>
+<span class="sd">                If not specified, instantiating this block multiple times may result in</span>
+<span class="sd">                name conflicts if existing layers have the same name.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The output tensor after applying all operations in the block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prefix</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_prefix</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_before_convs</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">(</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pooling_stride</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_pool&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_convs</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+                <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_bias</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_conv</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm_before_activation</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_bn</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span>
+                <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_act</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm_before_activation</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_bn</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_before_convs</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">(</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pooling_stride</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_pool&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+
+<div class="viewcode-block" id="DecoderBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.DecoderBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DecoderBlock</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class for decoder blocks.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_stride: The striding of the upsampling layer. This is typically set</span>
+<span class="sd">            to 2, such that the input tensor doubles in size after the block, but can be</span>
+<span class="sd">            set higher to upsample in fewer steps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">upsampling_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="DecoderBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">current_stride</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">skip_source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;upsample&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the decoder block from an input tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input tensor to the block.</span>
+<span class="sd">            current_stride: The stride of input tensor.</span>
+<span class="sd">            skip_source: A tensor that will be used to form a skip connection if</span>
+<span class="sd">                the block is configured to use it.</span>
+<span class="sd">            prefix: String that will be added to the name of every layer in the block.</span>
+<span class="sd">                If not specified, instantiating this block multiple times may result in</span>
+<span class="sd">                name conflicts if existing layers have the same name.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The output tensor after applying all operations in the block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Subclasses of DecoderBlock must implement make_block.&quot;</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SimpleUpsamplingBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SimpleUpsamplingBlock</span><span class="p">(</span><span class="n">DecoderBlock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Standard block of upsampling with optional refinement and skip connections.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_stride: The striding of the upsampling layer. This is typically set</span>
+<span class="sd">            to 2, such that the input tensor doubles in size after the block, but can be</span>
+<span class="sd">            set higher to upsample in fewer steps.</span>
+<span class="sd">        transposed_conv: If True, use a strided transposed convolution to perform</span>
+<span class="sd">            learnable upsampling. If False, interpolated upsampling will be used (see</span>
+<span class="sd">            `interp_method`) and `transposed_conv_*` attributes will have no effect.</span>
+<span class="sd">        transposed_conv_filters: Integer that specifies the number of filters in the</span>
+<span class="sd">            transposed convolution layer.</span>
+<span class="sd">        transposed_conv_kernel_size: Size of the kernel for the transposed convolution.</span>
+<span class="sd">        transposed_conv_use_bias: If False, transposed convolution layers will not have</span>
+<span class="sd">            a bias term.</span>
+<span class="sd">        transposed_conv_batch_norm: If True, applies batch normalization after the</span>
+<span class="sd">            transposed convolution.</span>
+<span class="sd">        transposed_conv_batch_norm_before_activation: If True, batch normalization is</span>
+<span class="sd">            applied to the features computed from the linear transposed convolution</span>
+<span class="sd">            operation before the activation function, i.e.:</span>
+<span class="sd">                transposed conv -&gt; BN -&gt; activation function</span>
+<span class="sd">            If False, the mini-block will look like:</span>
+<span class="sd">                transposed conv -&gt; activation function -&gt; BN</span>
+<span class="sd">        transposed_conv_activation: Name of activation function (typically &quot;relu&quot; or</span>
+<span class="sd">            &quot;linear&quot;).</span>
+<span class="sd">        interp_method: String specifying the type of interpolation to use if</span>
+<span class="sd">            `transposed_conv` is set to False. This can be `bilinear` or `nearest`. See</span>
+<span class="sd">            `tf.keras.layers.UpSampling2D` for more details on the implementation.</span>
+<span class="sd">        skip_connection: If True, the block will form a skip connection with source</span>
+<span class="sd">            features if provided during instantiation in the `make_block` method. If</span>
+<span class="sd">            False, no skip connection will be formed even if a source feature is</span>
+<span class="sd">            available.</span>
+<span class="sd">        skip_add: If True, the skip connection will be formed by adding the source</span>
+<span class="sd">            feature to the output of the upsampling operation. If they have different</span>
+<span class="sd">            number of channels, a 1x1 linear convolution will be applied to the source</span>
+<span class="sd">            first (similar to residual shortcut connections). If False, the two tensors</span>
+<span class="sd">            will be concatenated channelwise instead.</span>
+<span class="sd">        refine_convs: If greater than 0, specifies the number of convolutions that will</span>
+<span class="sd">            be applied after the upsampling step. These layers can serve the purpose of</span>
+<span class="sd">            &quot;mixing&quot; the skip connection fused features, or to refine the current</span>
+<span class="sd">            feature map after upsampling which can help to prevent aliasing and</span>
+<span class="sd">            checkerboard effects. If 0, no additional convolutions will be applied after</span>
+<span class="sd">            upsampling and the skip connection (if present) and all `refine_convs_*`</span>
+<span class="sd">            attributes will have no effect. If greater than 1, all layers will be</span>
+<span class="sd">            identical with respect to these attributes.</span>
+<span class="sd">        refine_convs_first_filters: If not None, the first refinement conv layer will</span>
+<span class="sd">            have this many filters, otherwise `refine_convs_filters`.</span>
+<span class="sd">        refine_convs_filters: Specifies the number of filters to use for the refinement</span>
+<span class="sd">            convolutions.</span>
+<span class="sd">        refine_convs_kernel_size: Size of the kernel for the refinement convolution.</span>
+<span class="sd">        refine_convs_use_bias: If False, refinement convolution layers will not have a</span>
+<span class="sd">            bias term.</span>
+<span class="sd">        refine_convs_batch_norm: If True, applies batch normalization after each</span>
+<span class="sd">            refinement convolution.</span>
+<span class="sd">        refine_convs_batch_norm_before_activation: If True, batch normalization is</span>
+<span class="sd">            applied to the features computed from each linear refinement convolution</span>
+<span class="sd">            operation before the activation function, i.e.:</span>
+<span class="sd">                conv -&gt; BN -&gt; activation function</span>
+<span class="sd">            If False, the mini-block will look like:</span>
+<span class="sd">                conv -&gt; activation function -&gt; BN</span>
+<span class="sd">        refine_convs_activation: Name of activation function (typically &quot;relu&quot; or</span>
+<span class="sd">            &quot;linear&quot;).</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This block is used in LeapCNN and UNet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">transposed_conv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">transposed_conv_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">transposed_conv_kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">transposed_conv_use_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">transposed_conv_batch_norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">transposed_conv_batch_norm_before_activation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">transposed_conv_activation</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span>
+
+    <span class="n">interp_method</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+
+    <span class="n">skip_connection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">skip_add</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">refine_convs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">refine_convs_first_filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">refine_convs_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">refine_convs_use_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">refine_convs_kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">refine_convs_batch_norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">refine_convs_batch_norm_before_activation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">refine_convs_activation</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span>
+
+<div class="viewcode-block" id="SimpleUpsamplingBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">current_stride</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;upsample&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the decoder block from an input tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input tensor to the block.</span>
+<span class="sd">            current_stride: The stride of input tensor. Not required but if provided,</span>
+<span class="sd">                will be used to prepend the strides to the prefix.</span>
+<span class="sd">            skip_source: A tensor that will be used to form a skip connection if</span>
+<span class="sd">                the block is configured to use it.</span>
+<span class="sd">            prefix: String that will be added to the name of every layer in the block.</span>
+<span class="sd">                If not specified, instantiating this block multiple times may result in</span>
+<span class="sd">                name conflicts if existing layers have the same name.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            The output tensor after applying all operations in the block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">current_stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Append the strides to the block prefix.</span>
+            <span class="n">new_stride</span> <span class="o">=</span> <span class="n">current_stride</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span>
+            <span class="n">prefix</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_s</span><span class="si">{</span><span class="n">current_stride</span><span class="si">}</span><span class="s2">_to_s</span><span class="si">{</span><span class="n">new_stride</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv</span><span class="p">:</span>
+            <span class="c1"># Upsample via strided transposed convolution.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2DTranspose</span><span class="p">(</span>
+                <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_filters</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_kernel_size</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_trans_conv&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_batch_norm</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_batch_norm_before_activation</span>
+            <span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_trans_conv_bn&quot;</span><span class="p">)(</span>
+                    <span class="n">x</span>
+                <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span>
+                <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_activation</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_trans_conv_act_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_activation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_batch_norm</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_batch_norm_before_activation</span>
+            <span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_trans_conv_bn&quot;</span><span class="p">)(</span>
+                    <span class="n">x</span>
+                <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Upsample via interpolation.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span>
+                <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span><span class="p">,</span>
+                <span class="n">interpolation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp_method</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_interp_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">interp_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Form skip connection if available.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_connection</span> <span class="ow">and</span> <span class="n">skip_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_add</span><span class="p">:</span>
+                <span class="n">source_x</span> <span class="o">=</span> <span class="n">skip_source</span>
+                <span class="k">if</span> <span class="n">source_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="c1"># Adjust channel count via 1x1 linear conv if not matching.</span>
+                    <span class="n">source_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+                        <span class="n">filters</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_skip_conv1x1&quot;</span><span class="p">,</span>
+                    <span class="p">)(</span><span class="n">source_x</span><span class="p">)</span>
+
+                <span class="c1"># Skip connection via addition.</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_skip_add&quot;</span><span class="p">)([</span><span class="n">source_x</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Skip connection via simple concatenation.</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_skip_concat&quot;</span><span class="p">)(</span>
+                    <span class="p">[</span><span class="n">skip_source</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Add further convolutions to refine after upsampling and/or skip.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_convs</span><span class="p">):</span>
+            <span class="n">filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_filters</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_first_filters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_first_filters</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+                <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_kernel_size</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_use_bias</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_refine_conv</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_batch_norm</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_batch_norm_before_activation</span>
+            <span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_refine_conv</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_bn&quot;</span>
+                <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span>
+                <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_activation</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_refine_conv</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_act_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_activation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_batch_norm</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_batch_norm_before_activation</span>
+            <span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_refine_conv</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_bn&quot;</span>
+                <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">EncoderDecoder</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;General encoder-decoder base class.</span>
+
+<span class="sd">    New architectures that follow the encoder-decoder pattern can be defined by</span>
+<span class="sd">    inheriting from this class and implementing the `encoder_stack` and `decoder_stack`</span>
+<span class="sd">    methods.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        stacks: If greater than 1, the encoder-decoder architecture will be repeated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">stacks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stem_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">EncoderBlock</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of encoder blocks that define the stem.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">encoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">EncoderBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of encoder blocks that define the encoder.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Encoder-decoder subclasses must define encoder stack.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">decoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">DecoderBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of decoder blocks that define the decoder.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Encoder-decoder subclasses must define decoder stack.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stem_features_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the relative stride of the final output of the stem block.</span>
+
+<span class="sd">        This is equivalent to the stride of the stem assuming that it is constructed</span>
+<span class="sd">        from an input with stride 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_stack</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">pooling_stride</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_stack</span> <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">pool</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">encoder_features_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the relative stride of the final output of the encoder.</span>
+
+<span class="sd">        This is equivalent to the stride of the encoder assuming that it is constructed</span>
+<span class="sd">        from an input with stride 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">pooling_stride</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_stack</span> <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">pool</span><span class="p">]</span>
+                <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_features_stride</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">decoder_features_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the relative stride of the final output of the decoder.</span>
+
+<span class="sd">        This is equivalent to the stride of the decoder assuming that it is constructed</span>
+<span class="sd">        from an input with stride 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_features_stride</span> <span class="o">//</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">upsampling_stride</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_stack</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the maximum stride that the input must be divisible by.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_features_stride</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return stride of the output of the backbone.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_features_stride</span>
+    
+
+<div class="viewcode-block" id="EncoderDecoder.make_stem"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem">[docs]</a>    <span class="k">def</span> <span class="nf">make_stem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;stem&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the stem layers defined by the stem block configuration.</span>
+
+<span class="sd">        Unlike in the encoder, the stem layers do not get repeated in stacked models.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: The input tensor.</span>
+<span class="sd">            current_stride: The stride of `x_in` relative to the original input. If any</span>
+<span class="sd">                pooling was performed before the stem, this must be specified in</span>
+<span class="sd">                order to appropriately set the stride in the rest of the model.</span>
+<span class="sd">            prefix: String prefix for naming stem layers.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The final output tensor of the stem.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_stack</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x_in</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_stack</span><span class="p">):</span>
+            <span class="c1"># Instantiate block.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">make_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="EncoderDecoder.make_encoder"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder">[docs]</a>    <span class="k">def</span> <span class="nf">make_encoder</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">current_stride</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;enc&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the encoder layers defined by the encoder stack configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: The input tensor.</span>
+<span class="sd">            current_stride: The stride of `x_in` relative to the original input. If any</span>
+<span class="sd">                pooling was performed before the encoder, this must be specified in</span>
+<span class="sd">                order to appropriately set the stride in the returned intermediate</span>
+<span class="sd">                features.</span>
+<span class="sd">            prefix: String prefix for naming encoder layers.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple of the final output tensor of the encoder and a list of</span>
+<span class="sd">            `IntermediateFeature`s.</span>
+
+<span class="sd">            The intermediate features contain the output tensors from every block except</span>
+<span class="sd">            the last. These can be reused in the decoder to form skip connections.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+        <span class="n">intermediate_features</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder_stack</span><span class="p">):</span>
+
+            <span class="c1"># Instantiate block.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">make_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Update the current stride and store the output of the current block.</span>
+            <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">pool</span><span class="p">:</span>
+                <span class="n">current_stride</span> <span class="o">*=</span> <span class="n">block</span><span class="o">.</span><span class="n">pooling_stride</span>
+
+            <span class="k">if</span> <span class="n">current_stride</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">feat</span><span class="o">.</span><span class="n">stride</span> <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">intermediate_features</span><span class="p">]:</span>
+                <span class="n">intermediate_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">IntermediateFeature</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">current_stride</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">intermediate_features</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="EncoderDecoder.make_decoder"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder">[docs]</a>    <span class="k">def</span> <span class="nf">make_decoder</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">current_stride</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">skip_source_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;dec&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the encoder layers defined by the decoder stack configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: The input tensor.</span>
+<span class="sd">            current_stride: The stride of `x_in` relative to the original input. This is</span>
+<span class="sd">                the stride of the output of the encoder relative to the original input.</span>
+<span class="sd">            skip_source_features: A sequence of `IntermediateFeature`s containing</span>
+<span class="sd">                tensors that can be used to form skip connections at matching strides.</span>
+<span class="sd">                At every decoder block, the first skip source feature found at the input</span>
+<span class="sd">                stride of the block will be passed to the block instantiation method. If</span>
+<span class="sd">                the decoder block is not configured to form skip connections, these will</span>
+<span class="sd">                be ignored even if found.</span>
+<span class="sd">            prefix: String prefix for naming decoder layers.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple of the final output tensor of the decoder and a list of</span>
+<span class="sd">            `IntermediateFeature`s.</span>
+
+<span class="sd">            The intermediate features contain the output tensors from every block except</span>
+<span class="sd">            the last. This includes the input to this function (`x_in`). These are</span>
+<span class="sd">            useful when defining heads that take inputs at multiple scales.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+        <span class="n">intermediate_features</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder_stack</span><span class="p">):</span>
+
+            <span class="c1"># Store the output of the current block.</span>
+            <span class="n">intermediate_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">IntermediateFeature</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">current_stride</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">next_stride</span> <span class="o">=</span> <span class="n">current_stride</span> <span class="o">//</span> <span class="n">block</span><span class="o">.</span><span class="n">upsampling_stride</span>
+
+            <span class="c1"># Look for a source tensor at the next stride (after upsampling) to form a</span>
+            <span class="c1"># skip connection.</span>
+            <span class="n">skip_source</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">source_feat</span> <span class="ow">in</span> <span class="n">skip_source_features</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">source_feat</span><span class="o">.</span><span class="n">stride</span> <span class="o">==</span> <span class="n">next_stride</span><span class="p">:</span>
+                    <span class="n">skip_source</span> <span class="o">=</span> <span class="n">source_feat</span><span class="o">.</span><span class="n">tensor</span>
+                    <span class="k">break</span>
+
+            <span class="c1"># Create the block.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">make_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">current_stride</span><span class="o">=</span><span class="n">current_stride</span><span class="p">,</span>
+                <span class="n">skip_source</span><span class="o">=</span><span class="n">skip_source</span><span class="p">,</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Update current stride.</span>
+            <span class="n">current_stride</span> <span class="o">=</span> <span class="n">next_stride</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">intermediate_features</span></div>
+
+<div class="viewcode-block" id="EncoderDecoder.make_backbone"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone">[docs]</a>    <span class="k">def</span> <span class="nf">make_backbone</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">current_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]],</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]],</span>
+    <span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the entire encoder-decoder backbone.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: The input tensor.</span>
+<span class="sd">            current_stride: The stride of `x_in` relative to the original input. This is</span>
+<span class="sd">                1 if the input tensor comes from the input layer of the network. If not,</span>
+<span class="sd">                this must be set appropriately in order to match up intermediate tensors</span>
+<span class="sd">                during decoder construction.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple of the final output tensor of the decoder and a list of</span>
+<span class="sd">            `IntermediateFeature`s.</span>
+
+<span class="sd">            The intermediate features contain the output tensors from every block except</span>
+<span class="sd">            the last. This includes the input to this function (`x_in`). These are</span>
+<span class="sd">            useful when defining heads that take inputs at multiple scales.</span>
+
+<span class="sd">            If the architecture has more than 1 stack, the outputs are each lists of</span>
+<span class="sd">            output tensors and intermediate features corresponding to each stack.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stacks</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_features_stride</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_features_stride</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;If using a stacked configuration, the backbone must define &quot;</span>
+                    <span class="s2">&quot;symmetric encoder and decoder. Create a stem for initial &quot;</span>
+                    <span class="s2">&quot;downsampling if an output stride &gt; 1 is desired.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Build stem for the first stack if defined.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_stem</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;stem&quot;</span><span class="p">)</span>
+        <span class="n">stem_output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_stack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stem_output</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">IntermediateFeature</span><span class="p">(</span>
+                    <span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">current_stride</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_features_stride</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+
+        <span class="n">stack_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">intermediate_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacks</span><span class="p">):</span>
+
+            <span class="c1"># Build encoder.</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">intermediate_encoder_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_encoder</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">current_stride</span><span class="o">=</span><span class="n">current_stride</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_features_stride</span><span class="p">,</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;stack</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_enc&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Build decoder.</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">intermediate_decoder_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_decoder</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">skip_source_features</span><span class="o">=</span><span class="n">stem_output</span> <span class="o">+</span> <span class="n">intermediate_encoder_features</span><span class="p">,</span>
+                <span class="n">current_stride</span><span class="o">=</span><span class="n">current_stride</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_features_stride</span><span class="p">,</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;stack</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_dec&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">stack_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">intermediate_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">intermediate_decoder_features</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stacks</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stack_outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">intermediate_outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stack_outputs</span><span class="p">,</span> <span class="n">intermediate_outputs</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

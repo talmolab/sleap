@@ -1,0 +1,551 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.data.normalization &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.nn.data.pipelines" href="sleap.nn.data.pipelines.html" />
+    <link rel="prev" title="sleap.nn.data.instance_cropping" href="sleap.nn.data.instance_cropping.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.nn.data.normalization">
+<span id="sleap-nn-data-normalization"></span><h1>sleap.nn.data.normalization<a class="headerlink" href="#module-sleap.nn.data.normalization" title="Permalink to this headline">¶</a></h1>
+<p>Transformers for normalizing data formats.</p>
+<dl class="py class">
+<dt id="sleap.nn.data.normalization.Normalizer">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">Normalizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'image'</span></em>, <em class="sig-param"><span class="n">ensure_float</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ensure_rgb</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ensure_grayscale</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">imagenet_mode</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#Normalizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data transformer to normalize images.</p>
+<p>This is useful as a transformation to data streams that require specific data ranges
+such as for pretrained models with specific preprocessing constraints.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.data.normalization.Normalizer.image_key">
+<code class="sig-name descname">image_key</code><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.image_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>String name of the key containing the images to normalize.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.data.normalization.Normalizer.ensure_float">
+<code class="sig-name descname">ensure_float</code><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.ensure_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, converts the image to a <cite>tf.float32</cite> if not already.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.data.normalization.Normalizer.ensure_rgb">
+<code class="sig-name descname">ensure_rgb</code><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.ensure_rgb" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, converts the image to RGB if not already.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.data.normalization.Normalizer.ensure_grayscale">
+<code class="sig-name descname">ensure_grayscale</code><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.ensure_grayscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, converts the image to grayscale if not already.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.data.normalization.Normalizer.imagenet_mode">
+<code class="sig-name descname">imagenet_mode</code><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.imagenet_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies an ImageNet-based normalization mode commonly used in
+<cite>tf.keras.applications</cite>-based pretrained models. No effect if not set.
+Valid values are:
+“tf”: Values will be scaled to [-1, 1], expanded to RGB if grayscale.
+“caffe”: Values will be scaled to [0, 255], expanded to RGB if grayscale,</p>
+<blockquote>
+<div><p>RGB channels flipped to BGR, and subtracted by a fixed mean.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>“torch”: Values will be scaled to [0, 1], expanded to RGB if grayscale,</dt><dd><p>subtracted by a fixed mean, and scaled by fixed standard deviation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.data.normalization.Normalizer.from_config">
+<em class="property">classmethod </em><code class="sig-name descname">from_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.PreprocessingConfig" title="sleap.nn.config.data.PreprocessingConfig">sleap.nn.config.data.PreprocessingConfig</a></span></em>, <em class="sig-param"><span class="n">image_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'image'</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#sleap.nn.data.normalization.Normalizer" title="sleap.nn.data.normalization.Normalizer">sleap.nn.data.normalization.Normalizer</a><a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#Normalizer.from_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.from_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build an instance of this class from its configuration options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – An <cite>PreprocessingConfig</cite> instance with the desired parameters.</p></li>
+<li><p><strong>image_key</strong> – String name of the key containing the images to normalize.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An instance of this class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.data.normalization.Normalizer.input_keys">
+<em class="property">property </em><code class="sig-name descname">input_keys</code><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.input_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the keys that incoming elements are expected to have.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.data.normalization.Normalizer.output_keys">
+<em class="property">property </em><code class="sig-name descname">output_keys</code><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.output_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the keys that outgoing elements will have.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.data.normalization.Normalizer.transform_dataset">
+<code class="sig-name descname">transform_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ds_input</span><span class="p">:</span> <span class="n">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.DatasetV2<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#Normalizer.transform_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.Normalizer.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a dataset that contains centroids computed from the inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ds_input</strong> – A dataset with image key specified in the <cite>image_key</cite> attribute.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <cite>tf.data.Dataset</cite> with elements containing the same images with
+normalization applied.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.convert_rgb_to_bgr">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">convert_rgb_to_bgr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#convert_rgb_to_bgr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.convert_rgb_to_bgr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an RGB image to BGR format by reversing the channel order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Tensor of any dtype with shape (…, 3) in RGB format. If grayscale, the
+image will be converted to RGB first.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The input image with the channels axis reversed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.ensure_float">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">ensure_float</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#ensure_float"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.ensure_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the image to a tf.float32.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Tensor of any dtype.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tensor of the same shape as <cite>image</cite> but with dtype tf.float32. If the image
+was already of tf.float32 dtype, it will not be changed.</p>
+<p>If the input was of an integer type, it will be scaled to the range [0, 1]
+according to the dtype’s maximum value.</p>
+</p>
+</dd>
+</dl>
+<p>See also: tf.image.convert_image_dtype</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.ensure_grayscale">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">ensure_grayscale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#ensure_grayscale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.ensure_grayscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert image to grayscale if in RGB format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Tensor of any dtype of shape (height, width, channels). Channels are
+expected to be 1 or 3.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A grayscale image of shape (height, width, 1) of the same dtype as the input.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the image had channels not equal to 1 or 3.</p>
+</dd>
+</dl>
+<p>See also: tf.image.rgb_to_grayscale</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.ensure_int">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">ensure_int</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#ensure_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.ensure_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the image to a tf.uint8.</p>
+<p>If the image is a floating dtype, then converts and scales data from [0, 1]
+to [0, 255] as needed. Otherwise, returns image as is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Tensor of any dtype.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tensor of the same shape as <cite>image</cite> but with dtype tf.uint8.
+If the image was not a floating dtype, then it will not be changed.</p>
+<p>If the input was float with range [0, 1], it will be scaled to [0, 255].</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.ensure_min_image_rank">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">ensure_min_image_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#ensure_min_image_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.ensure_min_image_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expand the image to a minimum rank of 3 by adding single dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Tensor of any rank and dtype.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The expanded image to a minimum rank of 3.</p>
+<p>If the input was rank-2, it is assumed be of shape (height, width), so a
+singleton channels axis is appended to produce a tensor of shape
+(height, width, 1).</p>
+<p>If the image was already of rank &gt;= 3, it will be returned without changes.</p>
+</p>
+</dd>
+</dl>
+<p>See also: sleap.nn.data.utils.expand_to_rank</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.ensure_rgb">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">ensure_rgb</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#ensure_rgb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.ensure_rgb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert image to RGB if in grayscale format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Tensor of any dtype of shape (height, width, channels). Channels are
+expected to be 1 or 3.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A grayscale image of shape (height, width, 1) of the same dtype as the input.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the image had channels not equal to 1 or 3.</p>
+</dd>
+</dl>
+<p>See also: tf.image.grayscale_to_rgb</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.scale_image_range">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">scale_image_range</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">min_val</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">max_val</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#scale_image_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.scale_image_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale the range of image values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – Tensor of any shape of dtype tf.float32 with values in the range [0, 1].</p></li>
+<li><p><strong>min_val</strong> – The minimum number that values will be scaled to.</p></li>
+<li><p><strong>max_val</strong> – The maximum number that values will be scaled to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The scaled image of the same shape and dtype tf.float32. Values in the input
+that were 0 will now be scaled to <cite>min_val</cite>, and values that were 1.0 will be
+scaled to <cite>max_val</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.scale_to_imagenet_caffe_mode">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">scale_to_imagenet_caffe_mode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#scale_to_imagenet_caffe_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.scale_to_imagenet_caffe_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale images according to the “caffe” preprocessing mode.</p>
+<p>This applies the preprocessing operations implemented in <cite>tf.keras.applications</cite> for
+models pretrained on ImageNet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Any image tensor of rank &gt;= 2. If rank &gt;=3, the last axis is assumed to
+be of size 3 corresponding to RGB-ordered channels.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The preprocessed image of dtype tf.float32 and shape (…, height, width, 3)
+with BGR channel ordering.</p>
+<p>Values will be in the approximate range of [-127.5, 127.5].</p>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>The preprocessing steps applied are:</dt><dd><ol class="arabic simple">
+<li><p>If needed, expand to rank-3 by adding singleton dimensions to the end.
+This assumes rank-2 images are grayscale of shape (height, width) and
+will be expanded to (height, width, 1).</p></li>
+<li><p>Convert to RGB if not already in 3 channel format.</p></li>
+<li><p>Reverse the channel ordering to convert RGB to BGR format.</p></li>
+<li><p>Convert to tf.float32 in the range [0.0, 1.0].</p></li>
+<li><p>Scale the values to the range [0.0, 255.0].</p></li>
+<li><p>Subtract the ImageNet mean values (103.939, 116.779, 123.68) for channels
+in BGR format.</p></li>
+</ol>
+</dd>
+</dl>
+<p>This preprocessing mode is required when using pretrained ResNetV1 models.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.scale_to_imagenet_tf_mode">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">scale_to_imagenet_tf_mode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#scale_to_imagenet_tf_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.scale_to_imagenet_tf_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale images according to the “tf” preprocessing mode.</p>
+<p>This applies the preprocessing operations implemented in <cite>tf.keras.applications</cite> for
+models pretrained on ImageNet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Any image tensor of rank &gt;= 2.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The preprocessed image of dtype tf.float32 and shape (…, height, width, 3)
+with RGB channel ordering.</p>
+<p>Values will be in the range [-1.0, 1.0].</p>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>The preprocessing steps applied are:</dt><dd><ol class="arabic simple">
+<li><p>If needed, expand to rank-3 by adding singleton dimensions to the end.
+This assumes rank-2 images are grayscale of shape (height, width) and
+will be expanded to (height, width, 1).</p></li>
+<li><p>Convert to RGB if not already in 3 channel format.</p></li>
+<li><p>Convert to tf.float32 in the range [0.0, 1.0].</p></li>
+<li><p>Scale the values to the range [-1.0, 1.0].</p></li>
+</ol>
+</dd>
+</dl>
+<p>This preprocessing mode is required when using pretrained ResNetV2, MobileNetV1,
+MobileNetV2 and NASNet models.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.normalization.scale_to_imagenet_torch_mode">
+<code class="sig-prename descclassname">sleap.nn.data.normalization.</code><code class="sig-name descname">scale_to_imagenet_torch_mode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/normalization.html#scale_to_imagenet_torch_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.normalization.scale_to_imagenet_torch_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale images according to the “torch” preprocessing mode.</p>
+<p>This applies the preprocessing operations implemented in <cite>tf.keras.applications</cite> for
+models pretrained on ImageNet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – Any image tensor of rank &gt;= 2. If rank &gt;=3, the last axis is assumed to
+be of size 3 corresponding to RGB-ordered channels.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The preprocessed image of dtype tf.float32 and shape (…, height, width, 3)
+with RGB channel ordering.</p>
+<p>Values will be in the approximate range of [-0.5, 0.5].</p>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>The preprocessing steps applied are:</dt><dd><ol class="arabic simple">
+<li><p>If needed, expand to rank-3 by adding singleton dimensions to the end.
+This assumes rank-2 images are grayscale of shape (height, width) and
+will be expanded to (height, width, 1).</p></li>
+<li><p>Convert to RGB if not already in 3 channel format.</p></li>
+<li><p>Convert to tf.float32 in the range [0.0, 1.0].</p></li>
+<li><p>Subtract the ImageNet mean values (0.485, 0.456, 0.406) for channels in
+RGB format.</p></li>
+<li><p>Divide by the ImageNet standard deviation values (0.229, 0.224, 0.225)
+for channels in RGB format.</p></li>
+</ol>
+</dd>
+</dl>
+<p>This preprocessing mode is required when using pretrained DenseNet models.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.training.html">sleap.gui.learning.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.nn.data.instance_cropping.html" title="previous chapter">sleap.nn.data.instance_cropping</a></li>
+      <li>Next: <a href="sleap.nn.data.pipelines.html" title="next chapter">sleap.nn.data.pipelines</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.nn.data.normalization.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.rangelist &#8212; SLEAP  documentation</title>
@@ -41,7 +41,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
 
-<div class="viewcode-block" id="RangeList"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList">[docs]</a><span class="k">class</span> <span class="nc">RangeList</span><span class="p">:</span>
+<div class="viewcode-block" id="RangeList"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList">[docs]</a><span class="k">class</span> <span class="nc">RangeList</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for manipulating a list of range intervals.</span>
 <span class="sd">    Each range interval in the list is a [start, end)-tuple.</span>
@@ -75,14 +75,14 @@
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
-<div class="viewcode-block" id="RangeList.add"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeList.add"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a single value, merges to last range if contiguous.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">tolerance</span> <span class="o">&gt;=</span> <span class="n">val</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">val</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">val</span><span class="p">,</span> <span class="n">val</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="RangeList.insert"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeList.insert"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a new range, merging to adjacent/overlapping ranges as appropriate.&quot;&quot;&quot;</span>
         <span class="n">new_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_tuple</span><span class="p">(</span><span class="n">new_range</span><span class="p">)</span>
 
@@ -90,22 +90,22 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_</span><span class="p">([</span><span class="n">pre</span><span class="p">,</span> <span class="p">[</span><span class="n">new_range</span><span class="p">],</span> <span class="n">post</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span></div>
 
-<div class="viewcode-block" id="RangeList.insert_list"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.insert_list">[docs]</a>    <span class="k">def</span> <span class="nf">insert_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">range_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
+<div class="viewcode-block" id="RangeList.insert_list"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.insert_list">[docs]</a>    <span class="k">def</span> <span class="nf">insert_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">range_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
         <span class="sd">&quot;&quot;&quot;Add each range from a list of ranges.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">range_</span> <span class="ow">in</span> <span class="n">range_list</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">range_</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span></div>
 
-<div class="viewcode-block" id="RangeList.remove"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeList.remove"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Remove everything that overlaps with given range.&quot;&quot;&quot;</span>
         <span class="n">pre</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">post</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cut_range</span><span class="p">(</span><span class="n">remove</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="n">pre</span> <span class="o">+</span> <span class="n">post</span></div>
 
-<div class="viewcode-block" id="RangeList.cut"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.cut">[docs]</a>    <span class="k">def</span> <span class="nf">cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cut</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeList.cut"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.cut">[docs]</a>    <span class="k">def</span> <span class="nf">cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cut</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a pair of lists with everything before/after cut.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cut_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="RangeList.cut_range"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.cut_range">[docs]</a>    <span class="k">def</span> <span class="nf">cut_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cut</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeList.cut_range"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.cut_range">[docs]</a>    <span class="k">def</span> <span class="nf">cut_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cut</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return three lists, everthing before/within/after cut range.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
@@ -123,7 +123,7 @@
             <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">stop</span>
         <span class="k">return</span> <span class="n">x</span>
 
-<div class="viewcode-block" id="RangeList.cut_"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.cut_">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="RangeList.cut_"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.cut_">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">cut_</span><span class="p">(</span><span class="n">range_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">cut</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a pair of lists with everything before/after cut.</span>
 <span class="sd">        Args:</span>
@@ -148,7 +148,7 @@
                 <span class="n">post</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pre</span><span class="p">,</span> <span class="n">post</span></div>
 
-<div class="viewcode-block" id="RangeList.join_"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.join_">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="RangeList.join_"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.join_">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">join_</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">list_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]):</span>
         <span class="sd">&quot;&quot;&quot;Return a single list that includes all lists in input list.</span>
 
@@ -163,7 +163,7 @@
             <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">join_pair_</span><span class="p">(</span><span class="n">list_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">list_list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">join_pair_</span><span class="p">(</span><span class="n">list_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">cls</span><span class="o">.</span><span class="n">join_</span><span class="p">(</span><span class="n">list_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span></div>
 
-<div class="viewcode-block" id="RangeList.join_pair_"><a class="viewcode-back" href="../../misc.html#sleap.rangelist.RangeList.join_pair_">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="RangeList.join_pair_"><a class="viewcode-back" href="../../_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.join_pair_">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">join_pair_</span><span class="p">(</span><span class="n">list_a</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">list_b</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
         <span class="sd">&quot;&quot;&quot;Return a single pair of lists that joins two input lists.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">list_a</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">list_b</span><span class="p">:</span>
@@ -195,12 +195,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
 
@@ -236,10 +234,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

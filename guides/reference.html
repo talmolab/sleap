@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Feature Reference &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Remote training" href="remote.html" />
+    <link rel="prev" title="Tracking and proofreading" href="proofreading.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="feature-reference">
+<span id="reference"></span><h1>Feature Reference<a class="headerlink" href="#feature-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="command-line-interfaces">
+<h2>Command Line Interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this headline">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> (or <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.gui.app</span></code>) runs the GUI application.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> (or <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.nn.train</span></code>) is the command-line interface for <em>training</em>. Use this for training on a remote machine/cluster/colab notebook.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> (or <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.nn.inference</span></code>) is the command-line interface for running <em>inference</em> using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook. All training parameters are exposed.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.nn.tracking</span></code> allows you to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. You give it a prediction file.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.info.trackcleaner</span></code> tries to clean the resuls of cross-frame identity tracking by connecting “breaks” where we lose one identity and spawn another. You specify how many identities there should be in a frame (i.e., the number of animals).</p>
+<p><code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.info.write_tracking_h5</span></code> allows you to export the tracking data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB).</p>
+<p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/murthylab/sleap/master/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
+<p><strong>Note</strong>: For more details about any command, run with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument (e.g., <code class="code docutils literal notranslate"><span class="pre">sleap-track</span> <span class="pre">--help</span></code>).</p>
+</div>
+<div class="section" id="menus">
+<h2>Menus<a class="headerlink" href="#menus" title="Permalink to this headline">¶</a></h2>
+<p>Note that many of the menu command have keyboard shortcuts which can be configured from “<strong>Keyboard Reference</strong>” in the “<strong>Help</strong>” menu.</p>
+<div class="section" id="file">
+<h3>File<a class="headerlink" href="#file" title="Permalink to this headline">¶</a></h3>
+<p>“<strong>New…</strong>”, “<strong>Open…</strong>”, “Save, and “<strong>Save As…</strong>” have their usual behavior.</p>
+<p>“<strong>Import…</strong>” allows you to import the data external formats into a new SLEAP dataset. This includes <a class="reference external" href="http://cocodataset.org/#format-data">COCO</a> keypoint detection (<code class="code docutils literal notranslate"><span class="pre">.json</span></code> files), <a class="reference external" href="http://deeplabcut.org">DeepLabCut</a> (<code class="code docutils literal notranslate"><span class="pre">.csv</span></code>), <a class="reference external" href="http://deepposekit.org">DeepPoseKit</a> (<code class="code docutils literal notranslate"><span class="pre">.h5</span></code>), and <a class="reference external" href="https://github.com/talmo/leap">LEAP</a> (<code class="code docutils literal notranslate"><span class="pre">.mat</span></code>).</p>
+<p>“<strong>Merge Data From…</strong>” allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you’ve trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you’d like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.</p>
+<p>“<strong>Add Videos…</strong>” allows you to add videos to your currently open project.</p>
+<p>“<strong>Replace Videos…</strong>” allows you to <em>swap</em> the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn’t affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).</p>
+</div>
+<div class="section" id="go">
+<h3>Go<a class="headerlink" href="#go" title="Permalink to this headline">¶</a></h3>
+<p>“<strong>Next Labeled Frame</strong>” will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.</p>
+<p>“<strong>Next User Labeled Frame</strong>” will take you to the next frame which has labels added by the user, skipping any frames which are unlabeled or have only predictions.</p>
+<p>“<strong>Next Suggestion</strong>” will take you to the next frame in the list of suggested frames. If you are currently on a suggested frame, it will take you to the next frame in the list, which may not be a later frame in the video (or even a frame in the same video). If you are not currently on a suggested frame, it will take you to the nearest subsequent suggested frame.</p>
+<p>“<strong>Next Track Spawn Frame</strong>” will take you to the next frame on which a new track starts—i.e., a predicted instance which were not able to identify as the same instance from some prior frame. This is useful when proofreading predictions, since you can skip between track spawn frames and then manually join the new track with one of the pre-existing tracks from prior frames.</p>
+<p>“<strong>Next Video</strong>” will show the next video in the project (if your project has multiple videos). All the videos are listed in the “Videos” window.</p>
+<p>“<strong>Go to Frame…</strong>” allows you to go to a specific frame (in the current video) by frame number. It’s also handy if you want to copy the current frame number to the clipboard.</p>
+<p>“<strong>Select to Frame…</strong>” allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use <strong>Go to</strong> to go to X then <strong>Select to</strong> to select from X to Y.</p>
+</div>
+<div class="section" id="view">
+<span id="id1"></span><h3>View<a class="headerlink" href="#view" title="Permalink to this headline">¶</a></h3>
+<p>“<strong>Color Predicted Instances</strong>” allows you to toggle whether <em>predicted</em> instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.</p>
+<p>“<strong>Color Palette</strong>” allows you to choose the palette which will be used for coloring instances. Most of the palettes cycle colors, so that if there are five colors in the palette, the sixth item to color will be the same as the first. A few things to know:</p>
+<ul class="simple">
+<li><p>The “alphabet” palette has 26 visually distinct colors, which can be useful when there are many items to color.</p></li>
+<li><p>If the palette name ends with “+”, the colors won’t cycle and everything beyond the number of colors in the palette will use the last color in the palette. This is especially useful for proofreading when you’re trying to merge all the track identities in the first few tracks (assuming you have a small number of instances in each frame). In particular, the “five+” palette will show any instance in the fourth or subsequent track as orange.</p></li>
+<li><p>Color palettes can be customized by modifying the <code class="code docutils literal notranslate"><span class="pre">colors.yaml</span></code> file that SLEAP creates inside the <code class="code docutils literal notranslate"><span class="pre">.sleap</span></code> directory in your home directory. You can add your own palette or modify those already present in the file. Each color in a palette is listed on it’s own line as r,g,b values (between 0 and 255).</p></li>
+</ul>
+<p>“<strong>Apply Distinct Colors To</strong>” allows you to determine whether distinct colors are used for distinct tracks (instance identities), nodes, or edges. Try it!</p>
+<p>“<strong>Show Node Names</strong>” allows you to toggle the visibility of the node names. This is useful if you have lots of nearby instances or very dense skeletons and the node names make it hard to see where the nodes are located.</p>
+<p>“<strong>Show Edges</strong>” allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.</p>
+<p>“<strong>Edge Style</strong>” controls whether edges are drawn as thin lines or as wedges which indicate the <a class="reference internal" href="proofreading.html#orientation"><span class="std std-ref">Orientation</span></a> of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a “bottom-up” approach).</p>
+<p>“<strong>Trail Length</strong>” allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames.</p>
+<p>“<strong>Fit Instances to View</strong>” allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.</p>
+<p>“<strong>Seekbar Header</strong>” allows you to plot relevant information above the seekbar. Note that the seekbar is not updated when you modify instances; it only updates when you select a new seekbar header.</p>
+<p>“<strong>Videos</strong>”, “<strong>Skeleton</strong>”, “<strong>Instances</strong>”, and “<strong>Labeling Suggestions</strong>” allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).</p>
+</div>
+<div class="section" id="labels">
+<h3>Labels<a class="headerlink" href="#labels" title="Permalink to this headline">¶</a></h3>
+<p>“<strong>Add Instance</strong>” will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also “convert” the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won’t be shown unless you delete the editable instance you just created).</p>
+<p>“<strong>Instance Placement Method</strong>” allows you to pick how we determine where to place the instance and its nodes on the video frame. “Best” (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the “average” method which creates an “average” instance from the instances you’ve already labeled.</p>
+<p>“<strong>Delete Instance</strong>” will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the “Instances” window).</p>
+<p>“<strong>Set Instance Track</strong>” sets the track for the currently selected instance. If the new track already has an instance assigned to it, then the tracks are swapped (the other instance is assigned to the track currently assigned to the selected instance). These changes are applied to instances in the same tracks in every subsequent frame, not just the current frame.</p>
+<p>“<strong>Transpose Instance Tracks</strong>” swaps the tracks assigned to two instances. If there are only two instances in the current frame, then this command will be applied to those. If there are more then two instances, then you’ll be prompted to select the two instances in sequence. (This has the same functionality as selecting an instance and using “<strong>Set Instance Track</strong>” with the track of the other instance).</p>
+<p>“<strong>Delete Instance and Track</strong>” deletes all instances in the track of the currently selected instance. This applied to <em>all</em> frames in the current video.</p>
+<p>“<strong>Custom Instance Delete…</strong>” allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.</p>
+<p>“<strong>Select Next Instance</strong>” allows you to cycle through the instances in the current frame.</p>
+<p>“<strong>Clear Selection</strong>” allows you to deselect the selected instance.</p>
+</div>
+<div class="section" id="predict">
+<h3>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h3>
+<p>“<strong>Run Training…</strong>” allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.</p>
+<p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <cite>models</cite> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
+<p>“<strong>Delete All Predictions…</strong>” deletes <em>all</em> predicted instances across <em>all</em> frames in the current video. (You’ll be asked to confirm before the instances are deleted.)</p>
+<p>“<strong>Delete All Predictions from Clip…</strong>” deletes all instances from within a selected range of frames. You can select a clip by shift-dragging in the seekbar (or shift + other movement key).</p>
+<p>“<strong>Delete All Predictions from Area…</strong>” deletes all instances which are entirely within some rectangular area on any frame in the current video. You’ll be asked to select the rectangle, and then asked to confirm before instances are deleted. This is useful when there’s something in the video which is visually similar to the animal instances and which creates many false-positives.</p>
+<p>“<strong>Delete All Predictions with Low Score…</strong>” deletes all instances with a prediction score below the specified value. You’ll be asked for the value, and then asked to confirm before instances are deleted. Instance scores are shown in the “Instances” table and below the selected instance in the current frame.</p>
+<p>“<strong>Delete All Predictions beyond Frame Limit…</strong>” deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You’ll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.</p>
+<p>“<strong>Export Training Package…</strong>” allows you to export a training package. This is a single HDF5 file which contains both labeled data as well as the images which will be used for training. This makes it easy to transport your training data, especially if you need to run training on another machine (e.g., an HPC cluster). Training packages can be opened just like regular SLEAP dataset files, although you’ll only be able to view the frames which have labeled data (since only these are included in the file).</p>
+<p>“<strong>Export Labeled Clip…</strong>” allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). To use this command, first select a clip in the seekbar.</p>
+</div>
+<div class="section" id="help">
+<h3>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
+<p>“<strong>Keyboard Shortcuts</strong>” allows you to view and change keyboard shortcuts for common menu and GUI actions.</p>
+</div>
+</div>
+<div class="section" id="main-gui-window">
+<h2>Main GUI Window<a class="headerlink" href="#main-gui-window" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mouse">
+<h3>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">¶</a></h3>
+<p><strong>Right-click</strong> (or control + click) on node: Toggle visibility</p>
+<p><strong>Right-click</strong> (or control + click) elsewhere on image: Add instance (with pop-up menu)</p>
+<p><strong>Alt + drag</strong>: Zoom into region</p>
+<p><strong>Alt + double-click</strong>: Zoom out</p>
+<p><strong>Alt + drag</strong> on node (or node label): Move entire instance</p>
+<p><strong>Alt + click and hold</strong> on node (or node label) <strong>+ mouse wheel</strong>: Rotate entire instance</p>
+<p>(On a Mac, substitute <strong>Option</strong> for <strong>Alt</strong>.)</p>
+<p><strong>Double-click</strong> on predicted instance: Create new editable instance from prediction</p>
+<p><strong>Double-click</strong> on editable instance: Any missing nodes (nodes added to the skeleton after this instance was created) will be added and marked as “non-visible”</p>
+<p><strong>Click</strong> on instance: Select that instance</p>
+<p><strong>Click</strong> elsewhere on image: Clear selection</p>
+</div>
+<div class="section" id="navigation-keys">
+<h3>Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permalink to this headline">¶</a></h3>
+<p><strong>Right arrow</strong> key: Move one frame forward</p>
+<p><strong>Left arrow</strong> key: Move one frame back</p>
+<p><strong>Down arrow</strong> key: Move a <em>medium</em> step forward (4 frames by default)</p>
+<p><strong>Up arrow</strong> key: Move a <em>medium</em> step backward (4 frames by default)</p>
+<p><strong>Space</strong> key: Move a <em>large</em> step forward (100 frames by default)</p>
+<p><strong>/</strong> key: Move a <em>large</em> step backward (100 frames by default)</p>
+<p><strong>Home</strong> key: Move to the first frame of the video</p>
+<p><strong>End</strong> key: Move to the last frame of the video</p>
+<p><strong>Shift</strong> + <em>any navigation key</em>: Select the frames over which you’ve moved</p>
+<p>(Note that these keys are the defaults; you can configure them with <strong>Keyboard Shortcuts</strong> in the <strong>Help</strong> menu.)</p>
+</div>
+<div class="section" id="selection-keys">
+<h3>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">¶</a></h3>
+<p><em>Number</em> (e.g., <strong>2</strong>) key: Select the instance corresponding to that number</p>
+<p><strong>Escape</strong> key: Deselect all instances</p>
+</div>
+<div class="section" id="seekbar">
+<h3>Seekbar<a class="headerlink" href="#seekbar" title="Permalink to this headline">¶</a></h3>
+<p><strong>Shift + drag</strong>: Select a range of frames</p>
+<p><strong>Shift + click</strong>: Clear frame selection</p>
+<p><strong>Alt + drag</strong>: Zoom into a range of frames</p>
+<p><strong>Alt + click</strong>: Zoom out so that all frames are visible in seekbar</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Guides</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Feature Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#command-line-interfaces">Command Line Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#menus">Menus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#main-gui-window">Main GUI Window</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Guides</a><ul>
+      <li>Previous: <a href="proofreading.html" title="previous chapter">Tracking and proofreading</a></li>
+      <li>Next: <a href="remote.html" title="next chapter">Remote training</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/guides/reference.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

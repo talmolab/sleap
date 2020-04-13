@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Guides &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Choosing a set of models" href="choosing-models.html" />
+    <link rel="prev" title="Tracking instances across frames" href="../tutorials/proofreading.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="guides">
+<span id="id1"></span><h1>Guides<a class="headerlink" href="#guides" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-better-results">
+<h2>Getting better results<a class="headerlink" href="#getting-better-results" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="skeleton-design.html#skeleton-design"><span class="std std-ref">Skeleton design</span></a> answers some questions about designing the skeleton for your animals.</p>
+<p><a class="reference internal" href="choosing-models.html#choosing-models"><span class="std std-ref">Choosing a set of models</span></a> provides information about the types of models you should.</p>
+<p><a class="reference internal" href="merging.html#merging"><span class="std std-ref">Add more training data to a project</span></a> when you have predictions that aren’t in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.</p>
+<p><a class="reference internal" href="proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> provides tips and tools you can use to speed up proofreading when you’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</p>
+</div>
+<div class="section" id="running-remotely">
+<h2>Running remotely<a class="headerlink" href="#running-remotely" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="training-package.html#training-package"><span class="std std-ref">Export a training package</span></a> when you’ve created a project with training data on one computer and you want to <strong>move your training data</strong> for training models on a different computer.</p>
+<p><a class="reference internal" href="colab.html#colab"><span class="std std-ref">Run training and/or inference on Colab</span></a> when you have a project with labeled training data and you’d like to run training or inference in a <strong>Colab</strong> notebook.</p>
+<p><a class="reference internal" href="remote.html#remote-train"><span class="std std-ref">Remote training</span></a> when you have a project with training data and you want to train on a different machine using a <strong>command-line interface</strong>.</p>
+<p><a class="reference internal" href="remote.html#remote-inference"><span class="std std-ref">Remote inference</span></a> when you trained models and you want to run inference on a different machine using a <strong>command-line interface</strong>.</p>
+<p><a class="reference internal" href="remote.html#pretrained-weights-remote"><span class="std std-ref">Downloading pretrained weights for remote training</span></a> explains how to download pretrained weights if you’re training a network with pretrained weights on a machine without internet access.</p>
+</div>
+<div class="section" id="all-guides">
+<h2>All Guides<a class="headerlink" href="#all-guides" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="choosing-models.html">Choosing a set of models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="colab.html">Run training and/or inference on Colab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#linux">Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#macos-x">MacOS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#developer-installation">Developer Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="merging.html">Add more training data to a project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proofreading.html">Tracking and proofreading</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html#tracking-methods">Tracking methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html#more-training-data">More training data?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html#the-track-cleaning-script">The “track cleaning” script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html#color-palettes">Color palettes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html#id1">Proofreading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html#orientation">Orientation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#command-line-interfaces">Command Line Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#menus">Menus</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#file">File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#go">Go</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#view">View</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#labels">Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#predict">Predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#help">Help</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#main-gui-window">Main GUI Window</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#mouse">Mouse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#navigation-keys">Navigation Keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#selection-keys">Selection Keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference.html#seekbar">Seekbar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="remote.html">Remote training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="remote.html#remote-inference">Remote inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skeleton-design.html">Skeleton design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training with GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training-package.html">Export a training package</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#getting-better-results">Getting better results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-remotely">Running remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#all-guides">All Guides</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../tutorials/proofreading.html" title="previous chapter">Tracking instances across frames</a></li>
+      <li>Next: <a href="choosing-models.html" title="next chapter">Choosing a set of models</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/guides/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.info.metrics &#8212; SLEAP  documentation</title>
@@ -43,7 +43,7 @@
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 
 
-<div class="viewcode-block" id="matched_instance_distances"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.matched_instance_distances">[docs]</a><span class="k">def</span> <span class="nf">matched_instance_distances</span><span class="p">(</span>
+<div class="viewcode-block" id="matched_instance_distances"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.matched_instance_distances">[docs]</a><span class="k">def</span> <span class="nf">matched_instance_distances</span><span class="p">(</span>
     <span class="n">labels_gt</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
     <span class="n">labels_pr</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
     <span class="n">match_lists_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
@@ -112,7 +112,7 @@
     <span class="k">return</span> <span class="n">frame_idxs</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">points_gt</span><span class="p">,</span> <span class="n">points_pr</span></div>
 
 
-<div class="viewcode-block" id="match_instance_lists"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.match_instance_lists">[docs]</a><span class="k">def</span> <span class="nf">match_instance_lists</span><span class="p">(</span>
+<div class="viewcode-block" id="match_instance_lists"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.match_instance_lists">[docs]</a><span class="k">def</span> <span class="nf">match_instance_lists</span><span class="p">(</span>
     <span class="n">instances_a</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
     <span class="n">instances_b</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
     <span class="n">cost_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
@@ -132,7 +132,7 @@
     <span class="k">return</span> <span class="n">sorted_a</span><span class="p">,</span> <span class="n">sorted_b</span></div>
 
 
-<div class="viewcode-block" id="calculate_pairwise_cost"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.calculate_pairwise_cost">[docs]</a><span class="k">def</span> <span class="nf">calculate_pairwise_cost</span><span class="p">(</span>
+<div class="viewcode-block" id="calculate_pairwise_cost"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.calculate_pairwise_cost">[docs]</a><span class="k">def</span> <span class="nf">calculate_pairwise_cost</span><span class="p">(</span>
     <span class="n">instances_a</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
     <span class="n">instances_b</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
     <span class="n">cost_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
@@ -157,7 +157,7 @@
     <span class="k">return</span> <span class="n">pairwise_cost_matrix</span></div>
 
 
-<div class="viewcode-block" id="match_instance_lists_nodewise"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.match_instance_lists_nodewise">[docs]</a><span class="k">def</span> <span class="nf">match_instance_lists_nodewise</span><span class="p">(</span>
+<div class="viewcode-block" id="match_instance_lists_nodewise"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.match_instance_lists_nodewise">[docs]</a><span class="k">def</span> <span class="nf">match_instance_lists_nodewise</span><span class="p">(</span>
     <span class="n">instances_a</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
     <span class="n">instances_b</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
     <span class="n">thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
@@ -198,7 +198,7 @@
     <span class="k">return</span> <span class="n">instances_a</span><span class="p">,</span> <span class="n">best_points_array</span></div>
 
 
-<div class="viewcode-block" id="point_dist"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.point_dist">[docs]</a><span class="k">def</span> <span class="nf">point_dist</span><span class="p">(</span>
+<div class="viewcode-block" id="point_dist"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.point_dist">[docs]</a><span class="k">def</span> <span class="nf">point_dist</span><span class="p">(</span>
     <span class="n">inst_a</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">],</span>
     <span class="n">inst_b</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -210,7 +210,7 @@
     <span class="k">return</span> <span class="n">point_dist</span></div>
 
 
-<div class="viewcode-block" id="nodeless_point_dist"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.nodeless_point_dist">[docs]</a><span class="k">def</span> <span class="nf">nodeless_point_dist</span><span class="p">(</span>
+<div class="viewcode-block" id="nodeless_point_dist"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.nodeless_point_dist">[docs]</a><span class="k">def</span> <span class="nf">nodeless_point_dist</span><span class="p">(</span>
     <span class="n">inst_a</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">],</span>
     <span class="n">inst_b</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -241,7 +241,7 @@
     <span class="k">return</span> <span class="n">point_dist</span></div>
 
 
-<div class="viewcode-block" id="compare_instance_lists"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.compare_instance_lists">[docs]</a><span class="k">def</span> <span class="nf">compare_instance_lists</span><span class="p">(</span>
+<div class="viewcode-block" id="compare_instance_lists"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.compare_instance_lists">[docs]</a><span class="k">def</span> <span class="nf">compare_instance_lists</span><span class="p">(</span>
     <span class="n">instances_a</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
     <span class="n">instances_b</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -255,7 +255,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">paired_points_array_distances</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="list_points_array"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.list_points_array">[docs]</a><span class="k">def</span> <span class="nf">list_points_array</span><span class="p">(</span>
+<div class="viewcode-block" id="list_points_array"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.list_points_array">[docs]</a><span class="k">def</span> <span class="nf">list_points_array</span><span class="p">(</span>
     <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">]]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Given list of Instances, returns (instances * nodes * 2) matrix.&quot;&quot;&quot;</span>
@@ -263,12 +263,12 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">points_arrays</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="point_match_count"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.point_match_count">[docs]</a><span class="k">def</span> <span class="nf">point_match_count</span><span class="p">(</span><span class="n">dist_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="point_match_count"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.point_match_count">[docs]</a><span class="k">def</span> <span class="nf">point_match_count</span><span class="p">(</span><span class="n">dist_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Given an array of distances, returns number which are &lt;= threshold.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dist_array</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dist_array</span><span class="p">)]</span> <span class="o">&lt;=</span> <span class="n">thresh</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="point_nonmatch_count"><a class="viewcode-back" href="../../../misc.html#sleap.info.metrics.point_nonmatch_count">[docs]</a><span class="k">def</span> <span class="nf">point_nonmatch_count</span><span class="p">(</span><span class="n">dist_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="point_nonmatch_count"><a class="viewcode-back" href="../../../_autosummary/sleap.info.metrics.html#sleap.info.metrics.point_nonmatch_count">[docs]</a><span class="k">def</span> <span class="nf">point_nonmatch_count</span><span class="p">(</span><span class="n">dist_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Given an array of distances, returns number which are not &lt;= threshold.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">dist_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">point_match_count</span><span class="p">(</span><span class="n">dist_array</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span></div>
 
@@ -334,12 +334,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
 </ul>
 
@@ -375,10 +373,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

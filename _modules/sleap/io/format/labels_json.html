@@ -1,0 +1,592 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.io.format.labels_json &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.io.format.labels_json</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Text</span>
+
+<span class="kn">import</span> <span class="nn">cattr</span>
+
+<span class="kn">from</span> <span class="nn">.adaptor</span> <span class="kn">import</span> <span class="n">Adaptor</span><span class="p">,</span> <span class="n">SleapObjectType</span>
+<span class="kn">from</span> <span class="nn">.filehandle</span> <span class="kn">import</span> <span class="n">FileHandle</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.suggestions</span> <span class="kn">import</span> <span class="n">SuggestionFrame</span>
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LabeledFrame</span><span class="p">,</span>
+    <span class="n">Track</span><span class="p">,</span>
+    <span class="n">make_instance_cattr</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sleap.io.legacy</span> <span class="kn">import</span> <span class="n">load_labels_json_old</span>
+<span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Skeleton</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">json_loads</span><span class="p">,</span> <span class="n">json_dumps</span><span class="p">,</span> <span class="n">weak_filename_match</span>
+
+
+<div class="viewcode-block" id="LabelsJsonAdaptor"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor">[docs]</a><span class="k">class</span> <span class="nc">LabelsJsonAdaptor</span><span class="p">(</span><span class="n">Adaptor</span><span class="p">):</span>
+    <span class="n">FORMAT_ID</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">handles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SleapObjectType</span><span class="o">.</span><span class="n">labels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;json&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_exts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;json.zip&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Labels JSON&quot;</span>
+
+<div class="viewcode-block" id="LabelsJsonAdaptor.can_read_file"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor.can_read_file">[docs]</a>    <span class="k">def</span> <span class="nf">can_read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">does_match_ext</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2"> doesn&#39;t match ext for json or json.zip&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.zip&quot;</span><span class="p">):</span>
+            <span class="c1"># We can&#39;t check inside zip so assume it&#39;s correct</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_json</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">format_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_ID</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsJsonAdaptor.can_write_filename"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor.can_write_filename">[docs]</a>    <span class="k">def</span> <span class="nf">can_write_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">does_match_ext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LabelsJsonAdaptor.does_read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor.does_read">[docs]</a>    <span class="k">def</span> <span class="nf">does_read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsJsonAdaptor.does_write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor.does_write">[docs]</a>    <span class="k">def</span> <span class="nf">does_write</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsJsonAdaptor.read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor.read">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">,</span>
+        <span class="n">video_search</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">match_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Labels</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Labels</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deserialize JSON file as new :class:`Labels` instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: Path to JSON file.</span>
+<span class="sd">            video_callback: A callback function that which can modify</span>
+<span class="sd">                video paths before we try to create the corresponding</span>
+<span class="sd">                :class:`Video` objects. Usually you&#39;ll want to pass</span>
+<span class="sd">                a callback created by :meth:`make_video_callback`</span>
+<span class="sd">                or :meth:`make_gui_video_callback`.</span>
+<span class="sd">                Alternately, if you pass a list of strings we&#39;ll construct a</span>
+<span class="sd">                non-gui callback with those strings as the search paths.</span>
+<span class="sd">            match_to: If given, we&#39;ll replace particular objects in the</span>
+<span class="sd">                data dictionary with *matching* objects in the match_to</span>
+<span class="sd">                :class:`Labels` object. This ensures that the newly</span>
+<span class="sd">                instantiated :class:`Labels` can be merged without</span>
+<span class="sd">                duplicate matching objects (e.g., :class:`Video` objects ).</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A new :class:`Labels` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">filename</span>
+
+        <span class="c1"># Check if the file is a zipfile for not.</span>
+        <span class="k">if</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+
+            <span class="c1"># Make a tmpdir, located in the directory that the file exists, to unzip</span>
+            <span class="c1"># its contents.</span>
+            <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                <span class="sa">f</span><span class="s2">&quot;tmp_</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="c1"># tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))</span>
+
+            <span class="k">try</span><span class="p">:</span>
+
+                <span class="c1"># Register a cleanup routine that deletes the tmpdir on program exit</span>
+                <span class="c1"># if something goes wrong. The True is for ignore_errors</span>
+                <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+                <span class="c1"># Uncompress the data into the directory</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">unpack_archive</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">extract_dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span>
+
+                <span class="c1"># We can now open the JSON file, save the zip file and</span>
+                <span class="c1"># replace file with the first JSON file we find in the archive.</span>
+                <span class="n">json_files</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+                <span class="p">]</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">json_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;No JSON file found inside </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">. Are you sure this is a valid sLEAP dataset.&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">json_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="c1"># If we had problems, delete the temp directory and reraise the exception.</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">raise</span>
+
+        <span class="c1"># Open and parse the JSON in filename</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+
+            <span class="c1"># FIXME: Peek into the json to see if there is version string.</span>
+            <span class="c1"># We do this to tell apart old JSON data from leap_dev vs the</span>
+            <span class="c1"># newer format for sLEAP.</span>
+            <span class="n">json_str</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">dicts</span> <span class="o">=</span> <span class="n">json_loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+
+            <span class="c1"># If we have a version number, then it is new sLEAP format</span>
+            <span class="k">if</span> <span class="s2">&quot;version&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
+
+                <span class="c1"># Cache the working directory.</span>
+                <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+                <span class="c1"># Replace local video paths (for imagestore)</span>
+                <span class="k">if</span> <span class="n">tmp_dir</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">]:</span>
+                        <span class="n">vid</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                            <span class="n">tmp_dir</span><span class="p">,</span> <span class="n">vid</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># Use the video_callback for finding videos with broken paths:</span>
+
+                <span class="c1"># 1. Accept single string as video search path</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">video_search</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">video_search</span> <span class="o">=</span> <span class="p">[</span><span class="n">video_search</span><span class="p">]</span>
+
+                <span class="c1"># 2. Accept list of strings as video search paths</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video_search</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+                    <span class="c1"># If the callback is an iterable, then we&#39;ll expect it to be a</span>
+                    <span class="c1"># list of strings and build a non-gui callback with those as</span>
+                    <span class="c1"># the search paths.</span>
+                    <span class="c1"># When path is to a file, use the path of parent directory.</span>
+                    <span class="n">search_paths</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">else</span> <span class="n">path</span>
+                        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">video_search</span>
+                    <span class="p">]</span>
+
+                    <span class="c1"># Make the search function from list of paths</span>
+                    <span class="n">video_search</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">make_video_callback</span><span class="p">(</span><span class="n">search_paths</span><span class="p">)</span>
+
+                <span class="c1"># 3. Use the callback function (either given as arg or build from paths)</span>
+                <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">video_search</span><span class="p">):</span>
+                    <span class="n">abort</span> <span class="o">=</span> <span class="n">video_search</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">abort</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+
+                <span class="c1"># Try to load the labels filename.</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">labels</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_json_data</span><span class="p">(</span><span class="n">dicts</span><span class="p">,</span> <span class="n">match_to</span><span class="o">=</span><span class="n">match_to</span><span class="p">)</span>
+
+                <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+
+                    <span class="c1"># FIXME: We are going to the labels JSON that has references to</span>
+                    <span class="c1"># video files. Lets change directory to the dirname of the json file</span>
+                    <span class="c1"># so that relative paths will be from this directory. Maybe</span>
+                    <span class="c1"># it is better to feed the dataset dirname all the way down to</span>
+                    <span class="c1"># the Video object. This seems like less coupling between classes</span>
+                    <span class="c1"># though.</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+                    <span class="c1"># Try again</span>
+                    <span class="n">labels</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_json_data</span><span class="p">(</span><span class="n">dicts</span><span class="p">,</span> <span class="n">match_to</span><span class="o">=</span><span class="n">match_to</span><span class="p">)</span>
+
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                    <span class="c1"># Ok, we give up, where the hell are these videos!</span>
+                    <span class="k">raise</span>  <span class="c1"># Re-raise.</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>  <span class="c1"># Make sure to change back if we have problems.</span>
+
+                <span class="k">return</span> <span class="n">labels</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">frames</span> <span class="o">=</span> <span class="n">load_labels_json_old</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">parsed_json</span><span class="o">=</span><span class="n">dicts</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Labels</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LabelsJsonAdaptor.write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor.write">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">source_object</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">compress</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_frame_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">frame_data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save a Labels instance to a JSON format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: The filename to save the data to.</span>
+<span class="sd">            source_object: The labels dataset to save.</span>
+<span class="sd">            compress: Whether the data be zip compressed or not? If True,</span>
+<span class="sd">                the JSON will be compressed using Python&#39;s shutil.make_archive</span>
+<span class="sd">                command into a PKZIP zip file. If compress is True then</span>
+<span class="sd">                filename will have a .zip appended to it.</span>
+<span class="sd">            save_frame_data: Whether to save the image data for each frame.</span>
+<span class="sd">                For each video in the dataset, all frames that have labels</span>
+<span class="sd">                will be stored as an imgstore dataset.</span>
+<span class="sd">                If save_frame_data is True then compress will be forced to True</span>
+<span class="sd">                since the archive must contain both the JSON data and image</span>
+<span class="sd">                data stored in ImgStores.</span>
+<span class="sd">            frame_data_format: If save_frame_data is True, then this argument</span>
+<span class="sd">                is used to set the data format to use when writing frame</span>
+<span class="sd">                data to ImgStore objects. Supported formats should be:</span>
+
+<span class="sd">                 * &#39;pgm&#39;,</span>
+<span class="sd">                 * &#39;bmp&#39;,</span>
+<span class="sd">                 * &#39;ppm&#39;,</span>
+<span class="sd">                 * &#39;tif&#39;,</span>
+<span class="sd">                 * &#39;png&#39;,</span>
+<span class="sd">                 * &#39;jpg&#39;,</span>
+<span class="sd">                 * &#39;npy&#39;,</span>
+<span class="sd">                 * &#39;mjpeg/avi&#39;,</span>
+<span class="sd">                 * &#39;h264/mkv&#39;,</span>
+<span class="sd">                 * &#39;avc1/mp4&#39;</span>
+
+<span class="sd">                 Note: &#39;h264/mkv&#39; and &#39;avc1/mp4&#39; require separate installation</span>
+<span class="sd">                 of these codecs on your system. They are excluded from SLEAP</span>
+<span class="sd">                 because of their GPL license.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">source_object</span>
+
+        <span class="k">if</span> <span class="n">compress</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">compress</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.zip&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Lets make a temporary directory to store the image frame data or pre-compressed json</span>
+        <span class="c1"># in case we need it.</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp_dir</span><span class="p">:</span>
+
+            <span class="c1"># If we are saving frame data along with the datasets. We will replace videos with</span>
+            <span class="c1"># new video object that represent video data from just the labeled frames.</span>
+            <span class="k">if</span> <span class="n">save_frame_data</span><span class="p">:</span>
+
+                <span class="c1"># Create a set of new Video objects with imgstore backends. One for each</span>
+                <span class="c1"># of the videos. We will only include the labeled frames though. We will</span>
+                <span class="c1"># then replace each video with this new video</span>
+                <span class="n">new_videos</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">save_frame_data_imgstore</span><span class="p">(</span>
+                    <span class="n">output_dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">frame_data_format</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Make video paths relative</span>
+                <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">new_videos</span><span class="p">:</span>
+                    <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">vid</span><span class="o">.</span><span class="n">filename</span>
+                    <span class="c1"># Get the parent dir of the YAML file.</span>
+                    <span class="c1"># Use &quot;/&quot; since this works on Windows and posix</span>
+                    <span class="n">img_store_dir</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+                        <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="c1"># Change to relative path</span>
+                    <span class="n">vid</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">img_store_dir</span>
+
+                <span class="c1"># Convert to a dict, not JSON yet, because we need to patch up the videos</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">new_videos</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+            <span class="c1"># Set file format version</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;format_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">FORMAT_ID</span>
+
+            <span class="k">if</span> <span class="n">compress</span> <span class="ow">or</span> <span class="n">save_frame_data</span><span class="p">:</span>
+
+                <span class="c1"># Ensure that filename ends with .json</span>
+                <span class="c1"># shutil will append .zip</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;(\.json)?(\.zip)?$&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+                <span class="c1"># Write the json to the tmp directory, we will zip it up with the frame data.</span>
+                <span class="n">full_out_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+                <span class="n">json_dumps</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">full_out_filename</span><span class="p">)</span>
+
+                <span class="c1"># Create the archive</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">make_archive</span><span class="p">(</span><span class="n">base_name</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">root_dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;zip&quot;</span><span class="p">)</span>
+
+            <span class="c1"># If the user doesn&#39;t want to compress, then just write the json to the filename</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">json_dumps</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LabelsJsonAdaptor.from_json_data"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.labels_json.html#sleap.io.format.labels_json.LabelsJsonAdaptor.from_json_data">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_json_data</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="n">match_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Labels&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create instance of class from data in dictionary.</span>
+
+<span class="sd">        Method is used by other methods that load from JSON.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: Dictionary, deserialized from JSON.</span>
+<span class="sd">            match_to: If given, we&#39;ll replace particular objects in the</span>
+<span class="sd">                data dictionary with *matching* objects in the match_to</span>
+<span class="sd">                :class:`Labels` object. This ensures that the newly</span>
+<span class="sd">                instantiated :class:`Labels` can be merged without</span>
+<span class="sd">                duplicate matching objects (e.g., :class:`Video` objects ).</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A new :class:`Labels` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Parse the json string if needed.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">dicts</span> <span class="o">=</span> <span class="n">json_loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dicts</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dicts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="p">)</span>  <span class="c1"># don&#39;t break if json doesn&#39;t include tracks</span>
+
+        <span class="c1"># First, deserialize the skeletons, videos, and nodes lists.</span>
+        <span class="c1"># The labels reference these so we will need them while deserializing.</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">])</span>
+
+        <span class="n">idx_to_node</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">))}</span>
+        <span class="n">skeletons</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">make_cattr</span><span class="p">(</span><span class="n">idx_to_node</span><span class="p">)</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
+            <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;skeletons&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Skeleton</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">videos</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">cattr</span><span class="p">()</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Video</span><span class="p">])</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># First try unstructuring tuple (newer format)</span>
+            <span class="n">track_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span>
+                <span class="n">unstruct_strat</span><span class="o">=</span><span class="n">cattr</span><span class="o">.</span><span class="n">UnstructureStrategy</span><span class="o">.</span><span class="n">AS_TUPLE</span>
+            <span class="p">)</span>
+            <span class="n">tracks</span> <span class="o">=</span> <span class="n">track_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># Then try unstructuring dict (older format)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tracks</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">])</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unable to load tracks as tuple or dict!&quot;</span><span class="p">)</span>
+
+        <span class="c1"># if we&#39;re given a Labels object to match, use its objects when they match</span>
+        <span class="k">if</span> <span class="n">match_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">sk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">skeletons</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">old_sk</span> <span class="ow">in</span> <span class="n">match_to</span><span class="o">.</span><span class="n">skeletons</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">sk</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">old_sk</span><span class="p">):</span>
+                        <span class="c1"># use nodes from matched skeleton</span>
+                        <span class="k">for</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">match_node</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sk</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">old_sk</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+                            <span class="n">node_idx</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                            <span class="n">nodes</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">match_node</span>
+                        <span class="c1"># use skeleton from match</span>
+                        <span class="n">skeletons</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">old_sk</span>
+                        <span class="k">break</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">vid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">videos</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">old_vid</span> <span class="ow">in</span> <span class="n">match_to</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
+                    <span class="c1"># compare last three parts of path</span>
+                    <span class="k">if</span> <span class="n">vid</span><span class="o">.</span><span class="n">filename</span> <span class="o">==</span> <span class="n">old_vid</span><span class="o">.</span><span class="n">filename</span> <span class="ow">or</span> <span class="n">weak_filename_match</span><span class="p">(</span>
+                        <span class="n">vid</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">old_vid</span><span class="o">.</span><span class="n">filename</span>
+                    <span class="p">):</span>
+                        <span class="c1"># use video from match</span>
+                        <span class="n">videos</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">old_vid</span>
+                        <span class="k">break</span>
+
+        <span class="n">suggestions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="s2">&quot;suggestions&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
+            <span class="n">suggestions_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
+            <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+                <span class="n">Video</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">videos</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
+                    <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">SuggestionFrame</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error while loading suggestions (1)&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># Convert old suggestion format to new format.</span>
+                    <span class="c1"># Old format: {video: list of frame indices}</span>
+                    <span class="c1"># New format: [SuggestionFrames]</span>
+                    <span class="n">old_suggestions</span> <span class="o">=</span> <span class="n">suggestions_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
+                        <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">old_suggestions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                            <span class="p">[</span>
+                                <span class="n">SuggestionFrame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">old_suggestions</span><span class="p">[</span><span class="n">video</span><span class="p">]</span>
+                            <span class="p">]</span>
+                        <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error while loading suggestions (2)&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                    <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="s2">&quot;negative_anchors&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
+            <span class="n">negative_anchors_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
+            <span class="n">negative_anchors_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+                <span class="n">Video</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">videos</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="n">negative_anchors</span> <span class="o">=</span> <span class="n">negative_anchors_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span>
+                <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;negative_anchors&quot;</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">negative_anchors</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s2">&quot;provenance&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
+            <span class="n">provenance</span> <span class="o">=</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;provenance&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">provenance</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="c1"># If there is actual labels data, get it.</span>
+        <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
+            <span class="n">label_cattr</span> <span class="o">=</span> <span class="n">make_instance_cattr</span><span class="p">()</span>
+            <span class="n">label_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+                <span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">skeletons</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="n">label_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span><span class="n">Video</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">videos</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span>
+            <span class="n">label_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+                <span class="n">Node</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">x</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Node</span><span class="p">)</span> <span class="k">else</span> <span class="n">nodes</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="n">label_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+                <span class="n">Track</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">tracks</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+            <span class="p">)</span>
+
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">label_cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="n">Labels</span><span class="p">(</span>
+            <span class="n">labeled_frames</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">videos</span><span class="o">=</span><span class="n">videos</span><span class="p">,</span>
+            <span class="n">skeletons</span><span class="o">=</span><span class="n">skeletons</span><span class="p">,</span>
+            <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span>
+            <span class="n">suggestions</span><span class="o">=</span><span class="n">suggestions</span><span class="p">,</span>
+            <span class="n">negative_anchors</span><span class="o">=</span><span class="n">negative_anchors</span><span class="p">,</span>
+            <span class="n">tracks</span><span class="o">=</span><span class="n">tracks</span><span class="p">,</span>
+            <span class="n">provenance</span><span class="o">=</span><span class="n">provenance</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

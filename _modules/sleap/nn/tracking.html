@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.nn.tracking &#8212; SLEAP  documentation</title>
@@ -31,7 +31,9 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.nn.tracking</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">defaultdict</span>
+<span></span><span class="sd">&quot;&quot;&quot;Tracking tools for linking grouped instances over time.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">defaultdict</span>
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">operator</span>
@@ -43,11 +45,12 @@
 <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">,</span> <span class="n">Track</span>
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">LabeledFrame</span>
 <span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Skeleton</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.normalization</span> <span class="kn">import</span> <span class="n">ensure_int</span>
 
 <span class="n">InstanceType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;InstanceType&quot;</span><span class="p">,</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="instance_similarity"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.instance_similarity">[docs]</a><span class="k">def</span> <span class="nf">instance_similarity</span><span class="p">(</span>
+<div class="viewcode-block" id="instance_similarity"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.instance_similarity">[docs]</a><span class="k">def</span> <span class="nf">instance_similarity</span><span class="p">(</span>
     <span class="n">ref_instance</span><span class="p">:</span> <span class="n">InstanceType</span><span class="p">,</span> <span class="n">query_instance</span><span class="p">:</span> <span class="n">InstanceType</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Computes similarity between instances.&quot;&quot;&quot;</span>
@@ -61,7 +64,7 @@
     <span class="k">return</span> <span class="n">similarity</span></div>
 
 
-<div class="viewcode-block" id="centroid_distance"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.centroid_distance">[docs]</a><span class="k">def</span> <span class="nf">centroid_distance</span><span class="p">(</span>
+<div class="viewcode-block" id="centroid_distance"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.centroid_distance">[docs]</a><span class="k">def</span> <span class="nf">centroid_distance</span><span class="p">(</span>
     <span class="n">ref_instance</span><span class="p">:</span> <span class="n">InstanceType</span><span class="p">,</span> <span class="n">query_instance</span><span class="p">:</span> <span class="n">InstanceType</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Returns the negative distance between the centroids of two instances.</span>
@@ -82,7 +85,7 @@
     <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="instance_iou"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.instance_iou">[docs]</a><span class="k">def</span> <span class="nf">instance_iou</span><span class="p">(</span>
+<div class="viewcode-block" id="instance_iou"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.instance_iou">[docs]</a><span class="k">def</span> <span class="nf">instance_iou</span><span class="p">(</span>
     <span class="n">ref_instance</span><span class="p">:</span> <span class="n">InstanceType</span><span class="p">,</span> <span class="n">query_instance</span><span class="p">:</span> <span class="n">InstanceType</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Computes IOU between bounding boxes of instances.&quot;&quot;&quot;</span>
@@ -99,14 +102,14 @@
     <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">compute_iou</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="hungarian_matching"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.hungarian_matching">[docs]</a><span class="k">def</span> <span class="nf">hungarian_matching</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<div class="viewcode-block" id="hungarian_matching"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.hungarian_matching">[docs]</a><span class="k">def</span> <span class="nf">hungarian_matching</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;Wrapper for Hungarian matching algorithm in scipy.&quot;&quot;&quot;</span>
 
     <span class="n">row_ind</span><span class="p">,</span> <span class="n">col_ind</span> <span class="o">=</span> <span class="n">linear_sum_assignment</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">row_ind</span><span class="p">,</span> <span class="n">col_ind</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="greedy_matching"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.greedy_matching">[docs]</a><span class="k">def</span> <span class="nf">greedy_matching</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<div class="viewcode-block" id="greedy_matching"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.greedy_matching">[docs]</a><span class="k">def</span> <span class="nf">greedy_matching</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;Performs greedy bipartite matching.&quot;&quot;&quot;</span>
 
     <span class="c1"># Sort edges by ascending cost.</span>
@@ -191,7 +194,7 @@
     <span class="n">img_t</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<div class="viewcode-block" id="FlowCandidateMaker"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.FlowCandidateMaker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="FlowCandidateMaker"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">FlowCandidateMaker</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Class for producing optical flow shift matching candidates.&quot;&quot;&quot;</span>
 
@@ -240,7 +243,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">shifted_instances</span><span class="p">[(</span><span class="n">ref_t</span><span class="p">,</span> <span class="n">t</span><span class="p">)]</span> <span class="o">=</span> <span class="n">shifted_instances</span>
         <span class="k">return</span> <span class="n">candidate_instances</span>
 
-<div class="viewcode-block" id="FlowCandidateMaker.flow_shift_instances"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="FlowCandidateMaker.flow_shift_instances"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">flow_shift_instances</span><span class="p">(</span>
         <span class="n">ref_instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InstanceType</span><span class="p">],</span>
         <span class="n">ref_img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -256,23 +259,35 @@
 <span class="sd">            ref_instances: Reference instances in the previous frame.</span>
 <span class="sd">            ref_img: Previous frame image as a numpy array.</span>
 <span class="sd">            new_img: New frame image as a numpy array.</span>
-<span class="sd">            min_shifted_points: Minimum number of points that must be detected in the new</span>
-<span class="sd">                frame in order to generate a new shifted instance.</span>
-<span class="sd">            scale: Factor to scale the images by when computing optical flow. Decrease this</span>
-<span class="sd">                to increase performance at the cost of finer accuracy. Sometimes decreasing</span>
-<span class="sd">                the image scale can improve performance with fast movements.</span>
-<span class="sd">            window_size: Optical flow window size to consider at each pyramid scale level.</span>
-<span class="sd">            max_levels: Number of pyramid scale levels to consider. This is different from</span>
-<span class="sd">                the scale parameter, which determines the initial image scaling.</span>
+<span class="sd">            min_shifted_points: Minimum number of points that must be detected in the</span>
+<span class="sd">                new frame in order to generate a new shifted instance.</span>
+<span class="sd">            scale: Factor to scale the images by when computing optical flow. Decrease</span>
+<span class="sd">                this to increase performance at the cost of finer accuracy. Sometimes</span>
+<span class="sd">                decreasing the image scale can improve performance with fast movements.</span>
+<span class="sd">            window_size: Optical flow window size to consider at each pyramid scale</span>
+<span class="sd">                level.</span>
+<span class="sd">            max_levels: Number of pyramid scale levels to consider. This is different</span>
+<span class="sd">                from the scale parameter, which determines the initial image scaling.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            A list of ShiftedInstances with the optical flow displacements applied to the</span>
-<span class="sd">            reference instance points. Points that are not found will be represented as</span>
-<span class="sd">            NaNs in the points array for each shifted instance.</span>
+<span class="sd">            A list of ShiftedInstances with the optical flow displacements applied to</span>
+<span class="sd">            the reference instance points. Points that are not found will be represented</span>
+<span class="sd">            as NaNs in the points array for each shifted instance.</span>
 
 <span class="sd">        Notes:</span>
 <span class="sd">            This function relies on the Lucas-Kanade method for optical flow estimation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Convert to uint8 for cv2.calcOpticalFlowPyrLK</span>
+        <span class="n">ref_img</span> <span class="o">=</span> <span class="n">ensure_int</span><span class="p">(</span><span class="n">ref_img</span><span class="p">)</span>
+        <span class="n">new_img</span> <span class="o">=</span> <span class="n">ensure_int</span><span class="p">(</span><span class="n">new_img</span><span class="p">)</span>
+
+        <span class="c1"># Convert tensors to ndarays</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">):</span>
+            <span class="n">ref_img</span> <span class="o">=</span> <span class="n">ref_img</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">new_img</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">):</span>
+            <span class="n">new_img</span> <span class="o">=</span> <span class="n">new_img</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 
         <span class="c1"># Convert RGB to grayscale.</span>
         <span class="k">if</span> <span class="n">ref_img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">ref_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
@@ -329,7 +344,7 @@
         <span class="k">return</span> <span class="n">shifted_instances</span></div></div>
 
 
-<div class="viewcode-block" id="SimpleCandidateMaker"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.SimpleCandidateMaker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="SimpleCandidateMaker"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.SimpleCandidateMaker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">SimpleCandidateMaker</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Class for producing list of matching candidates from prior frames.&quot;&quot;&quot;</span>
 
@@ -361,7 +376,7 @@
 <span class="n">match_policies</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">hungarian</span><span class="o">=</span><span class="n">hungarian_matching</span><span class="p">,</span> <span class="n">greedy</span><span class="o">=</span><span class="n">greedy_matching</span><span class="p">,)</span>
 
 
-<div class="viewcode-block" id="Tracker"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.Tracker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="Tracker"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.Tracker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Tracker</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Instance pose tracker.</span>
@@ -421,7 +436,7 @@
     <span class="k">def</span> <span class="nf">uses_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_maker</span><span class="p">,</span> <span class="s2">&quot;uses_image&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Tracker.track"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.Tracker.track">[docs]</a>    <span class="k">def</span> <span class="nf">track</span><span class="p">(</span>
+<div class="viewcode-block" id="Tracker.track"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.track">[docs]</a>    <span class="k">def</span> <span class="nf">track</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">untracked_instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InstanceType</span><span class="p">],</span>
         <span class="n">img</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -556,7 +571,7 @@
 
         <span class="k">return</span> <span class="n">tracked_instances</span></div>
 
-<div class="viewcode-block" id="Tracker.final_pass"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.Tracker.final_pass">[docs]</a>    <span class="k">def</span> <span class="nf">final_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]):</span>
+<div class="viewcode-block" id="Tracker.final_pass"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.final_pass">[docs]</a>    <span class="k">def</span> <span class="nf">final_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Called after tracking has run on all chunks.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleaner</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cleaner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span></div>
@@ -670,7 +685,8 @@
         <span class="n">option</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span>
         <span class="n">option</span><span class="p">[</span>
             <span class="s2">&quot;help&quot;</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;For optical-flow: Optical flow window size to consider at each pyramid scale level&quot;</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;For optical-flow: Optical flow window size to consider at each pyramid &quot;</span>
+        <span class="s2">&quot;scale level&quot;</span>
         <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
 
         <span class="n">option</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;of_max_levels&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
@@ -698,7 +714,7 @@
             <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="FlowTracker"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.FlowTracker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="FlowTracker"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.FlowTracker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">FlowTracker</span><span class="p">(</span><span class="n">Tracker</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A Tracker pre-configured to use optical flow shifted candidates.&quot;&quot;&quot;</span>
 
@@ -707,7 +723,7 @@
     <span class="n">candidate_maker</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">FlowCandidateMaker</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SimpleTracker"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.SimpleTracker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="SimpleTracker"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.SimpleTracker">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">SimpleTracker</span><span class="p">(</span><span class="n">Tracker</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A Tracker pre-configured to use simple, non-image-based candidates.&quot;&quot;&quot;</span>
 
@@ -716,7 +732,7 @@
     <span class="n">candidate_maker</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">SimpleCandidateMaker</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="TrackCleaner"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.TrackCleaner">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="TrackCleaner"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.TrackCleaner">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TrackCleaner</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for merging breaks in the predicted tracks.</span>
@@ -736,7 +752,7 @@
 
     <span class="n">instance_count</span><span class="p">:</span> <span class="nb">int</span>
 
-<div class="viewcode-block" id="TrackCleaner.run"><a class="viewcode-back" href="../../../inference.html#sleap.nn.tracking.TrackCleaner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">]):</span>
+<div class="viewcode-block" id="TrackCleaner.run"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.TrackCleaner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Attempts to merge tracks for given frames.</span>
 
@@ -746,6 +762,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            None; modifies frames in place.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
+            <span class="k">return</span>
 
         <span class="n">frames</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
 
@@ -871,7 +889,7 @@
         <span class="n">output_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
-        <span class="n">out_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">tracker</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">.h5&quot;</span>
+        <span class="n">out_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">tracker</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">.slp&quot;</span>
         <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">out_name</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -900,12 +918,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
 </ul>
 
@@ -941,10 +957,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

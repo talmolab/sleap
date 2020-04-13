@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.config.outputs &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.config.outputs</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="CheckpointingConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CheckpointingConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Configuration of model checkpointing.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        initial_model: If True, the initial model is saved before any training occurs.</span>
+<span class="sd">            If the model was not pretrained, these will just be the model with random</span>
+<span class="sd">            weights. This is mostly useful for comparisons to a random baseline. If</span>
+<span class="sd">            enabled, the model will be serialized to:</span>
+<span class="sd">                &quot;{run_folder}/initial_model.h5&quot;</span>
+<span class="sd">        best_model: If True, the model will be saved at the end of an epoch if the</span>
+<span class="sd">            validation loss has improved. If enabled, the model will be serialized to:</span>
+<span class="sd">                &quot;{run_folder}/best_model.h5&quot;</span>
+<span class="sd">        every_epoch: If True, the model will be saved at the end of every epoch,</span>
+<span class="sd">            regardless of whether there was an improvement detected. If enabled, the</span>
+<span class="sd">            models will be serialized to:</span>
+<span class="sd">                &quot;{run_folder}/model.epoch{04d}.h5&quot;</span>
+<span class="sd">        latest_model: If True, the model will be saved at the end of every epoch,</span>
+<span class="sd">            regardless of whether there was an improvement detected, but will overwrite</span>
+<span class="sd">            the previous latest model. If enabled, the model will be serialized to:</span>
+<span class="sd">                &quot;{run_folder}/latest_model.h5&quot;</span>
+<span class="sd">        final_model: If True, the model will be saved at the end of training, whether it</span>
+<span class="sd">            was stopped early or finished all epochs. If enabled, the model will be</span>
+<span class="sd">            serialized to:</span>
+<span class="sd">                &quot;{run_folder}/final_model.h5&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">initial_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">best_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">every_epoch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">latest_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">final_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="TensorBoardConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.outputs.html#sleap.nn.config.outputs.TensorBoardConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TensorBoardConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Configuration of TensorBoard-based monitoring of the training.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        write_logs: If True, logging data will be written to disk within the run folder.</span>
+<span class="sd">            TensorBoard can monitor either the specific run folder, or the parent runs</span>
+<span class="sd">            folder that may contain multiple models/runs. Both will be displayed</span>
+<span class="sd">            correctly in the dashboard.</span>
+<span class="sd">        loss_frequency: How often loss and metrics will be written out to disk. This can</span>
+<span class="sd">            be &quot;epoch&quot; to only write summaries at the end of every epoch, &quot;batch&quot; to</span>
+<span class="sd">            write summaries after every batch. High frequency writing can considerably</span>
+<span class="sd">            slow down training, so this is not recommended to be anything other than</span>
+<span class="sd">            &quot;epoch&quot; if training interactively. This value only affects the monitored</span>
+<span class="sd">            losses and metrics, not other summaries like visualizations.</span>
+<span class="sd">        architecture_graph: If True, the architecture of the model will be saved</span>
+<span class="sd">            and can be viewed graphically in TensorBoard. This is only saved at the</span>
+<span class="sd">            beginning of training, but can consume a lot of disk space for large models,</span>
+<span class="sd">            as well as potentially freezing the browser tab when rendered.</span>
+<span class="sd">        profile_graph: If True, profiles the second batch of examples to collect compute</span>
+<span class="sd">            statistics.</span>
+<span class="sd">        visualizations: If True, visualizations of the model predictions are rendered</span>
+<span class="sd">            and logged for display in TensorBoard -&gt; Images.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">write_logs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">loss_frequency</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;epoch&quot;</span>
+    <span class="n">architecture_graph</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">profile_graph</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">visualizations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ZMQConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.outputs.html#sleap.nn.config.outputs.ZMQConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ZMQConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Configuration of ZeroMQ-based monitoring of the training.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        subscribe_to_controller: If True, will listen for commands broadcast over a</span>
+<span class="sd">            socket or another messaging endpoint using the ZeroMQ SUB protocol. This</span>
+<span class="sd">            allows for external/asynchronous control of the training loop from other</span>
+<span class="sd">            programs, e.g., GUIs or job schedulers. Commands are expected to be</span>
+<span class="sd">            JSON-serialized strings of dictionaries with a key named &quot;command&quot;. The</span>
+<span class="sd">            endpoint is polled for messages at the end of each batch.</span>
+<span class="sd">            Current commands are:</span>
+<span class="sd">                &quot;stop&quot;: Stops the training after the current batch.</span>
+<span class="sd">                &quot;set_lr&quot;: Sets the optimizer&#39;s learning rate after the current batch.</span>
+<span class="sd">                    The new learning rate should be a float specified in the &quot;lr&quot; key.</span>
+<span class="sd">        controller_address: IP address/hostname and port number of the endpoint to</span>
+<span class="sd">            listen for command messages from. For TCP-based endpoints, this must be in</span>
+<span class="sd">            the form of &quot;tcp://{ip_address}:{port_number}&quot;. Defaults to</span>
+<span class="sd">            &quot;tcp://127.0.0.1:9000&quot;.</span>
+<span class="sd">        controller_polling_timeout: Polling timeout in microseconds specified as an</span>
+<span class="sd">            integer. This controls how long the poller should wait to receive a response</span>
+<span class="sd">            and should be set to a small value to minimize the impact on training speed.</span>
+<span class="sd">        publish_updates: If True, training summaries will be broadcast over a socket or</span>
+<span class="sd">            another messaging endpoint using the ZeroMQ PUB protocol. This is useful for</span>
+<span class="sd">            asynchronously monitoring training with external programs without writing to</span>
+<span class="sd">            the file system and without requiring special dependencies like TensorBoard.</span>
+<span class="sd">            All data will be broadcast as JSON serialized strings.</span>
+<span class="sd">            TODO: Describe published message keys.</span>
+<span class="sd">        publish_address: IP address/hostname and port number of the endpoint to publish</span>
+<span class="sd">            updates to. For TCP-based endpoints, this must be in the form of</span>
+<span class="sd">            &quot;tcp://{ip_address}:{port_number}&quot;. Defaults to &quot;tcp://127.0.0.1:9001&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">subscribe_to_controller</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">controller_address</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;tcp://127.0.0.1:9000&quot;</span>
+    <span class="n">controller_polling_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">publish_updates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">publish_address</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;tcp://127.0.0.1:9001&quot;</span></div>
+
+
+<div class="viewcode-block" id="OutputsConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">OutputsConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Configuration of training outputs.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        save_outputs: If True, file system-based outputs will be saved. If False,</span>
+<span class="sd">            nothing will be written to disk, which may be useful for interactive</span>
+<span class="sd">            training where no outputs are desired.</span>
+<span class="sd">        run_name: Name of the training run. This is the name of the folder that all</span>
+<span class="sd">            outputs related to the training job are stored. If not specified explicitly,</span>
+<span class="sd">            this will be automatically generated from the configuration options and the</span>
+<span class="sd">            timestamp of the start of the training job.</span>
+<span class="sd">            Note that if this is specified rather than automatically generated, multiple</span>
+<span class="sd">            runs can end up overwriting each other if `run_name_prefix` or</span>
+<span class="sd">            `run_name_suffix` are not specified.</span>
+<span class="sd">        run_name_prefix: String to prepend to the run name. This is useful to prevent</span>
+<span class="sd">            multiple runs started at the same exact time to be mapped to the same</span>
+<span class="sd">            folder, or when a fixed run name is specified.</span>
+<span class="sd">        run_name_suffix: String to append to the run name. This is useful to prevent</span>
+<span class="sd">            multiple runs started at the same exact time to be mapped to the same</span>
+<span class="sd">            folder, or when a fixed run name is specified. If set to None, this will be</span>
+<span class="sd">            automatically set to a number (e.g., &quot;_1&quot;) that does not conflict with an</span>
+<span class="sd">            existing folder, so sequential jobs with a fixed run name will have an</span>
+<span class="sd">            increasing counter as the suffix.</span>
+<span class="sd">            Warning: This can fail to prevent overwriting if multiple jobs are run in</span>
+<span class="sd">                parallel and attempt to detect the run name at the same time, especially</span>
+<span class="sd">                over network storage which can have a short delay in updating the</span>
+<span class="sd">                directory listing across clients.</span>
+<span class="sd">        runs_folder: Path to the folder that run data should be stored in. All the data</span>
+<span class="sd">            for a single run are stored in the path:</span>
+<span class="sd">                &quot;{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}&quot;</span>
+<span class="sd">            These are specified separately to allow the `run_name` to be auto-generated.</span>
+<span class="sd">            This can be specified as an absolute or relative path. Relative paths</span>
+<span class="sd">            specify a path with respect to the current working directory. Non-existing</span>
+<span class="sd">            folders will be created if they do not already exist. Defaults to the</span>
+<span class="sd">            &quot;models&quot; subdirectory of the current working directory.</span>
+<span class="sd">        tags: A list of strings to use as &quot;tags&quot; that can be used to organize multiple</span>
+<span class="sd">            runs. These are not used for anything during training or inference, so they</span>
+<span class="sd">            can be used to store arbitrary user-specified metadata.</span>
+<span class="sd">        save_visualizations: If True, will render and save visualizations of the model</span>
+<span class="sd">            predictions as PNGs to &quot;{run_folder}/viz/{split}.{epoch:04d}.png&quot;, where the</span>
+<span class="sd">            split is one of &quot;train&quot;, &quot;validation&quot;, &quot;test&quot;.</span>
+<span class="sd">        log_to_csv: If True, loss and metrics will be saved to a simple CSV after each</span>
+<span class="sd">            epoch to &quot;{run_folder}/training_log.csv&quot;</span>
+<span class="sd">        checkpointing: Configuration options related to model checkpointing.</span>
+<span class="sd">        tensorboard: Configuration options related to TensorBoard logging.</span>
+<span class="sd">        zmq: Configuration options related to ZeroMQ-based control and monitoring.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">save_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">run_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">run_name_prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">run_name_suffix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">runs_folder</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;models&quot;</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">save_visualizations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">log_to_csv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">checkpointing</span><span class="p">:</span> <span class="n">CheckpointingConfig</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">CheckpointingConfig</span><span class="p">)</span>
+    <span class="n">tensorboard</span><span class="p">:</span> <span class="n">TensorBoardConfig</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">TensorBoardConfig</span><span class="p">)</span>
+    <span class="n">zmq</span><span class="p">:</span> <span class="n">ZMQConfig</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">ZMQConfig</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">run_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the complete run path where all training outputs are stored.</span>
+
+<span class="sd">        This path is determined by other attributes using the pattern:</span>
+<span class="sd">            `{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}`</span>
+
+<span class="sd">        If `run_name_suffix` is set to None, it will be ignored.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If `run_name` is not set.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            This does not perform any checks for existence or validity and should only</span>
+<span class="sd">            be used when the above fields are complete.</span>
+
+<span class="sd">            This path will not be updated if the files are moved. To ensure this path is</span>
+<span class="sd">            valid, use a relative path for the `runs_folder` or manually update it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Run path cannot be determined when the run name is not set.&quot;</span><span class="p">)</span>
+        <span class="n">folder_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_name</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_name_suffix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">folder_name</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_name_suffix</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runs_folder</span><span class="p">,</span> <span class="n">folder_name</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

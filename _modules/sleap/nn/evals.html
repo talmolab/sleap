@@ -1,0 +1,498 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.evals &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.evals</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module contains evaluation utilities for measuring pose estimation accuracy.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="k">def</span> <span class="nf">replace_path</span><span class="p">(</span><span class="n">video_list</span><span class="p">,</span> <span class="n">new_paths</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_paths</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">new_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_paths</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">video_list</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">video</span><span class="p">,</span> <span class="n">new_path</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">video_list</span><span class="p">,</span> <span class="n">new_paths</span><span class="p">):</span>
+        <span class="n">video</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_path</span>
+
+
+<span class="k">def</span> <span class="nf">find_frame_pairs</span><span class="p">(</span><span class="n">labels_gt</span><span class="p">,</span> <span class="n">labels_pr</span><span class="p">):</span>
+    <span class="n">frame_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">video_gt</span> <span class="ow">in</span> <span class="n">labels_gt</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
+
+        <span class="c1"># Find matching video instance in predictions.</span>
+        <span class="n">video_pr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">labels_pr</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">video_gt</span><span class="p">):</span>
+                <span class="n">video_pr</span> <span class="o">=</span> <span class="n">video</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">video_pr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Find user labeled frames in this video.</span>
+        <span class="n">labeled_frames_gt</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">lf</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels_gt</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video_gt</span><span class="p">)</span> <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_user_instances</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Attempt to match each labeled frame in the ground truth.</span>
+        <span class="k">for</span> <span class="n">labeled_frame_gt</span> <span class="ow">in</span> <span class="n">labeled_frames_gt</span><span class="p">:</span>
+            <span class="n">labeled_frames_pr</span> <span class="o">=</span> <span class="n">labels_pr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
+                <span class="n">video_pr</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">labeled_frame_gt</span><span class="o">.</span><span class="n">frame_idx</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">labeled_frames_pr</span><span class="p">:</span>
+                <span class="c1"># No match</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">labeled_frames_pr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># Match!</span>
+                <span class="n">frame_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">labeled_frame_gt</span><span class="p">,</span> <span class="n">labeled_frames_pr</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Too many matches.</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;More than one labeled frame found in predictions.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">frame_pairs</span>
+
+
+<div class="viewcode-block" id="compute_instance_area"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_instance_area">[docs]</a><span class="k">def</span> <span class="nf">compute_instance_area</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the area of the bounding box of a set of keypoints.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">points</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">min_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">max_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">max_pt</span> <span class="o">-</span> <span class="n">min_pt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_oks"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_oks">[docs]</a><span class="k">def</span> <span class="nf">compute_oks</span><span class="p">(</span><span class="n">points_gt</span><span class="p">,</span> <span class="n">points_pr</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="mf">0.025</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the object keypoints similarity between sets of points.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        points_gt: Ground truth instances of shape (n_gt, n_nodes, n_ed),</span>
+<span class="sd">            where n_nodes is the number of body parts/keypoint types, and n_ed</span>
+<span class="sd">            is the number of Euclidean dimensions (typically 2 or 3). Keypoints</span>
+<span class="sd">            that are missing/not visible should be represented as NaNs.</span>
+<span class="sd">        points_pr: Predicted instance of shape (n_pr, n_nodes, n_ed).</span>
+<span class="sd">        scale: Size scaling factor to use when weighing the scores, typically</span>
+<span class="sd">            the area of the bounding box of the instance (in pixels). This</span>
+<span class="sd">            should be of the length n_gt. If a scalar is provided, the same</span>
+<span class="sd">            number is used for all ground truth instances. If set to None, the</span>
+<span class="sd">            bounding box area of the ground truth instances will be calculated.</span>
+<span class="sd">        stddev: The standard deviation associated with the spread in the</span>
+<span class="sd">            localization accuracy of each node/keypoint type. This should be of</span>
+<span class="sd">            the length n_nodes. &quot;Easier&quot; keypoint types will have lower values</span>
+<span class="sd">            to reflect the smaller spread expected in localizing it.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The object keypoints similarity between every pair of ground truth and</span>
+<span class="sd">        predicted instance, a numpy array of of shape (n_gt, n_pr) in the range</span>
+<span class="sd">        of [0, 1.0], with 1.0 denoting a perfect match.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        It&#39;s important to set the stddev appropriately when accounting for the</span>
+<span class="sd">        difficulty of each keypoint type. For reference, the median value for</span>
+<span class="sd">        all keypoint types in COCO is 0.072. The &quot;easiest&quot; keypoint is the left</span>
+<span class="sd">        eye, with stddev of 0.025, since it is easy to precisely locate the</span>
+<span class="sd">        eyes when labeling. The &quot;hardest&quot; keypoint is the left hip, with stddev</span>
+<span class="sd">        of 0.107, since it&#39;s hard to locate the left hip bone without external</span>
+<span class="sd">        anatomical features and since it is often occluded by clothing.</span>
+
+<span class="sd">        The implementation here is based off of the descriptions in:</span>
+<span class="sd">        Ronch &amp; Perona. &quot;Benchmarking and Error Diagnosis in Multi-Instance Pose</span>
+<span class="sd">        Estimation.&quot; ICCV (2017).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">points_gt</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">points_pr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Points must be rank-3 with shape (n_instances, n_nodes, n_ed).&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">compute_instance_area</span><span class="p">(</span><span class="n">points_gt</span><span class="p">)</span>
+
+    <span class="n">n_gt</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_ed</span> <span class="o">=</span> <span class="n">points_gt</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># n_ed = 2 or 3 (euclidean dimensions)</span>
+    <span class="n">n_pr</span> <span class="o">=</span> <span class="n">points_pr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># If scalar scale was provided, use the same for each ground truth instance.</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">scale</span><span class="p">):</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+
+    <span class="c1"># If scalar standard deviation was provided, use the same for each node.</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">stddev</span><span class="p">):</span>
+        <span class="n">stddev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">stddev</span><span class="p">)</span>
+
+    <span class="c1"># Compute displacement between each pair.</span>
+    <span class="n">displacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">points_gt</span><span class="p">,</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_ed</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">points_pr</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_pr</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_ed</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">displacement</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="n">n_pr</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_ed</span><span class="p">)</span>
+
+    <span class="c1"># Convert to pairwise Euclidean distances.</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="p">(</span><span class="n">displacement</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (n_gt, n_pr, n_nodes)</span>
+    <span class="k">assert</span> <span class="n">distance</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="n">n_pr</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span>
+
+    <span class="c1"># Compute the normalization factor per keypoint.</span>
+    <span class="n">spread_factor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">stddev</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">scale</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">spacing</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">normalization_factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">spread_factor</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">scale_factor</span><span class="p">,</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">normalization_factor</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span>
+
+    <span class="c1"># Since a &quot;miss&quot; is considered as KS &lt; 0.5, we&#39;ll set the</span>
+    <span class="c1"># distances for predicted points that are missing to inf.</span>
+    <span class="n">missing_pr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">points_pr</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (n_pr, n_nodes)</span>
+    <span class="k">assert</span> <span class="n">missing_pr</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_pr</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span>
+    <span class="n">distance</span><span class="p">[:,</span> <span class="n">missing_pr</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c1"># Compute the keypoint similarity as per the top of Eq. 1.</span>
+    <span class="n">ks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">distance</span> <span class="o">/</span> <span class="n">normalization_factor</span><span class="p">))</span>  <span class="c1"># (n_gt, n_pr, n_nodes)</span>
+    <span class="k">assert</span> <span class="n">ks</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="n">n_pr</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span>
+
+    <span class="c1"># Set the KS for missing ground truth points to 0.</span>
+    <span class="c1"># This is equivalent to the visibility delta function of the bottom</span>
+    <span class="c1"># of Eq. 1.</span>
+    <span class="n">missing_gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">points_gt</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (n_gt, n_nodes)</span>
+    <span class="k">assert</span> <span class="n">missing_gt</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span>
+    <span class="n">ks</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">missing_gt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Compute the OKS.</span>
+    <span class="n">n_visible_gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="p">(</span><span class="o">~</span><span class="n">missing_gt</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>  <span class="c1"># (n_gt, 1)</span>
+    <span class="n">oks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_visible_gt</span>
+    <span class="k">assert</span> <span class="n">oks</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_gt</span><span class="p">,</span> <span class="n">n_pr</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oks</span></div>
+
+
+<span class="k">def</span> <span class="nf">match_instances</span><span class="p">(</span><span class="n">frame_gt</span><span class="p">,</span> <span class="n">frame_pr</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="c1"># Sort predicted instances by score.</span>
+    <span class="n">scores_pr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">score</span>
+            <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">frame_pr</span><span class="o">.</span><span class="n">instances</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">idxs_pr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">scores_pr</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;mergesort&quot;</span><span class="p">)</span>  <span class="c1"># descending</span>
+    <span class="n">scores_pr</span> <span class="o">=</span> <span class="n">scores_pr</span><span class="p">[</span><span class="n">idxs_pr</span><span class="p">]</span>
+
+    <span class="n">available_instances_gt</span> <span class="o">=</span> <span class="n">frame_gt</span><span class="o">.</span><span class="n">user_instances</span>
+    <span class="n">positive_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">idx_pr</span> <span class="ow">in</span> <span class="n">idxs_pr</span><span class="p">:</span>
+        <span class="c1"># Pull out predicted instance.</span>
+        <span class="n">instance_pr</span> <span class="o">=</span> <span class="n">frame_pr</span><span class="o">.</span><span class="n">instances</span><span class="p">[</span><span class="n">idx_pr</span><span class="p">]</span>
+
+        <span class="c1"># Convert instances to point arrays.</span>
+        <span class="n">points_pr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">instance_pr</span><span class="o">.</span><span class="n">points_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">points_gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">points_array</span> <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">available_instances_gt</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Find the best match by computing OKS.</span>
+        <span class="n">oks</span> <span class="o">=</span> <span class="n">compute_oks</span><span class="p">(</span><span class="n">points_gt</span><span class="p">,</span> <span class="n">points_pr</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="n">stddev</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+        <span class="n">oks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">oks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">oks</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points_gt</span><span class="p">),)</span>
+
+        <span class="n">oks</span><span class="p">[</span><span class="n">oks</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">best_match_gt_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">oks</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;mergesort&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">best_match_oks</span> <span class="o">=</span> <span class="n">oks</span><span class="p">[</span><span class="n">best_match_gt_idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">best_match_oks</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Remove matched ground truth instance and add as a positive pair.</span>
+        <span class="n">instance_gt</span> <span class="o">=</span> <span class="n">available_instances_gt</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">best_match_gt_idx</span><span class="p">)</span>
+        <span class="n">positive_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">instance_gt</span><span class="p">,</span> <span class="n">instance_pr</span><span class="p">,</span> <span class="n">best_match_oks</span><span class="p">))</span>
+
+        <span class="c1"># Stop matching lower scoring instances if we run out of</span>
+        <span class="c1"># candidates in the ground truth.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">available_instances_gt</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="c1"># Any remaining ground truth instances are considered false negatives.</span>
+    <span class="n">false_negatives</span> <span class="o">=</span> <span class="n">available_instances_gt</span>
+
+    <span class="k">return</span> <span class="n">positive_pairs</span><span class="p">,</span> <span class="n">false_negatives</span>
+
+
+<span class="k">def</span> <span class="nf">match_frame_pairs</span><span class="p">(</span><span class="n">frame_pairs</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="c1"># Match instances within each frame pair.</span>
+    <span class="n">positive_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">false_negatives</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">frame_gt</span><span class="p">,</span> <span class="n">frame_pr</span> <span class="ow">in</span> <span class="n">frame_pairs</span><span class="p">:</span>
+        <span class="n">positive_pairs_frame</span><span class="p">,</span> <span class="n">false_negatives_frame</span> <span class="o">=</span> <span class="n">match_instances</span><span class="p">(</span>
+            <span class="n">frame_gt</span><span class="p">,</span> <span class="n">frame_pr</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="n">stddev</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span>
+        <span class="p">)</span>
+        <span class="n">positive_pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">positive_pairs_frame</span><span class="p">)</span>
+        <span class="n">false_negatives</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">false_negatives_frame</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">positive_pairs</span><span class="p">,</span> <span class="n">false_negatives</span>
+
+
+<span class="k">def</span> <span class="nf">compute_generalized_voc_metrics</span><span class="p">(</span>
+    <span class="n">positive_pairs</span><span class="p">,</span>
+    <span class="n">false_negatives</span><span class="p">,</span>
+    <span class="n">match_scores</span><span class="p">,</span>
+    <span class="n">match_score_thresholds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>  <span class="c1"># 0.5:0.05:0.95</span>
+    <span class="n">recall_thresholds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>  <span class="c1"># 0.0:0.01:1.00</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gvoc&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+
+    <span class="n">detection_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">score</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">positive_pairs</span><span class="p">])</span>
+
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">detection_scores</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;mergesort&quot;</span><span class="p">)</span>
+    <span class="n">detection_scores</span> <span class="o">=</span> <span class="n">detection_scores</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+    <span class="n">match_scores</span> <span class="o">=</span> <span class="n">match_scores</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+    <span class="n">precisions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">recalls</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">npig</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">positive_pairs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negatives</span><span class="p">)</span>  <span class="c1"># total number of GT instances</span>
+
+    <span class="k">for</span> <span class="n">match_score_threshold</span> <span class="ow">in</span> <span class="n">match_score_thresholds</span><span class="p">:</span>
+
+        <span class="n">tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">match_scores</span> <span class="o">&gt;=</span> <span class="n">match_score_threshold</span><span class="p">)</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">match_scores</span> <span class="o">&lt;</span> <span class="n">match_score_threshold</span><span class="p">)</span>
+
+        <span class="n">rc</span> <span class="o">=</span> <span class="n">tp</span> <span class="o">/</span> <span class="n">npig</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="n">tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">fp</span> <span class="o">+</span> <span class="n">tp</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">spacing</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">recall</span> <span class="o">=</span> <span class="n">rc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># best recall at this OKS threshold</span>
+
+        <span class="c1"># Ensure strictly decreasing precisions.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pr</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">pr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">pr</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">pr</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">pr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c1"># Find best precision at each recall threshold.</span>
+        <span class="n">rc_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">rc</span><span class="p">,</span> <span class="n">recall_thresholds</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rc_inds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">is_valid_rc_ind</span> <span class="o">=</span> <span class="n">rc_inds</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">pr</span><span class="p">)</span>
+        <span class="n">precision</span><span class="p">[</span><span class="n">is_valid_rc_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">pr</span><span class="p">[</span><span class="n">rc_inds</span><span class="p">[</span><span class="n">is_valid_rc_ind</span><span class="p">]]</span>
+
+        <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+        <span class="n">recalls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recall</span><span class="p">)</span>
+
+    <span class="n">precisions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">precisions</span><span class="p">)</span>
+    <span class="n">recalls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">recalls</span><span class="p">)</span>
+
+    <span class="n">AP</span> <span class="o">=</span> <span class="n">precisions</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">)</span>  <span class="c1"># AP = average precision over fixed set of recall thresholds</span>
+    <span class="n">AR</span> <span class="o">=</span> <span class="n">recalls</span>  <span class="c1"># AR = max recall given a fixed number of detections per image</span>
+
+    <span class="n">mAP</span> <span class="o">=</span> <span class="n">precisions</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>  <span class="c1"># mAP = mean over all OKS thresholds</span>
+    <span class="n">mAR</span> <span class="o">=</span> <span class="n">recalls</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>  <span class="c1"># mAR = mean over all OKS thresholds</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.match_score_thresholds&quot;</span><span class="p">:</span> <span class="n">match_score_thresholds</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.recall_thresholds&quot;</span><span class="p">:</span> <span class="n">recall_thresholds</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.match_scores&quot;</span><span class="p">:</span> <span class="n">match_scores</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.precisions&quot;</span><span class="p">:</span> <span class="n">precisions</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.recalls&quot;</span><span class="p">:</span> <span class="n">recalls</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.AP&quot;</span><span class="p">:</span> <span class="n">AP</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.AR&quot;</span><span class="p">:</span> <span class="n">AR</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.mAP&quot;</span><span class="p">:</span> <span class="n">mAP</span><span class="p">,</span>
+        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.mAR&quot;</span><span class="p">:</span> <span class="n">mAR</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">compute_dists</span><span class="p">(</span><span class="n">positive_pairs</span><span class="p">):</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">instance_gt</span><span class="p">,</span> <span class="n">instance_pr</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">positive_pairs</span><span class="p">:</span>
+        <span class="n">points_gt</span> <span class="o">=</span> <span class="n">instance_gt</span><span class="o">.</span><span class="n">points_array</span>
+        <span class="n">points_pr</span> <span class="o">=</span> <span class="n">instance_pr</span><span class="o">.</span><span class="n">points_array</span>
+
+        <span class="n">dists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">points_pr</span> <span class="o">-</span> <span class="n">points_gt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dists</span>
+
+
+<span class="k">def</span> <span class="nf">compute_dist_metrics</span><span class="p">(</span><span class="n">dists</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;dist.dists&quot;</span><span class="p">:</span> <span class="n">dists</span><span class="p">,</span>
+        <span class="s2">&quot;dist.avg&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">dists</span><span class="p">),</span>
+        <span class="s2">&quot;dist.p50&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">dists</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dists</span><span class="p">)],</span> <span class="mi">50</span><span class="p">),</span>
+        <span class="s2">&quot;dist.p75&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">dists</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dists</span><span class="p">)],</span> <span class="mi">75</span><span class="p">),</span>
+        <span class="s2">&quot;dist.p90&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">dists</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dists</span><span class="p">)],</span> <span class="mi">90</span><span class="p">),</span>
+        <span class="s2">&quot;dist.p95&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">dists</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dists</span><span class="p">)],</span> <span class="mi">95</span><span class="p">),</span>
+        <span class="s2">&quot;dist.p99&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">dists</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dists</span><span class="p">)],</span> <span class="mi">99</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">compute_pck_metrics</span><span class="p">(</span><span class="n">dists</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)):</span>
+
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+    <span class="n">dists</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dists</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">pcks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dists</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">thresholds</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">mPCK_parts</span> <span class="o">=</span> <span class="n">pcks</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">mPCK</span> <span class="o">=</span> <span class="n">mPCK_parts</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;pck.thresholds&quot;</span><span class="p">:</span> <span class="n">thresholds</span><span class="p">,</span>
+        <span class="s2">&quot;pck.pcks&quot;</span><span class="p">:</span> <span class="n">pcks</span><span class="p">,</span>
+        <span class="s2">&quot;pck.mPCK_parts&quot;</span><span class="p">:</span> <span class="n">mPCK_parts</span><span class="p">,</span>
+        <span class="s2">&quot;pck.mPCK&quot;</span><span class="p">:</span> <span class="n">mPCK</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">compute_visibility_conf</span><span class="p">(</span><span class="n">positive_pairs</span><span class="p">):</span>
+
+    <span class="n">vis_tp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">vis_fn</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">vis_fp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">vis_tn</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">instance_gt</span><span class="p">,</span> <span class="n">instance_pr</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">positive_pairs</span><span class="p">:</span>
+        <span class="n">missing_nodes_gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">instance_gt</span><span class="o">.</span><span class="n">points_array</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">missing_nodes_pr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">instance_pr</span><span class="o">.</span><span class="n">points_array</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">vis_tn</span> <span class="o">+=</span> <span class="p">((</span><span class="n">missing_nodes_gt</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">missing_nodes_pr</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">vis_fn</span> <span class="o">+=</span> <span class="p">((</span><span class="o">~</span><span class="n">missing_nodes_gt</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">missing_nodes_pr</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">vis_fp</span> <span class="o">+=</span> <span class="p">((</span><span class="n">missing_nodes_gt</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="o">~</span><span class="n">missing_nodes_pr</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">vis_tp</span> <span class="o">+=</span> <span class="p">((</span><span class="o">~</span><span class="n">missing_nodes_gt</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="o">~</span><span class="n">missing_nodes_pr</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;vis.tp&quot;</span><span class="p">:</span> <span class="n">vis_tp</span><span class="p">,</span>
+        <span class="s2">&quot;vis.fp&quot;</span><span class="p">:</span> <span class="n">vis_fp</span><span class="p">,</span>
+        <span class="s2">&quot;vis.tn&quot;</span><span class="p">:</span> <span class="n">vis_tn</span><span class="p">,</span>
+        <span class="s2">&quot;vis.fn&quot;</span><span class="p">:</span> <span class="n">vis_fn</span><span class="p">,</span>
+        <span class="s2">&quot;vis.precision&quot;</span><span class="p">:</span> <span class="n">vis_tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">vis_tp</span> <span class="o">+</span> <span class="n">vis_fp</span><span class="p">),</span>
+        <span class="s2">&quot;vis.recall&quot;</span><span class="p">:</span> <span class="n">vis_tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">vis_tp</span> <span class="o">+</span> <span class="n">vis_fn</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">labels_gt</span><span class="p">,</span> <span class="n">labels_pr</span><span class="p">,</span> <span class="n">oks_stddev</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">oks_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">match_threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+    <span class="n">frame_pairs</span> <span class="o">=</span> <span class="n">find_frame_pairs</span><span class="p">(</span><span class="n">labels_gt</span><span class="p">,</span> <span class="n">labels_pr</span><span class="p">)</span>
+    <span class="n">positive_pairs</span><span class="p">,</span> <span class="n">false_negatives</span> <span class="o">=</span> <span class="n">match_frame_pairs</span><span class="p">(</span>
+        <span class="n">frame_pairs</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="n">oks_stddev</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">oks_scale</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">match_threshold</span>
+    <span class="p">)</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">compute_dists</span><span class="p">(</span><span class="n">positive_pairs</span><span class="p">)</span>
+
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compute_visibility_conf</span><span class="p">(</span><span class="n">positive_pairs</span><span class="p">))</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compute_dist_metrics</span><span class="p">(</span><span class="n">dists</span><span class="p">))</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compute_pck_metrics</span><span class="p">(</span><span class="n">dists</span><span class="p">))</span>
+
+    <span class="n">pair_oks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">oks</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">oks</span> <span class="ow">in</span> <span class="n">positive_pairs</span><span class="p">])</span>
+    <span class="n">pair_pck</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;pck.pcks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks.mOKS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_oks</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">compute_generalized_voc_metrics</span><span class="p">(</span>
+            <span class="n">positive_pairs</span><span class="p">,</span> <span class="n">false_negatives</span><span class="p">,</span> <span class="n">match_scores</span><span class="o">=</span><span class="n">pair_oks</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;oks_voc&quot;</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">compute_generalized_voc_metrics</span><span class="p">(</span>
+            <span class="n">positive_pairs</span><span class="p">,</span> <span class="n">false_negatives</span><span class="p">,</span> <span class="n">match_scores</span><span class="o">=</span><span class="n">pair_pck</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pck_voc&quot;</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">metrics</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

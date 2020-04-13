@@ -1,0 +1,362 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.architectures.upsampling &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.architectures.upsampling</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module defines common upsampling layer stack configurations.</span>
+
+<span class="sd">The generic upsampling stack consists of:</span>
+<span class="sd">    - transposed convolution or bilinear upsampling with stride &gt; 1</span>
+<span class="sd">    - skip connections</span>
+<span class="sd">    - 0 or more 3x3 convolutions for refinement</span>
+
+<span class="sd">Configuring these components suffices to define the &quot;decoder&quot; portion of most canonical</span>
+<span class="sd">&quot;encoder-decoder&quot;-like architectures (e.g., LEAP CNN, UNet, Hourglass, etc.), as well as</span>
+<span class="sd">simpler patterns like shallow or direct upsampling (e.g., DLC).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.common</span> <span class="kn">import</span> <span class="n">IntermediateFeature</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">UpsamplingConfig</span>
+
+
+<div class="viewcode-block" id="UpsamplingStack"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">UpsamplingStack</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Standard stack of upsampling layers with refinement and skip connections.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        output_stride: The desired final stride of the output tensor of the stack.</span>
+<span class="sd">        upsampling_stride: The striding of the upsampling *layer* (not tensor). This is</span>
+<span class="sd">            typically set to 2, such that the tensor doubles in size with each</span>
+<span class="sd">            upsampling step, but can be set higher to upsample to the desired</span>
+<span class="sd">            `output_stride` directly in fewer steps. See the notes in the `make_stack`</span>
+<span class="sd">            method for examples.</span>
+<span class="sd">        transposed_conv: If True, use a strided transposed convolution to perform</span>
+<span class="sd">            learnable upsampling. If False, bilinear upsampling will be used instead.</span>
+<span class="sd">        transposed_conv_filters: Integer that specifies the base number of filters in</span>
+<span class="sd">            each transposed convolution layer. This will be scaled by the</span>
+<span class="sd">            `transposed_conv_filters_rate` at every upsampling step. No effect if</span>
+<span class="sd">            bilinear upsampling is used.</span>
+<span class="sd">        transposed_conv_filters_rate: Factor to scale the number of filters in the</span>
+<span class="sd">            transposed convolution layer after each upsampling step. If set to 1, the</span>
+<span class="sd">            number of filters won&#39;t change. No effect if bilinear upsampling is used.</span>
+<span class="sd">        transposed_conv_kernel_size: Size of the kernel for the transposed convolution.</span>
+<span class="sd">            No effect if bilinear upsampling is used.</span>
+<span class="sd">        transposed_conv_batchnorm: Specifies whether batch norm should be applied after</span>
+<span class="sd">            the transposed convolution (and before the ReLU activation). No effect if</span>
+<span class="sd">            bilinear upsampling is used.</span>
+<span class="sd">        make_skip_connection: If True, incoming feature tensors form skip connection</span>
+<span class="sd">            with upsampled features. If False, no skip connection will be formed.</span>
+<span class="sd">        skip_add: If True, incoming feature tensors form skip connection with upsampled</span>
+<span class="sd">            features via element-wise addition. Height/width are matched via stride and</span>
+<span class="sd">            a 1x1 linear conv is applied if the channel counts do no match up. If False,</span>
+<span class="sd">            the skip connection is formed via channel-wise concatenation.</span>
+<span class="sd">        refine_convs: If greater than 0, specifies the number of 3x3 convolutions that</span>
+<span class="sd">            will be applied after the upsampling step for refinement. These layers can</span>
+<span class="sd">            serve the purpose of &quot;mixing&quot; the skip connection fused features, or to</span>
+<span class="sd">            refine the current feature map after upsampling, which can help to prevent</span>
+<span class="sd">            aliasing and checkerboard effects. If 0, no additional convolutions will be</span>
+<span class="sd">            applied.</span>
+<span class="sd">        refine_convs_filters: Similar to `transposed_conv_filters`, specifies the number</span>
+<span class="sd">            of filters to use for the refinement convolutions in each upsampling step.</span>
+<span class="sd">            No effect if `refine_convs` is 0.</span>
+<span class="sd">        refine_convs_filters_rate: Factor to scale the number of filters in the refine</span>
+<span class="sd">            conv layers after each upsampling step. The same number of filters are used</span>
+<span class="sd">            for all convs within the same upsampling step. If set to 1, the number of</span>
+<span class="sd">            filters won&#39;t change. No effect if `refine_convs` is 0.</span>
+<span class="sd">        refine_convs_batchnorm: Specifies whether batch norm should be applied after</span>
+<span class="sd">            each 3x3 convolution and before the ReLU activation. No effect if</span>
+<span class="sd">            `refine_convs` is 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">upsampling_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">transposed_conv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">transposed_conv_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">transposed_conv_filters_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">transposed_conv_kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">transposed_conv_batchnorm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">make_skip_connection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">skip_add</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">refine_convs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">refine_convs_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">refine_convs_filters_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">refine_convs_batchnorm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="UpsamplingStack.from_config"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">UpsamplingConfig</span><span class="p">,</span> <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;UpsamplingStack&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a model from a set of configuration parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: An `UpsamplingConfig` instance with the desired parameters.</span>
+<span class="sd">            output_stride: The desired final stride of the output tensor of the stack.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of this class with the specified configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">upsampling_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">block_stride</span><span class="p">,</span>
+            <span class="n">transposed_conv</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;transposed_conv&quot;</span><span class="p">,</span>
+            <span class="n">transposed_conv_filters</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">transposed_conv_filters_rate</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters_rate</span><span class="p">,</span>
+            <span class="n">transposed_conv_kernel_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">transposed_conv_kernel_size</span><span class="p">,</span>
+            <span class="n">transposed_conv_batchnorm</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_norm</span><span class="p">,</span>
+            <span class="n">make_skip_connection</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skip_connections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">skip_add</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skip_connections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">skip_connections</span> <span class="o">==</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span>
+            <span class="n">refine_convs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">refine_convs</span><span class="p">,</span>
+            <span class="n">refine_convs_filters</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">refine_convs_filters_rate</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters_rate</span><span class="p">,</span>
+            <span class="n">refine_convs_batchnorm</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_norm</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="UpsamplingStack.make_stack"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack.make_stack">[docs]</a>    <span class="k">def</span> <span class="nf">make_stack</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">current_stride</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">skip_sources</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Create the stack of upsampling layers.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: Feature tensor at low resolution, typically from encoder/backbone.</span>
+<span class="sd">            current_stride: Stride of the feature tensor relative to the network input.</span>
+<span class="sd">            skip_sources: If a list of `IntermediateFeature`s are provided, they will be</span>
+<span class="sd">                searched to find source tensors with matching stride after each</span>
+<span class="sd">                upsampling step. The first element of this list with a matching stride</span>
+<span class="sd">                will be selected as the source at each level. Skip connection will be a</span>
+<span class="sd">                concatenation or addition, depending on the `skip_add` class attribute.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple of the resulting upsampled tensor at the stride specified by the</span>
+<span class="sd">            `output_stride` class attribute, and a list of intermediate tensors after</span>
+<span class="sd">            each upsampling step.</span>
+
+<span class="sd">            The intermediate features are useful when creating multi-head architectures</span>
+<span class="sd">            with different output strides for the heads.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The computed number of upsampling steps will be determined by the</span>
+<span class="sd">            `current_stride` argument, and `output_stride` and `upsampling_stride` class</span>
+<span class="sd">            attributes.</span>
+
+<span class="sd">            Specifically, the number of upsampling steps is equal to:</span>
+<span class="sd">                `log(current_stride) - log(output_stride)`</span>
+<span class="sd">            where the log base is equal to the `upsampling_stride`.</span>
+
+<span class="sd">            These can be used to control the number of upsampling steps indirectly, for</span>
+<span class="sd">            example:</span>
+<span class="sd">                Start with `current_stride = 16` and want to get to `output_stride = 4`;</span>
+<span class="sd">                with `upsampling_stride = 2` this will take 2 upsampling steps, and</span>
+<span class="sd">                with `upsampling_stride = 4` this will take 1 upsampling step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Calculate the number of upsampling steps.</span>
+        <span class="n">num_blocks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">current_stride</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">))</span>
+            <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create each upsampling block.</span>
+        <span class="n">intermediate_feats</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_blocks</span><span class="p">):</span>
+
+            <span class="c1"># Update stride level.</span>
+            <span class="n">new_stride</span> <span class="o">=</span> <span class="n">current_stride</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span>
+            <span class="n">block_prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;upsample_s</span><span class="si">{</span><span class="n">current_stride</span><span class="si">}</span><span class="s2">_to_s</span><span class="si">{</span><span class="n">new_stride</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv</span><span class="p">:</span>
+
+                <span class="c1"># Upsample via strided transposed convolution.</span>
+                <span class="n">block_trans_conv_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_filters</span>
+                    <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_filters_rate</span> <span class="o">**</span> <span class="n">block</span>
+                <span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2DTranspose</span><span class="p">(</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="n">block_trans_conv_filters</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_kernel_size</span><span class="p">,</span>
+                    <span class="n">strides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="s2">&quot;_trans_conv&quot;</span><span class="p">,</span>
+                <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transposed_conv_batchnorm</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="s2">&quot;_bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="s2">&quot;_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Upsample via bilinear interpolation.</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span>
+                    <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span><span class="p">,</span>
+                    <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="s2">&quot;_interp&quot;</span><span class="p">,</span>
+                <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="c1"># Tensor is now upsampled to the updated stride.</span>
+            <span class="n">current_stride</span> <span class="o">=</span> <span class="n">new_stride</span>
+
+            <span class="c1"># Form skip connection if there are any available at this stride level.</span>
+            <span class="k">if</span> <span class="n">skip_sources</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_skip_connection</span><span class="p">:</span>
+                <span class="n">added_skip</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">skip_source</span> <span class="ow">in</span> <span class="n">skip_sources</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">added_skip</span> <span class="ow">and</span> <span class="n">skip_source</span><span class="o">.</span><span class="n">stride</span> <span class="o">==</span> <span class="n">current_stride</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_add</span><span class="p">:</span>
+                            <span class="n">source_x</span> <span class="o">=</span> <span class="n">skip_source</span><span class="o">.</span><span class="n">tensor</span>
+                            <span class="k">if</span> <span class="n">source_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                                <span class="c1"># Adjust channel count via 1x1 linear conv if not</span>
+                                <span class="c1"># matching.</span>
+                                <span class="n">source_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+                                    <span class="n">filters</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                    <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                    <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="s2">&quot;_skip_conv1x1&quot;</span><span class="p">,</span>
+                                <span class="p">)(</span><span class="n">source_x</span><span class="p">)</span>
+
+                            <span class="c1"># Concatenate via addition.</span>
+                            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="s2">&quot;_skip_add&quot;</span><span class="p">)(</span>
+                                <span class="p">[</span><span class="n">source_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span>
+                            <span class="p">)</span>
+
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># Simple concatenation.</span>
+                            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">(</span>
+                                <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="s2">&quot;_skip_concat&quot;</span>
+                            <span class="p">)([</span><span class="n">skip_source</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+
+                        <span class="n">added_skip</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Add further convolutions to refine after upsampling and/or skip.</span>
+            <span class="n">block_refine_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_filters</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_filters_rate</span> <span class="o">**</span> <span class="n">block</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_convs</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="n">block_refine_filters</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                    <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_refine</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_conv&quot;</span><span class="p">,</span>
+                <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refine_convs_batchnorm</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_refine</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_bn&quot;</span>
+                    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span>
+                    <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">block_prefix</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_refine</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_relu&quot;</span>
+                <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">intermediate_feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">IntermediateFeature</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">current_stride</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">intermediate_feats</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

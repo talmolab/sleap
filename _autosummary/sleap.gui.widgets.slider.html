@@ -1,0 +1,709 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.gui.widgets.slider &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.gui.widgets.video" href="sleap.gui.widgets.video.html" />
+    <link rel="prev" title="sleap.gui.widgets.multicheck" href="sleap.gui.widgets.multicheck.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.gui.widgets.slider">
+<span id="sleap-gui-widgets-slider"></span><h1>sleap.gui.widgets.slider<a class="headerlink" href="#module-sleap.gui.widgets.slider" title="Permalink to this headline">¶</a></h1>
+<p>Drop-in replacement for QSlider with additional features.</p>
+<dl class="py class">
+<dt id="sleap.gui.widgets.slider.SemanticMarkType">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.widgets.slider.</code><code class="sig-name descname">SemanticMarkType</code><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#SemanticMarkType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.SemanticMarkType" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.widgets.slider.SliderMark">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.widgets.slider.</code><code class="sig-name descname">SliderMark</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">end_val</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">row</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n">Track</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>tuple<span class="p">, </span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'black'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#SliderMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to hold data for an individual mark on the slider.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.widgets.slider.SliderMark.type">
+<code class="sig-name descname">type</code><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the mark, options are:
+* “simple”     (single value)
+* “simple_thin” (    ditto   )
+* “filled”
+* “open”
+* “predicted”
+* “tick”
+* “tick_column”
+* “track”      (range of values)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.widgets.slider.SliderMark.val">
+<code class="sig-name descname">val</code><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark.val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Beginning of mark range</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.widgets.slider.SliderMark.end_val">
+<code class="sig-name descname">end_val</code><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark.end_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>End of mark range (for “track” marks)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.widgets.slider.SliderMark.row">
+<code class="sig-name descname">row</code><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark.row" title="Permalink to this definition">¶</a></dt>
+<dd><p>The row that the mark goes in; used for tracks.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.widgets.slider.SliderMark.color">
+<code class="sig-name descname">color</code><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark.color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Color of mark, can be string or (r, g, b) tuple.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.widgets.slider.SliderMark.filled">
+<code class="sig-name descname">filled</code><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark.filled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the mark is shown filled (solid color).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.SliderMark.QColor">
+<em class="property">property </em><code class="sig-name descname">QColor</code><a class="headerlink" href="#sleap.gui.widgets.slider.SliderMark.QColor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns color of mark as <cite>QColor</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id0">
+<em class="property">property </em><code class="sig-name descname">color</code><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns color of mark.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id1">
+<em class="property">property </em><code class="sig-name descname">filled</code><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether mark is filled or open.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.widgets.slider.VideoSlider">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.widgets.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">min</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">val</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">marks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color_manager</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.gui.color.html#sleap.gui.color.ColorManager" title="sleap.gui.color.ColorManager">sleap.gui.color.ColorManager</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop-in replacement for QSlider with additional features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>orientation</strong> – ignored (here for compatibility with QSlider)</p></li>
+<li><p><strong>min</strong> – initial minimum value</p></li>
+<li><p><strong>max</strong> – initial maximum value</p></li>
+<li><p><strong>val</strong> – initial value</p></li>
+<li><p><strong>marks</strong> – initial set of values to mark on slider
+this can be either
+* list of values to mark
+* list of (track, value)-tuples to mark</p></li>
+<li><p><strong>color_manager</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">ColorManager</span></code> which determines the
+color to use for “track”-type marks</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Signals:</dt><dd><p>mousePressed: triggered on Qt event
+mouseMoved: triggered on Qt event
+mouseReleased: triggered on Qt event
+keyPress: triggered on Qt event
+keyReleased: triggered on Qt event
+valueChanged: triggered when value of slider changes
+selectionChanged: triggered when slider range selection changes
+heightUpdated: triggered when the height of slider changes</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.addMark">
+<code class="sig-name descname">addMark</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_mark</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.widgets.slider.SliderMark" title="sleap.gui.widgets.slider.SliderMark">sleap.gui.widgets.slider.SliderMark</a></span></em>, <em class="sig-param"><span class="n">update</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.addMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.addMark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a marked value to the slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_mark</strong> – value to mark</p></li>
+<li><p><strong>update</strong> – Whether to redraw slider with new mark.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.boundingRect">
+<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.clearHeader">
+<code class="sig-name descname">clearHeader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.clearHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.clearHeader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove header graph from slider.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.clearMarks">
+<code class="sig-name descname">clearMarks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.clearMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.clearMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears all marked values for slider.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.clearSelection">
+<code class="sig-name descname">clearSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.clearSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.clearSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears selection endpoints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.contiguousSelectionMarksAroundVal">
+<code class="sig-name descname">contiguousSelectionMarksAroundVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.contiguousSelectionMarksAroundVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.contiguousSelectionMarksAroundVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects contiguously marked frames around value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.decrementContiguousMarkedVal">
+<code class="sig-name descname">decrementContiguousMarkedVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.decrementContiguousMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.decrementContiguousMarkedVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrements value within contiguously marked range if possible.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.drawHeader">
+<code class="sig-name descname">drawHeader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.drawHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.drawHeader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw the header graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.enabled">
+<code class="sig-name descname">enabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether slider is enabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.endSelection">
+<code class="sig-name descname">endSelection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em>, <em class="sig-param"><span class="n">update</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.endSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.endSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add final selection endpoint.</p>
+<p>Called during or after the user is dragging to select range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val</strong> – value of endpoint</p></li>
+<li><p><strong>update</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.getMarks">
+<code class="sig-name descname">getMarks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.getMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.getMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of marks.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.getSelection">
+<code class="sig-name descname">getSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.getSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.getSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns start and end value of current selection endpoints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.hasSelection">
+<code class="sig-name descname">hasSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.hasSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.hasSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if a clip is selected, False otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.incrementContiguousMarkedVal">
+<code class="sig-name descname">incrementContiguousMarkedVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.incrementContiguousMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.incrementContiguousMarkedVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increments value within contiguously marked range if possible.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.isMarkedVal">
+<code class="sig-name descname">isMarkedVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.isMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.isMarkedVal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether value has mark.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.keyPressEvent">
+<code class="sig-name descname">keyPressEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.keyPressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.keyPressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Catch event and emit signal so something else can handle event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.keyReleaseEvent">
+<code class="sig-name descname">keyReleaseEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.keyReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.keyReleaseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Catch event and emit signal so something else can handle event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.leaveEvent">
+<code class="sig-name descname">leaveEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">event</span><span class="p">:</span> <span class="n">PySide2.QtCore.QEvent</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.leaveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.leaveEvent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.mouseDoubleClickEvent">
+<code class="sig-name descname">mouseDoubleClickEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.mouseDoubleClickEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.mouseDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to move handle for mouse double-click.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>event</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.mouseMoveEvent">
+<code class="sig-name descname">mouseMoveEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.mouseMoveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.mouseMoveEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to emid mouseMoved signal on drag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.mousePressEvent">
+<code class="sig-name descname">mousePressEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.mousePressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to move handle for mouse press/drag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>event</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.mouseReleaseEvent">
+<code class="sig-name descname">mouseReleaseEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.mouseReleaseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.mouseReleaseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to emit mouseReleased signal on release.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.moveHandle">
+<code class="sig-name descname">moveHandle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.moveHandle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.moveHandle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move handle in response to mouse position.</p>
+<p>Emits valueChanged signal if value of slider changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x position of mouse</p></li>
+<li><p><strong>y</strong> – y position of mouse</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.moveSelectionAnchor">
+<code class="sig-name descname">moveSelectionAnchor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.moveSelectionAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.moveSelectionAnchor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves selection anchor in response to mouse position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x position of mouse</p></li>
+<li><p><strong>y</strong> – y position of mouse</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.paint">
+<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.releaseSelectionAnchor">
+<code class="sig-name descname">releaseSelectionAnchor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.releaseSelectionAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.releaseSelectionAnchor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finishes selection in response to mouse release.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x position of mouse</p></li>
+<li><p><strong>y</strong> – y position of mouse</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.removeMark">
+<code class="sig-name descname">removeMark</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mark</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.widgets.slider.SliderMark" title="sleap.gui.widgets.slider.SliderMark">sleap.gui.widgets.slider.SliderMark</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.removeMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.removeMark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes an individual mark.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.resizeEvent">
+<code class="sig-name descname">resizeEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.resizeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.resizeEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override method to update visual size when necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>event</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setEnabled">
+<code class="sig-name descname">setEnabled</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setEnabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setEnabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set whether the slider is enabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setHeaderSeries">
+<code class="sig-name descname">setHeaderSeries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">series</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span>int<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setHeaderSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setHeaderSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show header graph with specified series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>series</strong> – {frame number: series value} dict.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setMarks">
+<code class="sig-name descname">setMarks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">marks</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>Union<span class="p">[</span><a class="reference internal" href="#sleap.gui.widgets.slider.SliderMark" title="sleap.gui.widgets.slider.SliderMark">sleap.gui.widgets.slider.SliderMark</a><span class="p">, </span>int<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets all marked values for the slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>marks</strong> – iterable with all values to mark</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setMaximum">
+<code class="sig-name descname">setMaximum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setMaximum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setMaximum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets maximum value for slider.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setMinimum">
+<code class="sig-name descname">setMinimum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setMinimum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setMinimum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets minimum value for slider.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setSelection">
+<code class="sig-name descname">setSelection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_val</span></em>, <em class="sig-param"><span class="n">end_val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects clip from start_val to end_val.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setTickMarks">
+<code class="sig-name descname">setTickMarks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setTickMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setTickMarks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets which tick marks to show.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setTracks">
+<code class="sig-name descname">setTracks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track_rows</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setTracks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setTracks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the number of tracks to show in slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>track_rows</strong> – the number of tracks to show</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setTracksFromLabels">
+<code class="sig-name descname">setTracksFromLabels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Video</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setTracksFromLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setTracksFromLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set slider marks using track information from <cite>Labels</cite> object.</p>
+<p>Note that this is the only method coupled to a SLEAP object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> – the dataset with tracks and labeled frames</p></li>
+<li><p><strong>video</strong> – the video for which to show marks</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setValue">
+<code class="sig-name descname">setValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets value of slider.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.slider_visible_value_range">
+<em class="property">property </em><code class="sig-name descname">slider_visible_value_range</code><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.slider_visible_value_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value range that’s visible given current size and zoom.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.startSelection">
+<code class="sig-name descname">startSelection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.startSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.startSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds initial selection endpoint.</p>
+<p>Called when user starts dragging to select range in slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>val</strong> – value of endpoint</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.updateHeight">
+<code class="sig-name descname">updateHeight</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.updateHeight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.updateHeight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the height of the slider.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.updatePos">
+<code class="sig-name descname">updatePos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.updatePos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.updatePos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the visual x position of handle and slider annotations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.updateSelectionBoxPositions">
+<code class="sig-name descname">updateSelectionBoxPositions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">box_object</span></em>, <em class="sig-param"><span class="n">a</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">b</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.updateSelectionBoxPositions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.updateSelectionBoxPositions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update box item on slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>box_object</strong> – The box to update</p></li>
+<li><p><strong>a</strong> – one endpoint value</p></li>
+<li><p><strong>b</strong> – other endpoint value</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.value">
+<code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value of slider.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.training.html">sleap.gui.learning.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.gui.widgets.multicheck.html" title="previous chapter">sleap.gui.widgets.multicheck</a></li>
+      <li>Next: <a href="sleap.gui.widgets.video.html" title="next chapter">sleap.gui.widgets.video</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.gui.widgets.slider.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

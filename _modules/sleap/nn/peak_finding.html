@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.peak_finding &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.peak_finding</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module contains TensorFlow-based peak finding methods.</span>
+
+<span class="sd">In general, the inputs to the functions provided here operate on confidence maps</span>
+<span class="sd">(sometimes referred to as heatmaps), which are image-based representations of the</span>
+<span class="sd">locations of landmark coordinates.</span>
+
+<span class="sd">In these representations, landmark locations are encoded as probability that it is</span>
+<span class="sd">present each pixel. This is often represented by an unnormalized 2D Gaussian PDF</span>
+<span class="sd">centered at the true location and evaluated over the entire image grid.</span>
+
+<span class="sd">Peak finding entails finding either the global or local maxima of these confidence maps.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="ensure_odd"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.peak_finding.html#sleap.nn.peak_finding.ensure_odd">[docs]</a><span class="k">def</span> <span class="nf">ensure_odd</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rounds numbers up to the nearest odd value.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="crop_centered_boxes"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.peak_finding.html#sleap.nn.peak_finding.crop_centered_boxes">[docs]</a><span class="k">def</span> <span class="nf">crop_centered_boxes</span><span class="p">(</span>
+    <span class="n">img</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">peaks</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">window_length</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Crops boxes centered around peaks.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        img: Tensor of shape (samples, height, width, channels).</span>
+<span class="sd">        peaks: Tensor of shape (n_peaks, 4) where subscripts of peak locations are</span>
+<span class="sd">            specified in each row as [sample, row, col, channel].</span>
+<span class="sd">        window_length: Size (width and height) of windows to be cropped. This parameter</span>
+<span class="sd">            will be rounded up to nearest odd number.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor of shape (n_peaks, window_length, window_length, 1) corresponding to</span>
+<span class="sd">        the box cropped around each peak.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Compute window offset from odd window length.</span>
+    <span class="n">window_length</span> <span class="o">=</span> <span class="n">ensure_odd</span><span class="p">(</span><span class="n">window_length</span><span class="p">)</span>
+    <span class="n">crop_size</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">((</span><span class="n">window_length</span><span class="p">,</span> <span class="n">window_length</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">half_window</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">window_length</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Store initial shape.</span>
+    <span class="n">samples</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">channels</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">num</span><span class="o">=</span><span class="mi">4</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Pack channels along samples axis to enforce a singleton channel.</span>
+    <span class="n">packed_img</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="n">samples</span> <span class="o">*</span> <span class="n">channels</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Pull out peak subscripts as vectors.</span>
+    <span class="n">sample</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">channel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Compute packed sample_channel indices for each peak.</span>
+    <span class="n">box_indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span>
+        <span class="n">channel</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Define centered boxes with the form [y_min, x_min, y_max, x_max].</span>
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">half_window</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">height</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">half_window</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">half_window</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">height</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">half_window</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Crop with padding.</span>
+    <span class="n">cropped_boxes</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">crop_and_resize</span><span class="p">(</span>
+        <span class="n">packed_img</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">box_indices</span><span class="p">,</span> <span class="n">crop_size</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cropped_boxes</span></div>
+
+
+<div class="viewcode-block" id="make_gaussian_kernel"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.peak_finding.html#sleap.nn.peak_finding.make_gaussian_kernel">[docs]</a><span class="k">def</span> <span class="nf">make_gaussian_kernel</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generates a square unnormalized 2D symmetric Gaussian kernel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        size: Length of kernel. This should be an odd integer.</span>
+<span class="sd">        sigma: Standard deviation of the Gaussian specified as a scalar float.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        kernel, a float32 tensor of shape (size, size) with values corresponding to the</span>
+<span class="sd">        unnormalized probability density of a 2D Gaussian distribution with symmetric</span>
+<span class="sd">        covariance along the x and y directions.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        The maximum value of this kernel will be 1.0. To normalize it, divide each</span>
+<span class="sd">        element by (2 * np.pi * sigma ** 2).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create 1D grid vector.</span>
+    <span class="n">gv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Generate kernel and broadcast to 2D.</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+        <span class="o">-</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">gv</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">gv</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kernel</span></div>
+
+
+<div class="viewcode-block" id="smooth_imgs"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.peak_finding.html#sleap.nn.peak_finding.smooth_imgs">[docs]</a><span class="nd">@tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span>
+    <span class="n">input_signature</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">smooth_imgs</span><span class="p">(</span><span class="n">imgs</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Smooths the input image by convolving it with a Gaussian kernel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        imgs: A rank-4 tensor of shape (samples, height, width, channels).</span>
+<span class="sd">        kernel_size: An odd-valued scalar integer specifying the width and height of</span>
+<span class="sd">            the Gaussian kernel.</span>
+<span class="sd">        sigma: Standard deviation of the Gaussian specified as a scalar float.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor of the same shape as imgs after convolving with a Gaussian sample and</span>
+<span class="sd">        channelwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create kernel and broadcast to rank-4.</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="n">make_gaussian_kernel</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">sigma</span><span class="p">),</span> <span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">imgs</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Normalize kernel weights to keep output in the same range as the input.</span>
+    <span class="n">kernel</span> <span class="o">/=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="c1"># Convolve with padding to keep the shape fixed.</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">depthwise_conv2d</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;SAME&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_offsets_local_direction"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.peak_finding.html#sleap.nn.peak_finding.find_offsets_local_direction">[docs]</a><span class="nd">@tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span>
+    <span class="n">input_signature</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">find_offsets_local_direction</span><span class="p">(</span>
+    <span class="n">centered_patches</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Computes subpixel offsets from the direction of the pixels around the peak.</span>
+
+<span class="sd">    This function finds the delta-offset from the center pixel of peak-centered patches</span>
+<span class="sd">    by finding the direction of the gradient around each center.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        centered_patches: A rank-4 tensor of shape (samples, 3, 3, 1) corresponding</span>
+<span class="sd">            to the centered crops around the grid-anchored peaks. For multi-channel</span>
+<span class="sd">            images, stack the channels along the samples axis before calling this</span>
+<span class="sd">            function.</span>
+<span class="sd">        delta: Scalar float that will scaled by the gradient direction.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        offsets, a float32 tensor of shape (samples, 2) where the columns correspond to</span>
+<span class="sd">        the offsets relative to the center pixel for the y and x directions</span>
+<span class="sd">        respectively, i.e., for the i-th sample:</span>
+
+<span class="sd">            dy_i, dx_i = offsets[i]</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        For symmetric patches, the offset will be 0.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; find_offsets_local_direction(np.array(</span>
+<span class="sd">        ...     [[0., 1., 0.],</span>
+<span class="sd">        ...      [1., 3., 2.],</span>
+<span class="sd">        ...      [0., 1., 0.]]).reshape(1, 3, 3, 1), 0.25)</span>
+<span class="sd">        &lt;tf.Tensor: id=21250, shape=(1, 2), dtype=float64, numpy=array([[0.  , 0.25]])&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Compute directional gradients.</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">centered_patches</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">centered_patches</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># right - left</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">centered_patches</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">centered_patches</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># bottom - top</span>
+
+    <span class="c1"># Concatenate and scale signed direction by delta.</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">delta</span>
+
+    <span class="k">return</span> <span class="n">offsets</span></div>
+
+
+<div class="viewcode-block" id="refine_peaks_local_direction"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.peak_finding.html#sleap.nn.peak_finding.refine_peaks_local_direction">[docs]</a><span class="k">def</span> <span class="nf">refine_peaks_local_direction</span><span class="p">(</span>
+    <span class="n">imgs</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">peaks</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Refines peaks by applying a fixed offset along the gradients around the peaks.</span>
+
+<span class="sd">    This function wraps other methods to refine peak coordinates by:</span>
+<span class="sd">        1. Cropping 3 x 3 patches around each peak.</span>
+<span class="sd">        2. Stacking patches along the samples axis.</span>
+<span class="sd">        3. Computing the local gradient around each centered patch.</span>
+<span class="sd">        4. Applying subpixel offsets to each peak.</span>
+
+<span class="sd">    This is a commonly used algorithm for subpixel peak refinement, described for pose</span>
+<span class="sd">    estimation applications in [1].</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        imgs: A float32 tensor of shape (samples, height, width, channels) in which the</span>
+<span class="sd">            peaks were detected.</span>
+<span class="sd">        peaks: Tensor of shape (n_peaks, 4) where subscripts of peak locations are</span>
+<span class="sd">            specified in each row as [sample, row, col, channel].</span>
+<span class="sd">        delta: Scalar float specifying the step to take along the local peak gradients.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        refined_peaks, a float32 tensor of shape (n_peaks, 4) in the same format as the</span>
+<span class="sd">        input peaks, but with offsets applied.</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        .. [1] Alejandro Newell, Kaiyu Yang, and Jia Deng. Stacked Hourglass Networks</span>
+<span class="sd">           for Human Pose Estimation. In _European conference on computer vision_, 2016.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Extract peak-centered patches.</span>
+    <span class="n">all_peak_patches</span> <span class="o">=</span> <span class="n">crop_centered_boxes</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">peaks</span><span class="p">,</span> <span class="n">window_length</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="c1"># Compute local offsets.</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">find_offsets_local_direction</span><span class="p">(</span><span class="n">all_peak_patches</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
+
+    <span class="c1"># Apply offsets to refine peaks.</span>
+    <span class="n">refined_peaks</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">offsets</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+    <span class="k">return</span> <span class="n">refined_peaks</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

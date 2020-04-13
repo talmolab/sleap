@@ -6,15 +6,11 @@
     :caption: Documentation
     :maxdepth: 2
 
-    installation
-    tutorial
-    tutorial-part2
-    howtos
-    FAQ <faq>
-    reference
+    guides/installation
+    tutorials/tutorial
+    guides/index
+    guides/reference
     API <api>
-
-.. _Indices_and_Tables:
 
 .. _Contributors:
 
@@ -29,12 +25,18 @@ Contributors
 
 SLEAP was developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
 
+.. _Contact:
+
 Contact
 -------
 
 **Technical issue with the software?** `Open an issue on GitHub. <https://github.com/murthylab/sleap/issues>`_
 
 **Press inquiries? Interested in using SLEAP in a commercial application?** Reach out at: ``sleap@princeton.edu``
+
+
+
+.. _Indices_and_Tables:
 
 Indices and tables
 ------------------

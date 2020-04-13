@@ -1,0 +1,848 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.config.model &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.nn.config.optimization" href="sleap.nn.config.optimization.html" />
+    <link rel="prev" title="sleap.nn.config.data" href="sleap.nn.config.data.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.nn.config.model">
+<span id="sleap-nn-config-model"></span><h1>sleap.nn.config.model<a class="headerlink" href="#module-sleap.nn.config.model" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="sleap.nn.config.model.BackboneConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">BackboneConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#BackboneConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations related to the model backbone.</p>
+<p>Only one field can be set and will determine which backbone architecture to use.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.BackboneConfig.leap">
+<code class="sig-name descname">leap</code><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.leap" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>LEAPConfig</cite> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.BackboneConfig.unet">
+<code class="sig-name descname">unet</code><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.unet" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>UNetConfig</cite> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.BackboneConfig.hourglass">
+<code class="sig-name descname">hourglass</code><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.hourglass" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>HourglassConfig</cite> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.BackboneConfig.resnet">
+<code class="sig-name descname">resnet</code><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.resnet" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>ResNetConfig</cite> instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">CenteredInstanceConfmapsHeadConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">anchor_part</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">part_names</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#CenteredInstanceConfmapsHeadConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations for centered instance confidence map heads.</p>
+<p>These heads are used in topdown multi-instance models that make the assumption that
+there is an instance reliably centered in the cropped input image. These heads are
+useful when centroids are easy to detect as they learn complex relationships between
+the geometry of body parts, even when animals are occluded.</p>
+<p>This comes at the cost of a strong reliance on the accuracy of the instance-centered
+cropping, i.e., it is heavily limited by the accuracy of the centroid model.</p>
+<p>Additionally, since one image crop is evaluated per instance, topdown models scale
+linearly with the number of animals in the frame, which can result in poor
+performance when many instances are present.</p>
+<p>Use this head when centroids are easy to detect, preferably using a consistent body
+part as an anchor, and when there are few animals that cover a small region of the
+full frame.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.anchor_part">
+<code class="sig-name descname">anchor_part</code><a class="headerlink" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.anchor_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text name of a body part (node) to use as the anchor point. If
+None, the midpoint of the bounding box of all visible instance points will
+be used as the anchor. The bounding box midpoint will also be used if the
+anchor part is specified but not visible in the instance. Setting a reliable
+anchor point can significantly improve topdown model accuracy as they
+benefit from a consistent geometry of the body parts relative to the center
+of the image.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.part_names">
+<code class="sig-name descname">part_names</code><a class="headerlink" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.part_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text name of the body parts (nodes) that the head will be configured
+to produce. The number of parts determines the number of channels in the
+output. If not specified, all body parts in the skeleton will be used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.sigma">
+<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spread of the Gaussian distribution of the confidence maps as a scalar
+float. Smaller values are more precise but may be difficult to learn as they
+have a lower density within the image space. Larger values are easier to
+learn but are less precise with respect to the peak coordinate. This spread
+is in units of pixels of the model input image, i.e., the image resolution
+after any input scaling is applied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stride of the output confidence maps relative to the input
+image. This is the reciprocal of the resolution, e.g., an output stride of 2
+results in confidence maps that are 0.5x the size of the input. Increasing
+this value can considerably speed up model performance and decrease memory
+requirements, at the cost of decreased spatial resolution.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.CentroidsHeadConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">CentroidsHeadConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">anchor_part</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#CentroidsHeadConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.CentroidsHeadConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations for centroid confidence map heads.</p>
+<p>These heads are used in topdown models that rely on centroid detection to detect
+instances for cropping before predicting the remaining body parts.</p>
+<p>Multiple centroids can be present (one per instance), so their coordinates can be
+recovered in infernece via local peak finding.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.CentroidsHeadConfig.anchor_part">
+<code class="sig-name descname">anchor_part</code><a class="headerlink" href="#sleap.nn.config.model.CentroidsHeadConfig.anchor_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text name of a body part (node) to use as the anchor point. If
+None, the midpoint of the bounding box of all visible instance points will
+be used as the anchor. The bounding box midpoint will also be used if the
+anchor part is specified but not visible in the instance. Setting a reliable
+anchor point can significantly improve topdown model accuracy as they
+benefit from a consistent geometry of the body parts relative to the center
+of the image.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.CentroidsHeadConfig.sigma">
+<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.config.model.CentroidsHeadConfig.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spread of the Gaussian distribution of the confidence maps as a scalar
+float. Smaller values are more precise but may be difficult to learn as they
+have a lower density within the image space. Larger values are easier to
+learn but are less precise with respect to the peak coordinate. This spread
+is in units of pixels of the model input image, i.e., the image resolution
+after any input scaling is applied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.CentroidsHeadConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.CentroidsHeadConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stride of the output confidence maps relative to the input
+image. This is the reciprocal of the resolution, e.g., an output stride of 2
+results in confidence maps that are 0.5x the size of the input. Increasing
+this value can considerably speed up model performance and decrease memory
+requirements, at the cost of decreased spatial resolution.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.HeadsConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">HeadsConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#HeadsConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations related to the model output head type.</p>
+<p>Only one attribute of this class can be set, which defines the model output type.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HeadsConfig.single_instance">
+<code class="sig-name descname">single_instance</code><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.single_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>An instance of <cite>SingleInstanceConfmapsHeadConfig</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HeadsConfig.centroid">
+<code class="sig-name descname">centroid</code><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>An instance of <cite>CentroidsHeadConfig</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HeadsConfig.centered_instance">
+<code class="sig-name descname">centered_instance</code><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.centered_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>An instance of <cite>CenteredInstanceConfmapsHeadConfig</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HeadsConfig.multi_instance">
+<code class="sig-name descname">multi_instance</code><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.multi_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>An instance of <cite>MultiInstanceConfig</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.HourglassConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">HourglassConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stem_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">max_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">stem_filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">128</span></em>, <em class="sig-param"><span class="n">filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">256</span></em>, <em class="sig-param"><span class="n">filter_increase</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">128</span></em>, <em class="sig-param"><span class="n">stacks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#HourglassConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hourglass backbone configuration.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HourglassConfig.stem_stride">
+<code class="sig-name descname">stem_stride</code><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.stem_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls how many stem blocks to use for initial downsampling.
+These are useful for learned downsampling that is able to retain spatial
+information while reducing large input image sizes.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HourglassConfig.max_stride">
+<code class="sig-name descname">max_stride</code><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.max_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the number of downsampling blocks in the network,
+increasing receptive field size at the cost of network size.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HourglassConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the number of upsampling blocks in the network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HourglassConfig.filters">
+<code class="sig-name descname">filters</code><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base number of filters in the network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HourglassConfig.filters_increase">
+<code class="sig-name descname">filters_increase</code><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.filters_increase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant to increase the number of filters by at each block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.HourglassConfig.stacks">
+<code class="sig-name descname">stacks</code><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.stacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of repeated stacks of the network (excluding the stem).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.LEAPConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">LEAPConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">8</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em>, <em class="sig-param"><span class="n">filters_rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">up_interpolate</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">stacks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#LEAPConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>LEAP backbone configuration.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.LEAPConfig.max_stride">
+<code class="sig-name descname">max_stride</code><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.max_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the number of downsampling blocks in the network,
+increasing receptive field size at the cost of network size.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.LEAPConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the number of upsampling blocks in the network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.LEAPConfig.filters">
+<code class="sig-name descname">filters</code><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base number of filters in the network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.LEAPConfig.filters_rate">
+<code class="sig-name descname">filters_rate</code><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.filters_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factor to scale the number of filters by at each block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.LEAPConfig.up_interpolate">
+<code class="sig-name descname">up_interpolate</code><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.up_interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, use bilinear upsampling instead of transposed
+convolutions for upsampling. This can save computations but may lower
+overall accuracy.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.LEAPConfig.stacks">
+<code class="sig-name descname">stacks</code><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.stacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of repeated stacks of the network (excluding the stem).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.ModelConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">ModelConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backbone</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.nn.config.model.BackboneConfig" title="sleap.nn.config.model.BackboneConfig">sleap.nn.config.model.BackboneConfig</a></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em>, <em class="sig-param"><span class="n">heads</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.nn.config.model.HeadsConfig" title="sleap.nn.config.model.HeadsConfig">sleap.nn.config.model.HeadsConfig</a></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#ModelConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.ModelConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations related to model architecture.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.ModelConfig.backbone">
+<code class="sig-name descname">backbone</code><a class="headerlink" href="#sleap.nn.config.model.ModelConfig.backbone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations related to the main network architecture.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.ModelConfig.heads">
+<code class="sig-name descname">heads</code><a class="headerlink" href="#sleap.nn.config.model.ModelConfig.heads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations related to the output heads.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.MultiInstanceConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">MultiInstanceConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">confmaps</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</a></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em>, <em class="sig-param"><span class="n">pafs</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="sleap.nn.config.model.PartAffinityFieldsHeadConfig">sleap.nn.config.model.PartAffinityFieldsHeadConfig</a></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#MultiInstanceConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration for combined multi-instance confidence map and PAF model heads.</p>
+<p>This configuration specifies a multi-head model that outputs both multi-instance
+confidence maps and part affinity fields, which together enable multi-instance pose
+estimation in a bottom-up fashion, i.e., no instance cropping or centroids are
+required.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.MultiInstanceConfig.confmaps">
+<code class="sig-name descname">confmaps</code><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfig.confmaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Part confidence map configuration (see the description in
+<cite>MultiInstanceConfmapsHeadConfig</cite>).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.MultiInstanceConfig.pafs">
+<code class="sig-name descname">pafs</code><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfig.pafs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Part affinity fields configuration (see the description in
+<cite>PartAffinityFieldsHeadConfig</cite>).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">MultiInstanceConfmapsHeadConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">part_names</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">loss_weight</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#MultiInstanceConfmapsHeadConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations for multi-instance confidence map heads.</p>
+<p>These heads are used in bottom-up multi-instance models that do not make any
+assumption about the connectivity of the body parts. These heads will generate
+multiple local peaks for each body part type and must be detected using local peak
+finding.</p>
+<p>Although this head alone is sufficient to detect multiple copies of each body part
+type, it provides no information as to which sets of points should be grouped
+together to the same instance. If this is required, a head that provides
+connectivity or grouping information is required, e.g., part affinity fields.</p>
+<p>Use this head when multiple instances of each body part are present and do not need
+to be grouped or will be grouped using additional information.</p>
+<p>This head type has the advantage that it only needs to evaluate each frame once to
+find all peaks, in contrast to topdown models that must be evaluated for each crop.
+This constant scaling with the number of instances can be especially beneficial when
+there are many animals present in the frame.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.part_names">
+<code class="sig-name descname">part_names</code><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.part_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text name of the body parts (nodes) that the head will be configured
+to produce. The number of parts determines the number of channels in the
+output. If not specified, all body parts in the skeleton will be used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.sigma">
+<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spread of the Gaussian distribution of the confidence maps as a scalar
+float. Smaller values are more precise but may be difficult to learn as they
+have a lower density within the image space. Larger values are easier to
+learn but are less precise with respect to the peak coordinate. This spread
+is in units of pixels of the model input image, i.e., the image resolution
+after any input scaling is applied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stride of the output confidence maps relative to the input
+image. This is the reciprocal of the resolution, e.g., an output stride of 2
+results in confidence maps that are 0.5x the size of the input. Increasing
+this value can considerably speed up model performance and decrease memory
+requirements, at the cost of decreased spatial resolution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.loss_weight">
+<code class="sig-name descname">loss_weight</code><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.loss_weight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scalar float used to weigh the loss term for this head during
+training. Increase this to encourage the optimization to focus on improving
+this specific output in multi-head models.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.PartAffinityFieldsHeadConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">PartAffinityFieldsHeadConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Sequence<span class="p">[</span>Tuple<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">15.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">loss_weight</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#PartAffinityFieldsHeadConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations for multi-instance part affinity field heads.</p>
+<p>These heads are used in bottom-up multi-instance models that require information
+about body part connectivity in order to group multiple detections of each body part
+type into distinct instances.</p>
+<p>Part affinity fields are an image-space representation of the directed graph that
+defines the skeleton. Pixels that are close to the line (directed edge) formed
+between pairs of nodes of the same instance will contain unit vectors pointing along
+the direction of the the connection. The similarity between this line and the
+average of the unit vectors at the pixels underneath the line can be used as a
+matching score to associate candidate pairs of body part detections.</p>
+<p>Use this head when multiple instances of each body part are present and need to be
+grouped to coherent instances.</p>
+<p>This head type has the advantage that it only needs to evaluate each frame once to
+find all peaks, in contrast to topdown models that must be evaluated for each crop.
+This constant scaling with the number of instances can be especially beneficial when
+there are many animals present in the frame.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.PartAffinityFieldsHeadConfig.edges">
+<code class="sig-name descname">edges</code><a class="headerlink" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of 2-tuples of the form <cite>(source_node, destination_node)</cite> that
+define pairs of text names of the directed edges of the graph. If not set,
+all edges in the skeleton will be used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.PartAffinityFieldsHeadConfig.sigma">
+<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spread of the Gaussian distribution that weigh the part affinity fields
+as a function of their distance from the edge they represent. Smaller values
+are more precise but may be difficult to learn as they have a lower density
+within the image space. Larger values are easier to learn but are less
+precise with respect to the edge distance, so can be less useful in
+disambiguating between edges that are nearby and parallel in direction. This
+spread is in units of pixels of the model input image, i.e., the image
+resolution after any input scaling is applied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.PartAffinityFieldsHeadConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stride of the output part affinity fields relative to the
+input image. This is the reciprocal of the resolution, e.g., an output
+stride of 2 results in PAFs that are 0.5x the size of the input. Increasing
+this value can considerably speed up model performance and decrease memory
+requirements, at the cost of decreased spatial resolution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.PartAffinityFieldsHeadConfig.loss_weight">
+<code class="sig-name descname">loss_weight</code><a class="headerlink" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.loss_weight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scalar float used to weigh the loss term for this head during
+training. Increase this to encourage the optimization to focus on improving
+this specific output in multi-head models.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.ResNetConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">ResNetConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">version</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'ResNet50'</span></em>, <em class="sig-param"><span class="n">weights</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'frozen'</span></em>, <em class="sig-param"><span class="n">upsampling</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.nn.config.model.UpsamplingConfig" title="sleap.nn.config.model.UpsamplingConfig">sleap.nn.config.model.UpsamplingConfig</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">32</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#ResNetConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>ResNet backbone configuration.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.ResNetConfig.version">
+<code class="sig-name descname">version</code><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the ResNetV1 variant. Can be one of: “ResNet50”, “ResNet101”,
+or “ResNet152”.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.ResNetConfig.weights">
+<code class="sig-name descname">weights</code><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig.weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls how the network weights are initialized. If “random”, the
+network is not pretrained. If “frozen”, the network uses pretrained weights
+and keeps them fixed. If “tunable”, the network uses pretrained weights and
+allows them to be trainable.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.ResNetConfig.upsampling">
+<code class="sig-name descname">upsampling</code><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig.upsampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>UpsamplingConfig</cite> that defines an upsampling branch if not None.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.ResNetConfig.max_stride">
+<code class="sig-name descname">max_stride</code><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig.max_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stride of the backbone feature activations. These should be &lt;= 32.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.ResNetConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stride of the final output. If the upsampling branch is not
+defined, the output stride is controlled via dilated convolutions or reduced
+pooling in the backbone.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">SingleInstanceConfmapsHeadConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">part_names</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#SingleInstanceConfmapsHeadConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configurations for single instance confidence map heads.</p>
+<p>These heads are used in single instance models that make the assumption that only
+one of each body part is present in the image. These heads produce confidence maps
+with a single peak for each part type which can be detected via global peak finding.</p>
+<p>Do not use this head if there is more than one animal present in the image.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.part_names">
+<code class="sig-name descname">part_names</code><a class="headerlink" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.part_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text name of the body parts (nodes) that the head will be configured
+to produce. The number of parts determines the number of channels in the
+output. If not specified, all body parts in the skeleton will be used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.sigma">
+<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spread of the Gaussian distribution of the confidence maps as a scalar
+float. Smaller values are more precise but may be difficult to learn as they
+have a lower density within the image space. Larger values are easier to
+learn but are less precise with respect to the peak coordinate. This spread
+is in units of pixels of the model input image, i.e., the image resolution
+after any input scaling is applied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stride of the output confidence maps relative to the input
+image. This is the reciprocal of the resolution, e.g., an output stride of 2
+results in confidence maps that are 0.5x the size of the input. Increasing
+this value can considerably speed up model performance and decrease memory
+requirements, at the cost of decreased spatial resolution.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.UNetConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">UNetConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stem_stride</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">16</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em>, <em class="sig-param"><span class="n">filters_rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">middle_block</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">up_interpolate</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">stacks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#UNetConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.UNetConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>UNet backbone configuration.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.stem_stride">
+<code class="sig-name descname">stem_stride</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.stem_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>If not None, controls how many stem blocks to use for initial
+downsampling. These are useful for learned downsampling that is able to
+retain spatial information while reducing large input image sizes.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.max_stride">
+<code class="sig-name descname">max_stride</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.max_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the number of downsampling blocks in the network,
+increasing receptive field size at the cost of network size.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the number of upsampling blocks in the network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.filters">
+<code class="sig-name descname">filters</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base number of filters in the network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.filters_rate">
+<code class="sig-name descname">filters_rate</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.filters_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factor to scale the number of filters by at each block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.middle_block">
+<code class="sig-name descname">middle_block</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.middle_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, add an intermediate block between the downsampling and
+upsampling branch for additional processing for features at the largest
+receptive field size. This will not introduce an extra pooling step.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.up_interpolate">
+<code class="sig-name descname">up_interpolate</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.up_interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, use bilinear upsampling instead of transposed
+convolutions for upsampling. This can save computations but may lower
+overall accuracy.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UNetConfig.stacks">
+<code class="sig-name descname">stacks</code><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.stacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of repeated stacks of the network (excluding the stem).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.config.model.UpsamplingConfig">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.model.</code><code class="sig-name descname">UpsamplingConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'interpolation'</span></em>, <em class="sig-param"><span class="n">skip_connections</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">block_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em>, <em class="sig-param"><span class="n">filters_rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">refine_convs</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">batch_norm</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">transposed_conv_kernel_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/config/model.html#UpsamplingConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upsampling stack configuration.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.method">
+<code class="sig-name descname">method</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>If “transposed_conv”, use a strided transposed convolution to perform
+learnable upsampling. If “interpolation”, bilinear upsampling will be used
+instead.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.skip_connections">
+<code class="sig-name descname">skip_connections</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.skip_connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>If “add”, incoming feature tensors form skip connection with
+upsampled features via element-wise addition. Height/width are matched via
+stride and a 1x1 linear conv is applied if the channel counts do no match
+up. If “concatenate”, the skip connection is formed via channel-wise
+concatenation. If None, skip connections will not be formed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.block_stride">
+<code class="sig-name descname">block_stride</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.block_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The striding of the upsampling <em>layer</em> (not tensor). This is
+typically set to 2, such that the tensor doubles in size with each
+upsampling step, but can be set higher to upsample to the desired
+<cite>output_stride</cite> directly in fewer steps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.filters">
+<code class="sig-name descname">filters</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integer that specifies the base number of filters in each convolution
+layer. This will be scaled by the <cite>filters_rate</cite> at every upsampling step.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.filters_rate">
+<code class="sig-name descname">filters_rate</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.filters_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factor to scale the number of filters in the convolution layers
+after each upsampling step. If set to 1, the number of filters won’t change.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.refine_convs">
+<code class="sig-name descname">refine_convs</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.refine_convs" title="Permalink to this definition">¶</a></dt>
+<dd><p>If greater than 0, specifies the number of 3x3 convolutions that
+will be applied after the upsampling step for refinement. These layers can
+serve the purpose of “mixing” the skip connection fused features, or to
+refine the current feature map after upsampling, which can help to prevent
+aliasing and checkerboard effects. If 0, no additional convolutions will be
+applied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.conv_batchnorm">
+<code class="sig-name descname">conv_batchnorm</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.conv_batchnorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies whether batch norm should be applied after each
+convolution (and before the ReLU activation).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.config.model.UpsamplingConfig.transposed_conv_kernel_size">
+<code class="sig-name descname">transposed_conv_kernel_size</code><a class="headerlink" href="#sleap.nn.config.model.UpsamplingConfig.transposed_conv_kernel_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the kernel for the transposed convolution.
+No effect if bilinear upsampling is used.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.training.html">sleap.gui.learning.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.nn.config.data.html" title="previous chapter">sleap.nn.config.data</a></li>
+      <li>Next: <a href="sleap.nn.config.optimization.html" title="next chapter">sleap.nn.config.optimization</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.nn.config.model.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

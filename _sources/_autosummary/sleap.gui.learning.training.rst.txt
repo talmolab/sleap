@@ -1,0 +1,5 @@
+sleap.gui.learning.training
+===========================
+
+.. automodule:: sleap.gui.learning.training
+   :members:

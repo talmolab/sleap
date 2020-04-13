@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Training with GUI &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Export a training package" href="training-package.html" />
+    <link rel="prev" title="Skeleton design" href="skeleton-design.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="training-with-gui">
+<h1>Training with GUI<a class="headerlink" href="#training-with-gui" title="Permalink to this headline">¶</a></h1>
+<p>To run training, select “<strong>Run Training…</strong>” from the “Predict”
+menu. This trains new models using the frames that you’ve already
+labeled in your project, and then uses these models to predict instances
+in the suggested frames that you haven’t yet labeled (or on other random
+frames). This process can take a while, and since it runs on your
+machine, you should only try it if you have a GPU installed.</p>
+<p><img alt="training-dialog" src="../_images/training-dialog.jpg" /></p>
+<p>By default, training uses the training settings which we’ve found to work
+well on a wide range of videos. We train a “centroid” model on 1/4 scale
+images and then use this to crop where we think there are instances
+during inference. Another “instance centered” model is trained on full-sized,
+cropped image to predict the nodes for an instance at the center of each cropped
+image.</p>
+<p>At the top of the training dialog, you’ll see tabs for each of the models.
+This is where you can configure the model architecture and hyperparameters.</p>
+<p><img alt="model" src="../_images/training-model-dialog.jpg" /></p>
+<p>There are a few hyperparameters that you can control for active
+learning:</p>
+<ul class="simple">
+<li><p><strong>Crop size</strong> lets you set a specific crop size, or you can use “None” to let
+SLEAP determine a crop size for you based on the size of your labeled
+instances.</p></li>
+<li><p><strong>Batch Size</strong> determines how many samples are used to train the
+neural network at one time. If you get an error that your GPU ran out
+of memory while training, you should try a smaller batch size.</p></li>
+</ul>
+<p>You can visually preview the effects of these settings on the training
+data by clicking the “<strong>View Training Image Inputs…</strong>” button on the
+<strong>Training Pipeline</strong> tab.</p>
+<p>You should also note the <strong>Receptive Field</strong> preview:</p>
+<p><img alt="receptive-field" src="../_images/receptive-field.jpg" /></p>
+<p>This lets you see the receptive field size of the model give the current
+settings; you can zoom and drag the image just like you can when labeling frames.</p>
+<p>The <a class="reference external" href="https://distill.pub/2019/computing-receptive-fields/">receptive field</a>
+is the amount of visual “context” around each pixel in the
+image that will be used for the prediction at that pixel.
+For a U-Net backbone (the default) it’s a function of the
+“max stride”, and in a way also a function of the image input scaling (since
+scaling will give you a larger field relative to the original image).</p>
+<p>After setting the parameters click “<strong>Run</strong>”. During the
+training process, you’ll see a window where you can monitor the loss.
+Blue points are training loss for each batch, lines are training and
+validation loss for the epochs (these won’t appear until the second
+epoch has finished.) There’s a button to stop training the model when
+you think is appropriate, or the training will automatically stop if the
+model doesn’t improve for a certain number of epochs (15 by default)</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#getting-better-results">Getting better results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#running-remotely">Running remotely</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#all-guides">All Guides</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Guides</a><ul>
+      <li>Previous: <a href="skeleton-design.html" title="previous chapter">Skeleton design</a></li>
+      <li>Next: <a href="training-package.html" title="next chapter">Export a training package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/guides/training.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

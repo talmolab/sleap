@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Quick Training and Inference &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Prediction-assisted labeling" href="assisted-labeling.html" />
+    <link rel="prev" title="Creating a project" href="new-project.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="quick-training-and-inference">
+<span id="initial-training"></span><h1>Quick Training and Inference<a class="headerlink" href="#quick-training-and-inference" title="Permalink to this headline">¶</a></h1>
+<p>Let’s see how quickly we can train models and start getting some predictions.</p>
+<p>Start by labeling about 10 frames—this should be enough to at least get some initial results. Once you have the frames labeled, save your project.</p>
+<p>Now you’re ready to train some models! To run training, select “<strong>Run Training…</strong>” from the “Predict”
+menu. For this tutorial, let’s use the default settings for training and predict on 20 random frames.</p>
+<p><img alt="image6" src="../_images/training-dialog1.jpg" /></p>
+<p>The default settings will train two models: one for locating each instance in the frame confidence maps, and one for locating the parts for each of those instances. The models will be trained in that order.</p>
+<p>For this “topdown” prediction approach, it’s a good idea to choose an <strong>anchor</strong> part which has a relatively stable position near the center of your animal. You may also want to turn on the option to “<strong>Visualize Predictions During Training</strong>” (although this will make training run a bit more slowly).</p>
+<p>Once you hit the <strong>Run</strong> button, you should see a window which shows you a graph of training and validation loss for each model as it trains.</p>
+<p>Just for this tutorial, let’s stop each training session after about 10 epochs. This should take a minute or two for each model (assuming you have a usable GPU!), and should be good enough to get some initial predictions.</p>
+<p>After each model is trained, inference will run and if everything is successful, you should get a dialog telling you how many frames got predictions. Frames with labels will be marked in the seekbar, so try clicking on the newly marked frames or use the “<strong>Next Labeled Frame</strong>” command in the “Go” menu to step through frames with labels.</p>
+<p>Continue to <a class="reference internal" href="assisted-labeling.html#assisted-labeling"><span class="std std-ref">Prediction-assisted labeling</span></a>.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="tutorial.html">Tutorial</a><ul>
+      <li>Previous: <a href="new-project.html" title="previous chapter">Creating a project</a></li>
+      <li>Next: <a href="assisted-labeling.html" title="next chapter">Prediction-assisted labeling</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/tutorials/initial-training.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

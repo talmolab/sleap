@@ -1,0 +1,5 @@
+sleap.gui.dialogs.importvideos
+==============================
+
+.. automodule:: sleap.gui.dialogs.importvideos
+   :members:

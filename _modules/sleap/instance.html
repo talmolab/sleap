@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.instance &#8212; SLEAP  documentation</title>
@@ -71,7 +71,7 @@
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">_ForwardRef</span> <span class="k">as</span> <span class="n">ForwardRef</span>
 
 
-<div class="viewcode-block" id="Point"><a class="viewcode-back" href="../../instance.html#sleap.instance.Point">[docs]</a><span class="k">class</span> <span class="nc">Point</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">record</span><span class="p">):</span>
+<div class="viewcode-block" id="Point"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Point">[docs]</a><span class="k">class</span> <span class="nc">Point</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">record</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A labelled point and any metadata associated with it.</span>
 
@@ -113,7 +113,7 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">)&quot;</span>
 
-<div class="viewcode-block" id="Point.isnan"><a class="viewcode-back" href="../../instance.html#sleap.instance.Point.isnan">[docs]</a>    <span class="k">def</span> <span class="nf">isnan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Point.isnan"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Point.isnan">[docs]</a>    <span class="k">def</span> <span class="nf">isnan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Are either of the coordinates a NaN value.</span>
 
@@ -128,7 +128,7 @@
 <span class="n">Point</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">these</span><span class="o">=</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">Point</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">},</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="n">Point</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="PredictedPoint"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPoint">[docs]</a><span class="k">class</span> <span class="nc">PredictedPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">):</span>
+<div class="viewcode-block" id="PredictedPoint"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedPoint">[docs]</a><span class="k">class</span> <span class="nc">PredictedPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A predicted point is an output of the inference procedure.</span>
 
@@ -174,7 +174,7 @@
 
         <span class="k">return</span> <span class="n">val</span>
 
-<div class="viewcode-block" id="PredictedPoint.from_point"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPoint.from_point">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PredictedPoint.from_point"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedPoint.from_point">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_point</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span> <span class="n">Point</span><span class="p">,</span> <span class="n">score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PredictedPoint&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a PredictedPoint from a Point</span>
@@ -196,7 +196,7 @@
 <span class="p">)(</span><span class="n">PredictedPoint</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="PointArray"><a class="viewcode-back" href="../../instance.html#sleap.instance.PointArray">[docs]</a><span class="k">class</span> <span class="nc">PointArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">):</span>
+<div class="viewcode-block" id="PointArray"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PointArray">[docs]</a><span class="k">class</span> <span class="nc">PointArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    PointArray is a sub-class of numpy recarray which stores</span>
 <span class="sd">    Point objects as records.</span>
@@ -250,7 +250,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
-<div class="viewcode-block" id="PointArray.make_default"><a class="viewcode-back" href="../../instance.html#sleap.instance.PointArray.make_default">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PointArray.make_default"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PointArray.make_default">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">make_default</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PointArray&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a point array where points are all set to default.</span>
@@ -287,7 +287,7 @@
             <span class="c1"># return a single element</span>
             <span class="k">return</span> <span class="n">obj</span>
 
-<div class="viewcode-block" id="PointArray.from_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.PointArray.from_array">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PointArray.from_array"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PointArray.from_array">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_array</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="s2">&quot;PointArray&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PointArray&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Converts a :class:`PointArray` (or child) to a new instance.</span>
@@ -312,7 +312,7 @@
         <span class="k">return</span> <span class="n">v</span></div></div>
 
 
-<div class="viewcode-block" id="PredictedPointArray"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPointArray">[docs]</a><span class="k">class</span> <span class="nc">PredictedPointArray</span><span class="p">(</span><span class="n">PointArray</span><span class="p">):</span>
+<div class="viewcode-block" id="PredictedPointArray"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedPointArray">[docs]</a><span class="k">class</span> <span class="nc">PredictedPointArray</span><span class="p">(</span><span class="n">PointArray</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    PredictedPointArray is analogous to PointArray except for predicted</span>
 <span class="sd">    points.</span>
@@ -320,7 +320,7 @@
 
     <span class="n">_record_type</span> <span class="o">=</span> <span class="n">PredictedPoint</span>
 
-<div class="viewcode-block" id="PredictedPointArray.to_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedPointArray.to_array">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PredictedPointArray.to_array"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedPointArray.to_array">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">to_array</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="s2">&quot;PredictedPointArray&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PointArray&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert a PredictedPointArray to a normal PointArray.</span>
@@ -339,7 +339,7 @@
         <span class="k">return</span> <span class="n">v</span></div></div>
 
 
-<div class="viewcode-block" id="Track"><a class="viewcode-back" href="../../instance.html#sleap.instance.Track">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="viewcode-block" id="Track"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Track">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Track</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A track object is associated with a set of animal/object instances</span>
@@ -354,7 +354,7 @@
     <span class="n">spawned_on</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">converter</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Track.matches"><a class="viewcode-back" href="../../instance.html#sleap.instance.Track.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Track&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="Track.matches"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Track.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Track&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if two tracks match by value.</span>
 
@@ -373,7 +373,7 @@
 <span class="c1"># that are created in post init so they are not serialized.</span>
 
 
-<div class="viewcode-block" id="Instance"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="Instance"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Instance">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Instance</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The class :class:`Instance` represents a labelled instance of a skeleton.</span>
@@ -692,7 +692,7 @@
                 <span class="sa">f</span><span class="s2">&quot;The underlying skeleton (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="si">}</span><span class="s2">) has no node &#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="Instance.matches"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Instance&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Instance.matches"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Instance.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Instance&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Whether two instances match by value.</span>
 
@@ -780,7 +780,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="n">new_array</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span>
 
-<div class="viewcode-block" id="Instance.get_points_array"><a class="viewcode-back" href="../../instance.html#sleap.instance.Instance.get_points_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_points_array</span><span class="p">(</span>
+<div class="viewcode-block" id="Instance.get_points_array"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Instance.get_points_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_points_array</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">invisible_as_nan</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">full</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -865,10 +865,35 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span>
+
+<div class="viewcode-block" id="Instance.from_pointsarray"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Instance.from_pointsarray">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_pointsarray</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Track</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Instance&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create an instance from pointsarray.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains</span>
+<span class="sd">                the points in (x, y) coordinates of each node. Missing nodes should be</span>
+<span class="sd">                represented as NaNs.</span>
+<span class="sd">            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the</span>
+<span class="sd">                predicted instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new Instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">predicted_points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">point</span><span class="p">,</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">continue</span>
+
+            <span class="n">predicted_points</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">predicted_points</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">track</span><span class="o">=</span><span class="n">track</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="PredictedInstance"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedInstance">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="PredictedInstance"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedInstance">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">PredictedInstance</span><span class="p">(</span><span class="n">Instance</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A predicted instance is an output of the inference procedure.</span>
@@ -890,8 +915,8 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;PredictedInstance should not have from_predicted.&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PredictedInstance.from_instance"><a class="viewcode-back" href="../../instance.html#sleap.instance.PredictedInstance.from_instance">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">score</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<div class="viewcode-block" id="PredictedInstance.from_instance"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedInstance.from_instance">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">score</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PredictedInstance&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a :class:`PredictedInstance` from an :class:`Instance`.</span>
 
@@ -913,10 +938,53 @@
         <span class="p">)</span>
         <span class="n">kw_args</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PredictedPointArray</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span>
         <span class="n">kw_args</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kw_args</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kw_args</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PredictedInstance.from_arrays"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedInstance.from_arrays">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_arrays</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">point_confidences</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">instance_score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">,</span>
+        <span class="n">track</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Track</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PredictedInstance&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a predicted instance from data arrays.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains</span>
+<span class="sd">                the points in (x, y) coordinates of each node. Missing nodes should be</span>
+<span class="sd">                represented as NaNs.</span>
+<span class="sd">            point_confidences: A numpy array of shape (n_nodes,) and dtype float32 that</span>
+<span class="sd">                contains the confidence/score of the points.</span>
+<span class="sd">            instance_score: Scalar float representing the overall instance score, e.g.,</span>
+<span class="sd">                the PAF grouping score.</span>
+<span class="sd">            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the</span>
+<span class="sd">                predicted instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new PredictedInstance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">predicted_points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">point</span><span class="p">,</span> <span class="n">confidence</span><span class="p">,</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">points</span><span class="p">,</span> <span class="n">point_confidences</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">continue</span>
+
+            <span class="n">predicted_points</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">PredictedPoint</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">score</span><span class="o">=</span><span class="n">confidence</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">points</span><span class="o">=</span><span class="n">predicted_points</span><span class="p">,</span>
+            <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span>
+            <span class="n">score</span><span class="o">=</span><span class="n">instance_score</span><span class="p">,</span>
+            <span class="n">track</span><span class="o">=</span><span class="n">track</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="make_instance_cattr"><a class="viewcode-back" href="../../instance.html#sleap.instance.make_instance_cattr">[docs]</a><span class="k">def</span> <span class="nf">make_instance_cattr</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">:</span>
+<div class="viewcode-block" id="make_instance_cattr"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.make_instance_cattr">[docs]</a><span class="k">def</span> <span class="nf">make_instance_cattr</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a cattr converter for Lists of Instances/PredictedInstances.</span>
 
@@ -1007,7 +1075,7 @@
     <span class="k">return</span> <span class="n">converter</span></div>
 
 
-<div class="viewcode-block" id="LabeledFrame"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="LabeledFrame"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">LabeledFrame</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Holds labeled data for a single frame of a video.</span>
@@ -1043,7 +1111,7 @@
         <span class="sd">&quot;&quot;&quot;Returns instance (retrieved by index).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LabeledFrame.index"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Instance</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="LabeledFrame.index"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Instance</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns index of given :class:`Instance`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
@@ -1056,7 +1124,7 @@
         <span class="c1"># Modify the instance to remove reference to this frame</span>
         <span class="n">value</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="LabeledFrame.insert"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
+<div class="viewcode-block" id="LabeledFrame.insert"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds instance to frame.</span>
 
@@ -1089,7 +1157,7 @@
         <span class="c1"># Modify the instance to have a reference back to this frame</span>
         <span class="n">value</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span>
 
-<div class="viewcode-block" id="LabeledFrame.find"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame.find">[docs]</a>    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span>
+<div class="viewcode-block" id="LabeledFrame.find"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.find">[docs]</a>    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1144,6 +1212,15 @@
         <span class="sd">&quot;&quot;&quot;Returns list of user instances associated with this frame.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">training_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns list of user instances with points for training.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">inst</span>
+            <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instances</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inst</span><span class="o">.</span><span class="n">n_visible_points</span>
         <span class="p">]</span>
 
     <span class="nd">@property</span>
@@ -1224,7 +1301,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">inst_to_show</span>
 
-<div class="viewcode-block" id="LabeledFrame.merge_frames"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame.merge_frames">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="LabeledFrame.merge_frames"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.merge_frames">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">merge_frames</span><span class="p">(</span>
         <span class="n">labeled_frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">],</span> <span class="n">video</span><span class="p">:</span> <span class="s2">&quot;Video&quot;</span><span class="p">,</span> <span class="n">remove_redundant</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">]:</span>
@@ -1272,7 +1349,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;skipped </span><span class="si">{</span><span class="n">redundant_count</span><span class="si">}</span><span class="s2"> redundant instances&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">labeled_frames</span></div>
 
-<div class="viewcode-block" id="LabeledFrame.complex_merge_between"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame.complex_merge_between">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="LabeledFrame.complex_merge_between"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.complex_merge_between">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">complex_merge_between</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">base_labels</span><span class="p">:</span> <span class="s2">&quot;Labels&quot;</span><span class="p">,</span> <span class="n">new_frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]]],</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]]:</span>
@@ -1326,7 +1403,7 @@
                 <span class="n">merged</span><span class="p">[</span><span class="n">new_frame</span><span class="o">.</span><span class="n">video</span><span class="p">][</span><span class="n">new_frame</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_instances</span>
         <span class="k">return</span> <span class="n">merged</span><span class="p">,</span> <span class="n">extra_base</span><span class="p">,</span> <span class="n">extra_new</span></div>
 
-<div class="viewcode-block" id="LabeledFrame.complex_frame_merge"><a class="viewcode-back" href="../../instance.html#sleap.instance.LabeledFrame.complex_frame_merge">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="LabeledFrame.complex_frame_merge"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.complex_frame_merge">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">complex_frame_merge</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">base_frame</span><span class="p">:</span> <span class="s2">&quot;LabeledFrame&quot;</span><span class="p">,</span> <span class="n">new_frame</span><span class="p">:</span> <span class="s2">&quot;LabeledFrame&quot;</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]]:</span>
@@ -1447,12 +1524,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
 
@@ -1488,10 +1563,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

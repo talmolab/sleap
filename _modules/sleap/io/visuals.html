@@ -1,0 +1,531 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.io.visuals &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.io.visuals</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for generating videos with visual annotation overlays.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">usable_cpu_count</span>
+
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span><span class="p">,</span> <span class="n">clock</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Object that signals shutdown</span>
+<span class="n">_sentinel</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="reader"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.reader">[docs]</a><span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="n">out_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Read frame images from video and send them into queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        out_q: Queue to send (list of frame indexes, ndarray of frame images)</span>
+<span class="sd">            for chunks of video.</span>
+<span class="sd">        video: The `Video` object to read.</span>
+<span class="sd">        frames: Full list frame indexes we want to read.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cv2</span><span class="o">.</span><span class="n">setNumThreads</span><span class="p">(</span><span class="n">usable_cpu_count</span><span class="p">())</span>
+
+    <span class="n">total_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+    <span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">chunk_count</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_count</span> <span class="o">/</span> <span class="n">chunk_size</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Chunks: </span><span class="si">{</span><span class="n">chunk_count</span><span class="si">}</span><span class="s2">, chunk size: </span><span class="si">{</span><span class="n">chunk_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">chunk_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chunk_count</span><span class="p">):</span>
+
+        <span class="c1"># Read the next chunk of frames</span>
+        <span class="n">frame_start</span> <span class="o">=</span> <span class="n">chunk_size</span> <span class="o">*</span> <span class="n">chunk_i</span>
+        <span class="n">frame_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">frame_start</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">total_count</span><span class="p">)</span>
+        <span class="n">frames_idx_chunk</span> <span class="o">=</span> <span class="n">frames</span><span class="p">[</span><span class="n">frame_start</span><span class="p">:</span><span class="n">frame_end</span><span class="p">]</span>
+
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+
+        <span class="c1"># Load frames from video</span>
+        <span class="n">video_frame_images</span> <span class="o">=</span> <span class="n">video</span><span class="p">[</span><span class="n">frames_idx_chunk</span><span class="p">]</span>
+
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames_idx_chunk</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;reading chunk </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2"> fps&quot;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">frames_idx_chunk</span><span class="p">,</span> <span class="n">video_frame_images</span><span class="p">))</span>
+
+    <span class="c1"># send _sentinal object into queue to signal that we&#39;re done</span>
+    <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">_sentinel</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="marker"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.marker">[docs]</a><span class="k">def</span> <span class="nf">marker</span><span class="p">(</span><span class="n">in_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">out_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Annotate frame images (draw instances).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        in_q: Queue with (list of frame indexes, ndarray of frame images).</span>
+<span class="sd">        out_q: Queue to send annotated images as</span>
+<span class="sd">            (images, h, w, channels) ndarray.</span>
+<span class="sd">        labels: the `Labels` object from which to get data for annotating.</span>
+<span class="sd">        video_idx: index of `Video` in `labels.videos` list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cv2</span><span class="o">.</span><span class="n">setNumThreads</span><span class="p">(</span><span class="n">usable_cpu_count</span><span class="p">())</span>
+
+    <span class="n">chunk_i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">in_q</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="n">_sentinel</span><span class="p">:</span>
+            <span class="c1"># no more data to be received so stop</span>
+            <span class="n">in_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">_sentinel</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="n">frames_idx_chunk</span><span class="p">,</span> <span class="n">video_frame_images</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frames_idx_chunk</span><span class="p">):</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">get_frame_image</span><span class="p">(</span>
+                <span class="n">video_frame</span><span class="o">=</span><span class="n">video_frame_images</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">video_idx</span><span class="o">=</span><span class="n">video_idx</span><span class="p">,</span>
+                <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span>
+                <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;drawing chunk </span><span class="si">{</span><span class="n">chunk_i</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2"> fps&quot;</span><span class="p">)</span>
+        <span class="n">chunk_i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+
+    <span class="c1"># send _sentinal object into queue to signal that we&#39;re done</span>
+    <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">_sentinel</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="writer"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.writer">[docs]</a><span class="k">def</span> <span class="nf">writer</span><span class="p">(</span>
+    <span class="n">in_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+    <span class="n">progress_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">img_w_h</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write annotated images to video.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        in_q: Queue with annotated images as (images, h, w, channels) ndarray</span>
+<span class="sd">        progress_queue: Queue to send progress as</span>
+<span class="sd">            (total frames written: int, elapsed time: float).</span>
+<span class="sd">            Send (-1, elapsed time) when done.</span>
+<span class="sd">        filename: full path to output video</span>
+<span class="sd">        fps: frames per second for output video</span>
+<span class="sd">        img_w_h: (w, h) for output video (note width first for opencv)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cv2</span><span class="o">.</span><span class="n">setNumThreads</span><span class="p">(</span><span class="n">usable_cpu_count</span><span class="p">())</span>
+
+    <span class="n">fourcc</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter_fourcc</span><span class="p">(</span><span class="o">*</span><span class="s2">&quot;MJPG&quot;</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">fourcc</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="n">img_w_h</span><span class="p">)</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+    <span class="n">total_frames_written</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">in_q</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="n">_sentinel</span><span class="p">:</span>
+            <span class="c1"># no more data to be received so stop</span>
+            <span class="n">in_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">_sentinel</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;writing chunk </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2"> fps&quot;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">total_frames_written</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">total_elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+        <span class="n">progress_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">total_frames_written</span><span class="p">,</span> <span class="n">total_elapsed</span><span class="p">))</span>
+
+    <span class="n">out</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="c1"># send (-1, time) to signal done</span>
+    <span class="n">progress_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_elapsed</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="save_labeled_video"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.save_labeled_video">[docs]</a><span class="k">def</span> <span class="nf">save_labeled_video</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+    <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="n">gui_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to generate and save video with annotations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: Output filename.</span>
+<span class="sd">        labels: The dataset from which to get data.</span>
+<span class="sd">        video: The source :class:`Video` we want to annotate.</span>
+<span class="sd">        frames: List of frames to include in output video.</span>
+<span class="sd">        fps: Frames per second for output video.</span>
+<span class="sd">        gui_progress: Whether to show Qt GUI progress dialog.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing video with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span><span class="si">}</span><span class="s2"> frame images...&quot;</span><span class="p">)</span>
+
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+
+    <span class="n">q1</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">q2</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">progress_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+
+    <span class="n">thread_read</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">reader</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frames</span><span class="p">))</span>
+    <span class="n">thread_mark</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">marker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">video</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">thread_write</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q2</span><span class="p">,</span> <span class="n">progress_queue</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+    <span class="n">thread_read</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">thread_mark</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">thread_write</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">progress_win</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">gui_progress</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+        <span class="n">progress_win</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QProgressDialog</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Generating video with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span><span class="si">}</span><span class="s2"> frames...&quot;</span><span class="p">,</span> <span class="s2">&quot;Cancel&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">progress_win</span><span class="o">.</span><span class="n">setMinimumWidth</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+        <span class="n">progress_win</span><span class="o">.</span><span class="n">setWindowModality</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">WindowModal</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">frames_complete</span><span class="p">,</span> <span class="n">elapsed</span> <span class="o">=</span> <span class="n">progress_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">frames_complete</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">progress_win</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">progress_win</span><span class="o">.</span><span class="n">wasCanceled</span><span class="p">():</span>
+            <span class="k">break</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="n">frames_complete</span> <span class="o">/</span> <span class="n">elapsed</span>
+        <span class="n">remaining_frames</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">-</span> <span class="n">frames_complete</span>
+        <span class="n">remaining_time</span> <span class="o">=</span> <span class="n">remaining_frames</span> <span class="o">/</span> <span class="n">fps</span>
+
+        <span class="k">if</span> <span class="n">gui_progress</span><span class="p">:</span>
+            <span class="n">progress_win</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">frames_complete</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Finished </span><span class="si">{</span><span class="n">frames_complete</span><span class="si">}</span><span class="s2"> frames in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s, fps = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">, approx </span><span class="si">{</span><span class="n">remaining_time</span><span class="si">}</span><span class="s2"> s remaining&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+    <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s, fps = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="img_to_cv"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.img_to_cv">[docs]</a><span class="k">def</span> <span class="nf">img_to_cv</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Prepares frame image as needed for opencv.&quot;&quot;&quot;</span>
+    <span class="c1"># Convert RGB to BGR for OpenCV</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span>
+    <span class="c1"># Convert grayscale to BGR</span>
+    <span class="k">elif</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_GRAY2BGR</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="get_frame_image"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.get_frame_image">[docs]</a><span class="k">def</span> <span class="nf">get_frame_image</span><span class="p">(</span>
+    <span class="n">video_frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns single annotated frame image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        video_frame: The ndarray of the frame image.</span>
+<span class="sd">        video_idx: Index of video in :attribute:`Labels.videos` list.</span>
+<span class="sd">        frame_idx: Index of frame in video.</span>
+<span class="sd">        labels: The dataset from which to get data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray of frame image with visual annotations added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">img_to_cv</span><span class="p">(</span><span class="n">video_frame</span><span class="p">)</span>
+    <span class="n">plot_instances_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<span class="k">def</span> <span class="nf">_point_int_tuple</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns (x, y) tuple from :class:`Point`.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot_instances_cv"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.plot_instances_cv">[docs]</a><span class="k">def</span> <span class="nf">plot_instances_cv</span><span class="p">(</span>
+    <span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Adds visuals annotations to single frame image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        img: The ndarray of the frame image.</span>
+<span class="sd">        video_idx: Index of video in :attribute:`Labels.videos` list.</span>
+<span class="sd">        frame_idx: Index of frame in video.</span>
+<span class="sd">        labels: The dataset from which to get data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray of frame image with visual annotations added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">189</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">217</span><span class="p">,</span> <span class="mi">83</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">237</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">126</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">142</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">119</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span> <span class="mi">48</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">77</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="mi">238</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">162</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">47</span><span class="p">],</span>
+    <span class="p">]</span>
+    <span class="n">lfs</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="n">video_idx</span><span class="p">],</span> <span class="n">frame_idx</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">count_no_track</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">instances_to_show</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
+            <span class="n">track_idx</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Instance without track</span>
+            <span class="n">track_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span> <span class="o">+</span> <span class="n">count_no_track</span>
+            <span class="n">count_no_track</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">inst_color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">[</span><span class="n">track_idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)]</span>
+
+        <span class="n">plot_instance_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">inst_color</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="plot_instance_cv"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.plot_instance_cv">[docs]</a><span class="k">def</span> <span class="nf">plot_instance_cv</span><span class="p">(</span>
+    <span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">instance</span><span class="p">:</span> <span class="s2">&quot;Instance&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">marker_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add visual annotations for single instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        img: The ndarray of the frame image.</span>
+<span class="sd">        instance: The :class:`Instance` to add to frame image.</span>
+<span class="sd">        color: (r, g, b) color for this instance.</span>
+<span class="sd">        marker_radius: Radius of marker for instance points (nodes).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray of frame image with visual annotations for instance added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># RGB -&gt; BGR for cv2</span>
+    <span class="n">cv_color</span> <span class="o">=</span> <span class="n">color</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">nodes_points</span><span class="p">:</span>
+        <span class="c1"># plot node at point</span>
+        <span class="k">if</span> <span class="n">point</span><span class="o">.</span><span class="n">visible</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">point</span><span class="o">.</span><span class="n">isnan</span><span class="p">():</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span>
+                <span class="n">img</span><span class="p">,</span>
+                <span class="n">_point_int_tuple</span><span class="p">(</span><span class="n">point</span><span class="p">),</span>
+                <span class="n">marker_radius</span><span class="p">,</span>
+                <span class="n">cv_color</span><span class="p">,</span>
+                <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+        <span class="c1"># Make sure that both nodes are present in this instance before drawing edge</span>
+        <span class="k">if</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">instance</span> <span class="ow">and</span> <span class="n">dst</span> <span class="ow">in</span> <span class="n">instance</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">instance</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span>
+                <span class="ow">and</span> <span class="n">instance</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">instance</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="o">.</span><span class="n">isnan</span><span class="p">()</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">instance</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span><span class="o">.</span><span class="n">isnan</span><span class="p">()</span>
+            <span class="p">):</span>
+
+                <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                    <span class="n">img</span><span class="p">,</span>
+                    <span class="n">_point_int_tuple</span><span class="p">(</span><span class="n">instance</span><span class="p">[</span><span class="n">src</span><span class="p">]),</span>
+                    <span class="n">_point_int_tuple</span><span class="p">(</span><span class="n">instance</span><span class="p">[</span><span class="n">dst</span><span class="p">]),</span>
+                    <span class="n">cv_color</span><span class="p">,</span>
+                    <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="kn">import</span> <span class="nn">argparse</span>
+    <span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">frame_list</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;data_path&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to labels json file&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The output filename for the video&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;--fps&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Frames per second&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--frames&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">frame_list</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;list of frames to predict. Either comma separated list (e.g. 1,2,3) or &quot;</span>
+        <span class="s2">&quot;a range separated by hyphen (e.g. 1-3). (default is entire video)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">video_search</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)]</span>
+    <span class="p">)</span>
+
+    <span class="n">vid</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">frames</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">frames</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">)])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">frames</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">frames</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="s2">&quot;.avi&quot;</span>
+
+    <span class="n">save_labeled_video</span><span class="p">(</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">video</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span>
+        <span class="n">fps</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Video saved as: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

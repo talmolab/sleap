@@ -1,0 +1,5 @@
+sleap.gui.overlays.instance
+===========================
+
+.. automodule:: sleap.gui.overlays.instance
+   :members:

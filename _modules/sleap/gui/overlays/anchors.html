@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.gui.overlays.anchors &#8212; SLEAP  documentation</title>
@@ -38,11 +38,11 @@
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtGui</span>
 
-<span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 
 
-<div class="viewcode-block" id="NegativeAnchorOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.anchors.NegativeAnchorOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="NegativeAnchorOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.anchors.html#sleap.gui.overlays.anchors.NegativeAnchorOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">NegativeAnchorOverlay</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Class to overlay of negative training sample anchors to video frame.</span>
 
@@ -56,7 +56,7 @@
     <span class="n">_pen</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">))</span>
     <span class="n">_line_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
 
-<div class="viewcode-block" id="NegativeAnchorOverlay.add_to_scene"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.anchors.NegativeAnchorOverlay.add_to_scene">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+<div class="viewcode-block" id="NegativeAnchorOverlay.add_to_scene"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.anchors.html#sleap.gui.overlays.anchors.NegativeAnchorOverlay.add_to_scene">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adds anchor markers as overlay on frame image.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
@@ -103,12 +103,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
 </ul>
 
@@ -144,10 +142,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

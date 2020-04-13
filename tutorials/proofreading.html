@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tracking instances across frames &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Guides" href="../guides/index.html" />
+    <link rel="prev" title="Prediction-assisted labeling" href="assisted-labeling.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tracking-instances-across-frames">
+<span id="proofreading-tutorial"></span><h1>Tracking instances across frames<a class="headerlink" href="#tracking-instances-across-frames" title="Permalink to this headline">¶</a></h1>
+<p>When you’re satisfied with the predictions you’re getting, you can use your models to predict on more frames by selecting
+“<strong>Run Inference…</strong>” from the “Predict” menu. This will use the most
+recently trained set of models.</p>
+<p>The inference dialog is almost identical to the training dialog with a few key differences.</p>
+<p>The inference dialog allows you to choose a method to use for tracking
+instance identities:</p>
+<p><img alt="tracker" src="../_images/tracker.jpg" /></p>
+<p>By default the inference dialog will use the most recently train model (or set
+of models), but if you want to choose another trained model, you can do this
+by using the dropdown menu on the tab for the relevant model type.</p>
+<p><img alt="model-selection" src="../_images/model-selection.jpg" /></p>
+<div class="section" id="track-proofreading">
+<span id="id1"></span><h2>Track proofreading<a class="headerlink" href="#track-proofreading" title="Permalink to this headline">¶</a></h2>
+<p>Once you have predicted tracks, you’ll need to proofread these to ensure
+that the identities of instances across frames are correct. By default,
+predicted instances all appear in grey and yellow. Select “Color
+Predicted Instances” to show the tracks in color. (Note that colors in
+the frame match colors in the seekbar and colors in the “Instances”
+panel.) Click an instance to see it’s track name. Double-click the track
+name in the “Instances” panel to change the name.</p>
+<p>There are two main types of mistakes made by the tracking code: mistaken
+identities and lost identities.</p>
+<p><strong>Mistaken Identities:</strong> The code may misidentify which instance goes in
+which track, in which case you’ll want to “swap” the identities.</p>
+<p>You can swap the identities assigned to a pair of instances by selecting
+“Transpose Instance Tracks” in the “Labels” menu. If there are just two
+instances in the frame, it already knows what it do. If there are more,
+you’ll have to click the two instances you want to swap.</p>
+<p><img alt="image9" src="../_images/fixing-track.gif" /></p>
+<p>You can assign an instance to a different (or new) track from the “Set
+Instance Track” submenu in the “Labels” menu.</p>
+<p>You can select instances by typing a number between 1 and 9, by clicking
+the instance in the frame, or by clicking the instance in the
+“Instances” panel (on the right side of your main window). When an
+instance is selected, you’ll see its track name. These track names can
+be edited by double-clicking the track name in the “Instances” panel.</p>
+<p>When you assign an instance to a track, this change will also be applied
+to all <em>subsequent</em> frames. For instance, if you move an instance from
+track 3 to track 2, then any instance in track 3 in subsequent frames
+will also be moved to track 2. This lets you effectively “merge” tracks.</p>
+<p><strong>Lost Identities:</strong> The code may fail to identity an instance in one
+frame with any instances from previous frames. In this case, you’ll want
+to find the first frame in which the new track occurs and change the
+instance track to the track from previous frames. The “Next Track Spawn
+Frame” command in the “Labels” menu will take you to the next frame in
+which a new track is spawned.</p>
+<p>For more tools and tips, see the <a class="reference internal" href="../guides/proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> guide.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tracking instances across frames</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="tutorial.html">Tutorial</a><ul>
+      <li>Previous: <a href="assisted-labeling.html" title="previous chapter">Prediction-assisted labeling</a></li>
+      <li>Next: <a href="../guides/index.html" title="next chapter">Guides</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/tutorials/proofreading.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

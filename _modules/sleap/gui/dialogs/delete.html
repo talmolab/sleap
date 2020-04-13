@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.gui.dialogs.delete &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.dialogs.delete</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sleap.gui.dialogs</span> <span class="kn">import</span> <span class="n">formbuilder</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span>
+
+
+<div class="viewcode-block" id="DeleteDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.delete.html#sleap.gui.dialogs.delete.DeleteDialog">[docs]</a><span class="k">class</span> <span class="nc">DeleteDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="s2">&quot;CommandContext&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DeleteDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
+
+        <span class="c1"># Layout for main form and buttons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_form_widget</span><span class="p">()</span>
+        <span class="n">buttons_layout_widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_button_widget</span><span class="p">()</span>
+
+        <span class="c1"># Layout for entire dialog</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons_layout_widget</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delete</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_form_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span>
+
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGroupBox</span><span class="p">()</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance_type_menu</span> <span class="o">=</span> <span class="n">formbuilder</span><span class="o">.</span><span class="n">FieldComboWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames_menu</span> <span class="o">=</span> <span class="n">formbuilder</span><span class="o">.</span><span class="n">FieldComboWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracks_menu</span> <span class="o">=</span> <span class="n">formbuilder</span><span class="o">.</span><span class="n">FieldComboWidget</span><span class="p">()</span>
+
+        <span class="n">instance_type_options</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;predicted instances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;user instances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;all instances&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">frame_options</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;current frame&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;current video&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">frame_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;all videos&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;has_frame_range&quot;</span><span class="p">]:</span>
+            <span class="n">frame_options</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;selected clip&quot;</span><span class="p">,</span> <span class="s2">&quot;current video except for selected clip&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
+            <span class="n">track_options</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;any track identity (including none)&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;no track identity set&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_track_idx_offset</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">track_options</span><span class="p">)</span>
+            <span class="n">track_options</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_track_idx_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">track_options</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance_type_menu</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">instance_type_options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames_menu</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">frame_options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracks_menu</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">track_options</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Delete&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_type_menu</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames_menu</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;with&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks_menu</span><span class="p">)</span>
+
+        <span class="n">widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">widget</span>
+
+    <span class="k">def</span> <span class="nf">_make_button_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Layout for buttons</span>
+        <span class="n">buttons</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel_button</span> <span class="o">=</span> <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">Cancel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_button</span> <span class="o">=</span> <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span>
+            <span class="s2">&quot;Delete&quot;</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">AcceptRole</span>
+        <span class="p">)</span>
+
+        <span class="n">buttons_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+
+        <span class="n">buttons_layout_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">buttons_layout_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">buttons_layout</span><span class="p">)</span>
+
+        <span class="c1"># Connect actions for buttons</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">)</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">rejected</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reject</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">buttons_layout_widget</span>
+
+    <span class="k">def</span> <span class="nf">getSelectedTrack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">track_menu_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks_menu</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+        <span class="n">track_idx</span> <span class="o">=</span> <span class="n">track_menu_idx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_idx_offset</span>
+
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">track_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">[</span><span class="n">track_idx</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">get_frames_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance_type_value</span><span class="p">,</span> <span class="n">frames_value</span><span class="p">,</span> <span class="n">tracks_value</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">inst_condition</span><span class="p">(</span><span class="n">inst</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">instance_type_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;predicted&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">instance_type_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">tracks_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;any&quot;</span><span class="p">):</span>
+                <span class="c1"># print(&quot;match any track&quot;)</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">tracks_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;no&quot;</span><span class="p">):</span>
+                <span class="c1"># print(&quot;match None track&quot;)</span>
+                <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">track_to_match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedTrack</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">track_to_match</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="o">!=</span> <span class="n">track_to_match</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span>
+
+        <span class="n">lf_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">frames_value</span> <span class="o">==</span> <span class="s2">&quot;current frame&quot;</span><span class="p">:</span>
+            <span class="n">lf_list</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
+                <span class="n">video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span>
+                <span class="n">frame_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">frames_value</span> <span class="o">==</span> <span class="s2">&quot;current video&quot;</span><span class="p">:</span>
+            <span class="n">lf_list</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],)</span>
+        <span class="k">elif</span> <span class="n">frames_value</span> <span class="o">==</span> <span class="s2">&quot;all videos&quot;</span><span class="p">:</span>
+            <span class="n">lf_list</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">labeled_frames</span>
+        <span class="k">elif</span> <span class="n">frames_value</span> <span class="o">==</span> <span class="s2">&quot;selected clip&quot;</span><span class="p">:</span>
+            <span class="n">clip_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">])</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">clip_range</span><span class="p">)</span>
+            <span class="n">lf_list</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
+                <span class="n">video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">clip_range</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">frames_value</span> <span class="o">==</span> <span class="s2">&quot;current video except for selected clip&quot;</span><span class="p">:</span>
+            <span class="n">clip_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">])</span>
+            <span class="n">lf_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">lf</span>
+                <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">labeled_frames</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">lf</span><span class="o">.</span><span class="n">video</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span>
+                    <span class="ow">or</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clip_range</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid frames_value: </span><span class="si">{</span><span class="n">frames_value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">lf_inst_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lf_list</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span> <span class="k">if</span> <span class="n">inst_condition</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">lf_inst_list</span>
+
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">instance_type_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_type_menu</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="n">frames_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames_menu</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="n">tracks_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks_menu</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+
+        <span class="n">lf_inst_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frames_instances</span><span class="p">(</span>
+            <span class="n">instance_type_value</span><span class="o">=</span><span class="n">instance_type_value</span><span class="p">,</span>
+            <span class="n">frames_value</span><span class="o">=</span><span class="n">frames_value</span><span class="p">,</span>
+            <span class="n">tracks_value</span><span class="o">=</span><span class="n">tracks_value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># print(len(lf_inst_list))</span>
+        <span class="c1"># print(instance_type_value)</span>
+        <span class="c1"># print(frames_value)</span>
+        <span class="c1"># print(tracks_value)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_delete</span><span class="p">(</span><span class="n">lf_inst_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lf_inst_list</span><span class="p">):</span>
+        <span class="c1"># Delete the instances</span>
+        <span class="k">for</span> <span class="n">lf</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf_inst_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">,</span> <span class="n">in_transaction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Update caches since we skipped doing this after each deletion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">update_cache</span><span class="p">()</span>
+
+        <span class="c1"># Log update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">changestack_push</span><span class="p">(</span><span class="s2">&quot;delete instances&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span>
+    <span class="kn">from</span> <span class="nn">sleap.gui.commands</span> <span class="kn">import</span> <span class="n">CommandContext</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span>
+        <span class="s2">&quot;tests/data/json_format_v2/centered_pair_predictions.json&quot;</span>
+    <span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">CommandContext</span><span class="o">.</span><span class="n">from_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;has_frame_range&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+
+    <span class="n">win</span> <span class="o">=</span> <span class="n">DeleteDialog</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.nn.architectures.leap &#8212; SLEAP  documentation</title>
@@ -31,137 +31,137 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.nn.architectures.leap</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">attr</span>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides a generalized implementation of the LEAP CNN.</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">UpSampling2D</span>
+<span class="sd">See the `LeapCNN` class docstring for more information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures</span> <span class="kn">import</span> <span class="n">encoder_decoder</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">LEAPConfig</span>
 
 
-<div class="viewcode-block" id="LeapCNN"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.leap.LeapCNN">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">LeapCNN</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;LEAP CNN block.</span>
+<div class="viewcode-block" id="LeapCNN"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.leap.html#sleap.nn.architectures.leap.LeapCNN">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LeapCNN</span><span class="p">(</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderDecoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;LEAP CNN from &quot;Fast animal pose estimation using deep neural networks&quot; (2019).</span>
 
-<span class="sd">    Implementation generalized from original paper (`Pereira et al., 2019</span>
-<span class="sd">    &lt;https://www.nature.com/articles/s41592-018-0234-5&gt;`_).</span>
+<span class="sd">    This is a simple encoder-decoder style architecture without skip connections.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width</span>
-<span class="sd">            that are divisible by `2^down_blocks`.</span>
-<span class="sd">        num_output_channels: The number of output channels of the block. These</span>
-<span class="sd">            are the final output tensors on which intermediate supervision may be</span>
-<span class="sd">            applied.</span>
-<span class="sd">        down_blocks: The number of pooling steps applied to the input. The input</span>
-<span class="sd">            must be a tensor with `2^down_blocks` height and width.</span>
-<span class="sd">        up_blocks: The number of upsampling steps applied after downsampling.</span>
-<span class="sd">        upsampling_layers: If True, use upsampling instead of transposed convs.</span>
-<span class="sd">        num_filters: The base number feature channels of the block. The number of</span>
-<span class="sd">            filters is doubled at each pooling step.</span>
-<span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
+<span class="sd">    This implementation is generalized from original paper (`Pereira et al., 2019</span>
+<span class="sd">    &lt;https://www.nature.com/articles/s41592-018-0234-5&gt;`_) and `code</span>
+<span class="sd">    &lt;https://github.com/talmo/leap&gt;`_.</span>
 
+<span class="sd">    Using the defaults will create a network with ~10.8M parameters.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        filters: Base number of filters in the first encoder block. More filters will</span>
+<span class="sd">            increase the representational capacity of the network at the cost of memory</span>
+<span class="sd">            and runtime.</span>
+<span class="sd">        filters_rate: Factor to increase the number of filters by in each block.</span>
+<span class="sd">        down_blocks: Number of blocks with pooling in the encoder. More down blocks will</span>
+<span class="sd">            increase the effective maximum receptive field, but may incur loss of</span>
+<span class="sd">            spatial precision.</span>
+<span class="sd">        down_convs_per_block: Number of convolutions in each encoder block. More</span>
+<span class="sd">            convolutions per block will increase the representational capacity of the</span>
+<span class="sd">            network at the cost of memory and runtime.</span>
+<span class="sd">        up_blocks: Number of blocks with upsampling in the decoder. If this is equal to</span>
+<span class="sd">            `down_blocks`, the output of this network will be at the same stride (scale)</span>
+<span class="sd">            as the input.</span>
+<span class="sd">        up_interpolate: If True, use bilinear interpolation instead of transposed</span>
+<span class="sd">            convolutions for upsampling. Interpolation is faster but transposed</span>
+<span class="sd">            convolutions may be able to learn richer or more complex upsampling to</span>
+<span class="sd">            recover details from higher scales. If using transposed convolutions, the</span>
+<span class="sd">            number of filters are determined by `filters` and `filters_rate` to</span>
+<span class="sd">            progressively decrease the number of filters at each step.</span>
+<span class="sd">        up_convs_per_block: Number of convolution layers after each upsampling</span>
+<span class="sd">            operation. These will use the `filters` and `filters_rate` to progressively</span>
+<span class="sd">            decrease the number of filters at each step.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">filters_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span>
 
     <span class="n">down_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">upsampling_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">num_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
-    <span class="n">interp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+    <span class="n">down_convs_per_block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
 
-<div class="viewcode-block" id="LeapCNN.output"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.leap.LeapCNN.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate a tensorflow graph for the backbone and return the output tensor.</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">up_interpolate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">up_convs_per_block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kernel_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">3</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">encoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the encoder block configuration.&quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span><span class="p">):</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">(</span>
+                    <span class="n">num_convs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">down_convs_per_block</span><span class="p">,</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="n">i</span><span class="p">),</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                    <span class="n">pooling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">blocks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">decoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleUpsamplingBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the decoder block configuration.&quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">block_filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleUpsamplingBlock</span><span class="p">(</span>
+                    <span class="n">upsampling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">transposed_conv</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_interpolate</span><span class="p">),</span>
+                    <span class="n">transposed_conv_filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span>
+                    <span class="n">transposed_conv_use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">transposed_conv_kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">transposed_conv_batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">transposed_conv_activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                    <span class="n">interp_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
+                    <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">refine_convs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">up_convs_per_block</span><span class="p">,</span>
+                    <span class="n">refine_convs_filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span>
+                    <span class="n">refine_convs_kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">refine_convs_batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">refine_convs_activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">blocks</span>
+
+<div class="viewcode-block" id="LeapCNN.from_config"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.leap.html#sleap.nn.architectures.leap.LeapCNN.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">LEAPConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;LeapCNN&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a model from a set of configuration parameters.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width</span>
-<span class="sd">            that are divisible by `2^down_blocks.</span>
-<span class="sd">            num_output_channels: The number of output channels of the block. These</span>
-<span class="sd">            are the final output tensors on which intermediate supervision may be</span>
-<span class="sd">            applied.</span>
+<span class="sd">            config: An `LEAPConfig` instance with the desired parameters.</span>
+
 <span class="sd">        Returns:</span>
-<span class="sd">            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.</span>
+<span class="sd">            An instance of this class with the specified configuration.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">leap_cnn</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="o">.</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+        <span class="n">down_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">up_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_stride</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="leap_cnn"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.leap.leap_cnn">[docs]</a><span class="k">def</span> <span class="nf">leap_cnn</span><span class="p">(</span>
-    <span class="n">x_in</span><span class="p">,</span>
-    <span class="n">num_output_channels</span><span class="p">,</span>
-    <span class="n">down_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-    <span class="n">up_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-    <span class="n">upsampling_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">num_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">interp</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;LEAP CNN block.</span>
-
-<span class="sd">    Implementation generalized from original paper (`Pereira et al., 2019</span>
-<span class="sd">    &lt;https://www.nature.com/articles/s41592-018-0234-5&gt;`_).</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width</span>
-<span class="sd">            that are divisible by `2^down_blocks`.</span>
-<span class="sd">        num_output_channels: The number of output channels of the block. These</span>
-<span class="sd">            are the final output tensors on which intermediate supervision may be</span>
-<span class="sd">            applied.</span>
-<span class="sd">        down_blocks: The number of pooling steps applied to the input. The input</span>
-<span class="sd">            must be a tensor with `2^down_blocks` height and width.</span>
-<span class="sd">        up_blocks: The number of upsampling steps applied after downsampling.</span>
-<span class="sd">        upsampling_layers: If True, use upsampling instead of transposed convs.</span>
-<span class="sd">        num_filters: The base number feature channels of the block. The number of</span>
-<span class="sd">            filters is doubled at each pooling step.</span>
-<span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Check if input tensor has the right height/width for pooling given depth</span>
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">down_blocks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
-        <span class="ow">or</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">down_blocks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
-    <span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;Input tensor must have width and height dimensions divisible by </span><span class="si">%d</span><span class="s2">.&quot;</span>
-            <span class="o">%</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">down_blocks</span><span class="p">)</span>
-        <span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">down_blocks</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
-            <span class="n">num_filters</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span>
-        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
-            <span class="n">num_filters</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span>
-        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
-            <span class="n">num_filters</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span>
-        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">MaxPool2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">up_blocks</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">upsampling_layers</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">UpSampling2D</span><span class="p">(</span><span class="n">interpolation</span><span class="o">=</span><span class="n">interp</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2DTranspose</span><span class="p">(</span>
-                <span class="n">num_filters</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span><span class="p">),</span>
-                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-                <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
-                <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
-                <span class="n">kernel_initializer</span><span class="o">=</span><span class="s2">&quot;glorot_normal&quot;</span><span class="p">,</span>
-            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
-            <span class="n">num_filters</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span>
-        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
-            <span class="n">num_filters</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span>
-        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)(</span>
-        <span class="n">x</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">x</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">filters_rate</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters_rate</span><span class="p">,</span>
+            <span class="n">down_blocks</span><span class="o">=</span><span class="n">down_blocks</span><span class="p">,</span>
+            <span class="n">down_convs_per_block</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">up_blocks</span><span class="o">=</span><span class="n">up_blocks</span><span class="p">,</span>
+            <span class="n">up_interpolate</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">up_interpolate</span><span class="p">,</span>
+            <span class="n">up_convs_per_block</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">stacks</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
 </pre></div>
 
           </div>
@@ -182,12 +182,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
 </ul>
 
@@ -223,10 +221,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

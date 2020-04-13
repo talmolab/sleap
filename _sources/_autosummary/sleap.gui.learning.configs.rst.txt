@@ -1,0 +1,5 @@
+sleap.gui.learning.configs
+==========================
+
+.. automodule:: sleap.gui.learning.configs
+   :members:

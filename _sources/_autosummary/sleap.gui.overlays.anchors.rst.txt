@@ -1,0 +1,5 @@
+sleap.gui.overlays.anchors
+==========================
+
+.. automodule:: sleap.gui.overlays.anchors
+   :members:

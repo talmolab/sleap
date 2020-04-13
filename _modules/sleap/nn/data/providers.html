@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.data.providers &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.data.providers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Data providers for pipeline I/O.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">sleap</span>
+
+
+<div class="viewcode-block" id="LabelsReader"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LabelsReader</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Data provider from a `sleap.Labels` instance.</span>
+
+<span class="sd">    This class can generate `tf.data.Dataset`s from a set of labels for use in data</span>
+<span class="sd">    pipelines. Each element in the dataset will contain the data contained in a single</span>
+<span class="sd">    `LabeledFrame`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        labels: The `sleap.Labels` instance to generate data from.</span>
+<span class="sd">        example_indices: List or numpy array of ints with the labeled frame indices to</span>
+<span class="sd">            use when iterating over the labels. Use this to specify subsets of the</span>
+<span class="sd">            labels to use. Particularly handy for creating data splits. If not provided,</span>
+<span class="sd">            the entire labels dataset will be read. These indices will be applicable to</span>
+<span class="sd">            the labeled frames in `labels` attribute, which may have changed in ordering</span>
+<span class="sd">            or filtered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span>
+    <span class="n">example_indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="LabelsReader.from_user_instances"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.from_user_instances">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_user_instances</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;LabelsReader&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a `LabelsReader` using the user instances in a `Labels` set.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            labels: A `sleap.Labels` instance containing user instances.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `LabelsReader` instance that can create a dataset for pipelining. Note</span>
+<span class="sd">            that the examples may change in ordering relative to the input `labels`, so</span>
+<span class="sd">            be sure to use the `labels` attribute in the returned instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">user_labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">sleap</span><span class="o">.</span><span class="n">LabeledFrame</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">lf</span><span class="o">.</span><span class="n">training_instances</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">user_labeled_frames</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">user_labels</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LabelsReader.from_filename"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.from_filename">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_filename</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">user_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;LabelsReader&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a `LabelsReader` from a saved labels file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: Path to a saved labels file.</span>
+<span class="sd">            user_instances: If True, will use only labeled frames with user instances.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `LabelsReader` instance that can create a dataset for pipelining.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_instances</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_user_instances</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of elements in the dataset.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the output keys that the dataset will produce.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="s2">&quot;image&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;raw_image_size&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;example_ind&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;video_ind&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;frame_ind&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;scale&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;instances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;skeleton_inds&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">videos</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">sleap</span><span class="o">.</span><span class="n">Video</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the list of videos that `video_ind` in examples match up with.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span>
+
+<div class="viewcode-block" id="LabelsReader.make_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.make_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">make_dataset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">ds_index</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a `tf.data.Dataset` whose elements are data from labeled frames.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dataset whose elements are dictionaries with the loaded data associated</span>
+<span class="sd">            with a single `LabeledFrame`. Items will be converted to tensors. These are:</span>
+<span class="sd">                &quot;image&quot;: Tensors of shape (height, width, channels) containing the full</span>
+<span class="sd">                    raw frame image. The dtype is determined by the input data.</span>
+<span class="sd">                &quot;raw_image_size&quot;: The image size when it was first read as a tf.int32</span>
+<span class="sd">                    tensor of shape (3,) representing [height, width, channels]. This is</span>
+<span class="sd">                    useful for keeping track of absolute image coordinates if downstream</span>
+<span class="sd">                    processing modules resize, crop or pad the image.</span>
+<span class="sd">                &quot;example_ind&quot;: Index of the individual labeled frame within the labels</span>
+<span class="sd">                    stored in the `labels` attribute of this reader.</span>
+<span class="sd">                &quot;video_ind&quot;: Index of the video within the `Labels.videos` list that the</span>
+<span class="sd">                    labeled frame comes from. Tensor will be a scalar of dtype tf.int32.</span>
+<span class="sd">                &quot;frame_ind&quot;: Index of the frame within the video that the labeled frame</span>
+<span class="sd">                    comes from. Tensor will be a scalar of dtype tf.int64.</span>
+<span class="sd">                &quot;scale&quot;: The relative scaling factor of each image dimension specified</span>
+<span class="sd">                    as a tf.float32 tensor of shape (2,) representing the</span>
+<span class="sd">                    (x_scale, y_scale) of the example. This is always (1.0, 1.0) when</span>
+<span class="sd">                    the images are initially read, but may be modified downstream in</span>
+<span class="sd">                    order to keep track of scaling operations. This is especially</span>
+<span class="sd">                    important to keep track of changes to the aspect ratio of the image</span>
+<span class="sd">                    grid in order to properly map points to image coordinates.</span>
+<span class="sd">                &quot;instances&quot;: Tensor of shape (n_instances, n_nodes, 2) of dtype float32</span>
+<span class="sd">                    containing all of the instances in the frame.</span>
+<span class="sd">                &quot;skeleton_inds&quot;: Tensor of shape (n_instances,) of dtype tf.int32 that</span>
+<span class="sd">                    specifies the index of the skeleton used for each instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Grab an image to test for the dtype.</span>
+        <span class="n">test_lf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">test_image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="n">test_lf</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">image_dtype</span> <span class="o">=</span> <span class="n">test_image</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">def</span> <span class="nf">py_fetch_lf</span><span class="p">(</span><span class="n">ind</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local function that will not be autographed.&quot;&quot;&quot;</span>
+            <span class="n">lf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ind</span><span class="o">.</span><span class="n">numpy</span><span class="p">())]</span>
+            <span class="n">video_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+            <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+            <span class="n">raw_image</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">image</span>
+            <span class="n">raw_image_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">raw_image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+            <span class="n">instances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">points_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span>
+            <span class="n">skeleton_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">skeleton</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">]</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">raw_image</span><span class="p">,</span>
+                <span class="n">raw_image_size</span><span class="p">,</span>
+                <span class="n">instances</span><span class="p">,</span>
+                <span class="n">video_ind</span><span class="p">,</span>
+                <span class="n">frame_ind</span><span class="p">,</span>
+                <span class="n">skeleton_inds</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">fetch_lf</span><span class="p">(</span><span class="n">ind</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local function that fetches a sample given the index.&quot;&quot;&quot;</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="p">(</span>
+                <span class="n">image</span><span class="p">,</span>
+                <span class="n">raw_image_size</span><span class="p">,</span>
+                <span class="n">instances</span><span class="p">,</span>
+                <span class="n">video_ind</span><span class="p">,</span>
+                <span class="n">frame_ind</span><span class="p">,</span>
+                <span class="n">skeleton_inds</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">py_function</span><span class="p">(</span>
+                <span class="n">py_fetch_lf</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">ind</span><span class="p">],</span>
+                <span class="p">[</span><span class="n">image_dtype</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+                <span class="s2">&quot;raw_image_size&quot;</span><span class="p">:</span> <span class="n">raw_image_size</span><span class="p">,</span>
+                <span class="s2">&quot;example_ind&quot;</span><span class="p">:</span> <span class="n">ind</span><span class="p">,</span>
+                <span class="s2">&quot;video_ind&quot;</span><span class="p">:</span> <span class="n">video_ind</span><span class="p">,</span>
+                <span class="s2">&quot;frame_ind&quot;</span><span class="p">:</span> <span class="n">frame_ind</span><span class="p">,</span>
+                <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                <span class="s2">&quot;instances&quot;</span><span class="p">:</span> <span class="n">instances</span><span class="p">,</span>
+                <span class="s2">&quot;skeleton_inds&quot;</span><span class="p">:</span> <span class="n">skeleton_inds</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Create default indexing dataset.</span>
+            <span class="n">ds_index</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create indexing dataset from provided indices.</span>
+            <span class="n">ds_index</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span><span class="p">)</span>
+
+        <span class="c1"># Create reader dataset.</span>
+        <span class="c1"># Note: We don&#39;t parallelize here for thread safety.</span>
+        <span class="n">ds_reader</span> <span class="o">=</span> <span class="n">ds_index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">fetch_lf</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ds_reader</span></div></div>
+
+
+<div class="viewcode-block" id="VideoReader"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">VideoReader</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Data provider from a `sleap.Video` instance.</span>
+
+<span class="sd">    This class can generate `tf.data.Dataset`s from a video for use in data pipelines.</span>
+<span class="sd">    Each element in the dataset will contain the image data from a single frame.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        video: The `sleap.Video` instance to generate data from.</span>
+<span class="sd">        example_indices: List or numpy array of ints with the frame indices to use when</span>
+<span class="sd">            iterating over the video. Use this to specify subsets of the video to read.</span>
+<span class="sd">            If not provided, the entire video will be read.</span>
+<span class="sd">        video_ind: Scalar index of video to keep with each example. Helpful when running</span>
+<span class="sd">            inference across videos.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">video</span><span class="p">:</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Video</span>
+    <span class="n">example_indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="VideoReader.from_filepath"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader.from_filepath">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_filepath</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+        <span class="n">example_indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;VideoReader&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a `LabelsReader` from a saved labels file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: Path to a video file.</span>
+<span class="sd">            example_indices: List or numpy array of ints with the frame indices to use</span>
+<span class="sd">                when iterating over the video. Use this to specify subsets of the video</span>
+<span class="sd">                to read. If not provided, the entire video will be read.</span>
+<span class="sd">            **kwargs: Any other video keyword argument (e.g., grayscale, dataset).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `VideoReader` instance that can create a dataset for pipelining.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">video</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">example_indices</span><span class="o">=</span><span class="n">example_indices</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of elements in the dataset.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">videos</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">sleap</span><span class="o">.</span><span class="n">Video</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the list of videos that `video_ind` in examples match up with.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the output keys that the dataset will produce.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_image_size&quot;</span><span class="p">,</span> <span class="s2">&quot;video_ind&quot;</span><span class="p">,</span> <span class="s2">&quot;frame_ind&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="VideoReader.make_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader.make_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">make_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a `tf.data.Dataset` whose elements are data from video frames.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dataset whose elements are dictionaries with the loaded data associated</span>
+<span class="sd">            with a single video frame. Items will be converted to tensors. These are:</span>
+<span class="sd">                &quot;image&quot;: Tensors of shape (height, width, channels) containing the full</span>
+<span class="sd">                    raw frame image.</span>
+<span class="sd">                &quot;raw_image_size&quot;: The image size when it was first read as a tf.int32</span>
+<span class="sd">                    tensor of shape (3,) representing [height, width, channels]. This is</span>
+<span class="sd">                    useful for keeping track of absolute image coordinates if downstream</span>
+<span class="sd">                    processing modules resize, crop or pad the image.</span>
+<span class="sd">                &quot;video_ind&quot;: Index of the video (always 0). Can be used to index into</span>
+<span class="sd">                    the `videos` attribute of the provider.</span>
+<span class="sd">                &quot;frame_ind&quot;: Index of the frame within the video that the frame comes</span>
+<span class="sd">                    from. This is the same as the input index, but is also provided for</span>
+<span class="sd">                    convenience in downstream processing.</span>
+<span class="sd">                &quot;scale&quot;: The relative scaling factor of each image dimension specified</span>
+<span class="sd">                    as a tf.float32 tensor of shape (2,) representing the</span>
+<span class="sd">                    (x_scale, y_scale) of the example. This is always (1.0, 1.0) when</span>
+<span class="sd">                    the images are initially read, but may be modified downstream in</span>
+<span class="sd">                    order to keep track of scaling operations. This is especially</span>
+<span class="sd">                    important to keep track of changes to the aspect ratio of the image</span>
+<span class="sd">                    grid in order to properly map points to image coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Grab an image to test for the dtype.</span>
+        <span class="n">test_image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">test_frame</span><span class="p">)</span>
+        <span class="n">image_dtype</span> <span class="o">=</span> <span class="n">test_image</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">def</span> <span class="nf">py_fetch_frame</span><span class="p">(</span><span class="n">ind</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local function that will not be autographed.&quot;&quot;&quot;</span>
+            <span class="n">frame_ind</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ind</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+            <span class="n">raw_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">frame_ind</span><span class="p">)</span>
+            <span class="n">raw_image_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">raw_image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">raw_image</span><span class="p">,</span> <span class="n">raw_image_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">frame_ind</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">fetch_frame</span><span class="p">(</span><span class="n">ind</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local function that fetches a sample given the index.&quot;&quot;&quot;</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="n">image</span><span class="p">,</span> <span class="n">raw_image_size</span><span class="p">,</span> <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">py_function</span><span class="p">(</span>
+                <span class="n">py_fetch_frame</span><span class="p">,</span> <span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="p">[</span><span class="n">image_dtype</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+                <span class="s2">&quot;raw_image_size&quot;</span><span class="p">:</span> <span class="n">raw_image_size</span><span class="p">,</span>
+                <span class="s2">&quot;video_ind&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;frame_ind&quot;</span><span class="p">:</span> <span class="n">frame_ind</span><span class="p">,</span>
+                <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+            <span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Create default indexing dataset.</span>
+            <span class="n">ds_index</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create indexing dataset from provided indices.</span>
+            <span class="n">ds_index</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">example_indices</span><span class="p">)</span>
+
+        <span class="c1"># Create reader dataset.</span>
+        <span class="c1"># Note: We don&#39;t parallelize here for thread safety.</span>
+        <span class="n">ds_reader</span> <span class="o">=</span> <span class="n">ds_index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">fetch_frame</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ds_reader</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

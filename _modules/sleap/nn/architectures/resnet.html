@@ -1,0 +1,807 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.architectures.resnet &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.architectures.resnet</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;ResNet-based backbones.</span>
+
+<span class="sd">This module primarily generalizes the ResNet architectures for configurable output</span>
+<span class="sd">stride based on atrous convolutions, DeepLabv2-style (https://arxiv.org/abs/1606.00915).</span>
+
+<span class="sd">ResNet variants that have pretrained weights can be loaded for transfer learning.</span>
+
+<span class="sd">Based on the tf.keras.applications implementation:</span>
+<span class="sd">https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.upsampling</span> <span class="kn">import</span> <span class="n">IntermediateFeature</span><span class="p">,</span> <span class="n">UpsamplingStack</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">ResNetConfig</span>
+
+
+<span class="n">BASE_WEIGHTS_PATH</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;https://storage.googleapis.com/tensorflow/keras-applications/resnet/&quot;</span>
+<span class="p">)</span>
+<span class="n">WEIGHTS_HASHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;resnet50&quot;</span><span class="p">:</span> <span class="s2">&quot;4d473c1dd8becc155b73f8504c6f6626&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resnet101&quot;</span><span class="p">:</span> <span class="s2">&quot;88cf7a10940856eca736dc7b7e228a21&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resnet152&quot;</span><span class="p">:</span> <span class="s2">&quot;ee4c566cf9a93f14d82f913c2dc6dd0c&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resnet50v2&quot;</span><span class="p">:</span> <span class="s2">&quot;fac2f116257151a9d068a22e544a4917&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resnet101v2&quot;</span><span class="p">:</span> <span class="s2">&quot;c0ed64b8031c3730f411d2eb4eea35b5&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resnet152v2&quot;</span><span class="p">:</span> <span class="s2">&quot;ed17cf2e0169df9d443503ef94b23b33&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resnext50&quot;</span><span class="p">:</span> <span class="s2">&quot;62527c363bdd9ec598bed41947b379fc&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resnext101&quot;</span><span class="p">:</span> <span class="s2">&quot;0f678c91647380debd923963594981b3&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">WEIGHTS_FILENAMES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="n">model_name</span> <span class="o">+</span> <span class="s2">&quot;_weights_tf_dim_ordering_tf_kernels_notop.h5&quot;</span>
+    <span class="k">for</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="n">WEIGHTS_HASHES</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="p">}</span>
+<span class="n">WEIGHTS_URIS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="n">BASE_WEIGHTS_PATH</span> <span class="o">+</span> <span class="n">filename</span>
+    <span class="k">for</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">WEIGHTS_FILENAMES</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="make_resnet_model"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.make_resnet_model">[docs]</a><span class="k">def</span> <span class="nf">make_resnet_model</span><span class="p">(</span>
+    <span class="n">backbone_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="n">preact</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;resnet&quot;</span><span class="p">,</span>
+    <span class="n">weights</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;imagenet&quot;</span><span class="p">,</span>
+    <span class="n">input_tensor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">input_shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stem_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
+    <span class="n">stem_stride1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">stem_stride2</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Instantiate the ResNet, ResNetV2 (TODO), and ResNeXt (TODO) architecture.</span>
+
+<span class="sd">    Optionally loads weights pre-trained on ImageNet.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        backbone_fn: a function that returns output tensor for the</span>
+<span class="sd">            stacked residual blocks.</span>
+<span class="sd">        preact: whether to use pre-activation or not</span>
+<span class="sd">            (True for ResNetV2, False for ResNet and ResNeXt).</span>
+<span class="sd">        use_bias: whether to use biases for convolutional layers or not</span>
+<span class="sd">           (True for ResNet and ResNetV2, False for ResNeXt).</span>
+<span class="sd">        model_name: string, model name.</span>
+<span class="sd">        include_top: whether to include the fully-connected</span>
+<span class="sd">            layer at the top of the network.</span>
+<span class="sd">        weights: one of `None` (random initialization),</span>
+<span class="sd">            &#39;imagenet&#39; (pre-training on ImageNet),</span>
+<span class="sd">            or the path to the weights file to be loaded.</span>
+<span class="sd">        input_tensor: optional Keras tensor</span>
+<span class="sd">            (i.e. output of `tf.keras.layers.Input()`)</span>
+<span class="sd">            to use as image input for the model.</span>
+<span class="sd">        input_shape: optional shape tuple, only to be specified</span>
+<span class="sd">            if `include_top` is False (otherwise the input shape</span>
+<span class="sd">            has to be `(224, 224, 3)` (with `channels_last` data format)</span>
+<span class="sd">            or `(3, 224, 224)` (with `channels_first` data format).</span>
+<span class="sd">            It should have exactly 3 inputs channels.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tuple of the `tf.keras.Model` mapping input to final feature outputs, and a</span>
+<span class="sd">        list of `IntermediateFeature`s from every block in the backbone.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: in case of invalid argument for `weights`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">weights</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;imagenet&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">}</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">weights</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The `weights` argument should be either &quot;</span>
+            <span class="s2">&quot;`None` (random initialization), `imagenet` &quot;</span>
+            <span class="s2">&quot;(pre-training on ImageNet), &quot;</span>
+            <span class="s2">&quot;or the path to the weights file to be loaded.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">input_tensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Create input layer if tensor was not provided.</span>
+        <span class="n">img_input</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">is_keras_tensor</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">):</span>
+            <span class="n">img_input</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">input_tensor</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img_input</span> <span class="o">=</span> <span class="n">input_tensor</span>
+
+    <span class="n">intermediate_feats</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># First stem block.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ZeroPadding2D</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_pad&quot;</span><span class="p">)(</span>
+        <span class="n">img_input</span>
+    <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">stem_filters</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">stem_stride1</span><span class="p">,</span> <span class="n">use_bias</span><span class="o">=</span><span class="n">use_bias</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_conv&quot;</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">preact</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">intermediate_feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">IntermediateFeature</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stem_stride1</span><span class="p">))</span>
+
+    <span class="c1"># Second stem block.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ZeroPadding2D</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pool1_pad&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">stem_stride2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pool1_pool&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">intermediate_feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">IntermediateFeature</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stem_stride1</span> <span class="o">*</span> <span class="n">stem_stride2</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Main backbone stack.</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">backbone_intermediate_feats</span> <span class="o">=</span> <span class="n">backbone_fn</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">current_stride</span><span class="o">=</span><span class="n">stem_stride1</span> <span class="o">*</span> <span class="n">stem_stride2</span>
+    <span class="p">)</span>
+    <span class="n">intermediate_feats</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">backbone_intermediate_feats</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">preact</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;post_bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;post_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># Ensure that the model takes into account any potential predecessors of</span>
+    <span class="c1"># `input_tensor`.</span>
+    <span class="k">if</span> <span class="n">input_tensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_source_inputs</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">img_input</span>
+
+    <span class="c1"># Create model.</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">model_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="s2">&quot;imagenet&quot;</span> <span class="ow">and</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="n">WEIGHTS_HASHES</span><span class="p">:</span>
+        <span class="c1"># Download and load pretrained ImageNet weights.</span>
+        <span class="n">weights_path</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span>
+            <span class="n">fname</span><span class="o">=</span><span class="n">WEIGHTS_FILENAMES</span><span class="p">[</span><span class="n">model_name</span><span class="p">],</span>
+            <span class="n">origin</span><span class="o">=</span><span class="n">WEIGHTS_URIS</span><span class="p">[</span><span class="n">model_name</span><span class="p">],</span>
+            <span class="n">cache_subdir</span><span class="o">=</span><span class="s2">&quot;models&quot;</span><span class="p">,</span>
+            <span class="n">file_hash</span><span class="o">=</span><span class="n">WEIGHTS_HASHES</span><span class="p">[</span><span class="n">model_name</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">weights_path</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Load custom weights.</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">intermediate_feats</span></div>
+
+
+<div class="viewcode-block" id="block_v1"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.block_v1">[docs]</a><span class="k">def</span> <span class="nf">block_v1</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">dilation_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">conv_shortcut</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Create a ResNetv1 residual block.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: input tensor.</span>
+<span class="sd">        filters: integer, filters of the bottleneck layer.</span>
+<span class="sd">        kernel_size: default 3, kernel size of the bottleneck layer.</span>
+<span class="sd">        stride: default 1, stride of the first layer.</span>
+<span class="sd">        dilation_rate: default 1, atrous convolution dilation rate of first layer.</span>
+<span class="sd">        conv_shortcut: default True, use convolution shortcut if True,</span>
+<span class="sd">            otherwise identity shortcut.</span>
+<span class="sd">        name: string, block label.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Output tensor for the residual block.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">conv_shortcut</span><span class="p">:</span>
+        <span class="n">shortcut</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+            <span class="mi">4</span> <span class="o">*</span> <span class="n">filters</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="n">strides</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+            <span class="n">dilation_rate</span><span class="o">=</span><span class="n">dilation_rate</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_0_conv&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">shortcut</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_0_bn&quot;</span>
+        <span class="p">)(</span><span class="n">shortcut</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shortcut</span> <span class="o">=</span> <span class="n">x</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">filters</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">dilation_rate</span><span class="o">=</span><span class="n">dilation_rate</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_1_conv&quot;</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_1_bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_1_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;SAME&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_2_conv&quot;</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_2_bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_2_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">filters</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_3_conv&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_3_bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_add&quot;</span><span class="p">)([</span><span class="n">shortcut</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_out&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="stack_v1"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.stack_v1">[docs]</a><span class="k">def</span> <span class="nf">stack_v1</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">stride1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">dilation_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Create a set of stacked ResNetv1 residual blocks.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: input tensor.</span>
+<span class="sd">        filters: integer, filters of the bottleneck layer in a block.</span>
+<span class="sd">        blocks: integer, blocks in the stacked blocks.</span>
+<span class="sd">        stride1: default 2, stride of the first layer in the first block.</span>
+<span class="sd">        dilation_rate: default 1, atrous convolution dilation rate of first layer in the first block.</span>
+<span class="sd">        name: string, stack label.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Output tensor for the stacked blocks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">block_v1</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride1</span><span class="p">,</span> <span class="n">dilation_rate</span><span class="o">=</span><span class="n">dilation_rate</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_block1&quot;</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">blocks</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">block_v1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">conv_shortcut</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_block&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="make_backbone_fn"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.make_backbone_fn">[docs]</a><span class="k">def</span> <span class="nf">make_backbone_fn</span><span class="p">(</span>
+    <span class="n">stack_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]],</span>
+    <span class="n">stack_configs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Return a function that creates a block stack with output stride adjustments.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        stack_fn: Function that takes a tensor as the first positional argument,</span>
+<span class="sd">            followed by any number of keyword arguments. This function will construct</span>
+<span class="sd">            each stack of blocks in the backbone.</span>
+<span class="sd">        stack_configs: List of dictionaries containing the keyword arguments for each</span>
+<span class="sd">            stack. The stack_fn will be called consecutively with each element of</span>
+<span class="sd">            stack_configs expanded as keyword arguments. Each element must contain the</span>
+<span class="sd">            &quot;stride1&quot; key specifying the stride of the first layer of the stack. This</span>
+<span class="sd">            may be adjusted to achieve the desired target output stride by converting</span>
+<span class="sd">            strided convs into dilated convs.</span>
+<span class="sd">        output_stride: The desired target output stride. The final output of the</span>
+<span class="sd">            returned backbone creation function will be at this stride relative to the</span>
+<span class="sd">            input stride.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Function that creates the backbone stacks based on the stack_configs.</span>
+
+<span class="sd">        This function will have the signature:</span>
+<span class="sd">            x_out, intermediate_feats = backbone_fn(x_in, current_stride)</span>
+
+<span class="sd">        The current stride describes the stride of the x_in input tensor.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the desired output stride cannot be achieved.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">backbone_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">current_stride</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Construct backbone from partial configuration.&quot;&quot;&quot;</span>
+        <span class="n">dilation_rate</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">intermediate_feats</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">stack_config</span> <span class="ow">in</span> <span class="n">stack_configs</span><span class="p">:</span>
+
+            <span class="c1"># Adjust stride or dilation rate.</span>
+            <span class="k">if</span> <span class="n">current_stride</span> <span class="o">&lt;</span> <span class="n">output_stride</span><span class="p">:</span>
+                <span class="n">current_stride</span> <span class="o">*=</span> <span class="n">stack_config</span><span class="p">[</span><span class="s2">&quot;stride1&quot;</span><span class="p">]</span>
+                <span class="n">stride1</span> <span class="o">=</span> <span class="n">stack_config</span><span class="p">[</span><span class="s2">&quot;stride1&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">current_stride</span> <span class="o">==</span> <span class="n">output_stride</span><span class="p">:</span>
+                <span class="n">stride1</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">stack_config</span><span class="p">[</span><span class="s2">&quot;stride1&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">dilation_rate</span> <span class="o">*=</span> <span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not adjust output stride. Current: </span><span class="si">{</span><span class="n">current_stride</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;desired: </span><span class="si">{</span><span class="n">output_stride</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">stack_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dilation_rate</span><span class="o">=</span><span class="n">dilation_rate</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="n">stride1</span><span class="p">)</span>
+
+            <span class="c1"># Create a stack block.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">stack_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">stack_config</span><span class="p">)</span>
+
+            <span class="c1"># Save intermediate feature with stride metadata. This can serve as the</span>
+            <span class="c1"># source tensor for a skip connection.</span>
+            <span class="n">intermediate_feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">IntermediateFeature</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">current_stride</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">intermediate_feats</span>
+
+    <span class="k">return</span> <span class="n">backbone_fn</span></div>
+
+
+<div class="viewcode-block" id="tile_channels"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.tile_channels">[docs]</a><span class="k">def</span> <span class="nf">tile_channels</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Tile single channel to 3 channel tensor.</span>
+
+<span class="sd">    This functon is useful to replicate grayscale single-channel images into 3-channel</span>
+<span class="sd">    monochrome RGB images.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X: Tensor of shape (samples, height, width, 1).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor of shape (samples, height, width, 3) where the channels are identical.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="imagenet_preproc_v1"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.imagenet_preproc_v1">[docs]</a><span class="k">def</span> <span class="nf">imagenet_preproc_v1</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Preprocess images according to ImageNet/caffe/channels_last.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X: Tensor of shape (samples, height, width, 3) of dtype float32 with values in</span>
+<span class="sd">            the range [0, 1]. The channels axis is in RGB ordering.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor of the same shape and dtype with channels reversed to BGR ordering and</span>
+<span class="sd">        values scaled to [0, 255] and subtracted by the ImageNet/caffe pretrained model</span>
+<span class="sd">        channel means (103.939, 116.779, 123.68) for BGR respectively. The effective</span>
+<span class="sd">        range of values will then be around ~[-128, 127].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">*</span> <span class="mi">255</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span>
+        <span class="p">[[[[</span><span class="mf">103.939</span><span class="p">,</span> <span class="mf">116.779</span><span class="p">,</span> <span class="mf">123.68</span><span class="p">]]]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">X</span></div>
+
+
+<div class="viewcode-block" id="ResNetv1"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ResNetv1</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;ResNetv1 backbone with configurable output stride and pretrained weights.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        model_name: Backbone name. Must be one of &quot;resnet50&quot;, &quot;resnet101&quot;, or</span>
+<span class="sd">            &quot;resnet152&quot; if using pretrained weights.</span>
+<span class="sd">        stack_configs: List of dictionaries containing the keyword arguments for each</span>
+<span class="sd">            stack. The stack_fn will be called consecutively with each element of</span>
+<span class="sd">            stack_configs expanded as keyword arguments. Each element must contain the</span>
+<span class="sd">            &quot;stride1&quot; key specifying the stride of the first layer of the stack. This</span>
+<span class="sd">            may be adjusted to achieve the desired target output stride by converting</span>
+<span class="sd">            strided convs into dilated convs.</span>
+<span class="sd">        upsampling_stack: Definition of the upsampling layers that convert the ResNet</span>
+<span class="sd">            backbone features into the output features with the desired stride. See</span>
+<span class="sd">            the `UpsamplingStack` documentation for more.  If not provided, the</span>
+<span class="sd">            activations from the last backbone block will be the output.</span>
+<span class="sd">        features_output_stride: Output stride of the standard ResNet backbone.</span>
+<span class="sd">            Canonically, ResNets have 5 layers with 2-stride, resulting in a final</span>
+<span class="sd">            feature output layer with stride of 32. If a lower value is specified, the</span>
+<span class="sd">            strided convolution layers will be adjusted to have a stride of 1, but the</span>
+<span class="sd">            receptive field is maintained by compensating with dilated (atrous)</span>
+<span class="sd">            convolution kernel expansion, in the same style as DeepLabv2. Valid values</span>
+<span class="sd">            are 1, 2, 4, 8, 16 or 32.</span>
+<span class="sd">        pretrained: If True, initialize with weights pretrained on ImageNet. If False,</span>
+<span class="sd">            random weights will be used.</span>
+<span class="sd">        frozen: If True, the backbone weights will be not be trainable. This is useful</span>
+<span class="sd">            for fast fine-tuning of ResNet features, but relies on having an upsampling</span>
+<span class="sd">            stack with sufficient representational capacity to adapt the fixed features.</span>
+<span class="sd">        skip_connections: If True, form skip connections between outputs of each block</span>
+<span class="sd">            in the ResNet backbone and the upsampling stack.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This defines the ResNetv1 architecture, not v2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_name</span><span class="p">:</span> <span class="n">Text</span>
+    <span class="n">stack_configs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+    <span class="n">upsampling_stack</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UpsamplingStack</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">features_output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">frozen</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">skip_connections</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ResNetv1.from_config"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ResNetConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ResNetv1&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a model from a set of configuration parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: An `ResNetConfig` instance with the desired parameters.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of this class with the specified configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;ResNet50&quot;</span><span class="p">:</span>
+            <span class="n">new_cls</span> <span class="o">=</span> <span class="n">ResNet50</span>
+        <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;ResNet101&quot;</span><span class="p">:</span>
+            <span class="n">new_cls</span> <span class="o">=</span> <span class="n">ResNet101</span>
+        <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;ResNet152&quot;</span><span class="p">:</span>
+            <span class="n">new_cls</span> <span class="o">=</span> <span class="n">ResNet152</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid ResNet version in the configuration: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">upsampling_stack</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">skip_connections</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">upsampling</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">upsampling_stack</span> <span class="o">=</span> <span class="n">UpsamplingStack</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">upsampling</span><span class="p">,</span> <span class="n">output_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_stride</span>
+            <span class="p">)</span>
+            <span class="n">skip_connections</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">upsampling</span><span class="o">.</span><span class="n">skip_connections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">new_cls</span><span class="p">(</span>
+            <span class="n">upsampling_stack</span><span class="o">=</span><span class="n">upsampling_stack</span><span class="p">,</span>
+            <span class="n">features_output_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_stride</span><span class="p">,</span>
+            <span class="n">pretrained</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">weights</span> <span class="o">!=</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
+            <span class="n">frozen</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">weights</span> <span class="o">==</span> <span class="s2">&quot;frozen&quot;</span><span class="p">,</span>
+            <span class="n">skip_connections</span><span class="o">=</span><span class="n">skip_connections</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">down_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of downsampling steps in the model.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features_output_stride</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the maximum stride that the input must be divisible by.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_output_stride</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return stride of the output of the backbone.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stack</span><span class="o">.</span><span class="n">output_stride</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_output_stride</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return relative scaling factor of this backbone.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ResNetv1.make_backbone"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.make_backbone">[docs]</a>    <span class="k">def</span> <span class="nf">make_backbone</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Create the full backbone starting with the specified input tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input tensor of shape (samples, height, width, channels).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple of the final output tensor at the stride specified by the</span>
+<span class="sd">            `upsampling_stack.features_output_stride` class attribute, and a list of</span>
+<span class="sd">            intermediate tensors after each upsampling step.</span>
+
+<span class="sd">            The intermediate features are useful when creating multi-head architectures</span>
+<span class="sd">            with different output strides for the heads.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Apply expected preprocessing to the inputs if using pretrained weights.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">x_in</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">tile_channels</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;tile_channels&quot;</span><span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
+
+            <span class="n">x_in</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span>
+                <span class="n">imagenet_preproc_v1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;imagenet_preproc_v1&quot;</span>
+            <span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
+
+        <span class="c1"># Adjust stem strides if necessary.</span>
+        <span class="n">stem_stride1</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">stem_stride2</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_output_stride</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">stem_stride2</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_output_stride</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">stem_stride1</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># Configure the backbone instantiation function.</span>
+        <span class="n">backbone_fn</span> <span class="o">=</span> <span class="n">make_backbone_fn</span><span class="p">(</span>
+            <span class="n">stack_fn</span><span class="o">=</span><span class="n">stack_v1</span><span class="p">,</span>
+            <span class="n">stack_configs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stack_configs</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">features_output_stride</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create the backbone and return intermediate features.</span>
+        <span class="n">backbone</span><span class="p">,</span> <span class="n">intermediate_feats</span> <span class="o">=</span> <span class="n">make_resnet_model</span><span class="p">(</span>
+            <span class="n">backbone_fn</span><span class="o">=</span><span class="n">backbone_fn</span><span class="p">,</span>
+            <span class="n">preact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;imagenet&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">input_tensor</span><span class="o">=</span><span class="n">x_in</span><span class="p">,</span>
+            <span class="n">stem_stride1</span><span class="o">=</span><span class="n">stem_stride1</span><span class="p">,</span>
+            <span class="n">stem_stride2</span><span class="o">=</span><span class="n">stem_stride2</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Freeze pretrained weights so they are not updated in training.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">backbone</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use post-stem intermediate activations for skip connections if specified.</span>
+            <span class="n">skip_sources</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_connections</span><span class="p">:</span>
+                <span class="n">skip_sources</span> <span class="o">=</span> <span class="n">intermediate_feats</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+
+            <span class="c1"># Return the result of the upsampling stack, starting with the ResNet</span>
+            <span class="c1"># features as input.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stack</span><span class="o">.</span><span class="n">make_stack</span><span class="p">(</span>
+                <span class="n">backbone</span><span class="o">.</span><span class="n">output</span><span class="p">,</span>
+                <span class="n">current_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">features_output_stride</span><span class="p">,</span>
+                <span class="n">skip_sources</span><span class="o">=</span><span class="n">skip_sources</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Just return the final activation layer and backbone intermediate features.</span>
+            <span class="k">return</span> <span class="n">backbone</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">intermediate_feats</span></div></div>
+
+
+<div class="viewcode-block" id="ResNet50"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNet50">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span>
+<span class="k">class</span> <span class="nc">ResNet50</span><span class="p">(</span><span class="n">ResNetv1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ResNet50 backbone.</span>
+
+<span class="sd">    This model has a stack of 3, 4, 6 and 3 residual blocks.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_stack: Definition of the upsampling layers that convert the ResNet</span>
+<span class="sd">            backbone features into the output features with the desired stride. See</span>
+<span class="sd">            the `UpsamplingStack` documentation for more.  If not provided, the</span>
+<span class="sd">            activations from the last backbone block will be the output.</span>
+<span class="sd">        features_output_stride: Output stride of the standard ResNet backbone.</span>
+<span class="sd">            Canonically, ResNets have 5 layers with 2-stride, resulting in a final</span>
+<span class="sd">            feature output layer with stride of 32. If a lower value is specified, the</span>
+<span class="sd">            strided convolution layers will be adjusted to have a stride of 1, but the</span>
+<span class="sd">            receptive field is maintained by compensating with dilated (atrous)</span>
+<span class="sd">            convolution kernel expansion, in the same style as DeepLabv2. Valid values</span>
+<span class="sd">            are 1, 2, 4, 8, 16 or 32.</span>
+<span class="sd">        pretrained: If True, initialize with weights pretrained on ImageNet. If False,</span>
+<span class="sd">            random weights will be used.</span>
+<span class="sd">        frozen: If True, the backbone weights will be not be trainable. This is useful</span>
+<span class="sd">            for fast fine-tuning of ResNet features, but relies on having an upsampling</span>
+<span class="sd">            stack with sufficient representational capacity to adapt the fixed features.</span>
+<span class="sd">        skip_connections: If True, form skip connections between outputs of each block</span>
+<span class="sd">            in the ResNet backbone and the upsampling stack.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This defines the ResNetv1 architecture, not v2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">stack_configs</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+
+    <span class="nd">@model_name</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_fixed_model_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;ResNet50 model name.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;resnet50&quot;</span>
+
+    <span class="nd">@stack_configs</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_fixed_stack_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;ResNet50 layer stack configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv3&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv4&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv5&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enforce fixed attributes.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_model_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_stack_configs</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ResNet101"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNet101">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span>
+<span class="k">class</span> <span class="nc">ResNet101</span><span class="p">(</span><span class="n">ResNetv1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ResNet101 backbone.</span>
+
+<span class="sd">    This model has a stack of 3, 4, 23 and 3 residual blocks.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_stack: Definition of the upsampling layers that convert the ResNet</span>
+<span class="sd">            backbone features into the output features with the desired stride. See</span>
+<span class="sd">            the `UpsamplingStack` documentation for more.  If not provided, the</span>
+<span class="sd">            activations from the last backbone block will be the output.</span>
+<span class="sd">        features_output_stride: Output stride of the standard ResNet backbone.</span>
+<span class="sd">            Canonically, ResNets have 5 layers with 2-stride, resulting in a final</span>
+<span class="sd">            feature output layer with stride of 32. If a lower value is specified, the</span>
+<span class="sd">            strided convolution layers will be adjusted to have a stride of 1, but the</span>
+<span class="sd">            receptive field is maintained by compensating with dilated (atrous)</span>
+<span class="sd">            convolution kernel expansion, in the same style as DeepLabv2. Valid values</span>
+<span class="sd">            are 1, 2, 4, 8, 16 or 32.</span>
+<span class="sd">        pretrained: If True, initialize with weights pretrained on ImageNet. If False,</span>
+<span class="sd">            random weights will be used.</span>
+<span class="sd">        frozen: If True, the backbone weights will be not be trainable. This is useful</span>
+<span class="sd">            for fast fine-tuning of ResNet features, but relies on having an upsampling</span>
+<span class="sd">            stack with sufficient representational capacity to adapt the fixed features.</span>
+<span class="sd">        skip_connections: If True, form skip connections between outputs of each block</span>
+<span class="sd">            in the ResNet backbone and the upsampling stack.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This defines the ResNetv1 architecture, not v2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">stack_configs</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+
+    <span class="nd">@model_name</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_fixed_model_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;ResNet101 model name.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;resnet101&quot;</span>
+
+    <span class="nd">@stack_configs</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_fixed_stack_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;ResNet101 layer stack configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv3&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">23</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv4&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv5&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enforce fixed attributes.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_model_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_stack_configs</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ResNet152"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNet152">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span>
+<span class="k">class</span> <span class="nc">ResNet152</span><span class="p">(</span><span class="n">ResNetv1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ResNet152 backbone.</span>
+
+<span class="sd">    This model has a stack of 3, 4, 23 and 3 residual blocks.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_stack: Definition of the upsampling layers that convert the ResNet</span>
+<span class="sd">            backbone features into the output features with the desired stride. See</span>
+<span class="sd">            the `UpsamplingStack` documentation for more. If not provided, the</span>
+<span class="sd">            activations from the last backbone block will be the output.</span>
+<span class="sd">        features_output_stride: Output stride of the standard ResNet backbone.</span>
+<span class="sd">            Canonically, ResNets have 5 layers with 2-stride, resulting in a final</span>
+<span class="sd">            feature output layer with stride of 32. If a lower value is specified, the</span>
+<span class="sd">            strided convolution layers will be adjusted to have a stride of 1, but the</span>
+<span class="sd">            receptive field is maintained by compensating with dilated (atrous)</span>
+<span class="sd">            convolution kernel expansion, in the same style as DeepLabv2. Valid values</span>
+<span class="sd">            are 1, 2, 4, 8, 16 or 32.</span>
+<span class="sd">        pretrained: If True, initialize with weights pretrained on ImageNet. If False,</span>
+<span class="sd">            random weights will be used.</span>
+<span class="sd">        frozen: If True, the backbone weights will be not be trainable. This is useful</span>
+<span class="sd">            for fast fine-tuning of ResNet features, but relies on having an upsampling</span>
+<span class="sd">            stack with sufficient representational capacity to adapt the fixed features.</span>
+<span class="sd">        skip_connections: If True, form skip connections between outputs of each block</span>
+<span class="sd">            in the ResNet backbone and the upsampling stack.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This defines the ResNetv1 architecture, not v2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_name</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">stack_configs</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+
+    <span class="nd">@model_name</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_fixed_model_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;ResNet152 model name.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;resnet152&quot;</span>
+
+    <span class="nd">@stack_configs</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_fixed_stack_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;ResNet152 layer stack configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv3&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv4&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride1</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv5&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enforce fixed attributes.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_model_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_stack_configs</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

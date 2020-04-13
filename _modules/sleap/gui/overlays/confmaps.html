@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.gui.overlays.confmaps &#8212; SLEAP  documentation</title>
@@ -47,10 +47,10 @@
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
 
 
-<div class="viewcode-block" id="ConfmapOverlay"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay">[docs]</a><span class="k">class</span> <span class="nc">ConfmapOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
+<div class="viewcode-block" id="ConfmapOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfmapOverlay">[docs]</a><span class="k">class</span> <span class="nc">ConfmapOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Overlay to show confidence maps.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ConfmapOverlay.from_model"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfmapOverlay.from_model">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ConfmapOverlay.from_model"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfmapOverlay.from_model">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create object with live predictions from model as datasource.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
@@ -58,7 +58,7 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ConfMapsPlot"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapsPlot">[docs]</a><span class="k">class</span> <span class="nc">ConfMapsPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
+<div class="viewcode-block" id="ConfMapsPlot"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfMapsPlot">[docs]</a><span class="k">class</span> <span class="nc">ConfMapsPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;QGraphicsObject to display multiple confidence maps in a QGraphicsView.</span>
 
 <span class="sd">    Args:</span>
@@ -96,18 +96,18 @@
                     <span class="n">confmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">channel</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color_map</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span>
                 <span class="p">)</span>
 
-<div class="viewcode-block" id="ConfMapsPlot.boundingRect"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapsPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
+<div class="viewcode-block" id="ConfMapsPlot.boundingRect"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfMapsPlot.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Method required by Qt.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rect</span></div>
 
-<div class="viewcode-block" id="ConfMapsPlot.paint"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapsPlot.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ConfMapsPlot.paint"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfMapsPlot.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Method required by Qt.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div></div>
 
 
-<div class="viewcode-block" id="ConfMapPlot"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapPlot">[docs]</a><span class="k">class</span> <span class="nc">ConfMapPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsPixmapItem</span><span class="p">):</span>
+<div class="viewcode-block" id="ConfMapPlot"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfMapPlot">[docs]</a><span class="k">class</span> <span class="nc">ConfMapPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsPixmapItem</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;QGraphicsPixmapItem object for drawing single channel of confidence map.</span>
 
 <span class="sd">    Args:</span>
@@ -133,7 +133,7 @@
             <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_conf_image</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setPixmap</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QPixmap</span><span class="p">(</span><span class="n">image</span><span class="p">))</span>
 
-<div class="viewcode-block" id="ConfMapPlot.get_conf_image"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.ConfMapPlot.get_conf_image">[docs]</a>    <span class="k">def</span> <span class="nf">get_conf_image</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QImage</span><span class="p">:</span>
+<div class="viewcode-block" id="ConfMapPlot.get_conf_image"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfMapPlot.get_conf_image">[docs]</a>    <span class="k">def</span> <span class="nf">get_conf_image</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QImage</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Converts array data stored in object to QImage.</span>
 
 <span class="sd">        Returns:</span>
@@ -165,7 +165,7 @@
         <span class="k">return</span> <span class="n">image</span></div></div>
 
 
-<div class="viewcode-block" id="show_confmaps_from_h5"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.show_confmaps_from_h5">[docs]</a><span class="k">def</span> <span class="nf">show_confmaps_from_h5</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="show_confmaps_from_h5"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.show_confmaps_from_h5">[docs]</a><span class="k">def</span> <span class="nf">show_confmaps_from_h5</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Demo function.&quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">HDF5Video</span>
 
@@ -180,10 +180,10 @@
     <span class="k">return</span> <span class="n">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="o">=</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="n">standalone</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="demo_confmaps"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.confmaps.demo_confmaps">[docs]</a><span class="k">def</span> <span class="nf">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="demo_confmaps"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.demo_confmaps">[docs]</a><span class="k">def</span> <span class="nf">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Demo function.&quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
-    <span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
+    <span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
 
     <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span>
         <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
@@ -232,12 +232,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
 </ul>
 
@@ -273,10 +271,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

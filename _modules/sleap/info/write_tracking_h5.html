@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>sleap.info.write_tracking_h5 &#8212; SLEAP  documentation</title>
@@ -64,17 +64,17 @@
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 
 
-<div class="viewcode-block" id="get_tracks_as_np_strings"><a class="viewcode-back" href="../../../misc.html#sleap.info.write_tracking_h5.get_tracks_as_np_strings">[docs]</a><span class="k">def</span> <span class="nf">get_tracks_as_np_strings</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">]:</span>
+<div class="viewcode-block" id="get_tracks_as_np_strings"><a class="viewcode-back" href="../../../_autosummary/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.get_tracks_as_np_strings">[docs]</a><span class="k">def</span> <span class="nf">get_tracks_as_np_strings</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Get list of track names as `np.string_`.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">track</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get_nodes_as_np_strings"><a class="viewcode-back" href="../../../misc.html#sleap.info.write_tracking_h5.get_nodes_as_np_strings">[docs]</a><span class="k">def</span> <span class="nf">get_nodes_as_np_strings</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">]:</span>
+<div class="viewcode-block" id="get_nodes_as_np_strings"><a class="viewcode-back" href="../../../_autosummary/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.get_nodes_as_np_strings">[docs]</a><span class="k">def</span> <span class="nf">get_nodes_as_np_strings</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Get list of node names as `np.string_`.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get_occupancy_and_points_matrices"><a class="viewcode-back" href="../../../misc.html#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices">[docs]</a><span class="k">def</span> <span class="nf">get_occupancy_and_points_matrices</span><span class="p">(</span>
+<div class="viewcode-block" id="get_occupancy_and_points_matrices"><a class="viewcode-back" href="../../../_autosummary/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices">[docs]</a><span class="k">def</span> <span class="nf">get_occupancy_and_points_matrices</span><span class="p">(</span>
     <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">all_frames</span><span class="p">:</span> <span class="nb">bool</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -134,7 +134,7 @@
     <span class="k">return</span> <span class="n">occupancy_matrix</span><span class="p">,</span> <span class="n">locations_matrix</span></div>
 
 
-<div class="viewcode-block" id="remove_empty_tracks_from_matrices"><a class="viewcode-back" href="../../../misc.html#sleap.info.write_tracking_h5.remove_empty_tracks_from_matrices">[docs]</a><span class="k">def</span> <span class="nf">remove_empty_tracks_from_matrices</span><span class="p">(</span>
+<div class="viewcode-block" id="remove_empty_tracks_from_matrices"><a class="viewcode-back" href="../../../_autosummary/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.remove_empty_tracks_from_matrices">[docs]</a><span class="k">def</span> <span class="nf">remove_empty_tracks_from_matrices</span><span class="p">(</span>
     <span class="n">track_names</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">occupancy_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">locations_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -166,7 +166,7 @@
     <span class="k">return</span> <span class="n">track_names</span><span class="p">,</span> <span class="n">occupancy_matrix</span><span class="p">,</span> <span class="n">locations_matrix</span></div>
 
 
-<div class="viewcode-block" id="write_occupancy_file"><a class="viewcode-back" href="../../../misc.html#sleap.info.write_tracking_h5.write_occupancy_file">[docs]</a><span class="k">def</span> <span class="nf">write_occupancy_file</span><span class="p">(</span>
+<div class="viewcode-block" id="write_occupancy_file"><a class="viewcode-back" href="../../../_autosummary/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.write_occupancy_file">[docs]</a><span class="k">def</span> <span class="nf">write_occupancy_file</span><span class="p">(</span>
     <span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">transpose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -209,7 +209,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved as </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../misc.html#sleap.info.write_tracking_h5.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">all_frames</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../_autosummary/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">all_frames</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Writes HDF5 file with matrices of track occupancy and coordinates.</span>
 
@@ -260,9 +260,9 @@
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="n">video_callback</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">make_video_callback</span><span class="p">([</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)])</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">video_callback</span><span class="o">=</span><span class="n">video_callback</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">video_search</span><span class="o">=</span><span class="n">video_callback</span><span class="p">)</span>
 
-    <span class="n">output_path</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;(\.json(\.zip)?|\.h5)$&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;(\.json(\.zip)?|\.h5|\.slp)$&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
     <span class="n">output_path</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">+</span> <span class="s2">&quot;.tracking.h5&quot;</span>
 
     <span class="n">main</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">all_frames</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">all_frames</span><span class="p">)</span>
@@ -286,12 +286,10 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorial-part2.html">Tutorial, Part 2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../howtos.html">How-Tos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
 </ul>
 
@@ -327,10 +325,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2019, Murthy Lab @ Princeton.
+      &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

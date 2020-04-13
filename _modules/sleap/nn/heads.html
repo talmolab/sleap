@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.heads &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.heads</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Model head definitions for defining model output types.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CentroidsHeadConfig</span><span class="p">,</span>
+    <span class="n">SingleInstanceConfmapsHeadConfig</span><span class="p">,</span>
+    <span class="n">CenteredInstanceConfmapsHeadConfig</span><span class="p">,</span>
+    <span class="n">MultiInstanceConfmapsHeadConfig</span><span class="p">,</span>
+    <span class="n">PartAffinityFieldsHeadConfig</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="CentroidConfmapsHead"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CentroidConfmapsHead</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Head for specifying instance centroid confidence maps.&quot;&quot;&quot;</span>
+
+    <span class="n">anchor_part</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">loss_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of channels in the tensor output by this head.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="CentroidConfmapsHead.from_config"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">CentroidsHeadConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CentroidConfmapsHead&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create this head from a set of configurations.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            config: A `CentroidsHeadConfig` instance specifying the head parameters.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated head with the specified configuration options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">anchor_part</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">anchor_part</span><span class="p">,</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SingleInstanceConfmapsHead"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SingleInstanceConfmapsHead</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Head for specifying single instance confidence maps.&quot;&quot;&quot;</span>
+
+    <span class="n">part_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">loss_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of channels in the tensor output by this head.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">part_names</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SingleInstanceConfmapsHead.from_config"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">SingleInstanceConfmapsHeadConfig</span><span class="p">,</span>
+        <span class="n">part_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SingleInstanceConfmapsHead&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create this head from a set of configurations.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            config: A `SingleInstanceConfmapsHeadConfig` instance specifying the head</span>
+<span class="sd">                parameters.</span>
+<span class="sd">            part_names: Text name of the body parts (nodes) that the head will be</span>
+<span class="sd">                configured to produce. The number of parts determines the number of</span>
+<span class="sd">                channels in the output. This must be provided if the `part_names`</span>
+<span class="sd">                attribute of the configuration is not set.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated head with the specified configuration options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">part_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">part_names</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">part_names</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">part_names</span><span class="o">=</span><span class="n">part_names</span><span class="p">,</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CenteredInstanceConfmapsHead"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CenteredInstanceConfmapsHead</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Head for specifying centered instance confidence maps.&quot;&quot;&quot;</span>
+
+    <span class="n">part_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span>
+    <span class="n">anchor_part</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">loss_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of channels in the tensor output by this head.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">part_names</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CenteredInstanceConfmapsHead.from_config"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">CenteredInstanceConfmapsHeadConfig</span><span class="p">,</span>
+        <span class="n">part_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CenteredInstanceConfmapsHead&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create this head from a set of configurations.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            config: A `CenteredInstanceConfmapsHead` instance specifying the head</span>
+<span class="sd">                parameters.</span>
+<span class="sd">            part_names: Text name of the body parts (nodes) that the head will be</span>
+<span class="sd">                configured to produce. The number of parts determines the number of</span>
+<span class="sd">                channels in the output. This must be provided if the `part_names`</span>
+<span class="sd">                attribute of the configuration is not set.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated head with the specified configuration options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">part_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">part_names</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">part_names</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">part_names</span><span class="o">=</span><span class="n">part_names</span><span class="p">,</span>
+            <span class="n">anchor_part</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">anchor_part</span><span class="p">,</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MultiInstanceConfmapsHead"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MultiInstanceConfmapsHead</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Head for specifying multi-instance confidence maps.&quot;&quot;&quot;</span>
+
+    <span class="n">part_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">loss_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of channels in the tensor output by this head.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">part_names</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultiInstanceConfmapsHead.from_config"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">MultiInstanceConfmapsHeadConfig</span><span class="p">,</span>
+        <span class="n">part_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MultiInstanceConfmapsHead&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create this head from a set of configurations.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            config: A `MultiInstanceConfmapsHeadConfig` instance specifying the head</span>
+<span class="sd">                parameters.</span>
+<span class="sd">            part_names: Text name of the body parts (nodes) that the head will be</span>
+<span class="sd">                configured to produce. The number of parts determines the number of</span>
+<span class="sd">                channels in the output. This must be provided if the `part_names`</span>
+<span class="sd">                attribute of the configuration is not set.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated head with the specified configuration options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">part_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">part_names</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">part_names</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">part_names</span><span class="o">=</span><span class="n">part_names</span><span class="p">,</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">loss_weight</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">loss_weight</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PartAffinityFieldsHead"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PartAffinityFieldsHead</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Head for specifying multi-instance part affinity fields.&quot;&quot;&quot;</span>
+
+    <span class="n">edges</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Text</span><span class="p">]]</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span>
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">loss_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of channels in the tensor output by this head.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PartAffinityFieldsHead.from_config"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">PartAffinityFieldsHeadConfig</span><span class="p">,</span>
+        <span class="n">edges</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Text</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PartAffinityFieldsHead&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create this head from a set of configurations.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            config: A `PartAffinityFieldsHeadConfig` instance specifying the head</span>
+<span class="sd">                parameters.</span>
+<span class="sd">            edges: List of 2-tuples of the form `(source_node, destination_node)` that</span>
+<span class="sd">                define pairs of text names of the directed edges of the graph. This must</span>
+<span class="sd">                be set if the `edges` attribute of the configuration is not set.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated head with the specified configuration options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">edges</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">edges</span><span class="o">=</span><span class="n">edges</span><span class="p">,</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">loss_weight</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">loss_weight</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

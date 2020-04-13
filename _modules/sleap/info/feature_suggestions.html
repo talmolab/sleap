@@ -1,0 +1,830 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.info.feature_suggestions &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.info.feature_suggestions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for generating lists of frames using frame features, pca, kmeans, etc.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">cattr</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">cv2</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
+
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">draw</span>
+<span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="kn">import</span> <span class="n">hog</span>
+<span class="kn">from</span> <span class="nn">skimage.util.shape</span> <span class="kn">import</span> <span class="n">view_as_windows</span>
+
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BriskVec</span><span class="p">:</span>
+
+    <span class="n">brisk_threshold</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_brisk</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">BRISK_create</span><span class="p">(</span><span class="n">thresh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">brisk_threshold</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_vecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imgs</span><span class="p">):</span>
+        <span class="n">all_descs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">row_img</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Create matrix with multiple brisk descriptors for each image.</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">imgs</span><span class="p">):</span>
+            <span class="n">kps</span><span class="p">,</span> <span class="n">descs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_brisk</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="c1"># Brisk descriptor is 512 bits, but opencv returns this as 16 uint8&#39;s,</span>
+            <span class="c1"># so we&#39;ll convert it to discrete numbers.</span>
+            <span class="n">descs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unpackbits</span><span class="p">(</span><span class="n">descs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Make list with all brisk descriptors (or all images) and map which</span>
+            <span class="c1"># tells us which descriptor goes with which image</span>
+            <span class="n">row_img</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">descs</span><span class="p">))</span>
+            <span class="n">all_descs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">descs</span><span class="p">)</span>
+
+        <span class="c1"># Convert to single matrix of descriptors</span>
+        <span class="n">all_descs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">all_descs</span><span class="p">)</span>
+
+        <span class="c1"># Convert to single matrix of row (individual descriptor) -&gt; image index</span>
+        <span class="n">row_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">row_img</span><span class="p">)</span>
+
+        <span class="c1"># Create a bag of features for each image by clustering the brisk image</span>
+        <span class="c1"># descriptors (these clusters will be the &quot;words&quot; in a bag of words for</span>
+        <span class="c1"># each image), then generate vocab-length vector for each image which</span>
+        <span class="c1"># represents whether the &quot;word&quot; (i.e., brisk feature in some cluster)</span>
+        <span class="c1"># is present in the image.</span>
+
+        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">all_descs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">clusters_to_vecs</span><span class="p">(</span><span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">,</span> <span class="n">row_img</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">))</span>
+        <span class="c1"># img_bags = np.zeros((len(imgs), self.vocab_size), dtype=&quot;bool&quot;)</span>
+        <span class="c1">#</span>
+        <span class="c1"># for i in range(len(imgs)):</span>
+        <span class="c1">#     img_words = kmeans.labels_[row_img == i]</span>
+        <span class="c1">#     img_bags[(i,), img_words] = 1</span>
+        <span class="c1">#</span>
+        <span class="c1"># return img_bags</span>
+
+    <span class="k">def</span> <span class="nf">clusters_to_vecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">,</span> <span class="n">ownership</span><span class="p">,</span> <span class="n">img_count</span><span class="p">):</span>
+
+        <span class="c1"># Make helper function that builds bag of features vector for a single</span>
+        <span class="c1"># image by looking up all the descriptors for an image and counting</span>
+        <span class="c1"># how many there are for each cluster (vocab word).</span>
+        <span class="k">def</span> <span class="nf">img_bof_vec</span><span class="p">(</span><span class="n">img_idx</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span>
+                <span class="n">cluster_labels</span><span class="p">[</span><span class="n">ownership</span> <span class="o">==</span> <span class="n">img_idx</span><span class="p">],</span> <span class="n">minlength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Now make the matrix with a bag of features vector for each image</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">img_bof_vec</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img_count</span><span class="p">)])</span>
+
+
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">HogVec</span><span class="p">:</span>
+
+    <span class="n">brisk_threshold</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_brisk</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">BRISK_create</span><span class="p">(</span><span class="n">thresh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">brisk_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="mi">31</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">180</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">44</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">227</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">28</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">106</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">154</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">177</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">166</span><span class="p">,</span> <span class="mi">206</span><span class="p">,</span> <span class="mi">227</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">178</span><span class="p">,</span> <span class="mi">223</span><span class="p">,</span> <span class="mi">138</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">251</span><span class="p">,</span> <span class="mi">154</span><span class="p">,</span> <span class="mi">153</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">253</span><span class="p">,</span> <span class="mi">191</span><span class="p">,</span> <span class="mi">111</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">202</span><span class="p">,</span> <span class="mi">178</span><span class="p">,</span> <span class="mi">214</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">153</span><span class="p">],</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_vecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imgs</span><span class="p">):</span>
+        <span class="c1"># Get matrix of hog descriptors for all images, and array which says</span>
+        <span class="c1"># which image is the source for each row.</span>
+        <span class="n">descs</span><span class="p">,</span> <span class="n">ownership</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_hogs</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+
+        <span class="c1"># Cluster the descriptors into a vocabulary for bag of features</span>
+        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">descs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">new_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">new_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">imgs</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vis</span><span class="p">):</span>
+                <span class="n">img_desc_clusters</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">[</span><span class="n">ownership</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">img_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">point</span><span class="p">,</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">img_points</span><span class="p">,</span> <span class="n">img_desc_clusters</span><span class="p">):</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="p">[</span><span class="n">cluster</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="p">)]</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">point</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">clusters_to_vecs</span><span class="p">(</span><span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">,</span> <span class="n">ownership</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">clusters_to_vecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">,</span> <span class="n">ownership</span><span class="p">,</span> <span class="n">img_count</span><span class="p">):</span>
+
+        <span class="c1"># Make helper function that builds bag of features vector for a single</span>
+        <span class="c1"># image by looking up all the descriptors for an image and counting</span>
+        <span class="c1"># how many there are for each cluster (vocab word).</span>
+        <span class="k">def</span> <span class="nf">img_bof_vec</span><span class="p">(</span><span class="n">img_idx</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span>
+                <span class="n">cluster_labels</span><span class="p">[</span><span class="n">ownership</span> <span class="o">==</span> <span class="n">img_idx</span><span class="p">],</span> <span class="n">minlength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Now make the matrix with a bag of features vector for each image</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">img_bof_vec</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img_count</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">get_hogs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imgs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns descriptors and corresponding image for all images.&quot;&quot;&quot;</span>
+        <span class="n">per_image_hog_descriptors</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_image_hog</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">]</span>
+        <span class="n">descs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">image_descs</span> <span class="k">for</span> <span class="n">image_descs</span> <span class="ow">in</span> <span class="n">per_image_hog_descriptors</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">ownership</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span>
+                <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_descs</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">image_descs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">per_image_hog_descriptors</span><span class="p">)</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">descs</span><span class="p">,</span> <span class="n">ownership</span>
+
+    <span class="k">def</span> <span class="nf">get_image_hog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns hog descriptor for all brisk keypoints on single image.&quot;&quot;&quot;</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_brisk_keypoints_as_points</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">center_points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+
+        <span class="n">crops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image_crops</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">center_points</span><span class="p">)</span>
+        <span class="n">multichannel</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span>
+
+        <span class="n">img_descs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">hog</span><span class="p">(</span>
+                    <span class="n">crop</span><span class="p">,</span>
+                    <span class="n">orientations</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                    <span class="n">pixels_per_cell</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+                    <span class="n">cells_per_block</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                    <span class="n">visualize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">multichannel</span><span class="o">=</span><span class="n">multichannel</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">crop</span> <span class="ow">in</span> <span class="n">crops</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">img_descs</span>
+
+    <span class="k">def</span> <span class="nf">get_image_crops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns stack of windows around keypoints on single image.&quot;&quot;&quot;</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">view_as_windows</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>
+
+        <span class="n">max_y</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">max_x</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Shift crops for keypoints that are too close to edges</span>
+        <span class="c1"># TODO: is this how we should handle this case?</span>
+        <span class="n">xs</span><span class="p">[</span><span class="n">xs</span> <span class="o">&gt;</span> <span class="n">max_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_x</span>
+        <span class="n">ys</span><span class="p">[</span><span class="n">ys</span> <span class="o">&gt;</span> <span class="n">max_y</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_y</span>
+
+        <span class="k">return</span> <span class="n">W</span><span class="p">[</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_brisk_keypoints_as_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns matrix of brisk keypoints for single image.&quot;&quot;&quot;</span>
+        <span class="n">kps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_brisk</span><span class="o">.</span><span class="n">detect</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keypoints_to_points_matrix</span><span class="p">(</span><span class="n">kps</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">points</span>
+
+    <span class="k">def</span> <span class="nf">keypoints_to_points_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kps</span><span class="p">):</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">kps</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">kps</span><span class="p">))]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">int</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">points</span>
+
+
+<div class="viewcode-block" id="FrameItem"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameItem">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FrameItem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Just a simple wrapper for (video, frame_idx), plus method to get image.&quot;&quot;&quot;</span>
+
+    <span class="n">video</span><span class="p">:</span> <span class="n">Video</span>
+    <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span> <span class="nf">get_raw_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">]</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">h_</span><span class="p">,</span> <span class="n">w_</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span> <span class="o">//</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span> <span class="o">//</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">scale</span><span class="p">))</span>
+            <span class="c1"># note that cv2 expects (width, height) instead of (rows, columns)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="p">(</span><span class="n">w_</span><span class="p">,</span> <span class="n">h_</span><span class="p">))[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="FrameGroupSet"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FrameGroupSet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for a set of groups of FrameItem objects.</span>
+
+<span class="sd">    Each item can have at most one group; each group is represented as an int.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        method: Label for the method used to generate group set.</span>
+<span class="sd">        item_group: Dictionary which maps each item to its group.</span>
+<span class="sd">        group_data: Dictionary of any extra data for each group;</span>
+<span class="sd">            keys are group ids, values are dictionaries of data.</span>
+<span class="sd">        groupset_data: Dictionary for any data about the entire set of groups.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">item_group</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">FrameItem</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+    <span class="n">group_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+    <span class="n">groupset_data</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+
+<div class="viewcode-block" id="FrameGroupSet.append_to_group"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.append_to_group">[docs]</a>    <span class="k">def</span> <span class="nf">append_to_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">FrameItem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds item to group.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item_group</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span>
+        <span class="k">if</span> <span class="n">group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_data</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FrameGroupSet.extend_group_items"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.extend_group_items">[docs]</a>    <span class="k">def</span> <span class="nf">extend_group_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">item_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">FrameItem</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Adds all items in list to group.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">item_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append_to_group</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FrameGroupSet.get_item_group"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.get_item_group">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">FrameItem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns group that contain item.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_group</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">groups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate over groups, yielding group and list of items.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">item_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">frame_item</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">frame_item</span><span class="p">,</span> <span class="n">frame_group</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_group</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">frame_group</span> <span class="o">==</span> <span class="n">group</span>
+            <span class="p">]</span>
+            <span class="k">yield</span> <span class="n">group</span><span class="p">,</span> <span class="n">item_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets list of all items.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_group</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+<div class="viewcode-block" id="FrameGroupSet.sample"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">per_group</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">unique_samples</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns new FrameGroupSet with groups sampled from current groups.</span>
+
+<span class="sd">        Note that the order of items in the new groups will not match order of</span>
+<span class="sd">        items in the groups from which samples are drawn.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            per_group: The number of samples to take from each group.</span>
+<span class="sd">            unique_samples: Whether to ensure that there are no shared items</span>
+<span class="sd">                in the resulting groups.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            New FrameGroupSet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_groupset</span> <span class="o">=</span> <span class="n">FrameGroupSet</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;sample_groups&quot;</span><span class="p">)</span>
+        <span class="n">new_groupset</span><span class="o">.</span><span class="n">groupset_data</span><span class="p">[</span><span class="s2">&quot;per_group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">per_group</span>
+
+        <span class="n">selected_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">group_item_list</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">unique_samples</span><span class="p">:</span>
+                <span class="c1"># Remove items that were already sampled from other groups</span>
+                <span class="n">group_item_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">group_item_list</span><span class="p">)</span> <span class="o">-</span> <span class="n">selected_set</span><span class="p">)</span>
+
+            <span class="c1"># Sample items from this group</span>
+            <span class="n">samples_from_group</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                <span class="n">group_item_list</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group_item_list</span><span class="p">),</span> <span class="n">per_group</span><span class="p">),</span> <span class="kc">False</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Keep track of the items we sampled so far from any group</span>
+            <span class="n">selected_set</span> <span class="o">=</span> <span class="n">selected_set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">samples_from_group</span><span class="p">))</span>
+
+            <span class="c1"># Add this sampled group to the new set of groups</span>
+
+            <span class="c1"># samples_from_group.sort()</span>
+            <span class="n">new_groupset</span><span class="o">.</span><span class="n">extend_group_items</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">samples_from_group</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">new_groupset</span></div></div>
+
+
+<div class="viewcode-block" id="ItemStack"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ItemStack</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container for items, each item can &quot;own&quot; one or more rows of data.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        items: The list of items</span>
+<span class="sd">        data: An ndarray with rows of data corresponding to items.</span>
+<span class="sd">        ownership: List which specifies which rows of data correspond to which</span>
+<span class="sd">            items.</span>
+<span class="sd">        meta: List which stores metadata about each operation on stack.</span>
+<span class="sd">        group_sets: List of GroupSets of items.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">items</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ownership</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">meta</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+    <span class="n">group_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">FrameGroupSet</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_groupset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets current (most recent) group set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_sets</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ItemStack.get_item_data_idxs"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.get_item_data_idxs">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_data_idxs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns indexes of rows in data which belong to item.&quot;&quot;&quot;</span>
+        <span class="n">item_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ownership</span><span class="p">:</span>
+            <span class="n">owns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ownership</span><span class="p">[</span><span class="n">item_idx</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">owns</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">item_idx</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">owns</span></div>
+
+<div class="viewcode-block" id="ItemStack.get_item_data"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.get_item_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns rows of data which belong to item.&quot;&quot;&quot;</span>
+        <span class="n">owns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_item_data_idxs</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">owns</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">get_item_by_data_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ownership</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">item_idx</span><span class="p">,</span> <span class="n">owns</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ownership</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">row_idx</span> <span class="ow">in</span> <span class="n">owns</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">item_idx</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">row_idx</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">row_idx</span><span class="p">]</span>
+
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No ownership for row </span><span class="si">{</span><span class="n">row_idx</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ItemStack.extend_ownership"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.extend_ownership">[docs]</a>    <span class="k">def</span> <span class="nf">extend_ownership</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ownership</span><span class="p">,</span> <span class="n">row_count</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extends an ownership list with number of rows owned by next item.&quot;&quot;&quot;</span>
+        <span class="n">start_i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ownership</span><span class="p">):</span>
+            <span class="c1"># Start at 1 + (last row index of last item so far)</span>
+            <span class="n">start_i</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">ownership</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">item_owns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start_i</span><span class="p">,</span> <span class="n">start_i</span> <span class="o">+</span> <span class="n">row_count</span><span class="p">))</span>
+        <span class="n">ownership</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item_owns</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ItemStack.get_raw_images"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.get_raw_images">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets data to raw image for each FrameItem.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;raw_images&quot;</span><span class="p">))</span>
+
+        <span class="n">data_shape</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">mixed_shapes</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="c1"># Add to list of raw images</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">get_raw_image</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+            <span class="c1"># Keep track of shape large enough to hold any of the images</span>
+            <span class="n">img_shape</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">data_shape</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">data_shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">img_shape</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="n">data_shape</span> <span class="o">!=</span> <span class="n">img_shape</span><span class="p">:</span>
+                <span class="n">mixed_shapes</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">mixed_shapes</span><span class="p">:</span>
+            <span class="c1"># Make array large enough to hold any image and pad smaller images</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">),</span> <span class="o">*</span><span class="n">data_shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">imgs</span><span class="p">):</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">channels</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="n">rows</span><span class="p">,</span> <span class="p">:</span><span class="n">columns</span><span class="p">,</span> <span class="p">:</span><span class="n">channels</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ItemStack.flatten"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.flatten">[docs]</a>    <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Flattens each row of data to 1-d array.&quot;&quot;&quot;</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;flatten&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+
+        <span class="n">row_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">row_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">row_count</span><span class="p">,</span> <span class="n">row_size</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ItemStack.brisk_bag_of_features"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.brisk_bag_of_features">[docs]</a>    <span class="k">def</span> <span class="nf">brisk_bag_of_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brisk_threshold</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transform data using bag of features based on brisk features.&quot;&quot;&quot;</span>
+        <span class="n">brisk</span> <span class="o">=</span> <span class="n">BriskVec</span><span class="p">(</span><span class="n">brisk_threshold</span><span class="o">=</span><span class="n">brisk_threshold</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">brisk</span><span class="o">.</span><span class="n">get_vecs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ItemStack.hog_bag_of_features"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.hog_bag_of_features">[docs]</a>    <span class="k">def</span> <span class="nf">hog_bag_of_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brisk_threshold</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transforms data into bag of features vector of hog descriptors.&quot;&quot;&quot;</span>
+        <span class="n">hog</span> <span class="o">=</span> <span class="n">HogVec</span><span class="p">(</span><span class="n">brisk_threshold</span><span class="o">=</span><span class="n">brisk_threshold</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">hog</span><span class="o">.</span><span class="n">get_vecs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ItemStack.pca"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.pca">[docs]</a>    <span class="k">def</span> <span class="nf">pca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transforms data by applying PCA.&quot;&quot;&quot;</span>
+        <span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">)</span>
+        <span class="c1"># PCA applies row by row, so we can modify data in place</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;pca&quot;</span><span class="p">,</span>
+                <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="c1"># components=pca.components_.tolist(),</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ItemStack.kmeans"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.kmeans">[docs]</a>    <span class="k">def</span> <span class="nf">kmeans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds GroupSet using k-means clustering on data.&quot;&quot;&quot;</span>
+        <span class="c1"># print(f&quot;kmeans on {len(self.data)} rows of data&quot;)</span>
+        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">cluster_groupset</span> <span class="o">=</span> <span class="n">FrameGroupSet</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">)</span>
+        <span class="n">cluster_groupset</span><span class="o">.</span><span class="n">groupset_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">centers</span><span class="o">=</span><span class="n">kmeans</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="c1"># Make list of the items in each cluster</span>
+        <span class="n">item_labels</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span>
+        <span class="k">for</span> <span class="n">cluster_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">):</span>
+            <span class="p">(</span><span class="n">cluster_item_idxs</span><span class="p">,)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">item_labels</span> <span class="o">==</span> <span class="n">cluster_idx</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">data_row_idx</span> <span class="ow">in</span> <span class="n">cluster_item_idxs</span><span class="p">:</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_item_by_data_row</span><span class="p">(</span><span class="n">data_row_idx</span><span class="p">)</span>
+                <span class="n">cluster_groupset</span><span class="o">.</span><span class="n">append_to_group</span><span class="p">(</span><span class="n">cluster_idx</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cluster_groupset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ItemStack.make_sample_group"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.make_sample_group">[docs]</a>    <span class="k">def</span> <span class="nf">make_sample_group</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Video</span><span class="p">],</span> <span class="n">samples_per_video</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sample_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;stride&quot;</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds GroupSet by sampling frames from each video.&quot;&quot;&quot;</span>
+        <span class="n">groupset</span> <span class="o">=</span> <span class="n">FrameGroupSet</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;stride&quot;</span><span class="p">)</span>
+        <span class="n">groupset</span><span class="o">.</span><span class="n">groupset_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">samples_per_video</span><span class="o">=</span><span class="n">samples_per_video</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">video</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">videos</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">samples_per_video</span> <span class="o">&gt;=</span> <span class="n">video</span><span class="o">.</span><span class="n">num_frames</span><span class="p">:</span>
+                <span class="n">idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">num_frames</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">sample_method</span> <span class="o">==</span> <span class="s2">&quot;stride&quot;</span><span class="p">:</span>
+                <span class="n">idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">frames</span> <span class="o">//</span> <span class="n">samples_per_video</span><span class="p">))</span>
+                <span class="n">idxs</span> <span class="o">=</span> <span class="n">idxs</span><span class="p">[:</span><span class="n">samples_per_video</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">sample_method</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
+                <span class="n">idxs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">),</span> <span class="n">samples_per_video</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid sampling method: </span><span class="si">{</span><span class="n">sample_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">group_id</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+                <span class="n">groupset</span><span class="o">.</span><span class="n">append_to_group</span><span class="p">(</span><span class="n">group_id</span><span class="p">,</span> <span class="n">FrameItem</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">groupset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;sample&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;sample_method&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ItemStack.get_all_items_from_group"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.get_all_items_from_group">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_items_from_group</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets items for Stack to all items from current GroupSet.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_groupset</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_groupset</span><span class="o">.</span><span class="n">all_items</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># clear data when setting items</span></div>
+
+<div class="viewcode-block" id="ItemStack.sample_groups"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.sample_groups">[docs]</a>    <span class="k">def</span> <span class="nf">sample_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples_per_group</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds GroupSet by sampling items from current GroupSet.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_groupset</span><span class="p">:</span>
+            <span class="n">new_groupset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_groupset</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+                <span class="n">per_group</span><span class="o">=</span><span class="n">samples_per_group</span><span class="p">,</span> <span class="n">unique_samples</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_groupset</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">to_suggestion_tuples</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">,</span> <span class="n">group_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">video_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="n">tuples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_groupset</span><span class="o">.</span><span class="n">get_item_group</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">group</span> <span class="o">+=</span> <span class="n">group_offset</span>
+            <span class="n">video_idx</span> <span class="o">=</span> <span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">)</span> <span class="o">+</span> <span class="n">video_offset</span>
+            <span class="n">tuples</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">video_idx</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">group</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">tuples</span>
+
+    <span class="k">def</span> <span class="nf">to_suggestion_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;SuggestionFrame&quot;</span><span class="p">]:</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.suggestions</span> <span class="kn">import</span> <span class="n">SuggestionFrame</span>
+
+        <span class="n">suggestions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_groupset</span><span class="o">.</span><span class="n">get_item_group</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">group</span> <span class="o">+=</span> <span class="n">group_offset</span>
+            <span class="n">suggestions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SuggestionFrame</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">group</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">suggestions</span></div>
+
+
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FeatureSuggestionPipeline</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">per_video</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">sample_method</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">feature_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">per_cluster</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">brisk_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">frame_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ItemStack</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">run_disk_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span> <span class="o">=</span> <span class="n">ItemStack</span><span class="p">()</span>
+
+        <span class="c1"># Make the list of frames, sampling from each video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">make_sample_group</span><span class="p">(</span>
+            <span class="n">videos</span><span class="p">,</span> <span class="n">samples_per_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">per_video</span><span class="p">,</span> <span class="n">sample_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_method</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">get_all_items_from_group</span><span class="p">()</span>
+
+        <span class="c1"># Load the frame images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">get_raw_images</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run_processing_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Processing state called before disk stage (frame_data is None)&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Generate feature data for each frame</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_type</span> <span class="o">==</span> <span class="s2">&quot;brisk&quot;</span><span class="p">:</span>
+            <span class="c1"># Get bag of features vector for each image from brisk descriptors</span>
+            <span class="c1"># for brisk keypoints on each image.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">brisk_bag_of_features</span><span class="p">(</span>
+                <span class="n">brisk_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">brisk_threshold</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_type</span> <span class="o">==</span> <span class="s2">&quot;hog&quot;</span><span class="p">:</span>
+            <span class="c1"># Get bag of features vector for each image from hog descriptors</span>
+            <span class="c1"># at brisk keypoints.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">hog_bag_of_features</span><span class="p">(</span>
+                <span class="n">brisk_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">brisk_threshold</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Flatten the raw image matrix for each image</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="c1"># Transform data using PCA</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">)</span>
+
+        <span class="c1"># Generate groups of frames using k-means</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">kmeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_clusters</span><span class="p">)</span>
+
+        <span class="c1"># Limit the number of items in each group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">sample_groups</span><span class="p">(</span><span class="n">samples_per_group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">per_cluster</span><span class="p">)</span>
+
+        <span class="c1"># Finally, make the list of items across all the groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span><span class="o">.</span><span class="n">get_all_items_from_group</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">):</span>
+        <span class="c1"># Only run disk stage is we&#39;re running from scratch; otherwise, we</span>
+        <span class="c1"># assume that the disk stage was already run.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_disk_stage</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_processing_state</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span>
+
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">get_suggestion_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">,</span> <span class="n">group_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span><span class="o">.</span><span class="n">to_suggestion_frames</span><span class="p">(</span><span class="n">group_offset</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_suggestion_tuples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">,</span> <span class="n">group_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">video_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span><span class="o">.</span><span class="n">to_suggestion_tuples</span><span class="p">(</span><span class="n">videos</span><span class="p">,</span> <span class="n">group_offset</span><span class="p">,</span> <span class="n">video_offset</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ParallelFeaturePipeline"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ParallelFeaturePipeline">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ParallelFeaturePipeline</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enables easy per-video pipeline parallelization for feature suggestions.</span>
+
+<span class="sd">    Create a `FeatureSuggestionPipeline` with the desired parameters, and</span>
+<span class="sd">    then call `ParallelFeaturePipeline.run()` with the pipeline and the list</span>
+<span class="sd">    of videos to process in parallel. This will take care of serializing the</span>
+<span class="sd">    videos, running the pipelines in a process pool, and then deserializing</span>
+<span class="sd">    the results back into a single list of `SuggestionFrame` objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pipeline</span><span class="p">:</span> <span class="n">FeatureSuggestionPipeline</span>
+    <span class="n">videos_as_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ParallelFeaturePipeline.get"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ParallelFeaturePipeline.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply pipeline to single video by idx. Can be called in process.&quot;&quot;&quot;</span>
+        <span class="n">video_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos_as_dicts</span><span class="p">[</span><span class="n">video_idx</span><span class="p">]</span>
+        <span class="n">video</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">video_dict</span><span class="p">,</span> <span class="n">Video</span><span class="p">)</span>
+        <span class="n">group_offset</span> <span class="o">=</span> <span class="n">video_idx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">n_clusters</span>
+
+        <span class="c1"># t0 = time()</span>
+        <span class="c1"># logger.info(f&quot;starting {video_idx}&quot;)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">get_suggestion_tuples</span><span class="p">(</span>
+            <span class="n">videos</span><span class="o">=</span><span class="p">[</span><span class="n">video</span><span class="p">],</span> <span class="n">group_offset</span><span class="o">=</span><span class="n">group_offset</span><span class="p">,</span> <span class="n">video_offset</span><span class="o">=</span><span class="n">video_idx</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+        <span class="c1"># logger.info(f&quot;done with {video_idx} in {time() - t0} s for {len(result)} suggestions&quot;)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="ParallelFeaturePipeline.make"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ParallelFeaturePipeline.make">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">videos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make class object from pipeline and list of videos.&quot;&quot;&quot;</span>
+        <span class="n">videos_as_dicts</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">videos_as_dicts</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParallelFeaturePipeline.tuples_to_suggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ParallelFeaturePipeline.tuples_to_suggestions">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">tuples_to_suggestions</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">tuples</span><span class="p">,</span> <span class="n">videos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts serialized data from processes back into SuggestionFrames.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.suggestions</span> <span class="kn">import</span> <span class="n">SuggestionFrame</span>
+
+        <span class="n">suggestions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">video_idx</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span> <span class="ow">in</span> <span class="n">tuples</span><span class="p">:</span>
+            <span class="n">video</span> <span class="o">=</span> <span class="n">videos</span><span class="p">[</span><span class="n">video_idx</span><span class="p">]</span>
+            <span class="n">suggestions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SuggestionFrame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">group</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">suggestions</span></div>
+
+<div class="viewcode-block" id="ParallelFeaturePipeline.run"><a class="viewcode-back" href="../../../_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ParallelFeaturePipeline.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">videos</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs pipeline on all videos in parallel and returns suggestions.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Lock</span>
+
+        <span class="n">pp</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">videos</span><span class="p">)</span>
+        <span class="n">video_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
+
+            <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">()</span>
+
+            <span class="n">per_video_tuples</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">video_idxs</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">per_video_tuples</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">video_idxs</span><span class="p">)</span>
+
+        <span class="n">tuples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">per_video_tuples</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">pp</span><span class="o">.</span><span class="n">tuples_to_suggestions</span><span class="p">(</span><span class="n">tuples</span><span class="p">,</span> <span class="n">videos</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">demo_pipeline</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Video</span>
+
+    <span class="n">vids</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="s2">&quot;tests/data/videos/centered_pair_small.mp4&quot;</span><span class="p">),</span>
+        <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="s2">&quot;tests/data/videos/small_robot.mp4&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">pipeline</span> <span class="o">=</span> <span class="n">FeatureSuggestionPipeline</span><span class="p">(</span>
+        <span class="n">per_video</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">sample_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span>
+        <span class="n">feature_type</span><span class="o">=</span><span class="s2">&quot;hog&quot;</span><span class="p">,</span>
+        <span class="n">brisk_threshold</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">n_clusters</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">per_cluster</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">suggestions</span> <span class="o">=</span> <span class="n">ParallelFeaturePipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">vids</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">suggestions</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">demo_pipeline</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
