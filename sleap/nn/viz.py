@@ -189,34 +189,51 @@ def plot_pafs(
 
 
 def plot_instance(
-    instance, skeleton=None, cmap=None, lw=2, ms=10, bbox=None, scale=1.0, **kwargs
+    instance, skeleton=None, cmap=None, color_by_node=False, lw=2, ms=10, bbox=None, scale=1.0, **kwargs
 ):
     """Plot a single instance with edge coloring."""
-
     if cmap is None:
         cmap = sns.color_palette("tab20")
 
     if skeleton is None:
         skeleton = instance.skeleton
 
+    if len(skeleton.edges) == 0:
+        color_by_node = True
+
     h_lines = []
-    for k, (src_node, dst_node) in enumerate(skeleton.edges):
-        src_pt = instance.points_array[instance.skeleton.node_to_index(src_node)]
-        dst_pt = instance.points_array[instance.skeleton.node_to_index(dst_node)]
+    if color_by_node:
+        for k, (x, y) in enumerate(instance.points_array):
+            if bbox is not None:
+                x -= bbox[1]
+                y -= bbox[0]
 
-        x = np.array([src_pt[0], dst_pt[0]])
-        y = np.array([src_pt[1], dst_pt[1]])
+            x *= scale
+            y *= scale
 
-        if bbox is not None:
-            x -= bbox[1]
-            y -= bbox[0]
+            print((x,y))
 
-        x *= scale
-        y *= scale
+            h_lines_k = plt.plot(x, y, ".", ms=ms, c=cmap[k % len(cmap)], **kwargs)
+            h_lines.append(h_lines_k)    
 
-        h_lines_k = plt.plot(x, y, ".-", ms=ms, lw=lw, c=cmap[k % len(cmap)], **kwargs)
+    else:
+        for k, (src_node, dst_node) in enumerate(skeleton.edges):
+            src_pt = instance.points_array[instance.skeleton.node_to_index(src_node)]
+            dst_pt = instance.points_array[instance.skeleton.node_to_index(dst_node)]
 
-        h_lines.append(h_lines_k)
+            x = np.array([src_pt[0], dst_pt[0]])
+            y = np.array([src_pt[1], dst_pt[1]])
+
+            if bbox is not None:
+                x -= bbox[1]
+                y -= bbox[0]
+
+            x *= scale
+            y *= scale
+
+            h_lines_k = plt.plot(x, y, ".-", ms=ms, lw=lw, c=cmap[k % len(cmap)], **kwargs)
+
+            h_lines.append(h_lines_k)
 
     return h_lines
 
