@@ -143,36 +143,58 @@ def integral_regression(
 
 
 def find_global_peaks_integral(
-    cms: tf.Tensor, output_stride: int = 1, threshold: float = 0.2
-) -> Tuple[tf.Tensor, tf.Tensor]:
-    """Find global peaks via integral regression.
+    cms: tf.Tensor, crop_size: int = 5, threshold: float = 0.2
+) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
+    """Find local peaks with integral refinement.
 
     Args:
         cms: Confidence maps.
-        output_stride: Stride of the confidence maps.
-        threshold: Minimum peak values.
+        threshold: Minimum confidence threshold.
     
     Returns:
-        A tuple of (peaks, peak_vals).
+        A tuple of (peak_points, peak_vals).
+
+        peak_points: float32 tensor of shape (n_peaks, 2), where the last axis
+        indicates peak locations in xy order.
+
+        peak_vals: float32 tensor of shape (n_peaks,) containing the values at the peak
+        points.
     """
-    # Build sampling grid.
-    xv = tf.cast(tf.range(0, tf.shape(cms)[1]) * output_stride, tf.float32)
-    yv = tf.cast(tf.range(0, tf.shape(cms)[0]) * output_stride, tf.float32)
-
-    # Perform regression to the peak coordinates.
-    x_hat, y_hat = integral_regression(cms, xv, yv)
-    peaks = tf.stack([x_hat, y_hat], axis=1)
-
-    # Find grid-aligned peak values.
-    peak_vals = tf.reduce_max(cms, axis=[0, 1])
-
-    # Mask out low confidence points.
-    peaks = tf.where(
-        tf.expand_dims(peak_vals, axis=-1) < threshold,
-        x=tf.constant(np.nan, dtype=tf.float32),
-        y=peaks,
+    # Find grid aligned peaks.
+    rough_peaks, peak_vals = find_global_peaks(
+        tf.expand_dims(cms, axis=0), threshold=threshold
     )
-    return peaks, peak_vals
+    rough_peaks = tf.squeeze(rough_peaks, axis=0)
+    peak_vals = tf.squeeze(peak_vals, axis=0)
+
+    # Make bounding boxes for cropping around peaks.
+    bboxes = make_centered_bboxes(
+        rough_peaks, box_height=crop_size, box_width=crop_size
+    )
+    norm_bboxes = normalize_bboxes(
+        bboxes, image_height=tf.shape(cms)[0], image_width=tf.shape(cms)[1]
+    )
+
+    # Crop patch around each grid-aligned peak.
+    cms = tf.transpose(cms, [2, 0, 1])  # move channels to samples axis
+    cms = tf.expand_dims(cms, axis=3)
+    cm_crops = tf.image.crop_and_resize(
+        image=cms,
+        boxes=norm_bboxes,
+        box_indices=tf.range(tf.shape(cms)[0], dtype=tf.int32),
+        crop_size=[crop_size, crop_size],
+    )
+    cm_crops = tf.squeeze(cm_crops, axis=3)  # squeeze out singleton "channel" axis
+    cm_crops = tf.transpose(cm_crops, [1, 2, 0])  # move crops back to last axis
+
+    # Compute offsets via integral regression.
+    gv = tf.cast(tf.range(crop_size), tf.float32) - ((crop_size - 1) / 2)
+    dx_hat, dy_hat = integral_regression(cm_crops, xv=gv, yv=gv)
+
+    # Apply offsets.
+    refined_peaks = rough_peaks + tf.stack([dx_hat, dy_hat], axis=1)
+
+    return refined_peaks, peak_vals
 
 
 @attr.s(auto_attribs=True)
@@ -187,6 +209,7 @@ class GlobalPeakFinder:
     keep_confmaps: bool = True
     device_name: Optional[Text] = None
     integral: bool = True
+    integral_patch_size: int = 5
 
     @property
     def input_keys(self) -> List[Text]:
@@ -213,8 +236,9 @@ class GlobalPeakFinder:
                     peaks, peak_vals = find_global_peaks_integral(
                         confmaps,
                         threshold=self.peak_threshold,
-                        output_stride=self.confmaps_stride,
+                        crop_size=self.integral_patch_size
                     )
+                    peaks *= tf.cast(self.confmaps_stride, tf.float32)
 
                 else:
                     # Find peaks via standard grid aligned global argmax.
