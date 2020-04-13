@@ -1,9 +1,35 @@
 """
-A SLEAP dataset collects labeled video frames.
+A SLEAP dataset collects labeled video frames, together with required metadata.
 
 This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
-(videos, skeletons, negative training sample anchors, etc.).
+(videos, skeletons, etc.).
+
+To load a labels dataset file from disk:
+
+> labels = Labels.load_file(filename)
+
+If you're opening a dataset file created on a different computer (or if you've
+moved the video files), it's likely that the paths to the original videos will
+not work. We automatically check for the videos in the same directory as the
+labels file, but if the videos aren't there, you can tell `load_file` where
+to seach for the videos. There are various ways to do this:
+
+> Labels.load_filename(filename, single_path_to_search)
+> Labels.load_filename(filename, [path_a, path_b])
+> Labels.load_filename(filename, callback_function)
+> Labels.load_filename(filename, video_search=...)
+
+The callback_function can be created via `make_video_callback()` and has the
+option to make a callback with a GUI window so the user can locate the videos.
+
+To save a labels dataset file, run:
+
+> Labels.save_file(labels, filename)
+
+If the filename has a supported extension (e.g., ".slp", ".h5", ".json") then
+the file will be saved in the corresponding format. You can also specify the
+default extension to use if none is provided in the filename.
 """
 import itertools
 import os
