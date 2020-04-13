@@ -365,6 +365,16 @@ class TopdownPredictor:
             drop_old=False,
         )
         if self.confmap_config is not None:
+            # Infer colorspace preprocessing if not explicit.
+            if not (
+                self.confmap_config.data.preprocessing.ensure_rgb
+                or self.confmap_config.data.preprocessing.ensure_grayscale
+            ):
+                if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
+                    self.confmap_config.data.preprocessing.ensure_grayscale = True
+                else:
+                    self.confmap_config.data.preprocessing.ensure_rgb = True
+
             pipeline += Normalizer.from_config(
                 self.confmap_config.data.preprocessing, image_key="full_image"
             )
@@ -379,6 +389,16 @@ class TopdownPredictor:
             )
 
         if self.centroid_model is not None:
+            # Infer colorspace preprocessing if not explicit.
+            if not (
+                self.centroid_config.data.preprocessing.ensure_rgb
+                or self.centroid_config.data.preprocessing.ensure_grayscale
+            ):
+                if self.centroid_model.keras_model.inputs[0].shape[-1] == 1:
+                    self.centroid_config.data.preprocessing.ensure_grayscale = True
+                else:
+                    self.centroid_config.data.preprocessing.ensure_rgb = True
+
             pipeline += Normalizer.from_config(
                 self.centroid_config.data.preprocessing, image_key="image"
             )
@@ -462,7 +482,7 @@ class TopdownPredictor:
                 peak_threshold=self.peak_threshold,
                 integral=self.integral_refinement,
                 integral_patch_size=self.integral_patch_size,
-        )
+            )
 
         else:
             # Generate ground truth instance points.
@@ -550,11 +570,20 @@ class TopdownPredictor:
 
         return predicted_frames
 
-    def predict(self, data_provider: Provider, make_instances: bool = True):
+    def predict(
+        self,
+        data_provider: Provider,
+        make_instances: bool = True,
+        make_labels: bool = False,
+    ):
         generator = self.predict_generator(data_provider)
 
-        if make_instances:
-            return self.make_labeled_frames_from_generator(generator, data_provider)
+        if make_instances or make_labels:
+            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            if make_labels:
+                return sleap.Labels(lfs)
+            else:
+                return lfs
 
         return list(generator)
 
@@ -583,6 +612,16 @@ class BottomupPredictor:
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
+
+        # Infer colorspace preprocessing if not explicit.
+        if not (
+            self.bottomup_config.data.preprocessing.ensure_rgb
+            or self.bottomup_config.data.preprocessing.ensure_grayscale
+        ):
+            if self.bottomup_model.keras_model.inputs[0].shape[-1] == 1:
+                self.bottomup_config.data.preprocessing.ensure_grayscale = True
+            else:
+                self.bottomup_config.data.preprocessing.ensure_rgb = True
 
         pipeline += Normalizer.from_config(self.bottomup_config.data.preprocessing)
         pipeline += Resizer.from_config(
@@ -689,11 +728,20 @@ class BottomupPredictor:
         # Yield each example from dataset, catching and logging exceptions
         return safely_generate(self.pipeline.make_dataset())
 
-    def predict(self, data_provider: Provider, make_instances: bool = True):
+    def predict(
+        self,
+        data_provider: Provider,
+        make_instances: bool = True,
+        make_labels: bool = False,
+    ):
         generator = self.predict_generator(data_provider)
 
-        if make_instances:
-            return self.make_labeled_frames_from_generator(generator, data_provider)
+        if make_instances or make_labels:
+            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            if make_labels:
+                return sleap.Labels(lfs)
+            else:
+                return lfs
 
         return list(generator)
 
@@ -737,6 +785,16 @@ class SingleInstancePredictor:
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
+
+        # Infer colorspace preprocessing if not explicit.
+        if not (
+            self.confmap_config.data.preprocessing.ensure_rgb
+            or self.confmap_config.data.preprocessing.ensure_grayscale
+        ):
+            if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
+                self.confmap_config.data.preprocessing.ensure_grayscale = True
+            else:
+                self.confmap_config.data.preprocessing.ensure_rgb = True
 
         pipeline += Normalizer.from_config(self.confmap_config.data.preprocessing)
         pipeline += Resizer.from_config(
@@ -809,11 +867,20 @@ class SingleInstancePredictor:
         # Yield each example from dataset, catching and logging exceptions
         return safely_generate(self.pipeline.make_dataset())
 
-    def predict(self, data_provider: Provider, make_instances: bool = True):
+    def predict(
+        self,
+        data_provider: Provider,
+        make_instances: bool = True,
+        make_labels: bool = False,
+    ):
         generator = self.predict_generator(data_provider)
 
-        if make_instances:
-            return self.make_labeled_frames_from_generator(generator, data_provider)
+        if make_instances or make_labels:
+            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            if make_labels:
+                return sleap.Labels(lfs)
+            else:
+                return lfs
 
         return list(generator)
 
