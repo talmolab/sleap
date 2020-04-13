@@ -1064,7 +1064,7 @@ class Video:
 
         filename = Video.fixup_path(filename)
 
-        if filename.lower().endswith(("h5", "hdf5")):
+        if filename.lower().endswith(("h5", "hdf5", "slp")):
             backend_class = HDF5Video
         elif filename.endswith(("npy")):
             backend_class = NumpyVideo
