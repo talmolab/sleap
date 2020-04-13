@@ -12,6 +12,9 @@ set BUILDDIR=../../sleap-docs
 
 if "%1" == "" goto help
 
+echo "Building api docs..."
+python make_api_doctree.py
+
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
 	echo.
@@ -30,6 +33,7 @@ goto end
 
 :help
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+goto end
 
 :end
 popd

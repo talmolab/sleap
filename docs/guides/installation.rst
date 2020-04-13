@@ -9,7 +9,7 @@ Windows
 -------
 
 Since **SLEAP** has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
-Anaconda_ Python distribution to simplify installation.
+Anaconda_ Python distribution to simplify installation. If you don't already have Anaconda installed, go to the Anaconda_ website and follow their installation instructions.
 
 Once Anaconda_ has been installed, go to start menu and type in *Anaconda*, which should bring up a menu entry
 **Anaconda Prompt** which opens a command line with the base anaconda environment activated. One of the key

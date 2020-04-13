@@ -65,6 +65,8 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/_autosummary/
+docs/api.rst  # this is created when making docs
 
 # PyBuilder
 target/

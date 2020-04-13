@@ -13,6 +13,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -21,13 +22,19 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "SLEAP"
-copyright = "2019, Murthy Lab @ Princeton"
+copyright = "2019–2020, Murthy Lab @ Princeton"
 author = "Talmo D. Pereira, Nat Tabris, David M. Turner"
 
 # The short X.Y version
-version = ""
+version = "0.2.0"
 # The full version, including alpha/beta/rc tags
 release = ""
+
+
+# Get the sleap version
+# with open("../sleap/version.py") as f:
+#     version_file = f.read()
+#     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 
 # -- General configuration ---------------------------------------------------
@@ -41,10 +48,13 @@ release = ""
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
 ]
+
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -68,7 +78,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "_templates", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -79,13 +89,15 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'font_size': '15px'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
