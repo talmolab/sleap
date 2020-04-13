@@ -43,5 +43,9 @@ if __name__ == "__main__":
 
     print(f"Total user labeled frames: {total_user_frames}")
 
-    for key, value in labels.provenance.items():
-        print(f"Provenance for {key}: {value}")
+    if labels.provenance:
+        print()
+        print(f"Provenance:")
+
+        for key, value in labels.provenance.items():
+            print(f"  {key}: {value}")
