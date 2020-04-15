@@ -298,7 +298,7 @@ class LabelsDataCache:
         # video_idx so that we count frames from distinct videos with the same
         # frame index.
 
-        if video:
+        if video is not None:
             video_idx = self.labels.videos.index(video)
             return {(video_idx, lf.frame_idx) for lf in self.labels if filter_func(lf)}
 
