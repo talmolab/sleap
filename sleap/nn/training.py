@@ -711,16 +711,16 @@ class Trainer(ABC):
             # Save input (ground truth) labels.
             sleap.Labels.save_file(
                 self.data_readers.training_labels_reader.labels,
-                os.path.join(self.run_path, "labels_gt.train.h5"),
+                os.path.join(self.run_path, "labels_gt.train.slp"),
             )
             sleap.Labels.save_file(
                 self.data_readers.validation_labels_reader.labels,
-                os.path.join(self.run_path, "labels_gt.val.h5"),
+                os.path.join(self.run_path, "labels_gt.val.slp"),
             )
             if self.data_readers.test_labels_reader is not None:
                 sleap.Labels.save_file(
                     self.data_readers.test_labels_reader.labels,
-                    os.path.join(self.run_path, "labels_gt.test.h5"),
+                    os.path.join(self.run_path, "labels_gt.test.slp"),
                 )
 
     @property
