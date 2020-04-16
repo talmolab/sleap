@@ -23,7 +23,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.stop_button = None
 
         self.redraw_batch_interval = 40
-        self.batches_to_show = 200  # -1 to show all
+        self.batches_to_show = -1  # -1 to show all
         self.ignore_outliers = False
         self.log_scale = True
 
@@ -132,14 +132,25 @@ class LossViewer(QtWidgets.QMainWindow):
 
             control_layout.addWidget(QtWidgets.QLabel("Batches to Show:"))
 
+            # add field for how many batches to show in chart
             field = QtWidgets.QComboBox()
+            # add options
             self.batch_options = "200,1000,5000,All".split(",")
             for opt in self.batch_options:
                 field.addItem(opt)
+            # set field to currently set value
+            cur_opt_str = (
+                "All" if self.batches_to_show < 0 else str(self.batches_to_show)
+            )
+            if cur_opt_str in self.batch_options:
+                field.setCurrentText(cur_opt_str)
+            # connection action for when user selects another option
             field.currentIndexChanged.connect(
                 lambda x: self.set_batches_to_show(self.batch_options[x])
             )
-            control_layout.addWidget(field)
+            # store field as property and add to layout
+            self.batches_to_show_field = field
+            control_layout.addWidget(self.batches_to_show_field)
 
             control_layout.addStretch(1)
 
