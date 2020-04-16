@@ -1293,7 +1293,7 @@ class MainWindow(QMainWindow):
         """Called when inference finishes."""
         # we ran inference so update display/ui
         self.on_data_update([UpdateTopic.all])
-        if new_count:
+        if new_count > 0:
             self.commands.changestack_push("new predictions")
 
     def visualizeOutputs(self):
