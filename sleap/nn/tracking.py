@@ -98,6 +98,96 @@ def greedy_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
     return assignments
 
 
+def nms_instances(
+    instances, iou_threshold, target_count=None
+) -> Tuple[List[PredictedInstance], List[PredictedInstance]]:
+    boxes = np.array([inst.bounding_box for inst in instances])
+    scores = np.array([inst.score for inst in instances])
+    picks = nms_fast(boxes, scores, iou_threshold, target_count)
+
+    to_keep = [inst for i, inst in enumerate(instances) if i in picks]
+    to_remove = [inst for i, inst in enumerate(instances) if i not in picks]
+
+    return to_keep, to_remove
+
+
+def nms_fast(boxes, scores, iou_threshold, target_count=None) -> List[int]:
+    """https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/"""
+
+    # if there are no boxes, return an empty list
+    if len(boxes) == 0:
+        return []
+
+    # if we already have fewer boxes than the target count, return all boxes
+    if target_count and len(boxes) < target_count:
+        return list(range(len(boxes)))
+
+    # if the bounding boxes coordinates are integers, convert them to floats --
+    # this is important since we'll be doing a bunch of divisions
+    if boxes.dtype.kind == "i":
+        boxes = boxes.astype("float")
+
+    # initialize the list of picked indexes
+    picked_idxs = []
+
+    # init list of boxes removed by nms
+    nms_idxs = []
+
+    # grab the coordinates of the bounding boxes
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
+
+    # compute the area of the bounding boxes and sort the bounding
+    # boxes by their scores
+    area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    idxs = np.argsort(scores)
+
+    # keep looping while some indexes still remain in the indexes list
+    while len(idxs) > 0:
+
+        # we want to add the best box which is the last box in sorted list
+        picked_box_idx = idxs[-1]
+
+        # last = len(idxs) - 1
+        # i = idxs[last]
+        picked_idxs.append(picked_box_idx)
+
+        # find the largest (x, y) coordinates for the start of
+        # the bounding box and the smallest (x, y) coordinates
+        # for the end of the bounding box
+        xx1 = np.maximum(x1[picked_box_idx], x1[idxs[:-1]])
+        yy1 = np.maximum(y1[picked_box_idx], y1[idxs[:-1]])
+        xx2 = np.minimum(x2[picked_box_idx], x2[idxs[:-1]])
+        yy2 = np.minimum(y2[picked_box_idx], y2[idxs[:-1]])
+
+        # compute the width and height of the bounding box
+        w = np.maximum(0, xx2 - xx1 + 1)
+        h = np.maximum(0, yy2 - yy1 + 1)
+
+        # compute the ratio of overlap
+        overlap = (w * h) / area[idxs[:-1]]
+
+        # find boxes with iou over threshold
+        nms_for_new_box = np.where(overlap > iou_threshold)[0]
+        nms_idxs.extend(list(idxs[nms_for_new_box]))
+
+        # delete new box (last in list) plus nms boxes
+        idxs = np.delete(idxs, nms_for_new_box)[:-1]
+
+    # if we're below the target number of boxes, add some back
+    if target_count and nms_idxs and len(picked_idxs) < target_count:
+        # sort by descending score
+        nms_idxs.sort(key=lambda idx: -scores[idx])
+
+        add_back_count = min(len(nms_idxs), len(picked_idxs) - target_count)
+        picked_idxs.extend(nms_idxs[:add_back_count])
+
+    # return the list of picked boxes
+    return picked_idxs
+
+
 @attr.s(eq=False, slots=True, auto_attribs=True)
 class ShiftedInstance:
 
@@ -368,7 +458,7 @@ class Tracker:
     """
 
     track_window: int = 5
-    similarity_function: Callable = instance_similarity
+    similarity_function: Optional[Callable] = instance_similarity
     matching_function: Callable = greedy_matching
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
     cleaner: Optional[Callable] = None
@@ -715,9 +805,13 @@ class TrackCleaner:
 
     Attributes:
         instance_count: The maximum number of instances we want per frame.
+        nms_threshold: Intersection over Union (IOU) threshold to use when
+            removing overlapping instances over target count; if None, then
+            only use score to determine which instances to remove.
     """
 
     instance_count: int
+    nms_threshold: Optional[float] = None
 
     def run(self, frames: List["LabeledFrame"]):
         """
@@ -738,11 +832,29 @@ class TrackCleaner:
         # Find all frames with more instances than the desired threshold
         for lf in frames:
             if len(lf.predicted_instances) > self.instance_count:
-                # Get all but the instance_count many instances with the highest score
-                extra_instances = sorted(
-                    lf.predicted_instances, key=operator.attrgetter("score")
-                )[: -self.instance_count]
-                lf_inst_list.extend([(lf, inst) for inst in extra_instances])
+                # List of instances which we'll pare down
+                keep_instances = lf.predicted_instances
+
+                # Use NMS to remove overlapping instances over target count
+                if self.nms_threshold:
+                    keep_instances, extra_instances = nms_instances(
+                        keep_instances,
+                        iou_threshold=self.nms_threshold,
+                        target_count=self.instance_count,
+                    )
+                    # Mark for removal
+                    lf_inst_list.extend([(lf, inst) for inst in extra_instances])
+
+                # Use lower score to remove instances over target count
+                if len(keep_instances) > self.instance_count:
+                    # Sort by ascending score, get target number of instances
+                    # from the end of list (i.e., with highest score)
+                    extra_instances = sorted(
+                        keep_instances, key=operator.attrgetter("score")
+                    )[: -self.instance_count]
+
+                    # Mark for removal
+                    lf_inst_list.extend([(lf, inst) for inst in extra_instances])
 
         # Remove instances over per frame threshold
         for lf, inst in lf_inst_list:
@@ -782,9 +894,7 @@ class TrackCleaner:
 
 
 def run_tracker(frames, tracker):
-    import inspect
     import time
-    from sleap import Labels
 
     t0 = time.time()
 
@@ -815,14 +925,14 @@ def run_tracker(frames, tracker):
 
     print(time.time() - t0)
 
-    new_labels = Labels(labeled_frames=new_lfs)
-    return new_labels
+    return new_lfs
 
 
 def retrack():
     import argparse
     import operator
     import os
+    import time
 
     from sleap import Labels
 
@@ -847,10 +957,17 @@ def retrack():
 
     print(tracker)
 
-    labels = Labels.load_file(args.data_path)
+    print("Loading predictions...")
+    t0 = time.time()
+    labels = Labels.load_file(args.data_path, args.data_path)
     frames = sorted(labels.labeled_frames, key=operator.attrgetter("frame_idx"))
+    print(f"Done loading predictions in {time.time() - t0} seconds.")
 
-    new_labels = run_tracker(frames=frames, tracker=tracker)
+    print("Starting tracker...")
+    frames = run_tracker(frames=frames, tracker=tracker)
+    tracker.final_pass(frames)
+
+    new_labels = Labels(labeled_frames=frames)
 
     if args.output:
         output_path = args.output
