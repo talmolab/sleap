@@ -530,9 +530,9 @@ class StackBuilderWidget(QtWidgets.QWidget):
         multi_layout.addRow(combo_label, self.combo_box)
         multi_layout.addRow(self.stacked_widget)
 
-        self.setValue(stack_data["default"])
-
         self.setLayout(multi_layout)
+
+        self.setValue(stack_data["default"])
 
     def switch_to_idx(self, idx):
         """Switch currently shown widget from stack."""
@@ -748,12 +748,12 @@ class TextOrListWidget(QtWidgets.QWidget):
             result_as_idx=result_as_idx, add_blank_option=add_blank_option,
         )
 
-        self.setMode("text")
-
         layout.addWidget(self.text_widget)
         layout.addWidget(self.list_widget)
 
         self.setLayout(layout)
+
+        self.setMode("text")
 
         self.list_widget.currentIndexChanged.connect(self.emitValueChanged)
         self.text_widget.textChanged.connect(self.emitValueChanged)
