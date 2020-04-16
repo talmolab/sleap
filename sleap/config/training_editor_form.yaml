@@ -14,6 +14,7 @@ data:
   label: Crop Size
   name: data.instance_cropping.crop_size
   type: optional_int
+  none_label: Auto
   range: 0,512
 model:
 - default: unet
@@ -369,7 +370,7 @@ model:
     name: model.heads.single_instance.output_stride
     type: int
   type: stacked
-optimization:
+augmentation:
 - default: false
   help: If True, rotational augmentation will be applied. Rotation is relative to
     the center of the image. See `imgaug.augmenters.geometric.Affine`.
@@ -470,6 +471,7 @@ optimization:
   label: Brightness Max Val
   name: optimization.augmentation_config.brightness_max_val
   type: double
+optimization:
 - default: 8
   help: Number of examples per minibatch, i.e., a single step of training. Higher
     numbers can increase generalization performance by averaging model gradient updates
@@ -480,6 +482,12 @@ optimization:
   label: Batch Size
   name: optimization.batch_size
   type: int
+- default: 100
+  help: Maximum number of epochs to train for. Training can be stopped manually or automatically if early stopping is enabled and a plateau is detected.
+  label: Epochs
+  name: optimization.epochs
+  type: int
+  range: 1,1000
 - default: 0.0001
   help: The initial learning rate to use for the optimizer. This is typically set
     to 1e-3 or 1e-4, and can be decreased automatically if learning rate reduction
