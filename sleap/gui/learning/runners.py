@@ -126,7 +126,11 @@ def run_learning_pipeline(
 
     # Train the TrainingJobs
     trained_job_paths = run_gui_training(
-        labels_filename, config_info_list, gui=True, save_viz=save_viz
+        labels_filename=labels_filename,
+        labels=labels,
+        config_info_list=config_info_list,
+        gui=True,
+        save_viz=save_viz,
     )
 
     # Check that all the models were trained
@@ -149,6 +153,7 @@ def run_learning_pipeline(
 
 def run_gui_training(
     labels_filename: str,
+    labels: Labels,
     config_info_list: List[ConfigFileInfo],
     gui: bool = True,
     save_viz: bool = False,
@@ -202,7 +207,9 @@ def run_gui_training(
             job.outputs.runs_folder = os.path.join(
                 os.path.dirname(labels_filename), "models"
             )
-            training.setup_new_run_folder(job.outputs)
+            training.setup_new_run_folder(
+                job.outputs, base_run_name=f"{model_type}.{len(labels)}"
+            )
 
             if gui:
                 print("Resetting monitor window.")
