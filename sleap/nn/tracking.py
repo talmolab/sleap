@@ -652,23 +652,29 @@ class Tracker:
         of_window_size: int = 21,
         of_max_levels: int = 3,
         clean_instance_count: int = 0,
+        clean_iou_threshold: Optional[float] = None,
         **kwargs,
     ) -> "Tracker":
 
-        if tracker not in tracker_policies:
-            raise ValueError(f"{tracker} is not a valid tracker.")
+        if tracker.lower() == "none":
+            candidate_maker = None
+            similarity_function = None
+            matching_function = None
+        else:
+            if tracker not in tracker_policies:
+                raise ValueError(f"{tracker} is not a valid tracker.")
 
-        if similarity not in similarity_policies:
-            raise ValueError(
-                f"{similarity} is not a valid tracker similarity function."
-            )
+            if similarity not in similarity_policies:
+                raise ValueError(
+                    f"{similarity} is not a valid tracker similarity function."
+                )
 
-        if match not in match_policies:
-            raise ValueError(f"{match} is not a valid tracker matching function.")
+            if match not in match_policies:
+                raise ValueError(f"{match} is not a valid tracker matching function.")
 
-        candidate_maker = tracker_policies[tracker](min_points=min_match_points)
-        similarity_function = similarity_policies[similarity]
-        matching_function = match_policies[match]
+            candidate_maker = tracker_policies[tracker](min_points=min_match_points)
+            similarity_function = similarity_policies[similarity]
+            matching_function = match_policies[match]
 
         if tracker == "flow":
             candidate_maker.img_scale = img_scale
@@ -677,7 +683,9 @@ class Tracker:
 
         cleaner = None
         if clean_instance_count:
-            cleaner = TrackCleaner(instance_count=clean_instance_count)
+            cleaner = TrackCleaner(
+                instance_count=clean_instance_count, iou_threshold=clean_iou_threshold
+            )
 
         return cls(
             track_window=track_window,
@@ -705,6 +713,15 @@ class Tracker:
         option["help"] = (
             "If non-zero, then attempt to clean tracking results "
             "assuming there are this many instances per frame."
+        )
+        options.append(option)
+
+        option = dict(name="clean_iou_threshold", default=0)
+        option["type"] = float
+        option["help"] = (
+            "If non-zero and clean_instance_count also set, "
+            "then use IOU threshold to remove overlapping "
+            "instances over count."
         )
         options.append(option)
 
@@ -805,13 +822,13 @@ class TrackCleaner:
 
     Attributes:
         instance_count: The maximum number of instances we want per frame.
-        nms_threshold: Intersection over Union (IOU) threshold to use when
+        iou_threshold: Intersection over Union (IOU) threshold to use when
             removing overlapping instances over target count; if None, then
             only use score to determine which instances to remove.
     """
 
     instance_count: int
-    nms_threshold: Optional[float] = None
+    iou_threshold: Optional[float] = None
 
     def run(self, frames: List["LabeledFrame"]):
         """
@@ -836,10 +853,10 @@ class TrackCleaner:
                 keep_instances = lf.predicted_instances
 
                 # Use NMS to remove overlapping instances over target count
-                if self.nms_threshold:
+                if self.iou_threshold:
                     keep_instances, extra_instances = nms_instances(
                         keep_instances,
-                        iou_threshold=self.nms_threshold,
+                        iou_threshold=self.iou_threshold,
                         target_count=self.instance_count,
                     )
                     # Mark for removal
@@ -895,6 +912,10 @@ class TrackCleaner:
 
 def run_tracker(frames, tracker):
     import time
+
+    # Return original frames if we aren't retracking
+    if tracker.similarity_function is None:
+        return frames
 
     t0 = time.time()
 
