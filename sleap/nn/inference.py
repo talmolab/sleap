@@ -4,6 +4,7 @@ import attr
 import logging
 import os
 import time
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Text, Optional, List, Dict
 
@@ -195,8 +196,27 @@ def get_keras_model_path(path: Text) -> Text:
     return os.path.join(path, "best_model.h5")
 
 
+class Predictor(ABC):
+    """Base interface class for predictors."""
+
+    @classmethod
+    @abstractmethod
+    def from_trained_models(cls, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def make_pipeline(self):
+        pass
+
+    @abstractmethod
+    def predict(self, data_provider: Provider):
+        pass
+
+
 @attr.s(auto_attribs=True)
-class VisualPredictor:
+class VisualPredictor(Predictor):
+    """Predictor class for generating the visual output of model."""
+
     config: TrainingJobConfig
     model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
@@ -278,7 +298,7 @@ class VisualPredictor:
 
 
 @attr.s(auto_attribs=True)
-class TopdownPredictor:
+class TopdownPredictor(Predictor):
     centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     centroid_model: Optional[Model] = attr.ib(default=None)
     confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
@@ -589,7 +609,7 @@ class TopdownPredictor:
 
 
 @attr.s(auto_attribs=True)
-class BottomupPredictor:
+class BottomupPredictor(Predictor):
     bottomup_config: TrainingJobConfig
     bottomup_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
@@ -747,7 +767,7 @@ class BottomupPredictor:
 
 
 @attr.s(auto_attribs=True)
-class SingleInstancePredictor:
+class SingleInstancePredictor(Predictor):
     confmap_config: TrainingJobConfig
     confmap_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
@@ -970,10 +990,17 @@ def make_video_reader_from_cli(args):
     return video_reader
 
 
-def find_models_from_cli(args) -> Dict[str, str]:
+def make_predictor_from_paths(paths) -> Predictor:
+    """Builds predictor object from a list of model paths."""
+    return make_predictor_from_models(find_heads_for_model_paths(paths))
+
+
+def find_heads_for_model_paths(paths) -> Dict[str, str]:
+    """Given list of models paths, returns dict with path keyed by head name."""
+
     trained_model_paths = dict()
 
-    for model_path in args.models:
+    for model_path in paths:
         # Load the model config
         cfg = TrainingJobConfig.load_json(model_path)
 
@@ -989,7 +1016,9 @@ def find_models_from_cli(args) -> Dict[str, str]:
     return trained_model_paths
 
 
-def make_predictor_from_models(trained_model_paths: Dict[str, str]):
+def make_predictor_from_models(trained_model_paths: Dict[str, str]) -> Predictor:
+    """Given dict of paths keyed by head name, returns appropriate predictor."""
+
     if "multi_instance" in trained_model_paths:
         predictor = BottomupPredictor.from_trained_models(
             trained_model_paths["multi_instance"]
@@ -1067,7 +1096,7 @@ def main():
     print("Frames:", len(video_reader))
 
     # Find the specified models
-    model_paths_by_head = find_models_from_cli(args)
+    model_paths_by_head = find_heads_for_model_paths(args.models)
 
     # Create appropriate predictor given these models
     predictor = make_predictor_from_models(model_paths_by_head)
