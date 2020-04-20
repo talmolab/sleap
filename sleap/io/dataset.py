@@ -34,7 +34,7 @@ default extension to use if none is provided in the filename.
 import itertools
 import os
 from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional, Tuple, Text
+from typing import Callable, List, Union, Dict, Optional, Tuple, Text, Iterable
 
 import attr
 import cattr
@@ -106,14 +106,14 @@ class LabelsDataCache:
             self._frame_idx_map[new_vid][new_frame.frame_idx] = new_frame
 
     def find_frames(
-        self, video: Video, frame_idx: Optional[Union[int, range]] = None
+        self, video: Video, frame_idx: Optional[Union[int, Iterable[int]]] = None
     ) -> Optional[List[LabeledFrame]]:
         """Returns list of LabeledFrames matching video/frame_idx, or None."""
         if frame_idx is not None:
             if video not in self._frame_idx_map:
                 return None
 
-            if type(frame_idx) == range:
+            if isinstance(frame_idx, Iterable):
                 return [
                     self._frame_idx_map[video][idx]
                     for idx in frame_idx
@@ -637,7 +637,7 @@ class Labels(MutableSequence):
     def find(
         self,
         video: Video,
-        frame_idx: Optional[Union[int, range]] = None,
+        frame_idx: Optional[Union[int, Iterable[int]]] = None,
         return_new: bool = False,
     ) -> List[LabeledFrame]:
         """ Search for labeled frames given video and/or frame index.
