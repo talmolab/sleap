@@ -15,7 +15,7 @@ import sleap
 from sleap import util
 from sleap.nn.config import TrainingJobConfig
 from sleap.nn.model import Model
-from sleap.nn.tracking import Tracker
+from sleap.nn.tracking import Tracker, run_tracker
 from sleap.nn.data.pipelines import (
     Provider,
     Pipeline,
@@ -196,6 +196,7 @@ def get_keras_model_path(path: Text) -> Text:
     return os.path.join(path, "best_model.h5")
 
 
+@attr.s(auto_attribs=True)
 class Predictor(ABC):
     """Base interface class for predictors."""
 
@@ -211,6 +212,55 @@ class Predictor(ABC):
     @abstractmethod
     def predict(self, data_provider: Provider):
         pass
+
+
+@attr.s(auto_attribs=True)
+class MockPredictor(Predictor):
+    labels: sleap.Labels
+
+    @classmethod
+    def from_trained_models(cls, labels_path: Text):
+        labels = sleap.Labels.load_file(labels_path)
+        return cls(labels=labels)
+
+    def make_pipeline(self):
+        pass
+
+    def predict(self, data_provider: Provider):
+
+        prediction_video = None
+
+        # Try to match specified video by its full path
+        prediction_video_path = os.path.abspath(data_provider.video.filename)
+        for video in self.labels.videos:
+            if os.path.abspath(video.filename) == prediction_video_path:
+                prediction_video = video
+                break
+
+        if prediction_video is None:
+            # Try to match on filename (without path)
+            prediction_video_path = os.path.basename(data_provider.video.filename)
+            for video in self.labels.videos:
+                if os.path.basename(video.filename) == prediction_video_path:
+                    prediction_video = video
+                    break
+
+        if prediction_video is None:
+            # Default to first video in labels file
+            prediction_video = self.labels.videos[0]
+
+        # Get specified frames from labels file
+        frames = self.labels.find(
+            video=prediction_video, frame_idx=list(data_provider.example_indices)
+        )
+
+        # Run tracker as specified
+        if self.tracker:
+            frames = run_tracker(tracker=self.tracker, frames=frames)
+            self.tracker.final_pass(frames)
+
+        # Return frames (there are no "raw" predictions we could return)
+        return frames
 
 
 @attr.s(auto_attribs=True)
@@ -936,6 +986,12 @@ def make_cli_parser():
         default=None,
         help="The output filename to use for the predicted data.",
     )
+    parser.add_argument(
+        "--labels",
+        type=str,
+        default=None,
+        help="Path to labels file (for re-tracking pre-existing predictions).",
+    )
 
     # TODO: better video parameters
 
@@ -1000,6 +1056,9 @@ def find_heads_for_model_paths(paths) -> Dict[str, str]:
 
     trained_model_paths = dict()
 
+    if paths is None:
+        return trained_model_paths
+
     for model_path in paths:
         # Load the model config
         cfg = TrainingJobConfig.load_json(model_path)
@@ -1016,7 +1075,9 @@ def find_heads_for_model_paths(paths) -> Dict[str, str]:
     return trained_model_paths
 
 
-def make_predictor_from_models(trained_model_paths: Dict[str, str]) -> Predictor:
+def make_predictor_from_models(
+    trained_model_paths: Dict[str, str], labels_path: Optional[str] = None
+) -> Predictor:
     """Given dict of paths keyed by head name, returns appropriate predictor."""
 
     if "multi_instance" in trained_model_paths:
@@ -1034,8 +1095,9 @@ def make_predictor_from_models(trained_model_paths: Dict[str, str]) -> Predictor
             centroid_model_path=trained_model_paths["centroid"],
             confmap_model_path=trained_model_paths["centered_instance"],
         )
+    elif len(trained_model_paths) == 0 and labels_path:
+        predictor = MockPredictor.from_trained_models(labels_path=labels_path)
     else:
-        # TODO: support for tracking on previous predictions w/o model
         raise ValueError(
             f"Unable to run inference with {list(trained_model_paths.keys())} heads."
         )
@@ -1099,7 +1161,7 @@ def main():
     model_paths_by_head = find_heads_for_model_paths(args.models)
 
     # Create appropriate predictor given these models
-    predictor = make_predictor_from_models(model_paths_by_head)
+    predictor = make_predictor_from_models(model_paths_by_head, labels_path=args.labels)
 
     # Make the tracker
     policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
