@@ -406,6 +406,15 @@ def setup_visualization(
 ) -> List[tf.keras.callbacks.Callback]:
     """Set up visualization callbacks from config."""
     callbacks = []
+
+    try:
+        matplotlib.use("Qt5Agg")
+    except ImportError:
+        print(
+            "Unable to use Qt backend for matplotlib. "
+            "This probably means Qt is running headless."
+        )
+
     if config.save_visualizations and config.save_outputs:
         callbacks.append(
             MatplotlibSaver(

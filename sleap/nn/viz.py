@@ -6,14 +6,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import Union, Tuple, Optional, Text
 
-try:
-    matplotlib.use("Qt5Agg")
-except ImportError:
-    print(
-        "Unable to use Qt backend for matplotlib. "
-        "This probably means Qt is running headless."
-    )
-
 
 def imgfig(
     size: Union[float, Tuple] = 6, dpi: int = 72, scale: float = 1.0
@@ -60,7 +52,7 @@ def plot_img(
     # Normalize the range of pixel values.
     img_min = img.min()
     img_max = img.max()
-    if img_min < 0. or img_max > 1.0:
+    if img_min < 0.0 or img_max > 1.0:
         img = (img - img_min) / (img_max - img_min)
 
     fig = imgfig(
@@ -189,7 +181,15 @@ def plot_pafs(
 
 
 def plot_instance(
-    instance, skeleton=None, cmap=None, color_by_node=False, lw=2, ms=10, bbox=None, scale=1.0, **kwargs
+    instance,
+    skeleton=None,
+    cmap=None,
+    color_by_node=False,
+    lw=2,
+    ms=10,
+    bbox=None,
+    scale=1.0,
+    **kwargs
 ):
     """Plot a single instance with edge coloring."""
     if cmap is None:
@@ -211,10 +211,10 @@ def plot_instance(
             x *= scale
             y *= scale
 
-            print((x,y))
+            print((x, y))
 
             h_lines_k = plt.plot(x, y, ".", ms=ms, c=cmap[k % len(cmap)], **kwargs)
-            h_lines.append(h_lines_k)    
+            h_lines.append(h_lines_k)
 
     else:
         for k, (src_node, dst_node) in enumerate(skeleton.edges):
@@ -231,7 +231,9 @@ def plot_instance(
             x *= scale
             y *= scale
 
-            h_lines_k = plt.plot(x, y, ".-", ms=ms, lw=lw, c=cmap[k % len(cmap)], **kwargs)
+            h_lines_k = plt.plot(
+                x, y, ".-", ms=ms, lw=lw, c=cmap[k % len(cmap)], **kwargs
+            )
 
             h_lines.append(h_lines_k)
 
