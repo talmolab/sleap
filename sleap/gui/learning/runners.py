@@ -373,6 +373,10 @@ def train_subprocess(
         if save_viz:
             cli_args.append("--save_viz")
 
+        # Use cli arg since cli ignores setting in config
+        if job_config.outputs.tensorboard.write_logs:
+            cli_args.append("--tensorboard")
+
         print(cli_args)
 
         if not SKIP_TRAINING:
