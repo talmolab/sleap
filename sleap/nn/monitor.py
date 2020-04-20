@@ -329,10 +329,13 @@ class LossViewer(QtWidgets.QMainWindow):
             title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
             if self.last_epoch_val_loss is not None:
                 title += f"<br />Last Epoch Validation Loss: <b>{self.last_epoch_val_loss:.3e}</b>"
-            self.chart.setTitle(title)
+            self.set_message(title)
 
     def is_timer_running(self):
         return self.t0 is not None and self.is_running
+
+    def set_message(self, text):
+        self.chart.setTitle(text)
 
     def check_messages(
         self, timeout=10, times_to_check: int = 10, do_update: bool = True
@@ -421,5 +424,10 @@ if __name__ == "__main__":
     t = QtCore.QTimer()
     t.timeout.connect(test_point)
     t.start(0)
+
+    win.set_message("Waiting for 3 seconds...")
+    t2 = QtCore.QTimer()
+    t2.timeout.connect(lambda: win.set_message("Running demo..."))
+    t2.start(3000)
 
     app.exec_()

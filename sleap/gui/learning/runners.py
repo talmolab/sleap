@@ -215,6 +215,7 @@ def run_gui_training(
                 print("Resetting monitor window.")
                 win.reset(what=str(model_type))
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
+                win.set_message(f"Preparing to run training...")
                 if save_viz:
                     viz_window = QtImageDirectoryWidget.make_training_vizualizer(
                         job.outputs.run_path
