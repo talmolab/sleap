@@ -4,6 +4,7 @@ import attr
 import logging
 import os
 import time
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Text, Optional, List, Dict
 
@@ -14,7 +15,7 @@ import sleap
 from sleap import util
 from sleap.nn.config import TrainingJobConfig
 from sleap.nn.model import Model
-from sleap.nn.tracking import Tracker
+from sleap.nn.tracking import Tracker, run_tracker
 from sleap.nn.data.pipelines import (
     Provider,
     Pipeline,
@@ -143,7 +144,7 @@ def make_grouped_labeled_frame(
 
         if example[points_key].ndim == 3:
             for points, confidences, instance_score in zip(
-                example[points_key], example[point_confidences_key], instance_scores,
+                example[points_key], example[point_confidences_key], instance_scores
             ):
                 predicted_instances.append(
                     sleap.PredictedInstance.from_arrays(
@@ -176,12 +177,12 @@ def make_grouped_labeled_frame(
         if tracker:
             # Set tracks for predicted instances in this frame.
             predicted_instances = tracker.track(
-                untracked_instances=predicted_instances, img=img, t=frame_ind,
+                untracked_instances=predicted_instances, img=img, t=frame_ind
             )
 
         # Create labeled frame from predicted instances.
         labeled_frame = sleap.LabeledFrame(
-            video=videos[video_ind], frame_idx=frame_ind, instances=predicted_instances,
+            video=videos[video_ind], frame_idx=frame_ind, instances=predicted_instances
         )
 
         predicted_frames.append(labeled_frame)
@@ -196,7 +197,76 @@ def get_keras_model_path(path: Text) -> Text:
 
 
 @attr.s(auto_attribs=True)
-class VisualPredictor:
+class Predictor(ABC):
+    """Base interface class for predictors."""
+
+    @classmethod
+    @abstractmethod
+    def from_trained_models(cls, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def make_pipeline(self):
+        pass
+
+    @abstractmethod
+    def predict(self, data_provider: Provider):
+        pass
+
+
+@attr.s(auto_attribs=True)
+class MockPredictor(Predictor):
+    labels: sleap.Labels
+
+    @classmethod
+    def from_trained_models(cls, labels_path: Text):
+        labels = sleap.Labels.load_file(labels_path)
+        return cls(labels=labels)
+
+    def make_pipeline(self):
+        pass
+
+    def predict(self, data_provider: Provider):
+
+        prediction_video = None
+
+        # Try to match specified video by its full path
+        prediction_video_path = os.path.abspath(data_provider.video.filename)
+        for video in self.labels.videos:
+            if os.path.abspath(video.filename) == prediction_video_path:
+                prediction_video = video
+                break
+
+        if prediction_video is None:
+            # Try to match on filename (without path)
+            prediction_video_path = os.path.basename(data_provider.video.filename)
+            for video in self.labels.videos:
+                if os.path.basename(video.filename) == prediction_video_path:
+                    prediction_video = video
+                    break
+
+        if prediction_video is None:
+            # Default to first video in labels file
+            prediction_video = self.labels.videos[0]
+
+        # Get specified frames from labels file
+        frames = self.labels.find(
+            video=prediction_video, frame_idx=list(data_provider.example_indices)
+        )
+
+        # Run tracker as specified
+        if self.tracker:
+            frames = run_tracker(tracker=self.tracker, frames=frames)
+            self.tracker.final_pass(frames)
+
+        # Return frames (there are no "raw" predictions we could return)
+        return frames
+
+
+@attr.s(auto_attribs=True)
+class VisualPredictor(Predictor):
+    """Predictor class for generating the visual output of model."""
+
     config: TrainingJobConfig
     model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
@@ -249,7 +319,7 @@ class VisualPredictor:
 
         pipeline += Normalizer.from_config(self.config.data.preprocessing)
         pipeline += Resizer.from_config(
-            self.config.data.preprocessing, keep_full_image=False, points_key=None,
+            self.config.data.preprocessing, keep_full_image=False, points_key=None
         )
 
         pipeline += KerasModelPredictor(
@@ -278,19 +348,25 @@ class VisualPredictor:
 
 
 @attr.s(auto_attribs=True)
-class TopdownPredictor:
+class TopdownPredictor(Predictor):
     centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     centroid_model: Optional[Model] = attr.ib(default=None)
     confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     confmap_model: Optional[Model] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
+    integral_refinement: bool = True
+    integral_patch_size: int = 7
 
     @classmethod
     def from_trained_models(
         cls,
         centroid_model_path: Optional[Text] = None,
         confmap_model_path: Optional[Text] = None,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 7,
     ) -> "TopdownPredictor":
         """Create predictor from saved models.
 
@@ -338,6 +414,9 @@ class TopdownPredictor:
             centroid_model=centroid_model,
             confmap_config=confmap_config,
             confmap_model=confmap_model,
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
         )
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
@@ -356,6 +435,16 @@ class TopdownPredictor:
             drop_old=False,
         )
         if self.confmap_config is not None:
+            # Infer colorspace preprocessing if not explicit.
+            if not (
+                self.confmap_config.data.preprocessing.ensure_rgb
+                or self.confmap_config.data.preprocessing.ensure_grayscale
+            ):
+                if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
+                    self.confmap_config.data.preprocessing.ensure_grayscale = True
+                else:
+                    self.confmap_config.data.preprocessing.ensure_rgb = True
+
             pipeline += Normalizer.from_config(
                 self.confmap_config.data.preprocessing, image_key="full_image"
             )
@@ -370,6 +459,16 @@ class TopdownPredictor:
             )
 
         if self.centroid_model is not None:
+            # Infer colorspace preprocessing if not explicit.
+            if not (
+                self.centroid_config.data.preprocessing.ensure_rgb
+                or self.centroid_config.data.preprocessing.ensure_grayscale
+            ):
+                if self.centroid_model.keras_model.inputs[0].shape[-1] == 1:
+                    self.centroid_config.data.preprocessing.ensure_grayscale = True
+                else:
+                    self.centroid_config.data.preprocessing.ensure_rgb = True
+
             pipeline += Normalizer.from_config(
                 self.centroid_config.data.preprocessing, image_key="image"
             )
@@ -450,7 +549,9 @@ class TopdownPredictor:
                 confmaps_key="predicted_instance_confidence_maps",
                 peaks_key="predicted_center_instance_points",
                 confmaps_stride=self.confmap_model.heads[0].output_stride,
-                peak_threshold=0.2,
+                peak_threshold=self.peak_threshold,
+                integral=self.integral_refinement,
+                integral_patch_size=self.integral_patch_size,
             )
 
         else:
@@ -539,17 +640,26 @@ class TopdownPredictor:
 
         return predicted_frames
 
-    def predict(self, data_provider: Provider, make_instances: bool = True):
+    def predict(
+        self,
+        data_provider: Provider,
+        make_instances: bool = True,
+        make_labels: bool = False,
+    ):
         generator = self.predict_generator(data_provider)
 
-        if make_instances:
-            return self.make_labeled_frames_from_generator(generator, data_provider)
+        if make_instances or make_labels:
+            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            if make_labels:
+                return sleap.Labels(lfs)
+            else:
+                return lfs
 
         return list(generator)
 
 
 @attr.s(auto_attribs=True)
-class BottomupPredictor:
+class BottomupPredictor(Predictor):
     bottomup_config: TrainingJobConfig
     bottomup_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
@@ -566,12 +676,22 @@ class BottomupPredictor:
             bottomup_keras_model_path, compile=False
         )
 
-        return cls(bottomup_config=bottomup_config, bottomup_model=bottomup_model,)
+        return cls(bottomup_config=bottomup_config, bottomup_model=bottomup_model)
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
+
+        # Infer colorspace preprocessing if not explicit.
+        if not (
+            self.bottomup_config.data.preprocessing.ensure_rgb
+            or self.bottomup_config.data.preprocessing.ensure_grayscale
+        ):
+            if self.bottomup_model.keras_model.inputs[0].shape[-1] == 1:
+                self.bottomup_config.data.preprocessing.ensure_grayscale = True
+            else:
+                self.bottomup_config.data.preprocessing.ensure_rgb = True
 
         pipeline += Normalizer.from_config(self.bottomup_config.data.preprocessing)
         pipeline += Resizer.from_config(
@@ -678,25 +798,42 @@ class BottomupPredictor:
         # Yield each example from dataset, catching and logging exceptions
         return safely_generate(self.pipeline.make_dataset())
 
-    def predict(self, data_provider: Provider, make_instances: bool = True):
+    def predict(
+        self,
+        data_provider: Provider,
+        make_instances: bool = True,
+        make_labels: bool = False,
+    ):
         generator = self.predict_generator(data_provider)
 
-        if make_instances:
-            return self.make_labeled_frames_from_generator(generator, data_provider)
+        if make_instances or make_labels:
+            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            if make_labels:
+                return sleap.Labels(lfs)
+            else:
+                return lfs
 
         return list(generator)
 
 
 @attr.s(auto_attribs=True)
-class SingleInstancePredictor:
+class SingleInstancePredictor(Predictor):
     confmap_config: TrainingJobConfig
     confmap_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
+    integral_refinement: bool = True
+    integral_patch_size: int = 7
 
     @classmethod
-    def from_trained_models(cls, confmap_model_path: Text) -> "SingleInstancePredictor":
+    def from_trained_models(
+        cls,
+        confmap_model_path: Text,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 7,
+    ) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
-
         # Load confmap model.
         confmap_config = TrainingJobConfig.load_json(confmap_model_path)
         confmap_keras_model_path = get_keras_model_path(confmap_model_path)
@@ -705,7 +842,13 @@ class SingleInstancePredictor:
             confmap_keras_model_path, compile=False
         )
 
-        return cls(confmap_config=confmap_config, confmap_model=confmap_model,)
+        return cls(
+            confmap_config=confmap_config,
+            confmap_model=confmap_model,
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
+        )
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
@@ -713,11 +856,19 @@ class SingleInstancePredictor:
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
+        # Infer colorspace preprocessing if not explicit.
+        if not (
+            self.confmap_config.data.preprocessing.ensure_rgb
+            or self.confmap_config.data.preprocessing.ensure_grayscale
+        ):
+            if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
+                self.confmap_config.data.preprocessing.ensure_grayscale = True
+            else:
+                self.confmap_config.data.preprocessing.ensure_rgb = True
+
         pipeline += Normalizer.from_config(self.confmap_config.data.preprocessing)
         pipeline += Resizer.from_config(
-            self.confmap_config.data.preprocessing,
-            # keep_full_image=True,
-            points_key=None,
+            self.confmap_config.data.preprocessing, points_key=None
         )
 
         pipeline += Prefetcher()
@@ -732,7 +883,9 @@ class SingleInstancePredictor:
             peaks_key="predicted_instance",
             peak_vals_key="predicted_instance_confidences",
             confmaps_stride=self.confmap_model.heads[0].output_stride,
-            peak_threshold=0.2,
+            peak_threshold=self.peak_threshold,
+            integral=self.integral_refinement,
+            integral_patch_size=self.integral_patch_size,
         )
 
         pipeline += KeyFilter(
@@ -784,11 +937,20 @@ class SingleInstancePredictor:
         # Yield each example from dataset, catching and logging exceptions
         return safely_generate(self.pipeline.make_dataset())
 
-    def predict(self, data_provider: Provider, make_instances: bool = True):
+    def predict(
+        self,
+        data_provider: Provider,
+        make_instances: bool = True,
+        make_labels: bool = False,
+    ):
         generator = self.predict_generator(data_provider)
 
-        if make_instances:
-            return self.make_labeled_frames_from_generator(generator, data_provider)
+        if make_instances or make_labels:
+            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            if make_labels:
+                return sleap.Labels(lfs)
+            else:
+                return lfs
 
         return list(generator)
 
@@ -823,6 +985,12 @@ def make_cli_parser():
         type=str,
         default=None,
         help="The output filename to use for the predicted data.",
+    )
+    parser.add_argument(
+        "--labels",
+        type=str,
+        default=None,
+        help="Path to labels file (for re-tracking pre-existing predictions).",
     )
 
     # TODO: better video parameters
@@ -878,10 +1046,20 @@ def make_video_reader_from_cli(args):
     return video_reader
 
 
-def find_models_from_cli(args) -> Dict[str, str]:
+def make_predictor_from_paths(paths) -> Predictor:
+    """Builds predictor object from a list of model paths."""
+    return make_predictor_from_models(find_heads_for_model_paths(paths))
+
+
+def find_heads_for_model_paths(paths) -> Dict[str, str]:
+    """Given list of models paths, returns dict with path keyed by head name."""
+
     trained_model_paths = dict()
 
-    for model_path in args.models:
+    if paths is None:
+        return trained_model_paths
+
+    for model_path in paths:
         # Load the model config
         cfg = TrainingJobConfig.load_json(model_path)
 
@@ -897,7 +1075,11 @@ def find_models_from_cli(args) -> Dict[str, str]:
     return trained_model_paths
 
 
-def make_predictor_from_models(trained_model_paths: Dict[str, str]):
+def make_predictor_from_models(
+    trained_model_paths: Dict[str, str], labels_path: Optional[str] = None
+) -> Predictor:
+    """Given dict of paths keyed by head name, returns appropriate predictor."""
+
     if "multi_instance" in trained_model_paths:
         predictor = BottomupPredictor.from_trained_models(
             trained_model_paths["multi_instance"]
@@ -913,8 +1095,9 @@ def make_predictor_from_models(trained_model_paths: Dict[str, str]):
             centroid_model_path=trained_model_paths["centroid"],
             confmap_model_path=trained_model_paths["centered_instance"],
         )
+    elif len(trained_model_paths) == 0 and labels_path:
+        predictor = MockPredictor.from_trained_models(labels_path=labels_path)
     else:
-        # TODO: support for tracking on previous predictions w/o model
         raise ValueError(
             f"Unable to run inference with {list(trained_model_paths.keys())} heads."
         )
@@ -944,7 +1127,7 @@ def save_predictions_from_cli(args, predicted_frames, prediction_metadata=None):
         out_name = os.path.basename(args.data_path) + ".predictions.slp"
         output_path = os.path.join(out_dir, out_name)
 
-    labels = Labels(labeled_frames=predicted_frames, provenance=prediction_metadata,)
+    labels = Labels(labeled_frames=predicted_frames, provenance=prediction_metadata)
 
     print(f"Saving: {output_path}")
     Labels.save_file(labels, output_path)
@@ -975,10 +1158,10 @@ def main():
     print("Frames:", len(video_reader))
 
     # Find the specified models
-    model_paths_by_head = find_models_from_cli(args)
+    model_paths_by_head = find_heads_for_model_paths(args.models)
 
     # Create appropriate predictor given these models
-    predictor = make_predictor_from_models(model_paths_by_head)
+    predictor = make_predictor_from_models(model_paths_by_head, labels_path=args.labels)
 
     # Make the tracker
     policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)

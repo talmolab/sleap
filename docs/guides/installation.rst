@@ -19,7 +19,7 @@ different projects, mitigating issues of managing complex dependencies. To creat
 
 ::
 
-    (base) C:\>  conda create -n sleap_env -c defaults -c sleap sleap python=3.6 -y
+    (base) C:\>  conda create -n sleap_env -c defaults -c sleap sleap=0.2.1 python=3.6 -y
 
 Once the environment is finished installing, it can be activated using the following command:
 
@@ -42,43 +42,35 @@ you can run the labeling GUI by entering the following command:
 .. _Anaconda: https://www.anaconda.com/distribution/
 .. _Anaconda Environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 
-Linux
------
+Linux and MacOS X
+-----------------
 
-There's a Linux conda package which can be installed by running:
+Currently we don't have an up-do-date conda package for Linux or MacOS X. It is easy to install SLEAP via :code:`pip` on Linux and MacOS X.
+
+We recommend installing SLEAP into an environment with Python 3.6. If you are using conda, you can create an environment by running:
 
 ::
 
-    conda create -n sleap_env -c defaults -c sleap sleap python=3.6 -y
+    conda create -n sleap_env python=3.6 -y
+    conda activate sleap_env
 
-Alternately, installing via :code:`pip` should not be difficult on most Linux systems. The first step is to get a working version of TensorFlow installed in your Python environment. Follow official directions for installing TensorFlow_ with GPU support. Once TensorFlow is installed, simple issue the following command to install **SLEAP**:
+If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing TensorFlow_ with GPU support. There is no TensorFlow GPU support on MacOS X.
 
 .. _TensorFlow: https://www.tensorflow.org/install/gpu
 
+
+
+You can then install SLEAP by running:
+
 ::
 
-    pip install git+https://github.com/murthylab/sleap.git
+    pip install --extra-index-url https://test.pypi.org/simple/ sleap==0.2.1
 
 **SLEAP** is now installed you can run the labeling GUI by entering the following command:
 
 ::
 
-> sleap-label
-
-MacOS X
--------
-
-The installation for MacOS X is the same as for Linux, although there's no TensorFlow GPU support for Mac. The MacOS X conda package is built with the non-GPU version of TensorFlow and can be installed by running:
-
-::
-
-    conda create -n sleap_env -c defaults -c sleap sleap python=3.6 -y
-
-You can also use :code:`pip` to install TensorFlow and **SLEAP** together by running
-
-::
-
-    pip install tensorflow git+https://github.com/murthylab/sleap.git
+    sleap-label
 
 Developer Installation
 ----------------------

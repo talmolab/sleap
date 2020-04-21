@@ -240,7 +240,7 @@ def show_pafs_from_h5(filename, input_format="channels_last", standalone=False):
     return demo_pafs(pafs, video, standalone=standalone)
 
 
-def demo_pafs(pafs, video, decimation=4, standalone=False):
+def demo_pafs(pafs, video, decimation=4, scale=None, standalone=False):
     from sleap.gui.widgets.video import QtVideoPlayer
 
     if standalone:
@@ -266,6 +266,8 @@ def demo_pafs(pafs, video, decimation=4, standalone=False):
             aff_fields_item = MultiQuiverPlot(
                 frame_pafs, show=None, decimation=decimation
             )
+            if scale:
+                aff_fields_item.setScale(scale)
             win.view.scene.addItem(aff_fields_item)
 
     win.changedPlot.connect(plot_fields)

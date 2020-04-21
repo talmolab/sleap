@@ -581,7 +581,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         self.form_widgets = dict()
 
-        for key in ("model", "data", "optimization", "outputs"):
+        for key in ("model", "data", "augmentation", "optimization", "outputs"):
             self.form_widgets[key] = YamlFormWidget.from_name(
                 yaml_name, which_form=key, title=key.title()
             )
@@ -615,6 +615,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         col1_layout.addWidget(self.form_widgets["data"])
         col2_layout.addWidget(self.form_widgets["optimization"])
+        col2_layout.addWidget(self.form_widgets["augmentation"])
         col3_layout.addWidget(self.form_widgets["model"])
 
         col_layout = QtWidgets.QHBoxLayout()

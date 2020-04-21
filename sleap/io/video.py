@@ -20,6 +20,30 @@ logger = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True, cmp=False)
+class DummyVideo:
+    """
+    Fake video backend,returns frames with all zeros.
+
+    This can be useful when you want to look at labels for a dataset but don't
+    have access to the real video.
+    """
+
+    filename: str = ""
+    height: int = 2000
+    width: int = 2000
+    frames: int = 10000
+    channels: int = 1
+    dummy: bool = True
+
+    @property
+    def test_frame(self):
+        return self.get_frame(0)
+
+    def get_frame(self, idx) -> np.ndarray:
+        return np.zeros((self.height, self.width, self.channels))
+
+
+@attr.s(auto_attribs=True, cmp=False)
 class HDF5Video:
     """
     Video data stored as 4D datasets in HDF5 files.
@@ -880,7 +904,7 @@ class Video:
     """
 
     backend: Union[
-        HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo, SingleImageVideo
+        HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo, SingleImageVideo, DummyVideo
     ] = attr.ib()
 
     # Delegate to the backend
@@ -1064,7 +1088,7 @@ class Video:
 
         filename = Video.fixup_path(filename)
 
-        if filename.lower().endswith(("h5", "hdf5")):
+        if filename.lower().endswith(("h5", "hdf5", "slp")):
             backend_class = HDF5Video
         elif filename.endswith(("npy")):
             backend_class = NumpyVideo

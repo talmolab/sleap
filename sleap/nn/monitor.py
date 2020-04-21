@@ -6,6 +6,7 @@ from time import time, sleep
 import zmq
 import jsonpickle
 import logging
+from typing import Optional
 
 from PySide2 import QtCore, QtWidgets, QtGui, QtCharts
 
@@ -13,17 +14,23 @@ logger = logging.getLogger(__name__)
 
 
 class LossViewer(QtWidgets.QMainWindow):
+    """Qt window for showing in-progress training metrics sent over ZMQ."""
 
     on_epoch = QtCore.Signal()
 
-    def __init__(self, zmq_context=None, show_controller=True, parent=None):
+    def __init__(
+        self,
+        zmq_context: Optional[zmq.Context] = None,
+        show_controller=True,
+        parent=None,
+    ):
         super(LossViewer, self).__init__(parent)
 
         self.show_controller = show_controller
         self.stop_button = None
 
         self.redraw_batch_interval = 40
-        self.batches_to_show = 200  # -1 to show all
+        self.batches_to_show = -1  # -1 to show all
         self.ignore_outliers = False
         self.log_scale = True
 
@@ -132,14 +139,25 @@ class LossViewer(QtWidgets.QMainWindow):
 
             control_layout.addWidget(QtWidgets.QLabel("Batches to Show:"))
 
+            # add field for how many batches to show in chart
             field = QtWidgets.QComboBox()
+            # add options
             self.batch_options = "200,1000,5000,All".split(",")
             for opt in self.batch_options:
                 field.addItem(opt)
+            # set field to currently set value
+            cur_opt_str = (
+                "All" if self.batches_to_show < 0 else str(self.batches_to_show)
+            )
+            if cur_opt_str in self.batch_options:
+                field.setCurrentText(cur_opt_str)
+            # connection action for when user selects another option
             field.currentIndexChanged.connect(
                 lambda x: self.set_batches_to_show(self.batch_options[x])
             )
-            control_layout.addWidget(field)
+            # store field as property and add to layout
+            self.batches_to_show_field = field
+            control_layout.addWidget(self.batches_to_show_field)
 
             control_layout.addStretch(1)
 
@@ -200,33 +218,54 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisY)
 
-    def setup_zmq(self, zmq_context):
-        # Progress monitoring
+    def setup_zmq(self, zmq_context: Optional[zmq.Context]):
+
+        # Keep track of whether we're using an existing context (which we won't
+        # close when done) or are creating our own (which we should close).
         self.ctx_given = zmq_context is not None
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
+
+        # Progress monitoring, SUBSCRIBER
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
         self.sub.bind("tcp://127.0.0.1:9001")
-        # Controller
+
+        # Controller, PUBLISHER
         self.zmq_ctrl = None
         if self.show_controller:
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
             self.zmq_ctrl.bind("tcp://127.0.0.1:9000")
+
         # Set timer to poll for messages
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.check_messages)
         self.timer.start(0)
 
     def stop(self):
+        """Action to stop training."""
+
         if self.zmq_ctrl is not None:
             # send command to stop training
             logger.info("Sending command to stop training")
             self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop")))
+
+        # Disable the button
         if self.stop_button is not None:
             self.stop_button.setText("Stopping...")
             self.stop_button.setEnabled(False)
 
     def add_datapoint(self, x, y, which="batch"):
+        """
+        Adds data point to graph.
+
+        Args:
+            x: typically the batch number (out of all epochs, not just current)
+            y: typically the loss value
+            which: type of data point we're adding, possible values are
+                * batch (loss for batch)
+                * epoch_loss (loss for entire epoch)
+                * val_loss (validation loss for for epoch)
+        """
 
         # Keep track of all batch points
         if which == "batch":
@@ -290,14 +329,36 @@ class LossViewer(QtWidgets.QMainWindow):
             title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
             if self.last_epoch_val_loss is not None:
                 title += f"<br />Last Epoch Validation Loss: <b>{self.last_epoch_val_loss:.3e}</b>"
-            self.chart.setTitle(title)
+            self.set_message(title)
 
     def is_timer_running(self):
         return self.t0 is not None and self.is_running
 
+    def set_message(self, text):
+        self.chart.setTitle(text)
+
     def check_messages(
         self, timeout=10, times_to_check: int = 10, do_update: bool = True
     ):
+        """
+        Polls for ZMQ messages and adds any received data to graph.
+
+        The message is a dictionary encoded as JSON:
+            * event - options include
+                * train_begin
+                * train_end
+                * epoch_begin
+                * epoch_end
+                * batch_end
+            * what - this should match the type of model we're training and
+                ensures that we ignore old messages when we start monitoring
+                a new training session (when we're training multiple types
+                of models in a sequence, as for the top-down pipeline).
+            * logs - dictionary with data relevant for plotting, can include
+                * loss
+                * val_loss
+
+        """
         if self.sub and self.sub.poll(timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.sub.recv_string())
 
@@ -363,5 +424,10 @@ if __name__ == "__main__":
     t = QtCore.QTimer()
     t.timeout.connect(test_point)
     t.start(0)
+
+    win.set_message("Waiting for 3 seconds...")
+    t2 = QtCore.QTimer()
+    t2.timeout.connect(lambda: win.set_message("Running demo..."))
+    t2.start(3000)
 
     app.exec_()

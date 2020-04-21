@@ -29,13 +29,20 @@ def show_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo])
 
     win_x = 300
 
-    def show_win(results: dict, key: Text, head_name: Text, video: Video):
+    def show_win(
+        results: dict, key: Text, head_name: Text, video: Video, scale_to_height=None
+    ):
         nonlocal win_x
 
+        scale = None
+        if scale_to_height:
+            overlay_height = results[key].shape[1]  # frames, height, width, channels
+            scale = scale_to_height // overlay_height
+
         if key == "confmap":
-            win = demo_confmaps(results[key], video)
+            win = demo_confmaps(results[key], video, scale=scale)
         elif key == "paf":
-            win = demo_pafs(results[key], video)
+            win = demo_pafs(results[key], video, scale=scale, decimation=2)
         else:
             raise ValueError(f"Cannot show preview window for {key}")
 
@@ -50,11 +57,20 @@ def show_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo])
 
         if "image" in results:
             vid = Video.from_numpy(results["image"])
+
             if "confmap" in results:
-                show_win(results, "confmap", cfg_info.head_name, vid)
+                show_win(
+                    results,
+                    "confmap",
+                    cfg_info.head_name,
+                    vid,
+                    scale_to_height=vid.height,
+                )
 
             if "paf" in results:
-                show_win(results, "paf", cfg_info.head_name, vid)
+                show_win(
+                    results, "paf", cfg_info.head_name, vid, scale_to_height=vid.height
+                )
 
 
 def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig):

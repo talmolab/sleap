@@ -147,7 +147,7 @@ def show_confmaps_from_h5(filename, input_format="channels_last", standalone=Fal
     return demo_confmaps(confmaps=confmaps, video=video, standalone=standalone)
 
 
-def demo_confmaps(confmaps, video, standalone=False, callback=None):
+def demo_confmaps(confmaps, video, scale=None, standalone=False, callback=None):
     """Demo function."""
     from PySide2 import QtWidgets
     from sleap.gui.widgets.video import QtVideoPlayer
@@ -161,7 +161,9 @@ def demo_confmaps(confmaps, video, standalone=False, callback=None):
 
     def plot_confmaps(parent, frame_idx):
         if frame_idx < confmaps.shape[0]:
-            frame_conf_map = ConfMapsPlot(confmaps[frame_idx, ...])
+            frame_conf_map = ConfMapsPlot(confmaps[frame_idx, ...], show_box=not scale)
+            if scale:
+                frame_conf_map.setScale(scale)
             win.view.scene.addItem(frame_conf_map)
 
     win.changedPlot.connect(plot_confmaps)
