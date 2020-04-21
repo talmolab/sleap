@@ -29,12 +29,6 @@ init:
 - cmd: ''
 
 install:
-  - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n"
-  - ps: $fileContent += $env:priv_key.Replace(' ', "`n")
-  - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
-  - ps: Set-Content $env:userprofile\.ssh\id_rsa $fileContent
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  
   # Add Miniconda to the PATH
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
 
@@ -77,6 +71,13 @@ install:
 
   # Install sleap package
   - pip install .
+  
+  - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n"
+  - ps: $fileContent += $env:priv_key.Replace(' ', "`n")
+  - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
+  - ps: Set-Content $env:userprofile\.ssh\id_rsa $fileContent
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  
 
 build: off
 test_script:
