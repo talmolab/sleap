@@ -180,7 +180,7 @@
     <span class="k">return</span> <span class="n">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="o">=</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="n">standalone</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="demo_confmaps"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.demo_confmaps">[docs]</a><span class="k">def</span> <span class="nf">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="demo_confmaps"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.demo_confmaps">[docs]</a><span class="k">def</span> <span class="nf">demo_confmaps</span><span class="p">(</span><span class="n">confmaps</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Demo function.&quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
     <span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
@@ -194,7 +194,9 @@
 
     <span class="k">def</span> <span class="nf">plot_confmaps</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="n">confmaps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="n">frame_conf_map</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">confmaps</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+            <span class="n">frame_conf_map</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span><span class="p">(</span><span class="n">confmaps</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">show_box</span><span class="o">=</span><span class="ow">not</span> <span class="n">scale</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scale</span><span class="p">:</span>
+                <span class="n">frame_conf_map</span><span class="o">.</span><span class="n">setScale</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
             <span class="n">win</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">frame_conf_map</span><span class="p">)</span>
 
     <span class="n">win</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">plot_confmaps</span><span class="p">)</span>
@@ -274,7 +276,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

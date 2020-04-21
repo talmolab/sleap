@@ -37,6 +37,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span>
 
@@ -47,7 +48,7 @@
 <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">util</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">TrainingJobConfig</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">sleap.nn.tracking</span> <span class="kn">import</span> <span class="n">Tracker</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.tracking</span> <span class="kn">import</span> <span class="n">Tracker</span><span class="p">,</span> <span class="n">run_tracker</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.data.pipelines</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Provider</span><span class="p">,</span>
     <span class="n">Pipeline</span><span class="p">,</span>
@@ -176,7 +177,7 @@
 
         <span class="k">if</span> <span class="n">example</span><span class="p">[</span><span class="n">points_key</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">points</span><span class="p">,</span> <span class="n">confidences</span><span class="p">,</span> <span class="n">instance_score</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                <span class="n">example</span><span class="p">[</span><span class="n">points_key</span><span class="p">],</span> <span class="n">example</span><span class="p">[</span><span class="n">point_confidences_key</span><span class="p">],</span> <span class="n">instance_scores</span><span class="p">,</span>
+                <span class="n">example</span><span class="p">[</span><span class="n">points_key</span><span class="p">],</span> <span class="n">example</span><span class="p">[</span><span class="n">point_confidences_key</span><span class="p">],</span> <span class="n">instance_scores</span>
             <span class="p">):</span>
                 <span class="n">predicted_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">sleap</span><span class="o">.</span><span class="n">PredictedInstance</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
@@ -209,12 +210,12 @@
         <span class="k">if</span> <span class="n">tracker</span><span class="p">:</span>
             <span class="c1"># Set tracks for predicted instances in this frame.</span>
             <span class="n">predicted_instances</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">track</span><span class="p">(</span>
-                <span class="n">untracked_instances</span><span class="o">=</span><span class="n">predicted_instances</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="n">img</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="n">frame_ind</span><span class="p">,</span>
+                <span class="n">untracked_instances</span><span class="o">=</span><span class="n">predicted_instances</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="n">img</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="n">frame_ind</span>
             <span class="p">)</span>
 
         <span class="c1"># Create labeled frame from predicted instances.</span>
         <span class="n">labeled_frame</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">LabeledFrame</span><span class="p">(</span>
-            <span class="n">video</span><span class="o">=</span><span class="n">videos</span><span class="p">[</span><span class="n">video_ind</span><span class="p">],</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_ind</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">predicted_instances</span><span class="p">,</span>
+            <span class="n">video</span><span class="o">=</span><span class="n">videos</span><span class="p">[</span><span class="n">video_ind</span><span class="p">],</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_ind</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">predicted_instances</span>
         <span class="p">)</span>
 
         <span class="n">predicted_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labeled_frame</span><span class="p">)</span>
@@ -228,8 +229,77 @@
     <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;best_model.h5&quot;</span><span class="p">)</span>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">VisualPredictor</span><span class="p">:</span>
+<div class="viewcode-block" id="Predictor"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.Predictor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Predictor</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base interface class for predictors.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="MockPredictor"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.MockPredictor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MockPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">labels_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">labels_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">):</span>
+
+        <span class="n">prediction_video</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Try to match specified video by its full path</span>
+        <span class="n">prediction_video_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">data_provider</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="n">prediction_video_path</span><span class="p">:</span>
+                <span class="n">prediction_video</span> <span class="o">=</span> <span class="n">video</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">prediction_video</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Try to match on filename (without path)</span>
+            <span class="n">prediction_video_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data_provider</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="n">prediction_video_path</span><span class="p">:</span>
+                    <span class="n">prediction_video</span> <span class="o">=</span> <span class="n">video</span>
+                    <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">prediction_video</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Default to first video in labels file</span>
+            <span class="n">prediction_video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Get specified frames from labels file</span>
+        <span class="n">frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
+            <span class="n">video</span><span class="o">=</span><span class="n">prediction_video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">data_provider</span><span class="o">.</span><span class="n">example_indices</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Run tracker as specified</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="p">:</span>
+            <span class="n">frames</span> <span class="o">=</span> <span class="n">run_tracker</span><span class="p">(</span><span class="n">tracker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">final_pass</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+
+        <span class="c1"># Return frames (there are no &quot;raw&quot; predictions we could return)</span>
+        <span class="k">return</span> <span class="n">frames</span></div>
+
+
+<div class="viewcode-block" id="VisualPredictor"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.VisualPredictor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">VisualPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Predictor class for generating the visual output of model.&quot;&quot;&quot;</span>
+
     <span class="n">config</span><span class="p">:</span> <span class="n">TrainingJobConfig</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">Model</span>
     <span class="n">pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -282,7 +352,7 @@
 
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">keep_full_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">keep_full_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span>
         <span class="p">)</span>
 
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KerasModelPredictor</span><span class="p">(</span>
@@ -307,23 +377,29 @@
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
         <span class="n">examples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">examples</span>
+        <span class="k">return</span> <span class="n">examples</span></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">TopdownPredictor</span><span class="p">:</span>
+<div class="viewcode-block" id="TopdownPredictor"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.TopdownPredictor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TopdownPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
     <span class="n">centroid_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingJobConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">centroid_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">confmap_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TrainingJobConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">confmap_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">tracker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tracker</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
 
-    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TopdownPredictor.from_trained_models"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.TopdownPredictor.from_trained_models">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">centroid_model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">confmap_model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TopdownPredictor&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create predictor from saved models.</span>
 
@@ -371,7 +447,10 @@
             <span class="n">centroid_model</span><span class="o">=</span><span class="n">centroid_model</span><span class="p">,</span>
             <span class="n">confmap_config</span><span class="o">=</span><span class="n">confmap_config</span><span class="p">,</span>
             <span class="n">confmap_model</span><span class="o">=</span><span class="n">confmap_model</span><span class="p">,</span>
-        <span class="p">)</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="n">peak_threshold</span><span class="p">,</span>
+            <span class="n">integral_refinement</span><span class="o">=</span><span class="n">integral_refinement</span><span class="p">,</span>
+            <span class="n">integral_patch_size</span><span class="o">=</span><span class="n">integral_patch_size</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Provider</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
 
@@ -389,6 +468,16 @@
             <span class="n">drop_old</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Infer colorspace preprocessing if not explicit.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_model</span><span class="o">.</span><span class="n">keras_model</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span> <span class="o">=</span> <span class="kc">True</span>
+
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;full_image&quot;</span>
             <span class="p">)</span>
@@ -403,6 +492,16 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroid_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Infer colorspace preprocessing if not explicit.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroid_model</span><span class="o">.</span><span class="n">keras_model</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span> <span class="o">=</span> <span class="kc">True</span>
+
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;image&quot;</span>
             <span class="p">)</span>
@@ -483,7 +582,9 @@
                 <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_instance_confidence_maps&quot;</span><span class="p">,</span>
                 <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_center_instance_points&quot;</span><span class="p">,</span>
                 <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmap_model</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
-                <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">peak_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_threshold</span><span class="p">,</span>
+                <span class="n">integral</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">integral_refinement</span><span class="p">,</span>
+                <span class="n">integral_patch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">integral_patch_size</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -572,23 +673,32 @@
 
         <span class="k">return</span> <span class="n">predicted_frames</span>
 
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span>
+        <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">make_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">make_instances</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_labeled_frames_from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">make_instances</span> <span class="ow">or</span> <span class="n">make_labels</span><span class="p">:</span>
+            <span class="n">lfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_labeled_frames_from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">make_labels</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">lfs</span>
 
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">BottomupPredictor</span><span class="p">:</span>
+<div class="viewcode-block" id="BottomupPredictor"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.BottomupPredictor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BottomupPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
     <span class="n">bottomup_config</span><span class="p">:</span> <span class="n">TrainingJobConfig</span>
     <span class="n">bottomup_model</span><span class="p">:</span> <span class="n">Model</span>
     <span class="n">pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">tracker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tracker</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BottomupPredictor.from_trained_models"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.BottomupPredictor.from_trained_models">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">bottomup_model_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BottomupPredictor&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create predictor from saved models.&quot;&quot;&quot;</span>
         <span class="c1"># Load bottomup model.</span>
@@ -599,12 +709,22 @@
             <span class="n">bottomup_keras_model_path</span><span class="p">,</span> <span class="nb">compile</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">bottomup_config</span><span class="o">=</span><span class="n">bottomup_config</span><span class="p">,</span> <span class="n">bottomup_model</span><span class="o">=</span><span class="n">bottomup_model</span><span class="p">,)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">bottomup_config</span><span class="o">=</span><span class="n">bottomup_config</span><span class="p">,</span> <span class="n">bottomup_model</span><span class="o">=</span><span class="n">bottomup_model</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Provider</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
         <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">data_provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">pipeline</span><span class="o">.</span><span class="n">providers</span> <span class="o">=</span> <span class="p">[</span><span class="n">data_provider</span><span class="p">]</span>
+
+        <span class="c1"># Infer colorspace preprocessing if not explicit.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bottomup_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottomup_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottomup_model</span><span class="o">.</span><span class="n">keras_model</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bottomup_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bottomup_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bottomup_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
@@ -711,25 +831,42 @@
         <span class="c1"># Yield each example from dataset, catching and logging exceptions</span>
         <span class="k">return</span> <span class="n">safely_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">make_dataset</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span>
+        <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">make_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">make_instances</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_labeled_frames_from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">make_instances</span> <span class="ow">or</span> <span class="n">make_labels</span><span class="p">:</span>
+            <span class="n">lfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_labeled_frames_from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">make_labels</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">lfs</span>
 
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">SingleInstancePredictor</span><span class="p">:</span>
+<div class="viewcode-block" id="SingleInstancePredictor"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SingleInstancePredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
     <span class="n">confmap_config</span><span class="p">:</span> <span class="n">TrainingJobConfig</span>
     <span class="n">confmap_model</span><span class="p">:</span> <span class="n">Model</span>
     <span class="n">pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">confmap_model_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SingleInstancePredictor&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="SingleInstancePredictor.from_trained_models"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.from_trained_models">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">confmap_model_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+        <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SingleInstancePredictor&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create predictor from saved models.&quot;&quot;&quot;</span>
-
         <span class="c1"># Load confmap model.</span>
         <span class="n">confmap_config</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">confmap_model_path</span><span class="p">)</span>
         <span class="n">confmap_keras_model_path</span> <span class="o">=</span> <span class="n">get_keras_model_path</span><span class="p">(</span><span class="n">confmap_model_path</span><span class="p">)</span>
@@ -738,7 +875,13 @@
             <span class="n">confmap_keras_model_path</span><span class="p">,</span> <span class="nb">compile</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">confmap_config</span><span class="o">=</span><span class="n">confmap_config</span><span class="p">,</span> <span class="n">confmap_model</span><span class="o">=</span><span class="n">confmap_model</span><span class="p">,)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">confmap_config</span><span class="o">=</span><span class="n">confmap_config</span><span class="p">,</span>
+            <span class="n">confmap_model</span><span class="o">=</span><span class="n">confmap_model</span><span class="p">,</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="n">peak_threshold</span><span class="p">,</span>
+            <span class="n">integral_refinement</span><span class="o">=</span><span class="n">integral_refinement</span><span class="p">,</span>
+            <span class="n">integral_patch_size</span><span class="o">=</span><span class="n">integral_patch_size</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Provider</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
 
@@ -746,11 +889,19 @@
         <span class="k">if</span> <span class="n">data_provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">pipeline</span><span class="o">.</span><span class="n">providers</span> <span class="o">=</span> <span class="p">[</span><span class="n">data_provider</span><span class="p">]</span>
 
+        <span class="c1"># Infer colorspace preprocessing if not explicit.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_model</span><span class="o">.</span><span class="n">keras_model</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span> <span class="o">=</span> <span class="kc">True</span>
+
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span>
-            <span class="c1"># keep_full_image=True,</span>
-            <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span>
         <span class="p">)</span>
 
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
@@ -765,7 +916,9 @@
             <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_instance&quot;</span><span class="p">,</span>
             <span class="n">peak_vals_key</span><span class="o">=</span><span class="s2">&quot;predicted_instance_confidences&quot;</span><span class="p">,</span>
             <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmap_model</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
-            <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_threshold</span><span class="p">,</span>
+            <span class="n">integral</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">integral_refinement</span><span class="p">,</span>
+            <span class="n">integral_patch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">integral_patch_size</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KeyFilter</span><span class="p">(</span>
@@ -817,13 +970,22 @@
         <span class="c1"># Yield each example from dataset, catching and logging exceptions</span>
         <span class="k">return</span> <span class="n">safely_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">make_dataset</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span>
+        <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">make_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">make_instances</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_labeled_frames_from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">make_instances</span> <span class="ow">or</span> <span class="n">make_labels</span><span class="p">:</span>
+            <span class="n">lfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_labeled_frames_from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">make_labels</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">lfs</span>
 
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">make_cli_parser</span><span class="p">():</span>
@@ -856,6 +1018,12 @@
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The output filename to use for the predicted data.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--labels&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to labels file (for re-tracking pre-existing predictions).&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># TODO: better video parameters</span>
@@ -911,10 +1079,20 @@
     <span class="k">return</span> <span class="n">video_reader</span>
 
 
-<span class="k">def</span> <span class="nf">find_models_from_cli</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="make_predictor_from_paths"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.make_predictor_from_paths">[docs]</a><span class="k">def</span> <span class="nf">make_predictor_from_paths</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Predictor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Builds predictor object from a list of model paths.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">make_predictor_from_models</span><span class="p">(</span><span class="n">find_heads_for_model_paths</span><span class="p">(</span><span class="n">paths</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="find_heads_for_model_paths"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.find_heads_for_model_paths">[docs]</a><span class="k">def</span> <span class="nf">find_heads_for_model_paths</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Given list of models paths, returns dict with path keyed by head name.&quot;&quot;&quot;</span>
+
     <span class="n">trained_model_paths</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="n">model_path</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">paths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">trained_model_paths</span>
+
+    <span class="k">for</span> <span class="n">model_path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
         <span class="c1"># Load the model config</span>
         <span class="n">cfg</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
 
@@ -927,10 +1105,14 @@
 
         <span class="n">trained_model_paths</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_path</span>
 
-    <span class="k">return</span> <span class="n">trained_model_paths</span>
+    <span class="k">return</span> <span class="n">trained_model_paths</span></div>
 
 
-<span class="k">def</span> <span class="nf">make_predictor_from_models</span><span class="p">(</span><span class="n">trained_model_paths</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+<div class="viewcode-block" id="make_predictor_from_models"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.make_predictor_from_models">[docs]</a><span class="k">def</span> <span class="nf">make_predictor_from_models</span><span class="p">(</span>
+    <span class="n">trained_model_paths</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">labels_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Predictor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Given dict of paths keyed by head name, returns appropriate predictor.&quot;&quot;&quot;</span>
+
     <span class="k">if</span> <span class="s2">&quot;multi_instance&quot;</span> <span class="ow">in</span> <span class="n">trained_model_paths</span><span class="p">:</span>
         <span class="n">predictor</span> <span class="o">=</span> <span class="n">BottomupPredictor</span><span class="o">.</span><span class="n">from_trained_models</span><span class="p">(</span>
             <span class="n">trained_model_paths</span><span class="p">[</span><span class="s2">&quot;multi_instance&quot;</span><span class="p">]</span>
@@ -946,13 +1128,14 @@
             <span class="n">centroid_model_path</span><span class="o">=</span><span class="n">trained_model_paths</span><span class="p">[</span><span class="s2">&quot;centroid&quot;</span><span class="p">],</span>
             <span class="n">confmap_model_path</span><span class="o">=</span><span class="n">trained_model_paths</span><span class="p">[</span><span class="s2">&quot;centered_instance&quot;</span><span class="p">],</span>
         <span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">trained_model_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">labels_path</span><span class="p">:</span>
+        <span class="n">predictor</span> <span class="o">=</span> <span class="n">MockPredictor</span><span class="o">.</span><span class="n">from_trained_models</span><span class="p">(</span><span class="n">labels_path</span><span class="o">=</span><span class="n">labels_path</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># TODO: support for tracking on previous predictions w/o model</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Unable to run inference with </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">trained_model_paths</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2"> heads.&quot;</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">predictor</span>
+    <span class="k">return</span> <span class="n">predictor</span></div>
 
 
 <span class="k">def</span> <span class="nf">make_tracker_from_cli</span><span class="p">(</span><span class="n">policy_args</span><span class="p">):</span>
@@ -977,7 +1160,7 @@
         <span class="n">out_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.predictions.slp&quot;</span>
         <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">out_name</span><span class="p">)</span>
 
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">predicted_frames</span><span class="p">,</span> <span class="n">provenance</span><span class="o">=</span><span class="n">prediction_metadata</span><span class="p">,)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">predicted_frames</span><span class="p">,</span> <span class="n">provenance</span><span class="o">=</span><span class="n">prediction_metadata</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
@@ -1008,10 +1191,10 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Frames:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">video_reader</span><span class="p">))</span>
 
     <span class="c1"># Find the specified models</span>
-    <span class="n">model_paths_by_head</span> <span class="o">=</span> <span class="n">find_models_from_cli</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">model_paths_by_head</span> <span class="o">=</span> <span class="n">find_heads_for_model_paths</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
 
     <span class="c1"># Create appropriate predictor given these models</span>
-    <span class="n">predictor</span> <span class="o">=</span> <span class="n">make_predictor_from_models</span><span class="p">(</span><span class="n">model_paths_by_head</span><span class="p">)</span>
+    <span class="n">predictor</span> <span class="o">=</span> <span class="n">make_predictor_from_models</span><span class="p">(</span><span class="n">model_paths_by_head</span><span class="p">,</span> <span class="n">labels_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
 
     <span class="c1"># Make the tracker</span>
     <span class="n">policy_args</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">make_scoped_dictionary</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">exclude_nones</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1100,7 +1283,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

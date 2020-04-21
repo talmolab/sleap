@@ -39,14 +39,6 @@
 <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Qt5Agg&quot;</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="s2">&quot;Unable to use Qt backend for matplotlib. &quot;</span>
-        <span class="s2">&quot;This probably means Qt is running headless.&quot;</span>
-    <span class="p">)</span>
-
 
 <div class="viewcode-block" id="imgfig"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.viz.html#sleap.nn.viz.imgfig">[docs]</a><span class="k">def</span> <span class="nf">imgfig</span><span class="p">(</span>
     <span class="n">size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">72</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
@@ -93,7 +85,7 @@
     <span class="c1"># Normalize the range of pixel values.</span>
     <span class="n">img_min</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
     <span class="n">img_max</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">img_min</span> <span class="o">&lt;</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">img_max</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">img_min</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">img_max</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
         <span class="n">img</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">-</span> <span class="n">img_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">img_max</span> <span class="o">-</span> <span class="n">img_min</span><span class="p">)</span>
 
     <span class="n">fig</span> <span class="o">=</span> <span class="n">imgfig</span><span class="p">(</span>
@@ -222,34 +214,61 @@
 
 
 <div class="viewcode-block" id="plot_instance"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.viz.html#sleap.nn.viz.plot_instance">[docs]</a><span class="k">def</span> <span class="nf">plot_instance</span><span class="p">(</span>
-    <span class="n">instance</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="n">instance</span><span class="p">,</span>
+    <span class="n">skeleton</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color_by_node</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">bbox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot a single instance with edge coloring.&quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">cmap</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s2">&quot;tab20&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">skeleton</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">skeleton</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span>
 
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">color_by_node</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="n">h_lines</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">src_node</span><span class="p">,</span> <span class="n">dst_node</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">):</span>
-        <span class="n">src_pt</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">src_node</span><span class="p">)]</span>
-        <span class="n">dst_pt</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">dst_node</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">color_by_node</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">points_array</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">bbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">-=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">y</span> <span class="o">-=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">src_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dst_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">src_pt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dst_pt</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="n">x</span> <span class="o">*=</span> <span class="n">scale</span>
+            <span class="n">y</span> <span class="o">*=</span> <span class="n">scale</span>
 
-        <span class="k">if</span> <span class="n">bbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">-=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">y</span> <span class="o">-=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
 
-        <span class="n">x</span> <span class="o">*=</span> <span class="n">scale</span>
-        <span class="n">y</span> <span class="o">*=</span> <span class="n">scale</span>
+            <span class="n">h_lines_k</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="n">ms</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">k</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">h_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h_lines_k</span><span class="p">)</span>
 
-        <span class="n">h_lines_k</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;.-&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="n">ms</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">k</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">src_node</span><span class="p">,</span> <span class="n">dst_node</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">):</span>
+            <span class="n">src_pt</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">src_node</span><span class="p">)]</span>
+            <span class="n">dst_pt</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_to_index</span><span class="p">(</span><span class="n">dst_node</span><span class="p">)]</span>
 
-        <span class="n">h_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h_lines_k</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">src_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dst_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">src_pt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dst_pt</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+            <span class="k">if</span> <span class="n">bbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">-=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">y</span> <span class="o">-=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">x</span> <span class="o">*=</span> <span class="n">scale</span>
+            <span class="n">y</span> <span class="o">*=</span> <span class="n">scale</span>
+
+            <span class="n">h_lines_k</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;.-&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="n">ms</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">cmap</span><span class="p">[</span><span class="n">k</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)],</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+
+            <span class="n">h_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h_lines_k</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">h_lines</span></div>
 
@@ -361,7 +380,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

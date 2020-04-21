@@ -52,6 +52,30 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="DummyVideo"><a class="viewcode-back" href="../../../_autosummary/sleap.io.video.html#sleap.io.video.DummyVideo">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DummyVideo</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fake video backend,returns frames with all zeros.</span>
+
+<span class="sd">    This can be useful when you want to look at labels for a dataset but don&#39;t</span>
+<span class="sd">    have access to the real video.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">channels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dummy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">test_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">))</span></div>
+
+
 <div class="viewcode-block" id="HDF5Video"><a class="viewcode-back" href="../../../_autosummary/sleap.io.video.html#sleap.io.video.HDF5Video">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">HDF5Video</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -913,7 +937,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">backend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
-        <span class="n">HDF5Video</span><span class="p">,</span> <span class="n">NumpyVideo</span><span class="p">,</span> <span class="n">MediaVideo</span><span class="p">,</span> <span class="n">ImgStoreVideo</span><span class="p">,</span> <span class="n">SingleImageVideo</span>
+        <span class="n">HDF5Video</span><span class="p">,</span> <span class="n">NumpyVideo</span><span class="p">,</span> <span class="n">MediaVideo</span><span class="p">,</span> <span class="n">ImgStoreVideo</span><span class="p">,</span> <span class="n">SingleImageVideo</span><span class="p">,</span> <span class="n">DummyVideo</span>
     <span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
 
     <span class="c1"># Delegate to the backend</span>
@@ -1097,7 +1121,7 @@
 
         <span class="n">filename</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">fixup_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;h5&quot;</span><span class="p">,</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;h5&quot;</span><span class="p">,</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">,</span> <span class="s2">&quot;slp&quot;</span><span class="p">)):</span>
             <span class="n">backend_class</span> <span class="o">=</span> <span class="n">HDF5Video</span>
         <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;npy&quot;</span><span class="p">)):</span>
             <span class="n">backend_class</span> <span class="o">=</span> <span class="n">NumpyVideo</span>
@@ -1473,7 +1497,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

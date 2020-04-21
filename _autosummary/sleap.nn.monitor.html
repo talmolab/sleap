@@ -37,11 +37,73 @@
 <p>GUI for monitoring training progress interactively.</p>
 <dl class="py class">
 <dt id="sleap.nn.monitor.LossViewer">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.monitor.</code><code class="sig-name descname">LossViewer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zmq_context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">show_controller</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/monitor.html#LossViewer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.monitor.LossViewer" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.monitor.</code><code class="sig-name descname">LossViewer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zmq_context</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>zmq.sugar.context.Context<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">show_controller</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/monitor.html#LossViewer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.monitor.LossViewer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Qt window for showing in-progress training metrics sent over ZMQ.</p>
+<dl class="py method">
+<dt id="sleap.nn.monitor.LossViewer.add_datapoint">
+<code class="sig-name descname">add_datapoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">which</span><span class="o">=</span><span class="default_value">'batch'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/monitor.html#LossViewer.add_datapoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.monitor.LossViewer.add_datapoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds data point to graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – typically the batch number (out of all epochs, not just current)</p></li>
+<li><p><strong>y</strong> – typically the loss value</p></li>
+<li><p><strong>which</strong> – type of data point we’re adding, possible values are
+* batch (loss for batch)
+* epoch_loss (loss for entire epoch)
+* val_loss (validation loss for for epoch)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.monitor.LossViewer.check_messages">
+<code class="sig-name descname">check_messages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">times_to_check</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">do_update</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/monitor.html#LossViewer.check_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.monitor.LossViewer.check_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Polls for ZMQ messages and adds any received data to graph.</p>
+<dl class="simple">
+<dt>The message is a dictionary encoded as JSON:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>event - options include</dt><dd><ul>
+<li><p>train_begin</p></li>
+<li><p>train_end</p></li>
+<li><p>epoch_begin</p></li>
+<li><p>epoch_end</p></li>
+<li><p>batch_end</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>what - this should match the type of model we’re training and</dt><dd><p>ensures that we ignore old messages when we start monitoring
+a new training session (when we’re training multiple types
+of models in a sequence, as for the top-down pipeline).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>logs - dictionary with data relevant for plotting, can include</dt><dd><ul>
+<li><p>loss</p></li>
+<li><p>val_loss</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.nn.monitor.LossViewer.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/nn/monitor.html#LossViewer.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.monitor.LossViewer.close" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.monitor.LossViewer.stop">
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/monitor.html#LossViewer.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.monitor.LossViewer.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Action to stop training.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -217,7 +279,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

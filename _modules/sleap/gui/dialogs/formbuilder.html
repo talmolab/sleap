@@ -563,9 +563,9 @@
         <span class="n">multi_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="n">combo_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combo_box</span><span class="p">)</span>
         <span class="n">multi_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacked_widget</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">multi_layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">stack_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
 
 <div class="viewcode-block" id="StackBuilderWidget.switch_to_idx"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.StackBuilderWidget.switch_to_idx">[docs]</a>    <span class="k">def</span> <span class="nf">switch_to_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Switch currently shown widget from stack.&quot;&quot;&quot;</span>
@@ -781,12 +781,12 @@
             <span class="n">result_as_idx</span><span class="o">=</span><span class="n">result_as_idx</span><span class="p">,</span> <span class="n">add_blank_option</span><span class="o">=</span><span class="n">add_blank_option</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">setMode</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
-
         <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">text_widget</span><span class="p">)</span>
         <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_widget</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMode</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">list_widget</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emitValueChanged</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">text_widget</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emitValueChanged</span><span class="p">)</span>
@@ -891,7 +891,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

@@ -37,7 +37,7 @@
 <p>Transformers for performing inference.</p>
 <dl class="py class">
 <dt id="sleap.nn.data.inference.GlobalPeakFinder">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.inference.</code><code class="sig-name descname">GlobalPeakFinder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">confmaps_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predicted_instance_confidence_maps'</span></em>, <em class="sig-param"><span class="n">confmaps_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">peaks_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predicted_center_instance_points'</span></em>, <em class="sig-param"><span class="n">peak_vals_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predicted_center_instance_confidences'</span></em>, <em class="sig-param"><span class="n">keep_confmaps</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">device_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integral</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/data/inference.html#GlobalPeakFinder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.inference.GlobalPeakFinder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.inference.</code><code class="sig-name descname">GlobalPeakFinder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">confmaps_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predicted_instance_confidence_maps'</span></em>, <em class="sig-param"><span class="n">confmaps_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">peaks_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predicted_center_instance_points'</span></em>, <em class="sig-param"><span class="n">peak_vals_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predicted_center_instance_confidences'</span></em>, <em class="sig-param"><span class="n">keep_confmaps</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">device_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integral</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">integral_patch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/data/inference.html#GlobalPeakFinder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.inference.GlobalPeakFinder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Global peak finding transformer.</p>
 </dd></dl>
 
@@ -108,18 +108,22 @@ the peak points.</p>
 
 <dl class="py function">
 <dt id="sleap.nn.data.inference.find_global_peaks_integral">
-<code class="sig-prename descclassname">sleap.nn.data.inference.</code><code class="sig-name descname">find_global_peaks_integral</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cms</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/data/inference.html#find_global_peaks_integral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.inference.find_global_peaks_integral" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find global peaks via integral regression.</p>
+<code class="sig-prename descclassname">sleap.nn.data.inference.</code><code class="sig-name descname">find_global_peaks_integral</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cms</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">crop_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/data/inference.html#find_global_peaks_integral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.inference.find_global_peaks_integral" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find local peaks with integral refinement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps.</p></li>
-<li><p><strong>output_stride</strong> – Stride of the confidence maps.</p></li>
-<li><p><strong>threshold</strong> – Minimum peak values.</p></li>
+<li><p><strong>threshold</strong> – Minimum confidence threshold.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple of (peaks, peak_vals).</p>
+<dd class="field-even"><p><p>A tuple of (peak_points, peak_vals).</p>
+<p>peak_points: float32 tensor of shape (n_peaks, 2), where the last axis
+indicates peak locations in xy order.</p>
+<p>peak_vals: float32 tensor of shape (n_peaks,) containing the values at the peak
+points.</p>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -368,7 +372,7 @@ channel of the confidence maps.</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

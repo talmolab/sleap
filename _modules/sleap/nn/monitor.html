@@ -39,6 +39,7 @@
 <span class="kn">import</span> <span class="nn">zmq</span>
 <span class="kn">import</span> <span class="nn">jsonpickle</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCharts</span>
 
@@ -46,17 +47,23 @@
 
 
 <div class="viewcode-block" id="LossViewer"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer">[docs]</a><span class="k">class</span> <span class="nc">LossViewer</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Qt window for showing in-progress training metrics sent over ZMQ.&quot;&quot;&quot;</span>
 
     <span class="n">on_epoch</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zmq_context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_controller</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">zmq_context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_controller</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">LossViewer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">show_controller</span> <span class="o">=</span> <span class="n">show_controller</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stop_button</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">redraw_batch_interval</span> <span class="o">=</span> <span class="mi">40</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">batches_to_show</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># -1 to show all</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batches_to_show</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># -1 to show all</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ignore_outliers</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_scale</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -165,14 +172,25 @@
 
             <span class="n">control_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Batches to Show:&quot;</span><span class="p">))</span>
 
+            <span class="c1"># add field for how many batches to show in chart</span>
             <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
+            <span class="c1"># add options</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">batch_options</span> <span class="o">=</span> <span class="s2">&quot;200,1000,5000,All&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_options</span><span class="p">:</span>
                 <span class="n">field</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+            <span class="c1"># set field to currently set value</span>
+            <span class="n">cur_opt_str</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;All&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batches_to_show</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batches_to_show</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">cur_opt_str</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_options</span><span class="p">:</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">setCurrentText</span><span class="p">(</span><span class="n">cur_opt_str</span><span class="p">)</span>
+            <span class="c1"># connection action for when user selects another option</span>
             <span class="n">field</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_batches_to_show</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_options</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
             <span class="p">)</span>
-            <span class="n">control_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+            <span class="c1"># store field as property and add to layout</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batches_to_show_field</span> <span class="o">=</span> <span class="n">field</span>
+            <span class="n">control_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batches_to_show_field</span><span class="p">)</span>
 
             <span class="n">control_layout</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
@@ -233,33 +251,54 @@
         <span class="k">for</span> <span class="n">series</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">series</span><span class="p">():</span>
             <span class="n">series</span><span class="o">.</span><span class="n">attachAxis</span><span class="p">(</span><span class="n">axisY</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">setup_zmq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zmq_context</span><span class="p">):</span>
-        <span class="c1"># Progress monitoring</span>
+    <span class="k">def</span> <span class="nf">setup_zmq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zmq_context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">]):</span>
+
+        <span class="c1"># Keep track of whether we&#39;re using an existing context (which we won&#39;t</span>
+        <span class="c1"># close when done) or are creating our own (which we should close).</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ctx_given</span> <span class="o">=</span> <span class="n">zmq_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span> <span class="k">if</span> <span class="n">zmq_context</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">zmq_context</span>
+
+        <span class="c1"># Progress monitoring, SUBSCRIBER</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUB</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;tcp://127.0.0.1:9001&quot;</span><span class="p">)</span>
-        <span class="c1"># Controller</span>
+
+        <span class="c1"># Controller, PUBLISHER</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zmq_ctrl</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_controller</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">zmq_ctrl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUB</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">zmq_ctrl</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;tcp://127.0.0.1:9000&quot;</span><span class="p">)</span>
+
         <span class="c1"># Set timer to poll for messages</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_messages</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="LossViewer.stop"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Action to stop training.&quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zmq_ctrl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># send command to stop training</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sending command to stop training&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">zmq_ctrl</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s2">&quot;stop&quot;</span><span class="p">)))</span>
+
+        <span class="c1"># Disable the button</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_button</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stop_button</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Stopping...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">stop_button</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_button</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">add_datapoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="LossViewer.add_datapoint"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.add_datapoint">[docs]</a>    <span class="k">def</span> <span class="nf">add_datapoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds data point to graph.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: typically the batch number (out of all epochs, not just current)</span>
+<span class="sd">            y: typically the loss value</span>
+<span class="sd">            which: type of data point we&#39;re adding, possible values are</span>
+<span class="sd">                * batch (loss for batch)</span>
+<span class="sd">                * epoch_loss (loss for entire epoch)</span>
+<span class="sd">                * val_loss (validation loss for for epoch)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Keep track of all batch points</span>
         <span class="k">if</span> <span class="n">which</span> <span class="o">==</span> <span class="s2">&quot;batch&quot;</span><span class="p">:</span>
@@ -306,7 +345,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">axisY</span><span class="p">()</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">[</span><span class="n">which</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">[</span><span class="n">which</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">set_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span>
@@ -323,14 +362,36 @@
             <span class="n">title</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Runtime: &lt;b&gt;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">dt_min</span><span class="p">)</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">dt_sec</span><span class="p">)</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">&lt;/b&gt;&quot;</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_epoch_val_loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">title</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&lt;br /&gt;Last Epoch Validation Loss: &lt;b&gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_epoch_val_loss</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&lt;/b&gt;&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_message</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">is_timer_running</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_running</span>
 
-    <span class="k">def</span> <span class="nf">check_messages</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">set_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chart</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LossViewer.check_messages"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.check_messages">[docs]</a>    <span class="k">def</span> <span class="nf">check_messages</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">times_to_check</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">do_update</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Polls for ZMQ messages and adds any received data to graph.</span>
+
+<span class="sd">        The message is a dictionary encoded as JSON:</span>
+<span class="sd">            * event - options include</span>
+<span class="sd">                * train_begin</span>
+<span class="sd">                * train_end</span>
+<span class="sd">                * epoch_begin</span>
+<span class="sd">                * epoch_end</span>
+<span class="sd">                * batch_end</span>
+<span class="sd">            * what - this should match the type of model we&#39;re training and</span>
+<span class="sd">                ensures that we ignore old messages when we start monitoring</span>
+<span class="sd">                a new training session (when we&#39;re training multiple types</span>
+<span class="sd">                of models in a sequence, as for the top-down pipeline).</span>
+<span class="sd">            * logs - dictionary with data relevant for plotting, can include</span>
+<span class="sd">                * loss</span>
+<span class="sd">                * val_loss</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">recv_string</span><span class="p">())</span>
 
@@ -380,7 +441,7 @@
                 <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">do_update</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_runtime</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_runtime</span><span class="p">()</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
@@ -396,6 +457,11 @@
     <span class="n">t</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">()</span>
     <span class="n">t</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">test_point</span><span class="p">)</span>
     <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">win</span><span class="o">.</span><span class="n">set_message</span><span class="p">(</span><span class="s2">&quot;Waiting for 3 seconds...&quot;</span><span class="p">)</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">()</span>
+    <span class="n">t2</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">win</span><span class="o">.</span><span class="n">set_message</span><span class="p">(</span><span class="s2">&quot;Running demo...&quot;</span><span class="p">))</span>
+    <span class="n">t2</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">3000</span><span class="p">)</span>
 
     <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 </pre></div>
@@ -460,7 +526,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

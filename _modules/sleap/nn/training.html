@@ -439,6 +439,15 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Set up visualization callbacks from config.&quot;&quot;&quot;</span>
     <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Qt5Agg&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;Unable to use Qt backend for matplotlib. &quot;</span>
+            <span class="s2">&quot;This probably means Qt is running headless.&quot;</span>
+        <span class="p">)</span>
+
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">save_visualizations</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">:</span>
         <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">MatplotlibSaver</span><span class="p">(</span>
@@ -744,16 +753,16 @@
             <span class="c1"># Save input (ground truth) labels.</span>
             <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_readers</span><span class="o">.</span><span class="n">training_labels_reader</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span> <span class="s2">&quot;labels_gt.train.h5&quot;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span> <span class="s2">&quot;labels_gt.train.slp&quot;</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_readers</span><span class="o">.</span><span class="n">validation_labels_reader</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span> <span class="s2">&quot;labels_gt.val.h5&quot;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span> <span class="s2">&quot;labels_gt.val.slp&quot;</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_readers</span><span class="o">.</span><span class="n">test_labels_reader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">data_readers</span><span class="o">.</span><span class="n">test_labels_reader</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span> <span class="s2">&quot;labels_gt.test.h5&quot;</span><span class="p">),</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span> <span class="s2">&quot;labels_gt.test.slp&quot;</span><span class="p">),</span>
                 <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1416,7 +1425,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

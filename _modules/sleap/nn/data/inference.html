@@ -176,36 +176,58 @@
 
 
 <div class="viewcode-block" id="find_global_peaks_integral"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.inference.html#sleap.nn.data.inference.find_global_peaks_integral">[docs]</a><span class="k">def</span> <span class="nf">find_global_peaks_integral</span><span class="p">(</span>
-    <span class="n">cms</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Find global peaks via integral regression.</span>
+    <span class="n">cms</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">crop_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Find local peaks with integral refinement.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        cms: Confidence maps.</span>
-<span class="sd">        output_stride: Stride of the confidence maps.</span>
-<span class="sd">        threshold: Minimum peak values.</span>
+<span class="sd">        threshold: Minimum confidence threshold.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns:</span>
-<span class="sd">        A tuple of (peaks, peak_vals).</span>
+<span class="sd">        A tuple of (peak_points, peak_vals).</span>
+
+<span class="sd">        peak_points: float32 tensor of shape (n_peaks, 2), where the last axis</span>
+<span class="sd">        indicates peak locations in xy order.</span>
+
+<span class="sd">        peak_vals: float32 tensor of shape (n_peaks,) containing the values at the peak</span>
+<span class="sd">        points.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Build sampling grid.</span>
-    <span class="n">xv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">cms</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">output_stride</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-    <span class="n">yv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">cms</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">output_stride</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-
-    <span class="c1"># Perform regression to the peak coordinates.</span>
-    <span class="n">x_hat</span><span class="p">,</span> <span class="n">y_hat</span> <span class="o">=</span> <span class="n">integral_regression</span><span class="p">(</span><span class="n">cms</span><span class="p">,</span> <span class="n">xv</span><span class="p">,</span> <span class="n">yv</span><span class="p">)</span>
-    <span class="n">peaks</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">y_hat</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-    <span class="c1"># Find grid-aligned peak values.</span>
-    <span class="n">peak_vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">cms</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-
-    <span class="c1"># Mask out low confidence points.</span>
-    <span class="n">peaks</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-        <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">peak_vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">,</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
-        <span class="n">y</span><span class="o">=</span><span class="n">peaks</span><span class="p">,</span>
+    <span class="c1"># Find grid aligned peaks.</span>
+    <span class="n">rough_peaks</span><span class="p">,</span> <span class="n">peak_vals</span> <span class="o">=</span> <span class="n">find_global_peaks</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">cms</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span></div>
+    <span class="n">rough_peaks</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">rough_peaks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">peak_vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">peak_vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Make bounding boxes for cropping around peaks.</span>
+    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">make_centered_bboxes</span><span class="p">(</span>
+        <span class="n">rough_peaks</span><span class="p">,</span> <span class="n">box_height</span><span class="o">=</span><span class="n">crop_size</span><span class="p">,</span> <span class="n">box_width</span><span class="o">=</span><span class="n">crop_size</span>
+    <span class="p">)</span>
+    <span class="n">norm_bboxes</span> <span class="o">=</span> <span class="n">normalize_bboxes</span><span class="p">(</span>
+        <span class="n">bboxes</span><span class="p">,</span> <span class="n">image_height</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">cms</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image_width</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">cms</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Crop patch around each grid-aligned peak.</span>
+    <span class="n">cms</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">cms</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># move channels to samples axis</span>
+    <span class="n">cms</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">cms</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">cm_crops</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">crop_and_resize</span><span class="p">(</span>
+        <span class="n">image</span><span class="o">=</span><span class="n">cms</span><span class="p">,</span>
+        <span class="n">boxes</span><span class="o">=</span><span class="n">norm_bboxes</span><span class="p">,</span>
+        <span class="n">box_indices</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">cms</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">crop_size</span><span class="o">=</span><span class="p">[</span><span class="n">crop_size</span><span class="p">,</span> <span class="n">crop_size</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">cm_crops</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">cm_crops</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># squeeze out singleton &quot;channel&quot; axis</span>
+    <span class="n">cm_crops</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">cm_crops</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># move crops back to last axis</span>
+
+    <span class="c1"># Compute offsets via integral regression.</span>
+    <span class="n">gv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">crop_size</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">-</span> <span class="p">((</span><span class="n">crop_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">dx_hat</span><span class="p">,</span> <span class="n">dy_hat</span> <span class="o">=</span> <span class="n">integral_regression</span><span class="p">(</span><span class="n">cm_crops</span><span class="p">,</span> <span class="n">xv</span><span class="o">=</span><span class="n">gv</span><span class="p">,</span> <span class="n">yv</span><span class="o">=</span><span class="n">gv</span><span class="p">)</span>
+
+    <span class="c1"># Apply offsets.</span>
+    <span class="n">refined_peaks</span> <span class="o">=</span> <span class="n">rough_peaks</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">dx_hat</span><span class="p">,</span> <span class="n">dy_hat</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">refined_peaks</span><span class="p">,</span> <span class="n">peak_vals</span></div>
 
 
 <div class="viewcode-block" id="GlobalPeakFinder"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.inference.html#sleap.nn.data.inference.GlobalPeakFinder">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -220,6 +242,7 @@
     <span class="n">keep_confmaps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">device_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">integral</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">input_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
@@ -246,8 +269,9 @@
                     <span class="n">peaks</span><span class="p">,</span> <span class="n">peak_vals</span> <span class="o">=</span> <span class="n">find_global_peaks_integral</span><span class="p">(</span>
                         <span class="n">confmaps</span><span class="p">,</span>
                         <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_threshold</span><span class="p">,</span>
-                        <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmaps_stride</span><span class="p">,</span>
+                        <span class="n">crop_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">integral_patch_size</span>
                     <span class="p">)</span>
+                    <span class="n">peaks</span> <span class="o">*=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">confmaps_stride</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Find peaks via standard grid aligned global argmax.</span>
@@ -667,7 +691,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

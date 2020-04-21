@@ -52,7 +52,7 @@
         <span class="c1"># Find matching video instance in predictions.</span>
         <span class="n">video_pr</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">labels_pr</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">video_gt</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">video_gt</span><span class="o">.</span><span class="n">backend</span><span class="p">))</span> <span class="ow">and</span> <span class="n">video</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">video_gt</span><span class="p">):</span>
                 <span class="n">video_pr</span> <span class="o">=</span> <span class="n">video</span>
                 <span class="k">break</span>
 
@@ -486,7 +486,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

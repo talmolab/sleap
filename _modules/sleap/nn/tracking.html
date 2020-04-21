@@ -131,6 +131,96 @@
     <span class="k">return</span> <span class="n">assignments</span></div>
 
 
+<span class="k">def</span> <span class="nf">nms_instances</span><span class="p">(</span>
+    <span class="n">instances</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="p">,</span> <span class="n">target_count</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">]]:</span>
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">inst</span><span class="o">.</span><span class="n">bounding_box</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">])</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">inst</span><span class="o">.</span><span class="n">score</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">])</span>
+    <span class="n">picks</span> <span class="o">=</span> <span class="n">nms_fast</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="p">,</span> <span class="n">target_count</span><span class="p">)</span>
+
+    <span class="n">to_keep</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">picks</span><span class="p">]</span>
+    <span class="n">to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">picks</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">to_keep</span><span class="p">,</span> <span class="n">to_remove</span>
+
+
+<div class="viewcode-block" id="nms_fast"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.nms_fast">[docs]</a><span class="k">def</span> <span class="nf">nms_fast</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="p">,</span> <span class="n">target_count</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/&quot;&quot;&quot;</span>
+
+    <span class="c1"># if there are no boxes, return an empty list</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># if we already have fewer boxes than the target count, return all boxes</span>
+    <span class="k">if</span> <span class="n">target_count</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">target_count</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)))</span>
+
+    <span class="c1"># if the bounding boxes coordinates are integers, convert them to floats --</span>
+    <span class="c1"># this is important since we&#39;ll be doing a bunch of divisions</span>
+    <span class="k">if</span> <span class="n">boxes</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span>
+        <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span>
+
+    <span class="c1"># initialize the list of picked indexes</span>
+    <span class="n">picked_idxs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># init list of boxes removed by nms</span>
+    <span class="n">nms_idxs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># grab the coordinates of the bounding boxes</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+
+    <span class="c1"># compute the area of the bounding boxes and sort the bounding</span>
+    <span class="c1"># boxes by their scores</span>
+    <span class="n">area</span> <span class="o">=</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+
+    <span class="c1"># keep looping while some indexes still remain in the indexes list</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+        <span class="c1"># we want to add the best box which is the last box in sorted list</span>
+        <span class="n">picked_box_idx</span> <span class="o">=</span> <span class="n">idxs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># last = len(idxs) - 1</span>
+        <span class="c1"># i = idxs[last]</span>
+        <span class="n">picked_idxs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">picked_box_idx</span><span class="p">)</span>
+
+        <span class="c1"># find the largest (x, y) coordinates for the start of</span>
+        <span class="c1"># the bounding box and the smallest (x, y) coordinates</span>
+        <span class="c1"># for the end of the bounding box</span>
+        <span class="n">xx1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="n">picked_box_idx</span><span class="p">],</span> <span class="n">x1</span><span class="p">[</span><span class="n">idxs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">yy1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">y1</span><span class="p">[</span><span class="n">picked_box_idx</span><span class="p">],</span> <span class="n">y1</span><span class="p">[</span><span class="n">idxs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">xx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x2</span><span class="p">[</span><span class="n">picked_box_idx</span><span class="p">],</span> <span class="n">x2</span><span class="p">[</span><span class="n">idxs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">yy2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">y2</span><span class="p">[</span><span class="n">picked_box_idx</span><span class="p">],</span> <span class="n">y2</span><span class="p">[</span><span class="n">idxs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="c1"># compute the width and height of the bounding box</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">xx2</span> <span class="o">-</span> <span class="n">xx1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">yy2</span> <span class="o">-</span> <span class="n">yy1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># compute the ratio of overlap</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="n">area</span><span class="p">[</span><span class="n">idxs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="c1"># find boxes with iou over threshold</span>
+        <span class="n">nms_for_new_box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">overlap</span> <span class="o">&gt;</span> <span class="n">iou_threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nms_idxs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">idxs</span><span class="p">[</span><span class="n">nms_for_new_box</span><span class="p">]))</span>
+
+        <span class="c1"># delete new box (last in list) plus nms boxes</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">idxs</span><span class="p">,</span> <span class="n">nms_for_new_box</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># if we&#39;re below the target number of boxes, add some back</span>
+    <span class="k">if</span> <span class="n">target_count</span> <span class="ow">and</span> <span class="n">nms_idxs</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">picked_idxs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">target_count</span><span class="p">:</span>
+        <span class="c1"># sort by descending score</span>
+        <span class="n">nms_idxs</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">idx</span><span class="p">:</span> <span class="o">-</span><span class="n">scores</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+        <span class="n">add_back_count</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nms_idxs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">picked_idxs</span><span class="p">)</span> <span class="o">-</span> <span class="n">target_count</span><span class="p">)</span>
+        <span class="n">picked_idxs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">nms_idxs</span><span class="p">[:</span><span class="n">add_back_count</span><span class="p">])</span>
+
+    <span class="c1"># return the list of picked boxes</span>
+    <span class="k">return</span> <span class="n">picked_idxs</span></div>
+
+
 <span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ShiftedInstance</span><span class="p">:</span>
 
@@ -401,7 +491,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">track_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
-    <span class="n">similarity_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">instance_similarity</span>
+    <span class="n">similarity_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance_similarity</span>
     <span class="n">matching_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">greedy_matching</span>
     <span class="n">candidate_maker</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">FlowCandidateMaker</span><span class="p">)</span>
     <span class="n">cleaner</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -595,23 +685,29 @@
         <span class="n">of_window_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>
         <span class="n">of_max_levels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
         <span class="n">clean_instance_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">clean_iou_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Tracker&quot;</span><span class="p">:</span>
 
-        <span class="k">if</span> <span class="n">tracker</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tracker_policies</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tracker</span><span class="si">}</span><span class="s2"> is not a valid tracker.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tracker</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="n">candidate_maker</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">similarity_function</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">matching_function</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tracker</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tracker_policies</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tracker</span><span class="si">}</span><span class="s2"> is not a valid tracker.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">similarity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">similarity_policies</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">similarity</span><span class="si">}</span><span class="s2"> is not a valid tracker similarity function.&quot;</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">similarity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">similarity_policies</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">similarity</span><span class="si">}</span><span class="s2"> is not a valid tracker similarity function.&quot;</span>
+                <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match_policies</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">match</span><span class="si">}</span><span class="s2"> is not a valid tracker matching function.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match_policies</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">match</span><span class="si">}</span><span class="s2"> is not a valid tracker matching function.&quot;</span><span class="p">)</span>
 
-        <span class="n">candidate_maker</span> <span class="o">=</span> <span class="n">tracker_policies</span><span class="p">[</span><span class="n">tracker</span><span class="p">](</span><span class="n">min_points</span><span class="o">=</span><span class="n">min_match_points</span><span class="p">)</span>
-        <span class="n">similarity_function</span> <span class="o">=</span> <span class="n">similarity_policies</span><span class="p">[</span><span class="n">similarity</span><span class="p">]</span>
-        <span class="n">matching_function</span> <span class="o">=</span> <span class="n">match_policies</span><span class="p">[</span><span class="n">match</span><span class="p">]</span>
+            <span class="n">candidate_maker</span> <span class="o">=</span> <span class="n">tracker_policies</span><span class="p">[</span><span class="n">tracker</span><span class="p">](</span><span class="n">min_points</span><span class="o">=</span><span class="n">min_match_points</span><span class="p">)</span>
+            <span class="n">similarity_function</span> <span class="o">=</span> <span class="n">similarity_policies</span><span class="p">[</span><span class="n">similarity</span><span class="p">]</span>
+            <span class="n">matching_function</span> <span class="o">=</span> <span class="n">match_policies</span><span class="p">[</span><span class="n">match</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">tracker</span> <span class="o">==</span> <span class="s2">&quot;flow&quot;</span><span class="p">:</span>
             <span class="n">candidate_maker</span><span class="o">.</span><span class="n">img_scale</span> <span class="o">=</span> <span class="n">img_scale</span>
@@ -620,7 +716,9 @@
 
         <span class="n">cleaner</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">clean_instance_count</span><span class="p">:</span>
-            <span class="n">cleaner</span> <span class="o">=</span> <span class="n">TrackCleaner</span><span class="p">(</span><span class="n">instance_count</span><span class="o">=</span><span class="n">clean_instance_count</span><span class="p">)</span>
+            <span class="n">cleaner</span> <span class="o">=</span> <span class="n">TrackCleaner</span><span class="p">(</span>
+                <span class="n">instance_count</span><span class="o">=</span><span class="n">clean_instance_count</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="o">=</span><span class="n">clean_iou_threshold</span>
+            <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">track_window</span><span class="o">=</span><span class="n">track_window</span><span class="p">,</span>
@@ -648,6 +746,15 @@
         <span class="n">option</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;If non-zero, then attempt to clean tracking results &quot;</span>
             <span class="s2">&quot;assuming there are this many instances per frame.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+
+        <span class="n">option</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;clean_iou_threshold&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">option</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span>
+        <span class="n">option</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;If non-zero and clean_instance_count also set, &quot;</span>
+            <span class="s2">&quot;then use IOU threshold to remove overlapping &quot;</span>
+            <span class="s2">&quot;instances over count.&quot;</span>
         <span class="p">)</span>
         <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
 
@@ -748,9 +855,13 @@
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        instance_count: The maximum number of instances we want per frame.</span>
+<span class="sd">        iou_threshold: Intersection over Union (IOU) threshold to use when</span>
+<span class="sd">            removing overlapping instances over target count; if None, then</span>
+<span class="sd">            only use score to determine which instances to remove.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">instance_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">iou_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="TrackCleaner.run"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.TrackCleaner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -771,11 +882,29 @@
         <span class="c1"># Find all frames with more instances than the desired threshold</span>
         <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">predicted_instances</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">:</span>
-                <span class="c1"># Get all but the instance_count many instances with the highest score</span>
-                <span class="n">extra_instances</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-                    <span class="n">lf</span><span class="o">.</span><span class="n">predicted_instances</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">)</span>
-                <span class="p">)[:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">]</span>
-                <span class="n">lf_inst_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">extra_instances</span><span class="p">])</span>
+                <span class="c1"># List of instances which we&#39;ll pare down</span>
+                <span class="n">keep_instances</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">predicted_instances</span>
+
+                <span class="c1"># Use NMS to remove overlapping instances over target count</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_threshold</span><span class="p">:</span>
+                    <span class="n">keep_instances</span><span class="p">,</span> <span class="n">extra_instances</span> <span class="o">=</span> <span class="n">nms_instances</span><span class="p">(</span>
+                        <span class="n">keep_instances</span><span class="p">,</span>
+                        <span class="n">iou_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iou_threshold</span><span class="p">,</span>
+                        <span class="n">target_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="c1"># Mark for removal</span>
+                    <span class="n">lf_inst_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">extra_instances</span><span class="p">])</span>
+
+                <span class="c1"># Use lower score to remove instances over target count</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keep_instances</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">:</span>
+                    <span class="c1"># Sort by ascending score, get target number of instances</span>
+                    <span class="c1"># from the end of list (i.e., with highest score)</span>
+                    <span class="n">extra_instances</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                        <span class="n">keep_instances</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">)</span>
+                    <span class="p">)[:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">]</span>
+
+                    <span class="c1"># Mark for removal</span>
+                    <span class="n">lf_inst_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">extra_instances</span><span class="p">])</span>
 
         <span class="c1"># Remove instances over per frame threshold</span>
         <span class="k">for</span> <span class="n">lf</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf_inst_list</span><span class="p">:</span>
@@ -815,9 +944,11 @@
 
 
 <span class="k">def</span> <span class="nf">run_tracker</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">tracker</span><span class="p">):</span>
-    <span class="kn">import</span> <span class="nn">inspect</span>
     <span class="kn">import</span> <span class="nn">time</span>
-    <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span>
+
+    <span class="c1"># Return original frames if we aren&#39;t retracking</span>
+    <span class="k">if</span> <span class="n">tracker</span><span class="o">.</span><span class="n">similarity_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">frames</span>
 
     <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
@@ -848,14 +979,14 @@
 
     <span class="nb">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span>
 
-    <span class="n">new_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">new_lfs</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">new_labels</span>
+    <span class="k">return</span> <span class="n">new_lfs</span>
 
 
 <span class="k">def</span> <span class="nf">retrack</span><span class="p">():</span>
     <span class="kn">import</span> <span class="nn">argparse</span>
     <span class="kn">import</span> <span class="nn">operator</span>
     <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">time</span>
 
     <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span>
 
@@ -880,10 +1011,17 @@
 
     <span class="nb">print</span><span class="p">(</span><span class="n">tracker</span><span class="p">)</span>
 
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading predictions...&quot;</span><span class="p">)</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
     <span class="n">frames</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done loading predictions in </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="si">}</span><span class="s2"> seconds.&quot;</span><span class="p">)</span>
 
-    <span class="n">new_labels</span> <span class="o">=</span> <span class="n">run_tracker</span><span class="p">(</span><span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span> <span class="n">tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting tracker...&quot;</span><span class="p">)</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="n">run_tracker</span><span class="p">(</span><span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span> <span class="n">tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">final_pass</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+
+    <span class="n">new_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">frames</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
         <span class="n">output_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span>
@@ -960,7 +1098,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

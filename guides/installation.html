@@ -44,7 +44,7 @@
 advantages to using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">Anaconda Environments</a> is the ability to create separate Python installations (environments) for
 different projects, mitigating issues of managing complex dependencies. To create a new conda environment for
 <strong>SLEAP</strong> related development and use:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>  <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>  <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span><span class="o">=</span><span class="mf">0.2</span><span class="o">.</span><span class="mi">1</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
 </pre></div>
 </div>
 <p>Once the environment is finished installing, it can be activated using the following command:</p>
@@ -61,29 +61,21 @@ you can run the labeling GUI by entering the following command:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="linux">
-<h2>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h2>
-<p>There’s a Linux conda package which can be installed by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
+<div class="section" id="linux-and-macos-x">
+<h2>Linux and MacOS X<a class="headerlink" href="#linux-and-macos-x" title="Permalink to this headline">¶</a></h2>
+<p>Currently we don’t have an up-do-date conda package for Linux or MacOS X. It is easy to install SLEAP via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> on Linux and MacOS X.</p>
+<p>We recommend installing SLEAP into an environment with Python 3.6. If you are using conda, you can create an environment by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">sleap_env</span>
 </pre></div>
 </div>
-<p>Alternately, installing via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> should not be difficult on most Linux systems. The first step is to get a working version of TensorFlow installed in your Python environment. Follow official directions for installing <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow</a> with GPU support. Once TensorFlow is installed, simple issue the following command to install <strong>SLEAP</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">murthylab</span><span class="o">/</span><span class="n">sleap</span><span class="o">.</span><span class="n">git</span>
+<p>If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow</a> with GPU support. There is no TensorFlow GPU support on MacOS X.</p>
+<p>You can then install SLEAP by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">extra</span><span class="o">-</span><span class="n">index</span><span class="o">-</span><span class="n">url</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">test</span><span class="o">.</span><span class="n">pypi</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">simple</span><span class="o">/</span> <span class="n">sleap</span><span class="o">==</span><span class="mf">0.2</span><span class="o">.</span><span class="mi">1</span>
 </pre></div>
 </div>
 <p><strong>SLEAP</strong> is now installed you can run the labeling GUI by entering the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="macos-x">
-<h2>MacOS X<a class="headerlink" href="#macos-x" title="Permalink to this headline">¶</a></h2>
-<p>The installation for MacOS X is the same as for Linux, although there’s no TensorFlow GPU support for Mac. The MacOS X conda package is built with the non-GPU version of TensorFlow and can be installed by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
-</pre></div>
-</div>
-<p>You can also use <code class="code docutils literal notranslate"><span class="pre">pip</span></code> to install TensorFlow and <strong>SLEAP</strong> together by running</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">tensorflow</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">murthylab</span><span class="o">/</span><span class="n">sleap</span><span class="o">.</span><span class="n">git</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
 </pre></div>
 </div>
 </div>
@@ -114,8 +106,7 @@ you can run the labeling GUI by entering the following command:</p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#linux">Linux</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#macos-x">MacOS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linux-and-macos-x">Linux and MacOS X</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#developer-installation">Developer Installation</a></li>
 </ul>
 </li>
@@ -168,7 +159,7 @@ you can run the labeling GUI by entering the following command:</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
