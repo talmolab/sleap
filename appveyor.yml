@@ -100,6 +100,7 @@ for:
   # https://daler.github.io/sphinxdoc-test/includeme.html
   # for details on how to set this up.
   deploy_script:
+    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
     - git config --global credential.helper store
     - ps: Add-Content "$HOME\.git-credentials" "https://x-oauth-basic:$($env:access_token)@github.com`n" 
     - git config --global user.email "dmturner@princeton.edu"
