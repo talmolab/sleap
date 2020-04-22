@@ -239,9 +239,9 @@ class CommandContext(object):
         """Shows gui for exporting clip with visual annotations."""
         self.execute(ExportLabeledClip)
 
-    def exportLabeledFrames(self):
+    def exportDatasetWithImages(self):
         """Gui for exporting the training dataset of labels/frame images."""
-        self.execute(ExportLabeledFrames)
+        self.execute(ExportDatasetWithImages)
 
     # Navigation Commands
 
@@ -820,7 +820,7 @@ class ExportLabeledClip(AppCommand):
             return False
 
 
-class ExportLabeledFrames(AppCommand):
+class ExportDatasetWithImages(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         Labels.save_file(
@@ -836,10 +836,17 @@ class ExportLabeledFrames(AppCommand):
             "SLEAP HDF5 dataset (*.slp *.h5)",
             "Compressed JSON dataset (*.json *.json.zip)",
         ]
+
+        dirname = os.path.dirname(context.state["filename"])
+        basename = os.path.basename(context.state["filename"])
+
+        new_basename = f"{os.path.splitext(basename)[0]}.pkg.slp"
+        new_filename = os.path.join(dirname, new_basename)
+
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Labeled Frames As...",
-            dir=context.state["filename"] + ".slp",
+            dir=new_filename,
             filters=";;".join(filters),
         )
         if len(filename) == 0:

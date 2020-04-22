@@ -597,7 +597,7 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "export frames",
             "Export Training Package...",
-            self.commands.exportLabeledFrames,
+            self.commands.exportDatasetWithImages,
         )
         add_menu_item(
             predictionMenu,
