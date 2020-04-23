@@ -53,6 +53,7 @@ setup(
             "sleap-label=sleap.gui.app:main",
             "sleap-train=sleap.nn.training:main",
             "sleap-track=sleap.nn.inference:main",
+            "sleap-inspect=sleap.info.labels:main",
             "sleap-diagnostic=sleap.diagnostic:main",
         ],
     },
