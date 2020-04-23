@@ -1297,14 +1297,6 @@ def main():
         job_config.outputs.run_name_suffix = args.suffix
     job_config.outputs.save_visualizations = args.save_viz
 
-    # NOTE: This must be first line printed to stdout, otherwise we won't be
-    # able to access it when running training in subprocess via Popen.
-    # logger.info(training_job.run_path)
-    # logger.info()
-    ## Now this is what is printed: logger.info(f"Created run path: {self.run_path}")
-    # TODO: Set the run_name, prefix and suffix explicitly so this doesn't need to be
-    #   parsed from stdout.
-
     logger.info(f"Training labels file: {args.labels_path}")
     logger.info(f"Training profile: {job_filename}")
     logger.info("")
