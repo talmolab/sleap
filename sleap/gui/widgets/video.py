@@ -211,7 +211,7 @@ class QtVideoPlayer(QWidget):
         self.view = GraphicsView(self.state, self)
         self.video = None
 
-        self.seekbar = VideoSlider(color_manager=self.color_manager)
+        self.seekbar = VideoSlider()
         self.seekbar.keyPress.connect(self.keyPressEvent)
         self.seekbar.keyRelease.connect(self.keyReleaseEvent)
         self.seekbar.setEnabled(False)
