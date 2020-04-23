@@ -32,7 +32,7 @@ def test_slider(qtbot, centered_pair_predictions):
     assert slider.getSelection() == (slider._toVal(5), slider._toVal(100))
 
     slider.setSelection(20, 30)
-    assert slider.getSelection() == (slider._toVal(20), slider._toVal(30))
+    assert slider.getSelection() == (20, 30)
 
     slider.setEnabled(False)
     assert not slider.enabled()
