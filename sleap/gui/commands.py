@@ -823,12 +823,16 @@ class ExportLabeledClip(AppCommand):
 class ExportDatasetWithImages(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
+        win = MessageDialog("Exporting dataset with frame images...", context.app)
+
         Labels.save_file(
             context.state["labels"],
             params["filename"],
             default_suffix="slp",
             save_frame_data=True,
         )
+
+        win.hide()
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
