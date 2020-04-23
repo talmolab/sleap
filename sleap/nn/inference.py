@@ -249,10 +249,14 @@ class MockPredictor(Predictor):
             # Default to first video in labels file
             prediction_video = self.labels.videos[0]
 
-        # Get specified frames from labels file
-        frames = self.labels.find(
-            video=prediction_video, frame_idx=list(data_provider.example_indices)
+        # Get specified frames from labels file (or use None for all frames)
+        frame_idx_list = (
+            list(data_provider.example_indices)
+            if data_provider.example_indices
+            else None
         )
+
+        frames = self.labels.find(video=prediction_video, frame_idx=frame_idx_list)
 
         # Run tracker as specified
         if self.tracker:
