@@ -1,3 +1,43 @@
+"""
+Command line utility for converting between various dataset formats.
+
+Reads:
+
+* SLEAP dataset in .slp, .h5, .json, or .json.zip file
+* SLEAP "analysis" file in .h5 format
+* LEAP dataset in .mat file
+* DeepLabCut dataset in .yaml or .csv file
+* DeepPoseKit dataset in .h5 file
+* COCO keypoints dataset in .json file
+
+Writes:
+
+* SLEAP dataset (defaults to .slp if no extension specified)
+* SLEAP "analysis" file (.h5)
+
+You don't need to specify the input format; this will be automatically detected.
+
+If you don't specify an output path, then by default we will convert to a .slp
+dataset file and save it at `<input path>.slp`.
+
+Analysis HDF5:
+
+If you want to export an "analysis" h5 file, use `--format analysis`. If no
+output path is specified, the default is `<input path>.analysis.h5`.
+
+The analysis HDF5 file has these datasets:
+
+* "track_occupancy"    (shape: tracks * frames)
+* "tracks"             (shape: frames * nodes * 2 * tracks)
+* "track_names"        (shape: tracks)
+* "node_names"         (shape: nodes)
+
+Note: the datasets are stored column-major as expected by MATLAB.
+This means that if you're working with the file in Python you may want to
+first transpose the datasets so they matche the shapes described above.
+
+"""
+
 import argparse
 import os
 import re
