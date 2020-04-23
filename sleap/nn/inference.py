@@ -955,6 +955,13 @@ class SingleInstancePredictor(Predictor):
         return list(generator)
 
 
+CLI_PREDICTORS = {
+    "topdown": TopdownPredictor,
+    "bottomup": BottomupPredictor,
+    "single": SingleInstancePredictor,
+}
+
+
 def make_cli_parser():
     import argparse
     from sleap.util import frame_list
@@ -1026,8 +1033,30 @@ def make_cli_parser():
         "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
     )
 
+    # Add args for each predictor class
+    for predictor_name, predictor_class in CLI_PREDICTORS.items():
+        if "peak_threshold" in attr.fields_dict(predictor_class):
+            # get the default value to show in help string, although we'll
+            # use None as default so that unspecified vals won't be passed to
+            # builder.
+            default_val = attr.fields_dict(predictor_class)["peak_threshold"].default
+
+            parser.add_argument(
+                f"--{predictor_name}.peak_threshold",
+                type=float,
+                default=None,
+                help=f"Threshold to use when finding peaks in {predictor_class.__name__} (default: {default_val}).",
+            )
+
     # Add args for tracking
     Tracker.add_cli_parser_args(parser, arg_scope="tracking")
+
+    parser.add_argument(
+        "--test-pipeline",
+        default=False,
+        action="store_true",
+        help="Test pipeline construction without running anything.",
+    )
 
     return parser
 
@@ -1076,17 +1105,25 @@ def find_heads_for_model_paths(paths) -> Dict[str, str]:
 
 
 def make_predictor_from_models(
-    trained_model_paths: Dict[str, str], labels_path: Optional[str] = None
+    trained_model_paths: Dict[str, str],
+    labels_path: Optional[str] = None,
+    policy_args: Optional[dict] = None,
 ) -> Predictor:
     """Given dict of paths keyed by head name, returns appropriate predictor."""
 
+    def get_relevant_args(key):
+        if policy_args is not None and key in policy_args:
+            return policy_args[key]
+        return dict()
+
     if "multi_instance" in trained_model_paths:
         predictor = BottomupPredictor.from_trained_models(
-            trained_model_paths["multi_instance"]
+            trained_model_paths["multi_instance"], **get_relevant_args("bottomup")
         )
     elif "single_instance" in trained_model_paths:
         predictor = SingleInstancePredictor.from_trained_models(
-            confmap_model_path=trained_model_paths["single_instance"]
+            confmap_model_path=trained_model_paths["single_instance"],
+            **get_relevant_args("single"),
         )
     elif (
         "centroid" in trained_model_paths and "centered_instance" in trained_model_paths
@@ -1094,6 +1131,7 @@ def make_predictor_from_models(
         predictor = TopdownPredictor.from_trained_models(
             centroid_model_path=trained_model_paths["centroid"],
             confmap_model_path=trained_model_paths["centered_instance"],
+            **get_relevant_args("topdown"),
         )
     elif len(trained_model_paths) == 0 and labels_path:
         predictor = MockPredictor.from_trained_models(labels_path=labels_path)
@@ -1160,13 +1198,26 @@ def main():
     # Find the specified models
     model_paths_by_head = find_heads_for_model_paths(args.models)
 
+    # Make a scoped dictionary with args specified from cli
+    policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
+
     # Create appropriate predictor given these models
-    predictor = make_predictor_from_models(model_paths_by_head, labels_path=args.labels)
+    predictor = make_predictor_from_models(
+        model_paths_by_head, labels_path=args.labels, policy_args=policy_args
+    )
 
     # Make the tracker
-    policy_args = util.make_scoped_dictionary(vars(args), exclude_nones=True)
     tracker = make_tracker_from_cli(policy_args)
     predictor.tracker = tracker
+
+    if args.test_pipeline:
+        print()
+        print(policy_args)
+        print()
+        print(predictor)
+        print()
+        print("--test-pipeline arg set so stopping here.")
+        return
 
     # Run inference!
     t0 = time.time()
@@ -1176,9 +1227,9 @@ def main():
     prediction_metadata = dict()
     for head, path in model_paths_by_head.items():
         prediction_metadata[f"model.{head}.path"] = os.path.abspath(path)
-    if "tracking" in policy_args:
-        for key, val in policy_args["tracking"].items():
-            prediction_metadata[f"tracking.{key}"] = val
+    for scope in policy_args.keys():
+        for key, val in policy_args[scope].items():
+            prediction_metadata[f"{scope}.{key}"] = val
     prediction_metadata["video.path"] = args.data_path
     prediction_metadata["sleap.version"] = sleap.__version__
 
