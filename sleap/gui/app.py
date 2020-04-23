@@ -17,13 +17,13 @@ from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
 from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
 from PySide2.QtWidgets import QMessageBox
 
-
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.widgets.video import QtVideoPlayer
+from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.dataviews import (
     GenericTableView,
     VideosTableModel,
@@ -597,7 +597,7 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "export frames",
             "Export Training Package...",
-            self.commands.exportLabeledFrames,
+            self.commands.exportDatasetWithImages,
         )
         add_menu_item(
             predictionMenu,
@@ -1158,7 +1158,10 @@ class MainWindow(QMainWindow):
 
     def updateSeekbarMarks(self):
         """Updates marks on seekbar."""
-        self.player.seekbar.setTracksFromLabels(self.labels, self.state["video"])
+        set_slider_marks_from_labels(
+            self.player.seekbar, self.labels, self.state["video"], self.color_manager
+        )
+
 
     def setSeekbarHeader(self, graph_name):
         """Updates graph shown in seekbar header."""

@@ -6,13 +6,8 @@ empty frames from the beginning and end of video, although
 `--all-frames` argument will make it include empty frames from beginning
 of video.
 
-Call from command line as:
-
->>> python -m sleap.info.write_tracking_h5 <labels_filename>
-
-Will write file to `<labels_filename>.tracking.h5`.
-
 The HDF5 file has these datasets:
+
 * "track_occupancy"     shape: tracks * frames
 * "tracks"              shape: frames * nodes * 2 * tracks
 * "track_names"         shape: tracks

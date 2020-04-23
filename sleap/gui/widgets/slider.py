@@ -11,19 +11,10 @@ import attr
 import itertools
 import numpy as np
 from enum import Enum
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 
-# Map meaning of mark to the type of mark
-class SemanticMarkType(Enum):
-    user = "simple"
-    predicted_no_track = "simple_thin"
-    suggested_with_user = "filled"
-    suggested_with_nothing = "open"
-    suggested_with_predicted = "predicted"
-
-
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False)
 class SliderMark:
     """
     Class to hold data for an individual mark on the slider.
@@ -138,8 +129,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
             this can be either
             * list of values to mark
             * list of (track, value)-tuples to mark
-        color_manager: A :class:`ColorManager` which determines the
-            color to use for "track"-type marks
 
     Signals:
         mousePressed: triggered on Qt event
@@ -168,7 +157,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
         max=1,
         val=0,
         marks=None,
-        color_manager: Optional[ColorManager] = None,
         *args,
         **kwargs,
     ):
@@ -185,7 +173,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.setMouseTracking(True)
 
         self._get_val_tooltip = None
-        self._color_manager = color_manager
 
         self.tick_index_offset = 1
         self.zoom_factor = 1
@@ -206,7 +193,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         # Add border rect
         outline_rect = QtCore.QRectF(0, 0, 200, self._min_height - 3)
-        self.setBoxRect(outline_rect)
+        self.box_rect = outline_rect
         # self.outlineBox = self.scene.addRect(outline_rect)
         # self.outlineBox.setPen(QPen(QColor("black", alpha=0)))
 
@@ -249,167 +236,73 @@ class VideoSlider(QtWidgets.QGraphicsView):
         pen.setCosmetic(True)
         self.poly = self.scene.addPath(QPainterPath(), pen, self.select_box.brush())
         self.headerSeries = dict()
-        self.drawHeader()
+        self._draw_header()
 
-    def _pointsToPath(self, points: List[QtCore.QPointF]) -> QPainterPath:
-        """Converts list of `QtCore.QPointF` objects to a `QPainterPath`."""
-        path = QPainterPath()
-        path.addPolygon(QPolygonF(points))
-        return path
+    # Methods to match API for QSlider
 
-    def setTracksFromLabels(self, labels: "Labels", video: "Video"):
-        """Set slider marks using track information from `Labels` object.
+    def value(self) -> float:
+        """Returns value of slider."""
+        return self._val_main
 
-        Note that this is the only method coupled to a SLEAP object.
+    def setValue(self, val: float) -> float:
+        """Sets value of slider."""
+        self._val_main = val
+        x = self._toPos(val)
+        self.handle.setPos(x, 0)
+        self.ensureVisible(x, 0, self._handle_width, 0, 3, 0)
 
-        Args:
-            labels: the dataset with tracks and labeled frames
-            video: the video for which to show marks
+    def setMinimum(self, min: float) -> float:
+        """Sets minimum value for slider."""
+        self._val_min = min
 
-        Returns:
-            None
-        """
+    def setMaximum(self, max: float) -> float:
+        """Sets maximum value for slider."""
+        self._val_max = max
 
-        if self._color_manager is None:
-            self._color_manager = ColorManager(labels=labels)
+    def setEnabled(self, val: float) -> float:
+        """Set whether the slider is enabled."""
+        self._enabled = val
 
-        def get_val_tooltip(idx: int) -> str:
-            tooltip = f"Frame {idx+1}"
+    def enabled(self):
+        """Returns whether slider is enabled."""
+        return self._enabled
 
-            frame_mark_types = {mark.type for mark in self.getMarksAtVal(idx)}
+    # Methods for working with visual positions (mapping to and from, redrawing)
 
-            # if (SemanticMarkType.suggested_with_user.value in frame_mark_types
-            #         or SemanticMarkType.suggested_with_predicted.value in frame_mark_types
-            #         or SemanticMarkType.suggested_with_nothing.value in frame_mark_types ):
-            #     tooltip += "\nsuggested frame"
+    def _update_visual_positions(self):
+        """Updates the visual x position of handle and slider annotations."""
+        x = self._toPos(self.value())
+        self.handle.setPos(x, 0)
 
-            if SemanticMarkType.user.value in frame_mark_types:
-                tooltip += "\nuser labeled"
-            elif SemanticMarkType.predicted_no_track.value in frame_mark_types:
-                tooltip += "\nprediction without track identity"
-            elif SemanticMarkType.suggested_with_user.value in frame_mark_types:
-                tooltip += "\nsuggested frame with user labels"
-            elif SemanticMarkType.suggested_with_nothing.value in frame_mark_types:
-                tooltip += "\nsuggested frame (no labels)"
-            elif SemanticMarkType.suggested_with_predicted.value in frame_mark_types:
-                tooltip += "\nsuggested frame with prediction"
-            elif "track" in frame_mark_types:
-                tooltip += "\nprediction with track identity"
+        for mark in self._mark_items.keys():
 
-            lf = labels.find(video, idx)
-            if lf:
-                lf = lf[0]
-                user_instance_count = len(lf.user_instances)
-                pred_instance_count = len(lf.predicted_instances)
+            if mark.type == "track":
+                width_in_frames = mark.end_val - mark.val
+                width = max(2, self._toPos(width_in_frames))
 
-                if pred_instance_count:
-                    tooltip += f"\n{pred_instance_count} predicted instance"
-                    if pred_instance_count > 1:
-                        tooltip += "s"
-
-                if user_instance_count:
-                    tooltip += f"\n{user_instance_count} user instance"
-                    if user_instance_count > 1:
-                        tooltip += "s"
-
-            return tooltip
-
-        self._get_val_tooltip = get_val_tooltip
-
-        lfs = labels.find(video)
-
-        slider_marks = []
-        track_row = 0
-
-        # Add marks with track
-        track_occupancy = labels.get_track_occupancy(video)
-        for track in labels.tracks:
-            if track in track_occupancy and not track_occupancy[track].is_empty:
-                if track_row > 0 and self.isNewColTrack(track_row):
-                    slider_marks.append(
-                        SliderMark("tick_column", val=track_occupancy[track].start)
-                    )
-                for occupancy_range in track_occupancy[track].list:
-                    slider_marks.append(
-                        SliderMark(
-                            "track",
-                            val=occupancy_range[0],
-                            end_val=occupancy_range[1],
-                            row=track_row,
-                            color=self._color_manager.get_track_color(track),
-                        )
-                    )
-                track_row += 1
-
-        # Frames with instance without track
-        untracked_frames = set()
-        if None in track_occupancy:
-            for occupancy_range in track_occupancy[None].list:
-                untracked_frames.update({val for val in range(*occupancy_range)})
-
-        labeled_marks = {lf.frame_idx for lf in lfs}
-        user_labeled = {lf.frame_idx for lf in lfs if len(lf.user_instances)}
-        suggested_frames = set(labels.get_video_suggestions(video))
-
-        all_simple_frames = set()
-        all_simple_frames.update(untracked_frames)
-        all_simple_frames.update(suggested_frames)
-        all_simple_frames.update(user_labeled)
-
-        for frame_idx in all_simple_frames:
-            if frame_idx in suggested_frames:
-                if frame_idx in user_labeled:
-                    # suggested frame with user labeled instances
-                    mark_type = SemanticMarkType.suggested_with_user
-                elif frame_idx in labeled_marks:
-                    # suggested frame with only predicted instances
-                    mark_type = SemanticMarkType.suggested_with_predicted
-                else:
-                    # suggested frame without any instances
-                    mark_type = SemanticMarkType.suggested_with_nothing
-            elif frame_idx in user_labeled:
-                # frame with user labeled instances
-                mark_type = SemanticMarkType.user
             else:
-                # no user instances, predicted instance without track identity
-                mark_type = SemanticMarkType.predicted_no_track
+                width = mark.visual_width
 
-            mark_type = mark_type.value
+            x = self._toPos(mark.val, center=True)
+            self._mark_items[mark].setPos(x, 0)
 
-            slider_marks.append(SliderMark(mark_type, val=frame_idx))
+            if mark in self._mark_labels:
+                label_x = max(
+                    0, x - self._mark_labels[mark].boundingRect().width() // 2
+                )
+                self._mark_labels[mark].setPos(label_x, 4)
 
-        self.setTracks(track_row)  # total number of tracks to show
-        self.setMarks(slider_marks)
+            rect = self._mark_items[mark].rect()
+            rect.setWidth(width)
+            rect.setHeight(
+                mark.get_height(
+                    container_height=self.box_rect.height() - self._header_height
+                )
+            )
 
-    def setHeaderSeries(self, series: Optional[Dict[int, float]] = None):
-        """Show header graph with specified series.
+            self._mark_items[mark].setRect(rect)
 
-        Args:
-            series: {frame number: series value} dict.
-        Returns:
-            None.
-        """
-        self.headerSeries = [] if series is None else series
-        self._header_height = self._header_label_height + self._header_graph_height
-        self.drawHeader()
-        self.updateHeight()
-
-    def clearHeader(self):
-        """Remove header graph from slider."""
-        self.headerSeries = []
-        self._header_height = self._header_label_height
-        self.updateHeight()
-
-    def setTracks(self, track_rows):
-        """Set the number of tracks to show in slider.
-
-        Args:
-            track_rows: the number of tracks to show
-        """
-        self._track_rows = track_rows
-        self.updateHeight()
-
-    def getMinMaxHeights(self):
+    def _get_min_max_slider_heights(self):
         tracks = self._track_rows
         if tracks == 0:
             min_height = self._min_height
@@ -430,10 +323,10 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         return min_height, max_height
 
-    def updateHeight(self):
+    def _update_slider_height(self):
         """Update the height of the slider."""
 
-        min_height, max_height = self.getMinMaxHeights()
+        min_height, max_height = self._get_min_max_slider_heights()
 
         # TODO: find the current height of the scrollbar
         # self.horizontalScrollBar().height() gives the wrong value
@@ -464,7 +357,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         x = val
         x -= self._val_min
         x /= max(1, self._val_max - self._val_min)
-        x *= self._sliderWidth()
+        x *= self._slider_width
         if center:
             x += self.handle.rect().width() / 2.0
         return x
@@ -472,51 +365,45 @@ class VideoSlider(QtWidgets.QGraphicsView):
     def _toVal(self, x: float, center=False) -> float:
         """Converts x position to slider value."""
         val = x
-        val /= self._sliderWidth()
+        val /= self._slider_width
         val *= max(1, self._val_max - self._val_min)
         val += self._val_min
         val = round(val)
         return val
 
-    def _sliderWidth(self) -> float:
+    @property
+    def _slider_width(self) -> float:
         """Returns visual width of slider."""
-        return self.getBoxRect().width() - self.handle.rect().width()
+        return self.box_rect.width() - self.handle.rect().width()
 
     @property
     def slider_visible_value_range(self) -> float:
         """Value range that's visible given current size and zoom."""
         return self._toVal(self.width() - 1)
 
-    def value(self) -> float:
-        """Returns value of slider."""
-        return self._val_main
-
-    def setValue(self, val: float) -> float:
-        """Sets value of slider."""
-        self._val_main = val
-        x = self._toPos(val)
-        self.handle.setPos(x, 0)
-        self.ensureVisible(x, 0, self._handle_width, 0, 3, 0)
-
-    def setMinimum(self, min: float) -> float:
-        """Sets minimum value for slider."""
-        self._val_min = min
-
-    def setMaximum(self, max: float) -> float:
-        """Sets maximum value for slider."""
-        self._val_max = max
+    @property
+    def _mark_area_height(self) -> float:
+        _, max_height = self._get_min_max_slider_heights()
+        return max_height - 3 - self._header_height
 
     @property
     def value_range(self) -> float:
         return self._val_max - self._val_min
 
-    def setEnabled(self, val: float) -> float:
-        """Set whether the slider is enabled."""
-        self._enabled = val
+    @property
+    def box_rect(self) -> QtCore.QRectF:
+        return self._box_rect
 
-    def enabled(self):
-        """Returns whether slider is enabled."""
-        return self._enabled
+    @box_rect.setter
+    def box_rect(self, rect: QtCore.QRectF):
+        self._box_rect = rect
+
+        # Update the scene rect so that it matches how much space we
+        # currently want for drawing everything.
+        rect.setWidth(rect.width() - 1)
+        self.setSceneRect(rect)
+
+    # Methods for range selection and zoom
 
     def clearSelection(self):
         """Clears selection endpoints."""
@@ -551,7 +438,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if a == b:
             self.clearSelection()
         else:
-            self.drawSelection(a, b)
+            self._draw_selection(a, b)
         # Emit signal (even if user selected same region as before)
         self.selectionChanged.emit(*self.getSelection())
 
@@ -574,13 +461,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
         end = max(a, b)
         return start, end
 
-    def drawSelection(self, a: float, b: float):
-        self.updateSelectionBoxPositions(self.select_box, a, b)
+    def _draw_selection(self, a: float, b: float):
+        self._update_selection_box_positions(self.select_box, a, b)
 
-    def drawZoomBox(self, a: float, b: float):
-        self.updateSelectionBoxPositions(self.zoom_box, a, b)
+    def _draw_zoom_box(self, a: float, b: float):
+        self._update_selection_box_positions(self.zoom_box, a, b)
 
-    def updateSelectionBoxPositions(self, box_object, a: float, b: float):
+    def _update_selection_box_positions(self, box_object, a: float, b: float):
         """Update box item on slider.
 
         Args:
@@ -596,23 +483,20 @@ class VideoSlider(QtWidgets.QGraphicsView):
         start_pos = self._toPos(start, center=True)
         end_pos = self._toPos(end, center=True)
         box_rect = QtCore.QRect(
-            start_pos,
-            self._header_height,
-            end_pos - start_pos,
-            self.getBoxRect().height(),
+            start_pos, self._header_height, end_pos - start_pos, self.box_rect.height(),
         )
 
         box_object.setRect(box_rect)
         box_object.show()
 
-    def updateSelectionBoxesOnResize(self):
+    def _update_selection_boxes_on_resize(self):
         for box_object in (self.select_box, self.zoom_box):
             rect = box_object.rect()
             rect.setHeight(self._handle_height)
             box_object.setRect(rect)
 
         if self.select_box.isVisible():
-            self.drawSelection(*self.getSelection())
+            self._draw_selection(*self.getSelection())
 
     def moveSelectionAnchor(self, x: float, y: float):
         """
@@ -626,13 +510,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
             None.
         """
         x = max(x, 0)
-        x = min(x, self.getBoxRect().width())
+        x = min(x, self.box_rect.width())
         anchor_val = self._toVal(x, center=True)
 
         if len(self._selection) % 2 == 0:
             self.startSelection(anchor_val)
 
-        self.drawSelection(anchor_val, self._selection[-1])
+        self._draw_selection(anchor_val, self._selection[-1])
 
     def releaseSelectionAnchor(self, x, y):
         """
@@ -646,7 +530,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
             None.
         """
         x = max(x, 0)
-        x = min(x, self.getBoxRect().width())
+        x = min(x, self.box_rect.width())
         anchor_val = self._toVal(x)
         self.endSelection(anchor_val)
 
@@ -656,7 +540,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         current_val = self._toVal(x, center=True)
 
-        self.drawZoomBox(current_val, self._zoom_start_val)
+        self._draw_zoom_box(current_val, self._zoom_start_val)
 
     def releaseZoomDrag(self, x, y):
 
@@ -692,6 +576,17 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         self.centerOn(center_pos, 0)
 
+    # Methods for modifying marks on slider
+
+    def setNumberOfTracks(self, track_rows):
+        """Set the number of tracks to show in slider.
+
+        Args:
+            track_rows: the number of tracks to show
+        """
+        self._track_rows = track_rows
+        self._update_slider_height()
+
     def clearMarks(self):
         """Clears all marked values for slider."""
         if hasattr(self, "_mark_items"):
@@ -726,7 +621,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
                     mark = SliderMark("simple", mark)
                 self.addMark(mark, update=False)
 
-        self.updatePos()
+        self._update_visual_positions()
 
     def setTickMarks(self):
         """Resets which tick marks to show."""
@@ -805,10 +700,12 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         v_offset = v_top_pad
         if new_mark.type == "track":
-            v_offset += self.getTrackVerticalPos(*self.getTrackColRow(new_mark.row))
+            v_offset += self._get_track_vertical_pos(
+                *self._get_track_column_row(new_mark.row)
+            )
 
         height = new_mark.get_height(
-            container_height=self.getBoxRect().height() - self._header_height
+            container_height=self.box_rect.height() - self._header_height
         )
 
         color = new_mark.QColor
@@ -835,9 +732,16 @@ class VideoSlider(QtWidgets.QGraphicsView):
             self._mark_items[new_mark].setZValue(1)
 
         if update:
-            self.updatePos()
+            self._update_visual_positions()
 
-    def getTrackColRow(self, raw_row: int) -> Tuple[int, int]:
+    def _get_track_column_row(self, raw_row: int) -> Tuple[int, int]:
+        """
+        Returns the column and row for a given track index.
+
+        If there are many tracks we "wrap" around to showing tracks at the top
+        of the slider (so that it's not too tall). Each time we "wrap" back to
+        the top is a new "column" which starts at "row" 0.
+        """
         if raw_row < self._max_tracks_stacked:
             return 0, raw_row
 
@@ -852,7 +756,12 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
             return col, rows_down
 
-    def getTrackVerticalPos(self, col: int, row: int) -> int:
+    def _get_track_vertical_pos(self, col: int, row: int) -> int:
+        """
+        Returns visible vertical position of track in given column and row.
+
+        The "column" and "row" are given by _get_track_column_row.
+        """
         if col == 0:
             return row * self._track_height
         else:
@@ -860,42 +769,31 @@ class VideoSlider(QtWidgets.QGraphicsView):
                 self._track_height * row
             )
 
-    def isNewColTrack(self, row: int) -> bool:
-        _, row_down = self.getTrackColRow(row)
+    def _is_track_in_new_column(self, row: int) -> bool:
+        """Returns whether this track is at the top of a new column."""
+        _, row_down = self._get_track_column_row(row)
         return row_down == 0
 
-    def updatePos(self):
-        """Update the visual x position of handle and slider annotations."""
-        x = self._toPos(self.value())
-        self.handle.setPos(x, 0)
+    # Methods for header graph
 
-        for mark in self._mark_items.keys():
+    def setHeaderSeries(self, series: Optional[Dict[int, float]] = None):
+        """Show header graph with specified series.
 
-            if mark.type == "track":
-                width_in_frames = mark.end_val - mark.val
-                width = max(2, self._toPos(width_in_frames))
+        Args:
+            series: {frame number: series value} dict.
+        Returns:
+            None.
+        """
+        self.headerSeries = [] if series is None else series
+        self._header_height = self._header_label_height + self._header_graph_height
+        self._draw_header()
+        self._update_slider_height()
 
-            else:
-                width = mark.visual_width
-
-            x = self._toPos(mark.val, center=True)
-            self._mark_items[mark].setPos(x, 0)
-
-            if mark in self._mark_labels:
-                label_x = max(
-                    0, x - self._mark_labels[mark].boundingRect().width() // 2
-                )
-                self._mark_labels[mark].setPos(label_x, 4)
-
-            rect = self._mark_items[mark].rect()
-            rect.setWidth(width)
-            rect.setHeight(
-                mark.get_height(
-                    container_height=self.getBoxRect().height() - self._header_height
-                )
-            )
-
-            self._mark_items[mark].setRect(rect)
+    def clearHeader(self):
+        """Remove header graph from slider."""
+        self.headerSeries = []
+        self._header_height = self._header_label_height
+        self._update_slider_height()
 
     def _get_header_series_len(self):
         if hasattr(self.headerSeries, "keys"):
@@ -906,7 +804,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
     @property
     def _header_series_items(self):
-        """Uields (frame idx, val) for header series items."""
+        """Yields (frame idx, val) for header series items."""
         if hasattr(self.headerSeries, "items"):
             for key, val in self.headerSeries.items():
                 yield key, val
@@ -915,15 +813,15 @@ class VideoSlider(QtWidgets.QGraphicsView):
                 val = self.headerSeries[key]
                 yield key, val
 
-    def drawHeader(self):
-        """Draw the header graph."""
+    def _draw_header(self):
+        """Draws the header graph."""
         if len(self.headerSeries) == 0 or self._header_height == 0:
             self.poly.setPath(QPainterPath())
             return
 
         series_frame_max = self._get_header_series_len()
 
-        step = series_frame_max // int(self._sliderWidth())
+        step = series_frame_max // int(self._slider_width)
         step = max(step, 1)
         count = series_frame_max // step * step
 
@@ -959,10 +857,18 @@ class VideoSlider(QtWidgets.QGraphicsView):
         points = list(itertools.starmap(QtCore.QPointF, points))
         self.poly.setPath(self._pointsToPath(points))
 
+    def _pointsToPath(self, points: List[QtCore.QPointF]) -> QPainterPath:
+        """Converts list of `QtCore.QPointF` objects to a `QPainterPath`."""
+        path = QPainterPath()
+        path.addPolygon(QPolygonF(points))
+        return path
+
+    # Methods for working with slider handle
+
     def mapMouseXToHandleX(self, x) -> float:
         x -= self.handle.rect().width() / 2.0
         x = max(x, 0)
-        x = min(x, self.getBoxRect().width() - self.handle.rect().width())
+        x = min(x, self.box_rect.width() - self.handle.rect().width())
         return x
 
     def moveHandle(self, x, y):
@@ -995,140 +901,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if old != val:
             self.valueChanged.emit(self._val_main)
 
-    def contiguousSelectionMarksAroundVal(self, val):
-        """Selects contiguously marked frames around value."""
-        if not self.isMarkedVal(val):
-            return
-
-        dec_val = self.getStartContiguousMark(val)
-        inc_val = self.getEndContiguousMark(val)
-
-        self.setSelection(dec_val, inc_val)
-
-    def getStartContiguousMark(self, val):
-        last_val = val
-        dec_val = self.decrementContiguousMarkedVal(last_val)
-        while dec_val < last_val and dec_val > self._val_min:
-            last_val = dec_val
-            dec_val = self.decrementContiguousMarkedVal(last_val)
-
-        return dec_val
-
-    def getEndContiguousMark(self, val):
-        last_val = val
-        inc_val = self.incrementContiguousMarkedVal(last_val)
-        while inc_val > last_val and inc_val < self._val_max:
-            last_val = inc_val
-            inc_val = self.incrementContiguousMarkedVal(last_val)
-
-        return inc_val
-
-    def getMarksAtVal(self, val):
-        if val is None:
-            return []
-
-        return [
-            mark
-            for mark in self._marks
-            if (mark.val == val and mark.type not in ("tick", "tick_column"))
-            or (mark.type == "track" and mark.val <= val < mark.end_val)
-        ]
-
-    def isMarkedVal(self, val):
-        """Returns whether value has mark."""
-        if self.getMarksAtVal(val):
-            return True
-        return False
-
-    def decrementContiguousMarkedVal(self, val):
-        """Decrements value within contiguously marked range if possible."""
-        dec_val = min(
-            (
-                mark.val
-                for mark in self._marks
-                if mark.type == "track" and mark.val < val <= mark.end_val
-            ),
-            default=val,
-        )
-        if dec_val < val:
-            return dec_val
-
-        if val - 1 in [mark.val for mark in self._marks]:
-            return val - 1
-
-        # Return original value if we can't decrement it w/in contiguous range
-        return val
-
-    def incrementContiguousMarkedVal(self, val):
-        """Increments value within contiguously marked range if possible."""
-        inc_val = max(
-            (
-                mark.end_val - 1
-                for mark in self._marks
-                if mark.type == "track" and mark.val <= val < mark.end_val
-            ),
-            default=val,
-        )
-        if inc_val > val:
-            return inc_val
-
-        if val + 1 in [mark.val for mark in self._marks]:
-            return val + 1
-
-        # Return original value if we can't decrement it w/in contiguous range
-        return val
-
-    def getBoxRect(self):
-        # return self.outlineBox.rect()
-        return self._box_rect
-
-    def setBoxRect(self, rect):
-        # self.outlineBox.setRect(rect)
-        self._box_rect = rect
-
-        # Update the scene rect so that it matches how much space we
-        # currently want for drawing everything.
-        rect.setWidth(rect.width() - 1)
-        self.setSceneRect(rect)
-
-    def getMarkAreaHeight(self):
-        _, max_height = self.getMinMaxHeights()
-        return max_height - 3 - self._header_height
-
-    def resizeEvent(self, event=None):
-        """Override method to update visual size when necessary.
-
-        Args:
-            event
-        """
-
-        outline_rect = self.getBoxRect()
-        handle_rect = self.handle.rect()
-
-        outline_rect.setHeight(self.getMarkAreaHeight() + self._header_height)
-
-        if event is not None:
-            visual_width = event.size().width() - 1
-        else:
-            visual_width = self.width() - 1
-
-        drawn_width = visual_width * self.zoom_factor
-
-        outline_rect.setWidth(drawn_width)
-        self.setBoxRect(outline_rect)
-
-        handle_rect.setTop(self._handle_top)
-        handle_rect.setHeight(self._handle_height)
-        self.handle.setRect(handle_rect)
-
-        self.updateSelectionBoxesOnResize()
-
-        self.setTickMarks()
-        self.updatePos()
-        self.drawHeader()
-
-        super(VideoSlider, self).resizeEvent(event)
-
     @property
     def _handle_top(self) -> float:
         """Returns y position of top of handle (i.e., header height)."""
@@ -1147,7 +919,154 @@ class VideoSlider(QtWidgets.QGraphicsView):
         Returns:
             Height of handle in pixels.
         """
-        return self.getMarkAreaHeight()
+        return self._mark_area_height
+
+    # Methods for selection of contiguously marked ranges of frames
+
+    def contiguousSelectionMarksAroundVal(self, val):
+        """Selects contiguously marked frames around value."""
+        if not self.isMarkedVal(val):
+            return
+
+        dec_val = self.getStartContiguousMark(val)
+        inc_val = self.getEndContiguousMark(val)
+
+        self.setSelection(dec_val, inc_val)
+
+    def getStartContiguousMark(self, val: int) -> int:
+        """
+        Returns first marked value in contiguously marked region around val.
+        """
+        last_val = val
+        dec_val = self._dec_contiguous_marked_val(last_val)
+        while last_val > dec_val > self._val_min:
+            last_val = dec_val
+            dec_val = self._dec_contiguous_marked_val(last_val)
+
+        return dec_val
+
+    def getEndContiguousMark(self, val: int) -> int:
+        """
+        Returns last marked value in contiguously marked region around val.
+        """
+        last_val = val
+        inc_val = self._inc_contiguous_marked_val(last_val)
+        while last_val < inc_val < self._val_max:
+            last_val = inc_val
+            inc_val = self._inc_contiguous_marked_val(last_val)
+
+        return inc_val
+
+    def getMarksAtVal(self, val: int) -> List[SliderMark]:
+        if val is None:
+            return []
+
+        return [
+            mark
+            for mark in self._marks
+            if (mark.val == val and mark.type not in ("tick", "tick_column"))
+            or (mark.type == "track" and mark.val <= val < mark.end_val)
+        ]
+
+    def isMarkedVal(self, val: int) -> bool:
+        """Returns whether value has mark."""
+        if self.getMarksAtVal(val):
+            return True
+        return False
+
+    def _dec_contiguous_marked_val(self, val):
+        """Decrements value within contiguously marked range if possible."""
+        dec_val = min(
+            (
+                mark.val
+                for mark in self._marks
+                if mark.type == "track" and mark.val < val <= mark.end_val
+            ),
+            default=val,
+        )
+        if dec_val < val:
+            return dec_val
+
+        if val - 1 in [mark.val for mark in self._marks]:
+            return val - 1
+
+        # Return original value if we can't decrement it w/in contiguous range
+        return val
+
+    def _inc_contiguous_marked_val(self, val):
+        """Increments value within contiguously marked range if possible."""
+        inc_val = max(
+            (
+                mark.end_val - 1
+                for mark in self._marks
+                if mark.type == "track" and mark.val <= val < mark.end_val
+            ),
+            default=val,
+        )
+        if inc_val > val:
+            return inc_val
+
+        if val + 1 in [mark.val for mark in self._marks]:
+            return val + 1
+
+        # Return original value if we can't decrement it w/in contiguous range
+        return val
+
+    # Method for cursor
+
+    def setTooltipCallable(self, tooltip_callable: Callable):
+        """
+        Sets function to get tooltip text for given value in slider.
+
+        Args:
+            tooltip_callable: a function which takes the value which the user
+                is hovering over and returns the tooltip text to show (if any)
+        """
+        self._get_val_tooltip = tooltip_callable
+
+    def _update_cursor_for_event(self, event):
+        if event.modifiers() == QtCore.Qt.ShiftModifier:
+            self.setCursor(QtCore.Qt.CrossCursor)
+        elif event.modifiers() == QtCore.Qt.AltModifier:
+            self.setCursor(QtCore.Qt.SizeHorCursor)
+        else:
+            self.unsetCursor()
+
+    # Methods which override QGraphicsView
+
+    def resizeEvent(self, event=None):
+        """Override method to update visual size when necessary.
+
+        Args:
+            event
+        """
+
+        outline_rect = self.box_rect
+        handle_rect = self.handle.rect()
+
+        outline_rect.setHeight(self._mark_area_height + self._header_height)
+
+        if event is not None:
+            visual_width = event.size().width() - 1
+        else:
+            visual_width = self.width() - 1
+
+        drawn_width = visual_width * self.zoom_factor
+
+        outline_rect.setWidth(drawn_width)
+        self.box_rect = outline_rect
+
+        handle_rect.setTop(self._handle_top)
+        handle_rect.setHeight(self._handle_height)
+        self.handle.setRect(handle_rect)
+
+        self._update_selection_boxes_on_resize()
+
+        self.setTickMarks()
+        self._update_visual_positions()
+        self._draw_header()
+
+        super(VideoSlider, self).resizeEvent(event)
 
     def mousePressEvent(self, event):
         """Override method to move handle for mouse press/drag.
@@ -1161,13 +1080,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if not self.enabled():
             return
         # Do nothing if click outside slider area
-        if not self.getBoxRect().contains(scenePos):
+        if not self.box_rect.contains(scenePos):
             return
 
         move_function = None
         release_function = None
 
-        self.updateCursorForEvent(event)
+        self._update_cursor_for_event(event)
 
         # Shift : selection
         if event.modifiers() == QtCore.Qt.ShiftModifier:
@@ -1208,11 +1127,11 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.mousePressed.emit(scenePos.x(), scenePos.y())
 
     def mouseMoveEvent(self, event):
-        """Override method to emid mouseMoved signal on drag."""
+        """Override method to emit mouseMoved signal on drag."""
         scenePos = self.mapToScene(event.pos())
 
         # Update cursor type based on current modifier key
-        self.updateCursorForEvent(event)
+        self._update_cursor_for_event(event)
 
         # Show tooltip with information about frame under mouse
         if self._get_val_tooltip:
@@ -1240,26 +1159,18 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if not self.enabled():
             return
         # Do nothing if click outside slider area
-        if not self.getBoxRect().contains(scenePos):
+        if not self.box_rect.contains(scenePos):
             return
 
         if event.modifiers() == QtCore.Qt.ShiftModifier:
             self.contiguousSelectionMarksAroundVal(self._toVal(scenePos.x()))
-
-    def updateCursorForEvent(self, event):
-        if event.modifiers() == QtCore.Qt.ShiftModifier:
-            self.setCursor(QtCore.Qt.CrossCursor)
-        elif event.modifiers() == QtCore.Qt.AltModifier:
-            self.setCursor(QtCore.Qt.SizeHorCursor)
-        else:
-            self.unsetCursor()
 
     def leaveEvent(self, event):
         self.unsetCursor()
 
     def keyPressEvent(self, event):
         """Catch event and emit signal so something else can handle event."""
-        self.updateCursorForEvent(event)
+        self._update_cursor_for_event(event)
         self.keyPress.emit(event)
         event.accept()
 
@@ -1271,11 +1182,152 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
     def boundingRect(self) -> QtCore.QRectF:
         """Method required by Qt."""
-        return self.getBoxRect()
+        return self.box_rect
 
     def paint(self, *args, **kwargs):
         """Method required by Qt."""
         super(VideoSlider, self).paint(*args, **kwargs)
+
+
+# Map meaning of mark to the type of mark
+class SemanticMarkType(Enum):
+    user = "simple"
+    predicted_no_track = "simple_thin"
+    suggested_with_user = "filled"
+    suggested_with_nothing = "open"
+    suggested_with_predicted = "predicted"
+
+
+def set_slider_marks_from_labels(
+    slider: VideoSlider,
+    labels: "Labels",
+    video: "Video",
+    color_manager: Optional[ColorManager] = None,
+):
+    """
+    Sets slider marks using track information from `Labels` object.
+
+    Args:
+        slider: the slider we're updating
+        labels: the dataset with tracks and labeled frames
+        video: the video for which to show marks
+
+    Returns:
+        None
+    """
+
+    if color_manager is None:
+        color_manager = ColorManager(labels=labels)
+
+    # Make function which can be used to get tooltip text when hovering
+    # over a given value (i.e., frame index) in the slider.
+    def get_val_tooltip(idx: int) -> str:
+        tooltip = f"Frame {idx+1}"
+
+        frame_mark_types = {mark.type for mark in slider.getMarksAtVal(idx)}
+
+        if SemanticMarkType.user.value in frame_mark_types:
+            tooltip += "\nuser labeled"
+        elif SemanticMarkType.predicted_no_track.value in frame_mark_types:
+            tooltip += "\nprediction without track identity"
+        elif SemanticMarkType.suggested_with_user.value in frame_mark_types:
+            tooltip += "\nsuggested frame with user labels"
+        elif SemanticMarkType.suggested_with_nothing.value in frame_mark_types:
+            tooltip += "\nsuggested frame (no labels)"
+        elif SemanticMarkType.suggested_with_predicted.value in frame_mark_types:
+            tooltip += "\nsuggested frame with prediction"
+        elif "track" in frame_mark_types:
+            tooltip += "\nprediction with track identity"
+
+        lf = labels.find(video, idx)
+        if lf:
+            lf = lf[0]
+            user_instance_count = len(lf.user_instances)
+            pred_instance_count = len(lf.predicted_instances)
+
+            if pred_instance_count:
+                tooltip += f"\n{pred_instance_count} predicted instance"
+                if pred_instance_count > 1:
+                    tooltip += "s"
+
+            if user_instance_count:
+                tooltip += f"\n{user_instance_count} user instance"
+                if user_instance_count > 1:
+                    tooltip += "s"
+
+        return tooltip
+
+    # Set slider to use this function for getting tooltip text
+    slider.setTooltipCallable(get_val_tooltip)
+
+    ##########################################
+    # Make the slider marks for this dataset #
+    ##########################################
+
+    lfs = labels.find(video)
+
+    slider_marks = []
+    track_row = 0
+
+    # Add marks with track
+    track_occupancy = labels.get_track_occupancy(video)
+    for track in labels.tracks:
+        if track in track_occupancy and not track_occupancy[track].is_empty:
+            if track_row > 0 and slider._is_track_in_new_column(track_row):
+                slider_marks.append(
+                    SliderMark("tick_column", val=track_occupancy[track].start)
+                )
+            for occupancy_range in track_occupancy[track].list:
+                slider_marks.append(
+                    SliderMark(
+                        "track",
+                        val=occupancy_range[0],
+                        end_val=occupancy_range[1],
+                        row=track_row,
+                        color=color_manager.get_track_color(track),
+                    )
+                )
+            track_row += 1
+
+    # Frames with instance without track
+    untracked_frames = set()
+    if None in track_occupancy:
+        for occupancy_range in track_occupancy[None].list:
+            untracked_frames.update({val for val in range(*occupancy_range)})
+
+    labeled_marks = {lf.frame_idx for lf in lfs}
+    user_labeled = {lf.frame_idx for lf in lfs if len(lf.user_instances)}
+    suggested_frames = set(labels.get_video_suggestions(video))
+
+    all_simple_frames = set()
+    all_simple_frames.update(untracked_frames)
+    all_simple_frames.update(suggested_frames)
+    all_simple_frames.update(user_labeled)
+
+    for frame_idx in all_simple_frames:
+        if frame_idx in suggested_frames:
+            if frame_idx in user_labeled:
+                # suggested frame with user labeled instances
+                mark_type = SemanticMarkType.suggested_with_user
+            elif frame_idx in labeled_marks:
+                # suggested frame with only predicted instances
+                mark_type = SemanticMarkType.suggested_with_predicted
+            else:
+                # suggested frame without any instances
+                mark_type = SemanticMarkType.suggested_with_nothing
+        elif frame_idx in user_labeled:
+            # frame with user labeled instances
+            mark_type = SemanticMarkType.user
+        else:
+            # no user instances, predicted instance without track identity
+            mark_type = SemanticMarkType.predicted_no_track
+
+        mark_type = mark_type.value
+
+        slider_marks.append(SliderMark(mark_type, val=frame_idx))
+
+    slider.setNumberOfTracks(track_row)  # total number of tracks to show
+    slider.setMarks(slider_marks)
 
 
 if __name__ == "__main__":

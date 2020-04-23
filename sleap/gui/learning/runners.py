@@ -410,13 +410,14 @@ def make_predict_cli_call(
 ):
     cli_args = ["sleap-track"]
 
-    if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
-        # No models so we must want to re-track previous predictions
-        cli_args.append(labels_filename)
-    elif video_path is not None:
+    if video_path is not None:
         cli_args.append(video_path)
     else:
         cli_args.append(video.filename)
+
+    if not trained_job_paths and "tracking.tracker" in kwargs and labels_filename:
+        # No models so we must want to re-track previous predictions
+        cli_args.extend(("--labels", labels_filename))
 
     # TODO: better support for video params
     if hasattr(video.backend, "dataset") and video.backend.dataset:
