@@ -50,13 +50,13 @@
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="n">QLabel</span><span class="p">,</span> <span class="n">QPushButton</span><span class="p">,</span> <span class="n">QComboBox</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="n">QMessageBox</span>
 
-
 <span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Skeleton</span>
 <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Instance</span>
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 <span class="kn">from</span> <span class="nn">sleap.info.summary</span> <span class="kn">import</span> <span class="n">StatisticSeries</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.commands</span> <span class="kn">import</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">UpdateTopic</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.widgets.slider</span> <span class="kn">import</span> <span class="n">set_slider_marks_from_labels</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dataviews</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">GenericTableView</span><span class="p">,</span>
     <span class="n">VideosTableModel</span><span class="p">,</span>
@@ -630,7 +630,7 @@
             <span class="n">predictionMenu</span><span class="p">,</span>
             <span class="s2">&quot;export frames&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Export Training Package...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportLabeledFrames</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportDatasetWithImages</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">predictionMenu</span><span class="p">,</span>
@@ -1191,7 +1191,10 @@
 
 <div class="viewcode-block" id="MainWindow.updateSeekbarMarks"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.updateSeekbarMarks">[docs]</a>    <span class="k">def</span> <span class="nf">updateSeekbarMarks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates marks on seekbar.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setTracksFromLabels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">])</span></div>
+        <span class="n">set_slider_marks_from_labels</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span>
+        <span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="MainWindow.setSeekbarHeader"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.setSeekbarHeader">[docs]</a>    <span class="k">def</span> <span class="nf">setSeekbarHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates graph shown in seekbar header.&quot;&quot;&quot;</span>

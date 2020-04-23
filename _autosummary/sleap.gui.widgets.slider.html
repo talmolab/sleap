@@ -111,7 +111,7 @@
 
 <dl class="py class">
 <dt id="sleap.gui.widgets.slider.VideoSlider">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.widgets.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">min</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">val</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">marks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color_manager</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.gui.color.html#sleap.gui.color.ColorManager" title="sleap.gui.color.ColorManager">sleap.gui.color.ColorManager</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.widgets.slider.</code><code class="sig-name descname">VideoSlider</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">min</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">val</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">marks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop-in replacement for QSlider with additional features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -124,8 +124,6 @@
 this can be either
 * list of values to mark
 * list of (track, value)-tuples to mark</p></li>
-<li><p><strong>color_manager</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">ColorManager</span></code> which determines the
-color to use for “track”-type marks</p></li>
 </ul>
 </dd>
 </dl>
@@ -188,18 +186,6 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.decrementContiguousMarkedVal">
-<code class="sig-name descname">decrementContiguousMarkedVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.decrementContiguousMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.decrementContiguousMarkedVal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decrements value within contiguously marked range if possible.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.drawHeader">
-<code class="sig-name descname">drawHeader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.drawHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.drawHeader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draw the header graph.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.widgets.slider.VideoSlider.enabled">
 <code class="sig-name descname">enabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.enabled" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether slider is enabled.</p>
@@ -221,6 +207,12 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.getEndContiguousMark">
+<code class="sig-name descname">getEndContiguousMark</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.getEndContiguousMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.getEndContiguousMark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns last marked value in contiguously marked region around val.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.gui.widgets.slider.VideoSlider.getMarks">
 <code class="sig-name descname">getMarks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.getMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.getMarks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns list of marks.</p>
@@ -233,20 +225,20 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.getStartContiguousMark">
+<code class="sig-name descname">getStartContiguousMark</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.getStartContiguousMark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.getStartContiguousMark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns first marked value in contiguously marked region around val.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.gui.widgets.slider.VideoSlider.hasSelection">
 <code class="sig-name descname">hasSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.hasSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.hasSelection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if a clip is selected, False otherwise.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.incrementContiguousMarkedVal">
-<code class="sig-name descname">incrementContiguousMarkedVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.incrementContiguousMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.incrementContiguousMarkedVal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Increments value within contiguously marked range if possible.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.widgets.slider.VideoSlider.isMarkedVal">
-<code class="sig-name descname">isMarkedVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.isMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.isMarkedVal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">isMarkedVal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.isMarkedVal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.isMarkedVal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether value has mark.</p>
 </dd></dl>
 
@@ -281,7 +273,7 @@ heightUpdated: triggered when the height of slider changes</p>
 <dl class="py method">
 <dt id="sleap.gui.widgets.slider.VideoSlider.mouseMoveEvent">
 <code class="sig-name descname">mouseMoveEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.mouseMoveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.mouseMoveEvent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override method to emid mouseMoved signal on drag.</p>
+<dd><p>Override method to emit mouseMoved signal on drag.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -420,6 +412,17 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.gui.widgets.slider.VideoSlider.setNumberOfTracks">
+<code class="sig-name descname">setNumberOfTracks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track_rows</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setNumberOfTracks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setNumberOfTracks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the number of tracks to show in slider.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>track_rows</strong> – the number of tracks to show</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.gui.widgets.slider.VideoSlider.setSelection">
 <code class="sig-name descname">setSelection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_val</span></em>, <em class="sig-param"><span class="n">end_val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setSelection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Selects clip from start_val to end_val.</p>
@@ -432,30 +435,13 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.setTracks">
-<code class="sig-name descname">setTracks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track_rows</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setTracks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setTracks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the number of tracks to show in slider.</p>
+<dt id="sleap.gui.widgets.slider.VideoSlider.setTooltipCallable">
+<code class="sig-name descname">setTooltipCallable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tooltip_callable</span><span class="p">:</span> <span class="n">Callable</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setTooltipCallable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setTooltipCallable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets function to get tooltip text for given value in slider.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>track_rows</strong> – the number of tracks to show</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.setTracksFromLabels">
-<code class="sig-name descname">setTracksFromLabels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Video</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.setTracksFromLabels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.setTracksFromLabels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set slider marks using track information from <cite>Labels</cite> object.</p>
-<p>Note that this is the only method coupled to a SLEAP object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> – the dataset with tracks and labeled frames</p></li>
-<li><p><strong>video</strong> – the video for which to show marks</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>tooltip_callable</strong> – a function which takes the value which the user
+is hovering over and returns the tooltip text to show (if any)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -485,41 +471,29 @@ heightUpdated: triggered when the height of slider changes</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.updateHeight">
-<code class="sig-name descname">updateHeight</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.updateHeight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.updateHeight" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the height of the slider.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.updatePos">
-<code class="sig-name descname">updatePos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.updatePos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.updatePos" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the visual x position of handle and slider annotations.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.widgets.slider.VideoSlider.updateSelectionBoxPositions">
-<code class="sig-name descname">updateSelectionBoxPositions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">box_object</span></em>, <em class="sig-param"><span class="n">a</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">b</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.updateSelectionBoxPositions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.updateSelectionBoxPositions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update box item on slider.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>box_object</strong> – The box to update</p></li>
-<li><p><strong>a</strong> – one endpoint value</p></li>
-<li><p><strong>b</strong> – other endpoint value</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.widgets.slider.VideoSlider.value">
 <code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#VideoSlider.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.VideoSlider.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns value of slider.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.gui.widgets.slider.set_slider_marks_from_labels">
+<code class="sig-prename descclassname">sleap.gui.widgets.slider.</code><code class="sig-name descname">set_slider_marks_from_labels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">slider</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.widgets.slider.VideoSlider" title="sleap.gui.widgets.slider.VideoSlider">sleap.gui.widgets.slider.VideoSlider</a></span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Video</span></em>, <em class="sig-param"><span class="n">color_manager</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.gui.color.html#sleap.gui.color.ColorManager" title="sleap.gui.color.ColorManager">sleap.gui.color.ColorManager</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/widgets/slider.html#set_slider_marks_from_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.widgets.slider.set_slider_marks_from_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets slider marks using track information from <cite>Labels</cite> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>slider</strong> – the slider we’re updating</p></li>
+<li><p><strong>labels</strong> – the dataset with tracks and labeled frames</p></li>
+<li><p><strong>video</strong> – the video for which to show marks</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

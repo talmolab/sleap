@@ -307,15 +307,15 @@ This function should accept a list of <cite>UpdateTopic</cite> items.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.commands.CommandContext.exportLabeledClip">
-<code class="sig-name descname">exportLabeledClip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportLabeledClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportLabeledClip" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows gui for exporting clip with visual annotations.</p>
+<dt id="sleap.gui.commands.CommandContext.exportDatasetWithImages">
+<code class="sig-name descname">exportDatasetWithImages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportDatasetWithImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportDatasetWithImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for exporting the training dataset of labels/frame images.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.commands.CommandContext.exportLabeledFrames">
-<code class="sig-name descname">exportLabeledFrames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportLabeledFrames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportLabeledFrames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gui for exporting the training dataset of labels/frame images.</p>
+<dt id="sleap.gui.commands.CommandContext.exportLabeledClip">
+<code class="sig-name descname">exportLabeledClip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportLabeledClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportLabeledClip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for exporting clip with visual annotations.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -715,6 +715,30 @@ and they abort.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt id="sleap.gui.commands.ExportDatasetWithImages">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportDatasetWithImages</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ExportDatasetWithImages.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ExportDatasetWithImages.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="sleap.gui.commands.ExportLabeledClip">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportLabeledClip</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledClip" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
@@ -733,30 +757,6 @@ and they abort.</p>
 <dl class="py method">
 <dt id="sleap.gui.commands.ExportLabeledClip.do_action">
 <em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledClip.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledClip.do_action" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for performing action.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="sleap.gui.commands.ExportLabeledFrames">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportLabeledFrames</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledFrames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledFrames" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
-<dt id="sleap.gui.commands.ExportLabeledFrames.ask">
-<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledFrames.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledFrames.ask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for information gathering.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
-where we should return False if we prompt user for confirmation
-and they abort.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.commands.ExportLabeledFrames.do_action">
-<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledFrames.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledFrames.do_action" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for performing action.</p>
 </dd></dl>
 

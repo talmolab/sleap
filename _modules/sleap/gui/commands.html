@@ -272,9 +272,9 @@
         <span class="sd">&quot;&quot;&quot;Shows gui for exporting clip with visual annotations.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportLabeledClip</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandContext.exportLabeledFrames"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.exportLabeledFrames">[docs]</a>    <span class="k">def</span> <span class="nf">exportLabeledFrames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CommandContext.exportDatasetWithImages"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.exportDatasetWithImages">[docs]</a>    <span class="k">def</span> <span class="nf">exportDatasetWithImages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Gui for exporting the training dataset of labels/frame images.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportLabeledFrames</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportDatasetWithImages</span><span class="p">)</span></div>
 
     <span class="c1"># Navigation Commands</span>
 
@@ -853,26 +853,37 @@
             <span class="k">return</span> <span class="kc">False</span></div></div>
 
 
-<div class="viewcode-block" id="ExportLabeledFrames"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportLabeledFrames">[docs]</a><span class="k">class</span> <span class="nc">ExportLabeledFrames</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>
-<div class="viewcode-block" id="ExportLabeledFrames.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportLabeledFrames.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExportDatasetWithImages"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportDatasetWithImages">[docs]</a><span class="k">class</span> <span class="nc">ExportDatasetWithImages</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>
+<div class="viewcode-block" id="ExportDatasetWithImages.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportDatasetWithImages.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">MessageDialog</span><span class="p">(</span><span class="s2">&quot;Exporting dataset with frame images...&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
+
         <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span>
             <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span>
             <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">],</span>
             <span class="n">default_suffix</span><span class="o">=</span><span class="s2">&quot;slp&quot;</span><span class="p">,</span>
             <span class="n">save_frame_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-<div class="viewcode-block" id="ExportLabeledFrames.ask"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportLabeledFrames.ask">[docs]</a>    <span class="nd">@staticmethod</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ExportDatasetWithImages.ask"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportDatasetWithImages.ask">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;SLEAP HDF5 dataset (*.slp *.h5)&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Compressed JSON dataset (*.json *.json.zip)&quot;</span><span class="p">,</span>
         <span class="p">]</span>
+
+        <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">])</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">])</span>
+
+        <span class="n">new_basename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">basename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.pkg.slp&quot;</span>
+        <span class="n">new_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">new_basename</span><span class="p">)</span>
+
         <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
             <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="p">,</span>
             <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save Labeled Frames As...&quot;</span><span class="p">,</span>
-            <span class="nb">dir</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.slp&quot;</span><span class="p">,</span>
+            <span class="nb">dir</span><span class="o">=</span><span class="n">new_filename</span><span class="p">,</span>
             <span class="n">filters</span><span class="o">=</span><span class="s2">&quot;;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

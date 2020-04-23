@@ -36,14 +36,33 @@
 <span id="reference"></span><h1>Feature Reference<a class="headerlink" href="#feature-reference" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="command-line-interfaces">
 <h2>Command Line Interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this headline">¶</a></h2>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> (or <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.gui.app</span></code>) runs the GUI application.</p>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> (or <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.nn.train</span></code>) is the command-line interface for <em>training</em>. Use this for training on a remote machine/cluster/colab notebook.</p>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> (or <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.nn.inference</span></code>) is the command-line interface for running <em>inference</em> using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook. All training parameters are exposed.</p>
-<p><code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.nn.tracking</span></code> allows you to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. You give it a prediction file.</p>
-<p><code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.info.trackcleaner</span></code> tries to clean the resuls of cross-frame identity tracking by connecting “breaks” where we lose one identity and spawn another. You specify how many identities there should be in a frame (i.e., the number of animals).</p>
-<p><code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.info.write_tracking_h5</span></code> allows you to export the tracking data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB).</p>
+<div class="section" id="gui">
+<h3>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> runs the GUI application. This is an entry-point for <a class="reference internal" href="../_autosummary/sleap.gui.app.html#module-sleap.gui.app" title="sleap.gui.app"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.gui.app</span></code></a>.</p>
+</div>
+<div class="section" id="training">
+<h3>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook. This is an entry-point for <a class="reference internal" href="../_autosummary/sleap.nn.training.html#module-sleap.nn.training" title="sleap.nn.training"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.nn.training</span></code></a>.</p>
+</div>
+<div class="section" id="inference-and-tracking">
+<h3>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Permalink to this headline">¶</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.  This is an entry-point for <a class="reference internal" href="../_autosummary/sleap.nn.inference.html#module-sleap.nn.inference" title="sleap.nn.inference"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.nn.inference</span></code></a>.</p>
+<p>You can also use <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. Instead of specifying models, you specify a predictions dataset file (with the <code class="code docutils literal notranslate"><span class="pre">--labels</span></code> argument) and the tracking parameters.</p>
+<p>If you specify how many identities there should be in a frame (i.e., the number of animals) with the <code class="code docutils literal notranslate"><span class="pre">--tracking.clean_instance_count</span></code> argument, then we will use a heuristic method to connect “breaks” in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">none</span></code>).</p>
+</div>
+<div class="section" id="dataset-files">
+<h3>Dataset Files<a class="headerlink" href="#dataset-files" title="Permalink to this headline">¶</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-convert</span></code> allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See <a class="reference internal" href="../_autosummary/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for more information.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-inspect</span></code> gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you’re inspecting a predictions dataset (i.e., the output from running <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).</p>
+</div>
+<div class="section" id="debugging">
+<h3>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h3>
 <p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/murthylab/sleap/master/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
-<p><strong>Note</strong>: For more details about any command, run with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument (e.g., <code class="code docutils literal notranslate"><span class="pre">sleap-track</span> <span class="pre">--help</span></code>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For more details about any command, run with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument (e.g., <code class="code docutils literal notranslate"><span class="pre">sleap-track</span> <span class="pre">--help</span></code>).</p>
+</div>
+</div>
 </div>
 <div class="section" id="menus">
 <h2>Menus<a class="headerlink" href="#menus" title="Permalink to this headline">¶</a></h2>
@@ -140,7 +159,10 @@
 <p><strong>Home</strong> key: Move to the first frame of the video</p>
 <p><strong>End</strong> key: Move to the last frame of the video</p>
 <p><strong>Shift</strong> + <em>any navigation key</em>: Select the frames over which you’ve moved</p>
-<p>(Note that these keys are the defaults; you can configure them with <strong>Keyboard Shortcuts</strong> in the <strong>Help</strong> menu.)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These keys are the defaults; you can configure them with <strong>Keyboard Shortcuts</strong> in the <strong>Help</strong> menu.</p>
+</div>
 </div>
 <div class="section" id="selection-keys">
 <h3>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">¶</a></h3>

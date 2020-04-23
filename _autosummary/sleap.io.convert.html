@@ -34,6 +34,37 @@
             
   <div class="section" id="module-sleap.io.convert">
 <span id="sleap-io-convert"></span><h1>sleap.io.convert<a class="headerlink" href="#module-sleap.io.convert" title="Permalink to this headline">¶</a></h1>
+<p>Command line utility for converting between various dataset formats.</p>
+<p>Reads:</p>
+<ul class="simple">
+<li><p>SLEAP dataset in .slp, .h5, .json, or .json.zip file</p></li>
+<li><p>SLEAP “analysis” file in .h5 format</p></li>
+<li><p>LEAP dataset in .mat file</p></li>
+<li><p>DeepLabCut dataset in .yaml or .csv file</p></li>
+<li><p>DeepPoseKit dataset in .h5 file</p></li>
+<li><p>COCO keypoints dataset in .json file</p></li>
+</ul>
+<p>Writes:</p>
+<ul class="simple">
+<li><p>SLEAP dataset (defaults to .slp if no extension specified)</p></li>
+<li><p>SLEAP “analysis” file (.h5)</p></li>
+</ul>
+<p>You don’t need to specify the input format; this will be automatically detected.</p>
+<p>If you don’t specify an output path, then by default we will convert to a .slp
+dataset file and save it at <cite>&lt;input path&gt;.slp</cite>.</p>
+<p>Analysis HDF5:</p>
+<p>If you want to export an “analysis” h5 file, use <cite>–format analysis</cite>. If no
+output path is specified, the default is <cite>&lt;input path&gt;.analysis.h5</cite>.</p>
+<p>The analysis HDF5 file has these datasets:</p>
+<ul class="simple">
+<li><p>“track_occupancy”    (shape: tracks * frames)</p></li>
+<li><p>“tracks”             (shape: frames * nodes * 2 * tracks)</p></li>
+<li><p>“track_names”        (shape: tracks)</p></li>
+<li><p>“node_names”         (shape: nodes)</p></li>
+</ul>
+<p>Note: the datasets are stored column-major as expected by MATLAB.
+This means that if you’re working with the file in Python you may want to
+first transpose the datasets so they matche the shapes described above.</p>
 </div>
 
 

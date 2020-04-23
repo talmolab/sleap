@@ -1330,14 +1330,6 @@
         <span class="n">job_config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_name_suffix</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">suffix</span>
     <span class="n">job_config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">save_visualizations</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">save_viz</span>
 
-    <span class="c1"># NOTE: This must be first line printed to stdout, otherwise we won&#39;t be</span>
-    <span class="c1"># able to access it when running training in subprocess via Popen.</span>
-    <span class="c1"># logger.info(training_job.run_path)</span>
-    <span class="c1"># logger.info()</span>
-    <span class="c1">## Now this is what is printed: logger.info(f&quot;Created run path: {self.run_path}&quot;)</span>
-    <span class="c1"># TODO: Set the run_name, prefix and suffix explicitly so this doesn&#39;t need to be</span>
-    <span class="c1">#   parsed from stdout.</span>
-
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training labels file: </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">labels_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training profile: </span><span class="si">{</span><span class="n">job_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
