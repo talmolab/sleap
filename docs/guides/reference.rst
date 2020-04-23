@@ -6,21 +6,38 @@ Feature Reference
 Command Line Interfaces
 -----------------------
 
-:code:`sleap-label` (or :code:`python -m sleap.gui.app`) runs the GUI application.
+GUI
+~~~
+:code:`sleap-label` runs the GUI application. This is an entry-point for :py:mod:`sleap.gui.app`.
 
-:code:`sleap-train` (or :code:`python -m sleap.nn.train`) is the command-line interface for *training*. Use this for training on a remote machine/cluster/colab notebook.
+Training
+~~~~~~~~
+:code:`sleap-train` is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook. This is an entry-point for :py:mod:`sleap.nn.training`.
 
-:code:`sleap-track` (or :code:`python -m sleap.nn.inference`) is the command-line interface for running *inference* using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook. All training parameters are exposed.
+Inference and Tracking
+~~~~~~~~~~~~~~~~~~~~~~
+:code:`sleap-track` is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.  This is an entry-point for :py:mod:`sleap.nn.inference`.
 
-:code:`python -m sleap.nn.tracking` allows you to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. You give it a prediction file.
+You can also use :code:`sleap-track` to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. Instead of specifying models, you specify a predictions dataset file (with the :code:`--labels` argument) and the tracking parameters.
 
-:code:`python -m sleap.info.trackcleaner` tries to clean the resuls of cross-frame identity tracking by connecting "breaks" where we lose one identity and spawn another. You specify how many identities there should be in a frame (i.e., the number of animals).
+If you specify how many identities there should be in a frame (i.e., the number of animals) with the :code:`--tracking.clean_instance_count` argument, then we will use a heuristic method to connect "breaks" in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify :code:`--tracking.tracker none`).
 
-:code:`python -m sleap.info.write_tracking_h5` allows you to export the tracking data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB).
+Dataset Files
+~~~~~~~~~~~~~~~
+
+:code:`sleap-convert` allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See :py:mod:`sleap.io.convert` for more information.
+
+:code:`sleap-inspect` gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you're inspecting a predictions dataset (i.e., the output from running :code:`sleap-track` or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).
+
+Debugging
+~~~~~~~~~
 
 There's also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with :code:`sleap-diagnostic`. Otherwise, you can download `diagnostic.py <https://raw.githubusercontent.com/murthylab/sleap/master/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY>`_ and run :code:`python diagnostic.py`.
 
-**Note**: For more details about any command, run with the :code:`--help` argument (e.g., :code:`sleap-track --help`).
+.. note::
+
+    For more details about any command, run with the :code:`--help` argument (e.g., :code:`sleap-track --help`).
+
 
 Menus
 -----
@@ -187,7 +204,9 @@ Navigation Keys
 
 **Shift** + *any navigation key*: Select the frames over which you've moved
 
-(Note that these keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.)
+.. note::
+
+    These keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.
 
 Selection Keys
 ~~~~~~~~~~~~~~
