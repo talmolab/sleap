@@ -1,10 +1,16 @@
 import pytest
 import os
+import h5py
 
 import numpy as np
 
-from sleap.io.video import Video, HDF5Video, MediaVideo
-from tests.fixtures.videos import TEST_H5_FILE, TEST_SMALL_ROBOT_MP4_FILE
+from sleap.io.video import Video, HDF5Video, MediaVideo, DummyVideo
+from tests.fixtures.videos import (
+    TEST_H5_FILE,
+    TEST_SMALL_ROBOT_MP4_FILE,
+    TEST_H5_DSET,
+    TEST_H5_INPUT_FORMAT,
+)
 
 # FIXME:
 # Parameterizing fixtures with fixtures is annoying so this leads to a lot
@@ -205,6 +211,16 @@ def test_imgstore_single_channel(centered_pair_vid, tmpdir):
     assert vid.channels == 1
 
 
+def test_imgstore_no_frames(small_robot_mp4_vid, tmpdir):
+    path = os.path.join(tmpdir, "test_imgstore")
+    frame_indices = []
+    vid = small_robot_mp4_vid.to_imgstore(path, frame_numbers=frame_indices)
+
+    # This is actually testing that the __img will be loaded when needed,
+    # since we use __img to get dtype.
+    assert vid.dtype == np.dtype("uint8")
+
+
 def test_empty_hdf5_video(small_robot_mp4_vid, tmpdir):
     path = os.path.join(tmpdir, "test_to_hdf5")
     hdf5_vid = small_robot_mp4_vid.to_hdf5(path, "testvid", frame_numbers=[])
@@ -283,3 +299,54 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
 
     with pytest.raises(ValueError):
         hdf5_vid2.get_frames([0, 1, 2])
+
+
+def test_hdf5_vid_from_open_dataset():
+    with h5py.File(TEST_H5_FILE, "r") as f:
+        dataset = f[TEST_H5_DSET]
+
+        vid = Video(
+            backend=HDF5Video(
+                filename=f, dataset=dataset, input_format=TEST_H5_INPUT_FORMAT
+            )
+        )
+
+        assert vid.shape == (42, 512, 512, 1)
+
+
+def test_dummy_video():
+    vid = Video(backend=DummyVideo("foo", 10, 20, 30, 3))
+
+    assert vid.filename == "foo"
+    assert vid.height == 10
+    assert vid.width == 20
+    assert vid.frames == 30
+    assert vid.channels == 3
+
+    assert vid[0].shape == (1, 10, 20, 3)
+
+
+def test_images_video():
+    filenames = [f"tests/data/videos/robot{i}.jpg" for i in range(3)]
+    vid = Video.from_image_filenames(filenames)
+
+    assert vid.frames == len(filenames)
+    assert vid.height == 320
+    assert vid.width == 560
+    assert vid.channels == 3
+
+    assert vid[0].shape == (1, 320, 560, 3)
+
+
+def test_imgstore_from_filenames(tmpdir):
+    temp_filename = os.path.join(tmpdir, "test_imgstore")
+    filenames = [f"tests/data/videos/robot{i}.jpg" for i in range(3)]
+
+    vid = Video.imgstore_from_filenames(filenames, temp_filename)
+
+    assert vid.frames == len(filenames)
+    assert vid.height == 320
+    assert vid.width == 560
+    assert vid.channels == 3
+
+    assert vid[0].shape == (1, 320, 560, 3)

@@ -360,6 +360,10 @@ class MediaVideo:
         return self._reader_
 
     @property
+    def __frames_float(self):
+        return self.__reader.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    @property
     def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
@@ -396,12 +400,7 @@ class MediaVideo:
     @property
     def frames(self):
         """See :class:`Video`."""
-        return int(self.__reader.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    @property
-    def frames_float(self):
-        """See :class:`Video`."""
-        return self.__reader.get(cv2.CAP_PROP_FRAME_COUNT)
+        return int(self.__frames_float)
 
     @property
     def channels(self):
@@ -462,7 +461,7 @@ class NumpyVideo:
         * numpy data shape: (frames, width, height, channels)
     """
 
-    filename: attr.ib()
+    filename: Union[str, np.ndarray] = attr.ib()
 
     def __attrs_post_init__(self):
 
@@ -1056,7 +1055,9 @@ class Video:
         *args,
         **kwargs,
     ) -> "Video":
-        """Create an instance of a SingleImageVideo from individual image file(s)."""
+        """
+        Create an instance of a SingleImageVideo from individual image file(s).
+        """
         backend = SingleImageVideo(filenames=filenames)
         if height:
             backend.height = height
