@@ -65,10 +65,6 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
         if scale != 1.0:
             video_frame_images = resize_images(video_frame_images, scale)
 
-        # Flip channel order from OpenCV for multichannel images.
-        if video.channels > 1:
-            video_frame_images = video_frame_images[..., -1]
-
         elapsed = clock() - t0
         fps = len(loaded_chunk_idxs) / elapsed
         logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
@@ -170,7 +166,7 @@ def writer(
 
         t0 = clock()
         for img in data:
-            writer_object.add_frame(img)
+            writer_object.add_frame(img, bgr=True)
 
         elapsed = clock() - t0
         fps = len(data) / elapsed
@@ -296,14 +292,24 @@ def get_frame_image(
         ndarray of frame image with visual annotations added.
     """
 
-    # Convert to a color image
-    if video_frame.shape[-1] == 1:
-        video_frame = cv2.cvtColor(video_frame, cv2.COLOR_GRAY2RGB)
+    # Use OpenCV to convert to BGR color image
+    video_frame = img_to_cv(video_frame)
 
     # Add the instances to the image
     plot_instances_cv(video_frame, video_idx, frame_idx, labels, scale)
 
     return video_frame
+
+
+def img_to_cv(img: np.ndarray) -> np.ndarray:
+    """Prepares frame image as needed for opencv."""
+    # Convert RGB to BGR for OpenCV
+    if img.shape[-1] == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    # Convert grayscale to BGR
+    elif img.shape[-1] == 1:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    return img
 
 
 def plot_instances_cv(
@@ -386,7 +392,6 @@ def plot_instance_cv(
         if not has_nans(x, y):
             # Convert to ints for opencv (now that we know these aren't nans)
             x, y = int(x), int(y)
-
             # Draw circle to mark node
             cv2.circle(
                 img, (x, y), marker_radius, color, lineType=cv2.LINE_AA,

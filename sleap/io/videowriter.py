@@ -10,6 +10,7 @@ Usage:
 
 from abc import ABC, abstractmethod
 import cv2
+import numpy as np
 
 
 class VideoWriter(ABC):
@@ -57,12 +58,10 @@ class VideoWriterOpenCV(VideoWriter):
         fourcc = cv2.VideoWriter_fourcc(*"MJPG")
         self._writer = cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
-    def add_frame(self, img):
-        if img.ndim == 3 and img.shape[2] > 1:
-            # Convert from RGB to BGR
-            self._writer.write(img[..., ::-1])
-        else:
-            self._writer.write(img)
+    def add_frame(self, img, bgr: bool = False):
+        if not bgr and img.shape[-1] == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        self._writer.write(img)
 
     def close(self):
         self._writer.release()
@@ -89,7 +88,9 @@ class VideoWriterSkvideo(VideoWriter):
             },
         )
 
-    def add_frame(self, img):
+    def add_frame(self, img, bgr: bool = False):
+        if bgr:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self._writer.writeFrame(img)
 
     def close(self):

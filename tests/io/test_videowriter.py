@@ -13,8 +13,8 @@ def test_video_writer(tmpdir, small_robot_mp4_vid):
         fps=small_robot_mp4_vid.fps,
     )
 
-    writer.add_frame(small_robot_mp4_vid[0])
-    writer.add_frame(small_robot_mp4_vid[1])
+    writer.add_frame(small_robot_mp4_vid[0][0])
+    writer.add_frame(small_robot_mp4_vid[1][0])
 
     writer.close()
 
