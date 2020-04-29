@@ -3,18 +3,6 @@ import os
 from sleap.io.visuals import save_labeled_video, resize_images, mark_images, VideoWriter
 
 
-def test_write_visuals(tmpdir, centered_pair_predictions):
-    path = os.path.join(tmpdir, "clip.avi")
-    save_labeled_video(
-        filename=path,
-        labels=centered_pair_predictions,
-        video=centered_pair_predictions.videos[0],
-        frames=(0, 1, 2),
-        fps=15,
-    )
-    assert os.path.exists(path)
-
-
 def test_resize(small_robot_mp4_vid):
     imgs = small_robot_mp4_vid[:4]
 
@@ -67,12 +55,14 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
         marked_image_list[0][10:20, :10, 0], small_images[0, 10:20, :10, 0]
     )
 
-    # Make sure video writer works
-    writer = VideoWriter(out_path, height=height, width=width, fps=25)
 
-    for img in marked_image_list:
-        writer.add_frame(img)
-
-    writer.close()
-
-    assert os.path.exists(out_path)
+def test_write_visuals(tmpdir, centered_pair_predictions):
+    path = os.path.join(tmpdir, "clip.avi")
+    save_labeled_video(
+        filename=path,
+        labels=centered_pair_predictions,
+        video=centered_pair_predictions.videos[0],
+        frames=(0, 1, 2),
+        fps=15,
+    )
+    assert os.path.exists(path)

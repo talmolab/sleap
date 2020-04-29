@@ -3,6 +3,7 @@ Module for generating videos with visual annotation overlays.
 """
 
 from sleap.io.video import Video
+from sleap.io.videowriter import VideoWriter
 from sleap.io.dataset import Labels
 from sleap.util import usable_cpu_count
 
@@ -148,7 +149,7 @@ def writer(
 
     w, h = img_w_h
 
-    writer_object = VideoWriter(filename, height=h, width=w, fps=fps)
+    writer_object = VideoWriter.safe_builder(filename, height=h, width=w, fps=fps)
 
     start_time = clock()
     total_elapsed = 0
@@ -179,18 +180,6 @@ def writer(
     writer_object.close()
     # send (-1, time) to signal done
     progress_queue.put((-1, total_elapsed))
-
-
-class VideoWriter:
-    def __init__(self, filename, height, width, fps):
-        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        self._writer = cv2.VideoWriter(filename, fourcc, fps, (width, height))
-
-    def add_frame(self, img):
-        self._writer.write(img)
-
-    def close(self):
-        self._writer.release()
 
 
 def save_labeled_video(
