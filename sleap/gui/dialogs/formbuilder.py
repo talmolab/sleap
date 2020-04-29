@@ -123,6 +123,57 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         self.mainAction.emit(self.get_form_data())
 
 
+class FormBuilderModalDialog(QtWidgets.QDialog):
+    """Blocking modal dialog wrapper for YamlFormWidget widget."""
+
+    def __init__(
+        self, form_widget: YamlFormWidget, *args, **kwargs,
+    ):
+        super(FormBuilderModalDialog, self).__init__()
+
+        self._results = None
+        self.form_widget = form_widget
+
+        # Layout for buttons
+        buttons = QtWidgets.QDialogButtonBox()
+        self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.run_button = buttons.addButton(QtWidgets.QDialogButtonBox.Ok)
+
+        buttons_layout = QtWidgets.QHBoxLayout()
+        buttons_layout.addWidget(buttons, alignment=QtCore.Qt.AlignTop)
+
+        buttons_layout_widget = QtWidgets.QWidget()
+        buttons_layout_widget.setLayout(buttons_layout)
+
+        # Layout for entire dialog
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.form_widget)
+        layout.addWidget(buttons_layout_widget)
+
+        self.setLayout(layout)
+
+        # Connect actions for buttons
+        buttons.accepted.connect(self.on_accept)
+        buttons.rejected.connect(self.reject)
+
+    def add_message(self, message):
+        """Adds text message between form fields and buttons."""
+        field = QtWidgets.QLabel(message)
+        field.setWordWrap(True)
+
+        self.layout().insertWidget(1, field)
+
+    def on_accept(self):
+        self._results = self.form_widget.get_form_data()
+        self.accept()
+
+    def get_results(self):
+        """Shows dialog, blocks till submitted, returns dict of form data."""
+        self._results = None
+        self.exec_()
+        return self._results
+
+
 class FormBuilderLayout(QtWidgets.QFormLayout):
     """
     Custom QFormLayout which populates itself from list of form fields.
@@ -307,142 +358,144 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         if not items_to_create:
             return
         for item in items_to_create:
-            if item["type"] == "text":
-                field = QtWidgets.QLabel(item["text"])
-                field.setWordWrap(True)
+            self.add_item(item)
 
-                # We don't need to keep track of this text-only field so we'll
-                # add it to the form and skip the other things we usually do.
-                self.addRow(field)
-                continue
+    def add_item(self, item: Dict[str, Any]):
+        if item["type"] == "text":
+            field = QtWidgets.QLabel(item["text"])
+            field.setWordWrap(True)
 
-            # double: show spinbox (number w/ up/down controls)
-            elif item["type"] == "double":
-                field = QtWidgets.QDoubleSpinBox()
+            # We don't need to keep track of this text-only field so we'll
+            # add it to the form and skip the other things we usually do.
+            self.addRow(field)
+            return
 
-                min, max = -1000, 1000
-                if "range" in item.keys():
-                    min, max = list(map(float, item["range"].split(",")))
+        # double: show spinbox (number w/ up/down controls)
+        elif item["type"] == "double":
+            field = QtWidgets.QDoubleSpinBox()
+
+            min, max = -1000, 1000
+            if "range" in item.keys():
+                min, max = list(map(float, item["range"].split(",")))
+            field.setRange(min, max)
+            field.setSingleStep(0.25)
+
+            field.setValue(item["default"])
+
+            field.valueChanged.connect(lambda: self.valueChanged.emit())
+
+        # int: show spinbox (number w/ up/down controls)
+        elif item["type"] == "int":
+            field = QtWidgets.QSpinBox()
+            if "range" in item.keys():
+                min, max = list(map(int, item["range"].split(",")))
                 field.setRange(min, max)
-                field.setSingleStep(0.25)
+            elif item["default"] > 100:
+                min, max = 0, item["default"] * 10
+                field.setRange(min, max)
+            field.setValue(item["default"])
+            field.valueChanged.connect(lambda: self.valueChanged.emit())
 
-                field.setValue(item["default"])
+        elif item["type"] in ("optional_int", "optional_double", "auto_int"):
+            spin_type = item["type"].split("_")[-1]
+            none_string = "auto" if item["type"].startswith("auto") else "none"
+            none_label = item.get("none_label", None)
+            field = OptionalSpinWidget(
+                type=spin_type, none_string=none_string, none_label=none_label
+            )
+            if "range" in item.keys():
+                min, max = list(map(int, item["range"].split(",")))
+                field.setRange(min, max)
+            elif item["default"] is not None and item["default"] > 100:
+                min, max = 0, item["default"] * 10
+                field.setRange(min, max)
+            field.setValue(item["default"])
+            field.valueChanged.connect(lambda: self.valueChanged.emit())
 
-                field.valueChanged.connect(lambda: self.valueChanged.emit())
+        # bool: show checkbox
+        elif item["type"] == "bool":
+            field = QtWidgets.QCheckBox()
+            field.setChecked(item["default"])
+            field.stateChanged.connect(lambda: self.valueChanged.emit())
 
-            # int: show spinbox (number w/ up/down controls)
-            elif item["type"] == "int":
-                field = QtWidgets.QSpinBox()
-                if "range" in item.keys():
-                    min, max = list(map(int, item["range"].split(",")))
-                    field.setRange(min, max)
-                elif item["default"] > 100:
-                    min, max = 0, item["default"] * 10
-                    field.setRange(min, max)
-                field.setValue(item["default"])
-                field.valueChanged.connect(lambda: self.valueChanged.emit())
+        # list: show drop-down menu
+        elif item["type"] in ("list", "optional_list"):
+            type_options = item.get("type-options", "")
 
-            elif item["type"] in ("optional_int", "optional_double", "auto_int"):
-                spin_type = item["type"].split("_")[-1]
-                none_string = "auto" if item["type"].startswith("auto") else "none"
-                none_label = item.get("none_label", None)
-                field = OptionalSpinWidget(
-                    type=spin_type, none_string=none_string, none_label=none_label
-                )
-                if "range" in item.keys():
-                    min, max = list(map(int, item["range"].split(",")))
-                    field.setRange(min, max)
-                elif item["default"] is not None and item["default"] > 100:
-                    min, max = 0, item["default"] * 10
-                    field.setRange(min, max)
-                field.setValue(item["default"])
-                field.valueChanged.connect(lambda: self.valueChanged.emit())
+            result_as_optional_idx = False
+            add_blank_option = False
+            if type_options == "optional_index":
+                result_as_optional_idx = True
+                add_blank_option = True
+            if item["type"] == "optional_list":
+                add_blank_option = True
 
-            # bool: show checkbox
-            elif item["type"] == "bool":
-                field = QtWidgets.QCheckBox()
-                field.setChecked(item["default"])
-                field.stateChanged.connect(lambda: self.valueChanged.emit())
+            field = TextOrListWidget(
+                result_as_idx=result_as_optional_idx, add_blank_option=add_blank_option,
+            )
 
-            # list: show drop-down menu
-            elif item["type"] in ("list", "optional_list"):
-                type_options = item.get("type-options", "")
-
-                result_as_optional_idx = False
-                add_blank_option = False
-                if type_options == "optional_index":
-                    result_as_optional_idx = True
-                    add_blank_option = True
-                if item["type"] == "optional_list":
-                    add_blank_option = True
-
-                field = TextOrListWidget(
-                    result_as_idx=result_as_optional_idx,
-                    add_blank_option=add_blank_option,
+            if item["name"] in self.field_options_lists:
+                field.set_options(self.field_options_lists[item["name"]])
+            elif "options" in item:
+                field.set_options(
+                    item["options"].split(","), select_item=item.get("default", "")
                 )
 
-                if item["name"] in self.field_options_lists:
-                    field.set_options(self.field_options_lists[item["name"]])
-                elif "options" in item:
-                    field.set_options(
-                        item["options"].split(","), select_item=item.get("default", "")
-                    )
+            field.valueChanged.connect(lambda: self.valueChanged.emit())
 
-                field.valueChanged.connect(lambda: self.valueChanged.emit())
+        # button
+        elif item["type"] == "button":
+            field = QtWidgets.QPushButton(item["label"])
+            self.buttons[item["name"]] = field
 
-            # button
-            elif item["type"] == "button":
-                field = QtWidgets.QPushButton(item["label"])
-                self.buttons[item["name"]] = field
+        # string
+        elif item["type"] in ("string", "optional_string"):
+            field = QtWidgets.QLineEdit()
+            val = item.get("default", "")
+            val = "" if val is None else val
+            field.setText(str(val))
 
-            # string
-            elif item["type"] in ("string", "optional_string"):
-                field = QtWidgets.QLineEdit()
-                val = item.get("default", "")
-                val = "" if val is None else val
-                field.setText(str(val))
+        elif item["type"] == "string_list":
+            field = StringListWidget()
+            val = item.get("default", "")
+            field.setValue(val)
 
-            elif item["type"] == "string_list":
-                field = StringListWidget()
-                val = item.get("default", "")
-                field.setValue(val)
+        # stacked: show menu and form panel corresponding to menu selection
+        elif item["type"] == "stacked":
+            field = StackBuilderWidget(
+                item, field_options_lists=self.field_options_lists
+            )
+            field.valueChanged.connect(lambda: self.valueChanged.emit())
 
-            # stacked: show menu and form panel corresponding to menu selection
-            elif item["type"] == "stacked":
-                field = StackBuilderWidget(
-                    item, field_options_lists=self.field_options_lists
-                )
-                field.valueChanged.connect(lambda: self.valueChanged.emit())
-
-            # If we don't recognize the type, just show a text box
-            else:
-                field = QtWidgets.QLineEdit()
-                field.setText(str(item.get("default", "")))
-                if item["type"].split("_")[0] == "file":
-                    field.setDisabled(True)
-
-            # Store name and type on widget
-            field.setObjectName(item["name"])
-            field.setProperty("field_data_type", item.get("dtype", item["type"]))
-
-            # Set tooltip for field
-            if "help" in item:
-                field.setToolTip(item["help"])
-
-            # Store widget by name
-            self.fields[item["name"]] = field
-
-            # Add field (and label if appropriate) to form layout
-            if item["type"] in ("stacked"):
-                self.addRow(field)
-            elif item["type"] in ("button"):
-                self.addRow("", field)
-            else:
-                self.addRow(item["label"] + ":", field)
-
-            # file_[open|dir]: show button to select file/directory
+        # If we don't recognize the type, just show a text box
+        else:
+            field = QtWidgets.QLineEdit()
+            field.setText(str(item.get("default", "")))
             if item["type"].split("_")[0] == "file":
-                self.addRow("", self._make_file_button(item, field))
+                field.setDisabled(True)
+
+        # Store name and type on widget
+        field.setObjectName(item["name"])
+        field.setProperty("field_data_type", item.get("dtype", item["type"]))
+
+        # Set tooltip for field
+        if "help" in item:
+            field.setToolTip(item["help"])
+
+        # Store widget by name
+        self.fields[item["name"]] = field
+
+        # Add field (and label if appropriate) to form layout
+        if item["type"] in ("stacked"):
+            self.addRow(field)
+        elif item["type"] in ("button"):
+            self.addRow("", field)
+        else:
+            self.addRow(item["label"] + ":", field)
+
+        # file_[open|dir]: show button to select file/directory
+        if item["type"].split("_")[0] == "file":
+            self.addRow("", self._make_file_button(item, field))
 
     def _make_file_button(
         self, item: Dict, field: QtWidgets.QWidget

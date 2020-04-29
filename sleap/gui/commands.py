@@ -782,21 +782,33 @@ class ExportLabeledClip(AppCommand):
             gui_progress=True,
         )
 
+        if params["open_when_done"]:
+            # Open the file using default video playing app
+            from sleap.util import open_file
+
+            open_file(params["filename"])
+
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         if context.state["has_frame_range"]:
 
-            fps, okay = QtWidgets.QInputDialog.getInt(
-                context.app,
-                "Frames per second",
-                "Frames per second:",
-                getattr(context.state["video"], "fps", 30),
-                1,
-                300,
+            from sleap.gui.dialogs.export_clip import ExportClipDialog
+
+            dialog = ExportClipDialog()
+
+            # Set default fps from video (if video has fps attribute)
+            dialog.form_widget.set_form_data(
+                dict(fps=getattr(context.state["video"], "fps", 30))
             )
-            if not okay:
+
+            # Show modal dialog and get form results
+            export_options = dialog.get_results()
+
+            # Check if user hit cancel
+            if export_options is None:
                 return False
 
+            # Use VideoWriter to determine default video type to use
             from sleap.io.videowriter import VideoWriter
 
             # For OpenCV we default to avi since the bundled ffmpeg
@@ -808,6 +820,7 @@ class ExportLabeledClip(AppCommand):
             if VideoWriter.can_use_skvideo():
                 default_out_filename = context.state["filename"] + ".mp4"
 
+            # Ask where use wants to save video file
             filename, _ = FileDialog.save(
                 context.app,
                 caption="Save Video As...",
@@ -815,11 +828,13 @@ class ExportLabeledClip(AppCommand):
                 filter="Video (*.avi *mp4)",
             )
 
+            # Check if user hit cancel
             if len(filename) == 0:
                 return False
 
             params["filename"] = filename
-            params["fps"] = fps
+            params["fps"] = export_options["fps"]
+            params["open_when_done"] = export_options["open_when_done"]
             return True
         else:
             message = (
