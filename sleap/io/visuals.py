@@ -65,6 +65,10 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
         if scale != 1.0:
             video_frame_images = resize_images(video_frame_images, scale)
 
+        # Flip channel order from OpenCV for multichannel images.
+        if video.channels > 1:
+            video_frame_images = video_frame_images[..., -1]
+
         elapsed = clock() - t0
         fps = len(loaded_chunk_idxs) / elapsed
         logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
@@ -273,17 +277,6 @@ def mark_images(frame_indices, frame_images, video_idx, labels, scale):
     return imgs
 
 
-def img_to_cv(img: np.ndarray) -> np.ndarray:
-    """Prepares frame image as needed for opencv."""
-    # Convert RGB to BGR for OpenCV
-    if img.shape[-1] == 3:
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    # Convert grayscale to BGR
-    elif img.shape[-1] == 1:
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    return img
-
-
 def get_frame_image(
     video_frame: np.ndarray,
     video_idx: int,
@@ -302,9 +295,15 @@ def get_frame_image(
     Returns:
         ndarray of frame image with visual annotations added.
     """
-    img = img_to_cv(video_frame)
-    plot_instances_cv(img, video_idx, frame_idx, labels, scale)
-    return img
+
+    # Convert to a color image
+    if video_frame.shape[-1] == 1:
+        video_frame = cv2.cvtColor(video_frame, cv2.COLOR_GRAY2RGB)
+
+    # Add the instances to the image
+    plot_instances_cv(video_frame, video_idx, frame_idx, labels, scale)
+
+    return video_frame
 
 
 def plot_instances_cv(
@@ -374,9 +373,6 @@ def plot_instance_cv(
         ndarray of frame image with visual annotations for instance added.
     """
 
-    # RGB -> BGR for cv2
-    cv_color = color[::-1]
-
     # Get matrix of all point locations
     points_array = instance.points_array
 
@@ -393,7 +389,7 @@ def plot_instance_cv(
 
             # Draw circle to mark node
             cv2.circle(
-                img, (x, y), marker_radius, cv_color, lineType=cv2.LINE_AA,
+                img, (x, y), marker_radius, color, lineType=cv2.LINE_AA,
             )
 
     for (src, dst) in instance.skeleton.edge_inds:
@@ -410,7 +406,7 @@ def plot_instance_cv(
 
             # Draw line to mark edge between nodes
             cv2.line(
-                img, (src_x, src_y), (dst_x, dst_y), cv_color, lineType=cv2.LINE_AA,
+                img, (src_x, src_y), (dst_x, dst_y), color, lineType=cv2.LINE_AA,
             )
 
 
