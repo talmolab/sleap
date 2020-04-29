@@ -5,6 +5,8 @@ unless they really have no other place.
 
 import os
 import re
+import subprocess
+import sys
 import shutil
 
 from collections import defaultdict
@@ -363,7 +365,8 @@ def find_files_by_suffix(
 
     subdir_paths = [file.path for file in files if file.is_dir()]
     matching_files = [
-        file for file in files
+        file
+        for file in files
         if file.is_file()
         and file.name.endswith(suffix)
         and (not prefix or file.name.startswith(prefix))
@@ -371,6 +374,21 @@ def find_files_by_suffix(
 
     if depth:
         for subdir in subdir_paths:
-            matching_files.extend(find_files_by_suffix(subdir, suffix, prefix, depth=depth - 1))
+            matching_files.extend(
+                find_files_by_suffix(subdir, suffix, prefix, depth=depth - 1)
+            )
 
     return matching_files
+
+
+def open_file(filename):
+    """
+    Opens file (as if double-clicked by user).
+
+    https://stackoverflow.com/questions/17317219/is-there-an-platform-independent-equivalent-of-os-startfile/17317468#17317468
+    """
+    if sys.platform == "win32":
+        os.startfile(filename)
+    else:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
