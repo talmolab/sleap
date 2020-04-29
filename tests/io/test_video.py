@@ -350,3 +350,17 @@ def test_imgstore_from_filenames(tmpdir):
     assert vid.channels == 3
 
     assert vid[0].shape == (1, 320, 560, 3)
+
+
+def test_safe_frame_loading(small_robot_mp4_vid):
+    vid = small_robot_mp4_vid
+
+    frame_count = vid.frames
+
+    with pytest.raises(KeyError):
+        vid.get_frames([1, 2, frame_count + 5])
+
+    idxs, frames = vid.get_frames_safely([1, 2, frame_count + 5])
+
+    assert idxs == [1, 2]
+    assert len(frames) == 2
