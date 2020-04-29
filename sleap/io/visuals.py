@@ -349,7 +349,8 @@ def plot_instances_cv(
             track_idx = len(labels.tracks) + count_no_track
             count_no_track += 1
 
-        inst_color = cmap[track_idx % len(cmap)]
+        # Get color for instance and convert RGB to BGR for OpenCV
+        inst_color = cmap[track_idx % len(cmap)][::-1]
 
         plot_instance_cv(img, instance, inst_color, scale=scale)
 
