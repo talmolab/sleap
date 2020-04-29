@@ -30,13 +30,24 @@ class VideoWriter(ABC):
     @staticmethod
     def safe_builder(filename, height, width, fps):
         """Builds VideoWriter based on available dependencies."""
-
-        try:
-            import skvideo.io
-
+        if VideoWriter.can_use_skvideo():
             return VideoWriterSkvideo(filename, height, width, fps)
-        except ImportError:
+        else:
             return VideoWriterOpenCV(filename, height, width, fps)
+
+    @staticmethod
+    def can_use_skvideo():
+        # See if we can import skvideo
+        try:
+            import skvideo
+        except ImportError:
+            return False
+
+        # See if skvideo can find FFMPEG
+        if skvideo.getFFmpegVersion() != "0.0.0":
+            return True
+
+        return False
 
 
 class VideoWriterOpenCV(VideoWriter):
@@ -47,7 +58,11 @@ class VideoWriterOpenCV(VideoWriter):
         self._writer = cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
     def add_frame(self, img):
-        self._writer.write(img)
+        if img.ndim == 3 and img.shape[2] > 1:
+            # Convert from RGB to BGR
+            self._writer.write(img[..., ::-1])
+        else:
+            self._writer.write(img)
 
     def close(self):
         self._writer.release()
