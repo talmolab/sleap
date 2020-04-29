@@ -797,11 +797,22 @@ class ExportLabeledClip(AppCommand):
             if not okay:
                 return False
 
+            from sleap.io.videowriter import VideoWriter
+
+            # For OpenCV we default to avi since the bundled ffmpeg
+            # makes mp4's that most programs can't open (VLC can).
+            default_out_filename = context.state["filename"] + ".avi"
+
+            # But if we can write mpegs using sci-kit video, use .mp4
+            # since it has trouble writing .avi files.
+            if VideoWriter.can_use_skvideo():
+                default_out_filename = context.state["filename"] + ".mp4"
+
             filename, _ = FileDialog.save(
                 context.app,
                 caption="Save Video As...",
-                dir=context.state["filename"] + ".avi",
-                filter="AVI Video (*.avi)",
+                dir=default_out_filename,
+                filter="Video (*.avi *mp4)",
             )
 
             if len(filename) == 0:
