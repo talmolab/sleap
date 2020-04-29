@@ -1162,7 +1162,6 @@ class MainWindow(QMainWindow):
             self.player.seekbar, self.labels, self.state["video"], self.color_manager
         )
 
-
     def setSeekbarHeader(self, graph_name):
         """Updates graph shown in seekbar header."""
         data_obj = StatisticSeries(self.labels)
