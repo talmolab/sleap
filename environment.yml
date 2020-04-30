@@ -26,5 +26,6 @@ dependencies:
     - imgstore
     - jsmin
     - seaborn
+    - scikit-video
     - "--editable=./"
     - "--requirement=./dev_requirements.txt"
