@@ -200,6 +200,11 @@ def run_gui_training(
             job = config_info.config
             model_type = config_info.head_name
 
+            # We'll pass along the list of paths we actually used for loading
+            # the videos so that we don't have to rely on the paths currently
+            # saved in the labels file for finding videos.
+            video_path_list = [video.filename for video in labels.videos]
+
             # Update save dir and run name for job we're about to train
             # so we have access to them here (rather than letting
             # train_subprocess update them).
@@ -231,7 +236,11 @@ def run_gui_training(
 
             # Run training
             trained_job_path, success = train_subprocess(
-                job, labels_filename, waiting_callback=waiting, save_viz=save_viz,
+                job_config=job,
+                labels_filename=labels_filename,
+                video_paths=video_path_list,
+                waiting_callback=waiting,
+                save_viz=save_viz,
             )
 
             if success:
@@ -343,6 +352,7 @@ def run_gui_inference(
 def train_subprocess(
     job_config: TrainingJobConfig,
     labels_filename: str,
+    video_paths: Optional[List[Text]] = None,
     waiting_callback: Optional[Callable] = None,
     save_viz: bool = False,
 ):
@@ -367,8 +377,6 @@ def train_subprocess(
             training_job_path,
             labels_filename,
             "--zmq",
-            # "--run_name",
-            # run_name,
         ]
 
         if save_viz:
@@ -377,6 +385,11 @@ def train_subprocess(
         # Use cli arg since cli ignores setting in config
         if job_config.outputs.tensorboard.write_logs:
             cli_args.append("--tensorboard")
+
+        # Add list of video paths so we can find video even if paths in saved
+        # labels dataset file are incorrect.
+        if video_paths:
+            cli_args.extend(("--video-paths", ",".join(video_paths)))
 
         print(cli_args)
 

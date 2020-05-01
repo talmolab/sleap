@@ -98,6 +98,7 @@ class DataReaders:
         training: Union[Text, sleap.Labels],
         validation: Union[Text, sleap.Labels, float],
         test: Optional[Union[Text, sleap.Labels]] = None,
+        video_search_paths: Optional[List[Text]] = None,
         update_config: bool = False,
     ) -> "DataReaders":
         """Create data readers from a (possibly incomplete) configuration."""
@@ -125,7 +126,12 @@ class DataReaders:
 
         # Build class.
         # TODO: use labels_config.search_path_hints for loading
-        return cls.from_labels(training=training, validation=validation, test=test)
+        return cls.from_labels(
+            training=training,
+            validation=validation,
+            test=test,
+            video_search_paths=video_search_paths,
+        )
 
     @classmethod
     def from_labels(
@@ -133,19 +139,24 @@ class DataReaders:
         training: Union[Text, sleap.Labels],
         validation: Union[Text, sleap.Labels, float],
         test: Optional[Union[Text, sleap.Labels]] = None,
+        video_search_paths: Optional[List[Text]] = None,
     ) -> "DataReaders":
         """Create data readers from sleap.Labels datasets as data providers."""
 
         if isinstance(training, str):
-            training = sleap.Labels.load_file(training)
+            print("video search paths: ", video_search_paths)
+            training = sleap.Labels.load_file(training, video_search=video_search_paths)
+            print(training.videos)
 
         if isinstance(validation, str):
-            validation = sleap.Labels.load_file(validation)
+            validation = sleap.Labels.load_file(
+                validation, video_search=video_search_paths
+            )
         elif isinstance(validation, float):
             training, validation = split_labels(training, [-1, validation])
 
         if isinstance(test, str):
-            test = sleap.Labels.load_file(test)
+            test = sleap.Labels.load_file(test, video_search=video_search_paths)
 
         test_reader = None
         if test is not None:
@@ -517,6 +528,7 @@ class Trainer(ABC):
         training_labels: Optional[Union[Text, sleap.Labels]] = None,
         validation_labels: Optional[Union[Text, sleap.Labels, float]] = None,
         test_labels: Optional[Union[Text, sleap.Labels]] = None,
+        video_search_paths: Optional[List[Text]] = None,
     ) -> "Trainer":
         """Initialize the trainer from a training job configuration.
         
@@ -539,6 +551,7 @@ class Trainer(ABC):
             training=training_labels,
             validation=validation_labels,
             test=test_labels,
+            video_search_paths=video_search_paths,
             update_config=True,
         )
         config.data.labels.skeletons = data_readers.training_labels.skeletons
@@ -1239,6 +1252,12 @@ def main():
     )
     parser.add_argument("labels_path", help="Path to labels file to use for training.")
     parser.add_argument(
+        "--video-paths",
+        type=str,
+        default="",
+        help="List of paths for finding videos in case paths inside labels file need fixing.",
+    )
+    parser.add_argument(
         "--val_labels",
         "--val",
         help="Path to labels file to use for validation (overrides training job path if set).",
@@ -1316,6 +1335,7 @@ def main():
         training_labels=args.labels_path,
         validation_labels=args.val_labels,
         test_labels=args.test_labels,
+        video_search_paths=args.video_paths.split(","),
     )
     trainer.train()
 
