@@ -454,6 +454,90 @@ class MediaVideo:
 
 
 @attr.s(auto_attribs=True, cmp=False)
+class NumpyVideo:
+    """
+    Video data stored as Numpy array.
+
+    Args:
+        filename: Either a file to load or a numpy array of the data.
+
+        * numpy data shape: (frames, height, width, channels)
+    """
+
+    filename: Union[str, np.ndarray] = attr.ib()
+
+    def __attrs_post_init__(self):
+
+        self.__frame_idx = 0
+        self.__height_idx = 1
+        self.__width_idx = 2
+        self.__channel_idx = 3
+
+        # Handle cases where the user feeds in np.array instead of filename
+        if isinstance(self.filename, np.ndarray):
+            self.__data = self.filename
+            self.filename = "Raw Video Data"
+        elif type(self.filename) is str:
+            try:
+                self.__data = np.load(self.filename)
+            except OSError as ex:
+                raise FileNotFoundError(
+                    f"Could not find filename {self.filename}"
+                ) from ex
+        else:
+            self.__data = None
+
+    # The properties and methods below complete our contract with the
+    # higher level Video interface.
+
+    def matches(self, other: "NumpyVideo") -> np.ndarray:
+        """
+        Check if attributes match those of another video.
+
+        Args:
+            other: The other video to compare with.
+
+        Returns:
+            True if attributes match, False otherwise.
+        """
+        return np.all(self.__data == other.__data)
+
+    @property
+    def frames(self):
+        """See :class:`Video`."""
+        return self.__data.shape[self.__frame_idx]
+
+    @property
+    def channels(self):
+        """See :class:`Video`."""
+        return self.__data.shape[self.__channel_idx]
+
+    @property
+    def width(self):
+        """See :class:`Video`."""
+        return self.__data.shape[self.__width_idx]
+
+    @property
+    def height(self):
+        """See :class:`Video`."""
+        return self.__data.shape[self.__height_idx]
+
+    @property
+    def dtype(self):
+        """See :class:`Video`."""
+        return self.__data.dtype
+
+    def reset(self):
+        """Reloads the video."""
+        # TODO
+        pass
+
+    def get_frame(self, idx):
+        """See :class:`Video`."""
+        return self.__data[idx]
+
+
+@attr.s(auto_attribs=True, cmp=False)
 class ImgStoreVideo:
     """
     Video data stored as an ImgStore dataset.
@@ -822,7 +906,7 @@ class Video:
     """
 
     backend: Union[
-        HDF5Video, MediaVideo, ImgStoreVideo, SingleImageVideo, DummyVideo
+        HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo, SingleImageVideo, DummyVideo
     ] = attr.ib()
 
     # Delegate to the backend
@@ -957,6 +1041,23 @@ class Video:
         return cls(backend=backend)
 
     @classmethod
+    def from_numpy(cls, filename: Union[str, np.ndarray], *args, **kwargs) -> "Video":
+        """
+        Create an instance of a video object from a numpy array.
+
+        Args:
+            filename: The numpy array or the name of the file
+            args: Arguments to pass to :class:`NumpyVideo`
+            kwargs: Arguments to pass to :class:`NumpyVideo`
+
+        Returns:
+            A Video object with a NumpyVideo backend
+        """
+        filename = Video.fixup_path(filename)
+        backend = NumpyVideo(filename=filename, *args, **kwargs)
+        return cls(backend=backend)
+
+    @classmethod
     def from_media(cls, filename: str, *args, **kwargs) -> "Video":
         """
         Create an instance of a video object from a typical media file.
@@ -1005,11 +1106,12 @@ class Video:
 
                 * Media Videos - AVI, MP4, etc. handled by OpenCV directly
                 * HDF5 Datasets - .h5 files
+                * Numpy Arrays - npy files
                 * imgstore datasets - produced by loopbio's Motif recording
                     system. See: https://github.com/loopbio/imgstore.
 
-            args: Arguments to pass to backend class
-            kwargs: Arguments to pass to backend class
+            args: Arguments to pass to :class:`NumpyVideo`
+            kwargs: Arguments to pass to :class:`NumpyVideo`
 
         Returns:
             A Video object with the detected backend.
@@ -1019,6 +1121,8 @@ class Video:
 
         if filename.lower().endswith(("h5", "hdf5", "slp")):
             backend_class = HDF5Video
+        elif filename.endswith(("npy")):
+            backend_class = NumpyVideo
         elif filename.lower().endswith(("mp4", "avi")):
             backend_class = MediaVideo
         elif os.path.isdir(filename) or "metadata.yaml" in filename:

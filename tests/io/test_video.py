@@ -103,6 +103,13 @@ def test_mp4_file_not_found():
         vid.channels
 
 
+def test_numpy_frames(small_robot_mp4_vid):
+    clip_frames = small_robot_mp4_vid.get_frames((3, 7, 9))
+    np_vid = Video.from_numpy(clip_frames)
+
+    assert np.all(np.equal(np_vid.get_frame(1), small_robot_mp4_vid.get_frame(7)))
+
+
 @pytest.mark.parametrize("format", ["png", "jpg", "mjpeg/avi"])
 def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
 
