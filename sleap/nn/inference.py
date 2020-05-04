@@ -960,6 +960,12 @@ def make_cli_parser():
         help="Only run inference on labeled frames (when running on labels dataset file).",
     )
     parser.add_argument(
+        "--only-suggested-frames",
+        action="store_true",
+        default=False,
+        help="Only run inference on suggested frames (when running on labels dataset file).",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=str,
@@ -1064,6 +1070,12 @@ def make_video_readers_from_cli(args) -> List[VideoReader]:
                     lf.frame_idx for lf in user_labeled_frames if lf.video == video
                 ]
                 readers.append(VideoReader(video=video, example_indices=frame_indices))
+            elif args.only_suggested_frames:
+                readers.append(
+                    VideoReader(
+                        video=video, example_indices=labels.get_video_suggestions(video)
+                    )
+                )
             else:
                 readers.append(VideoReader(video=video))
 

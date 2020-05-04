@@ -412,6 +412,16 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ]
             )
+        elif predict_frames_choice.startswith("suggested"):
+            # For inference on all suggested frames, we'll have a single
+            # inference item.
+            items_for_inference = runners.ItemsForInference(
+                items=[
+                    runners.DatasetItemForInference(
+                        labels_path=self.labels_filename, frame_filter="suggested"
+                    )
+                ]
+            )
         else:
             # Otherwise, make an inference item for each video with list of frames.
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(

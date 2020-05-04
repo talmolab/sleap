@@ -79,6 +79,8 @@ class DatasetItemForInference(ItemForInference):
         args_list = ["--labels", self.path]
         if self.frame_filter == "user":
             args_list.append("--only-labeled-frames")
+        elif self.frame_filter == "suggested":
+            args_list.append("--only-suggested-frames")
         return args_list
 
 
