@@ -397,6 +397,12 @@ class LearningDialog(QtWidgets.QDialog):
 
         return frames_to_predict
 
+    def get_items_for_inference(self, pipeline_form_data):
+        items_for_inference = runners.ItemsForInference.from_video_frames_dict(
+            self.get_selected_frames_to_predict(pipeline_form_data)
+        )
+        return items_for_inference
+
     def _validate_pipeline(self):
         can_run = True
 
@@ -424,7 +430,7 @@ class LearningDialog(QtWidgets.QDialog):
         """Run with current dialog settings."""
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
-        frames_to_predict = self.get_selected_frames_to_predict(pipeline_form_data)
+        items_for_inference = self.get_items_for_inference(pipeline_form_data)
 
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
 
@@ -437,7 +443,7 @@ class LearningDialog(QtWidgets.QDialog):
             labels=self.labels,
             config_info_list=config_info_list,
             inference_params=pipeline_form_data,
-            frames_to_predict=frames_to_predict,
+            items_for_inference=items_for_inference,
         )
 
         self.learningFinished.emit(new_counts)
@@ -457,8 +463,7 @@ class LearningDialog(QtWidgets.QDialog):
             return
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
-        frames_to_predict = self.get_selected_frames_to_predict(pipeline_form_data)
-
+        items_for_inference = self.get_items_for_inference(pipeline_form_data)
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
 
         runners.write_pipeline_files(
@@ -466,7 +471,7 @@ class LearningDialog(QtWidgets.QDialog):
             labels_filename=self.labels_filename,
             config_info_list=config_info_list,
             inference_params=pipeline_form_data,
-            frames_to_predict=frames_to_predict,
+            items_for_inference=items_for_inference,
         )
 
 
