@@ -5,7 +5,7 @@ networkx
 tensorflow==2.1
 h5py
 python-rapidjson
-opencv-python-headless==3.4.1.15
+opencv-python-headless==4.2.0.34
 pandas
 psutil
 PySide2>=5.12.0,<=5.14.1
@@ -15,7 +15,7 @@ imgaug==0.3.0
 scikit-image
 scikit-learn
 scikit-video
-imgstore
+imgstore==0.2.9
 qimage2ndarray==1.8
 jsmin
 seaborn
