@@ -11,8 +11,10 @@ from typing import Dict, List, Optional, Text
 from PySide2 import QtWidgets, QtCore
 
 
+# Debug option to skip the training run
 SKIP_TRAINING = False
 
+# List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
     "model.heads.centered_instance.anchor_part",
@@ -398,9 +400,23 @@ class LearningDialog(QtWidgets.QDialog):
         return frames_to_predict
 
     def get_items_for_inference(self, pipeline_form_data):
-        items_for_inference = runners.ItemsForInference.from_video_frames_dict(
-            self.get_selected_frames_to_predict(pipeline_form_data)
-        )
+        predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
+
+        if predict_frames_choice.startswith("user"):
+            # For inference on user labeled frames, we'll have a single
+            # inference item.
+            items_for_inference = runners.ItemsForInference(
+                items=[
+                    runners.DatasetItemForInference(
+                        labels_path=self.labels_filename, frame_filter="user"
+                    )
+                ]
+            )
+        else:
+            # Otherwise, make an inference item for each video with list of frames.
+            items_for_inference = runners.ItemsForInference.from_video_frames_dict(
+                self.get_selected_frames_to_predict(pipeline_form_data)
+            )
         return items_for_inference
 
     def _validate_pipeline(self):

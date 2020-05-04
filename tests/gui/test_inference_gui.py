@@ -30,7 +30,7 @@ def test_inference_cli_builder():
         inference_params={"tracking.tracker": "simple"},
     )
 
-    item_for_inference = runners.ItemForInference(
+    item_for_inference = runners.VideoItemForInference(
         video=Video.from_filename("video.mp4"), frames=[1, 2, 3],
     )
 
@@ -47,21 +47,14 @@ def test_inference_cli_builder():
     assert output_path.endswith("predictions.slp")
 
 
-def test_inference_cli_specified_video_path():
+def test_inference_cli_output_path():
     inference_task = runners.InferenceTask(
         trained_job_paths=["model1", "model2"], inference_params=dict(),
     )
 
-    item_for_inference = runners.ItemForInference(
-        video=Video.from_filename("video.mp4"),
-        video_path="another_video_path.mp4",
-        frames=[1, 2, 3],
+    item_for_inference = runners.VideoItemForInference(
+        video=Video.from_filename("video.mp4"), frames=[1, 2, 3],
     )
-
-    cli_args, output_path = inference_task.make_predict_cli_call(item_for_inference)
-
-    assert cli_args[1] == "another_video_path.mp4"
-    assert "--tracking.tracker" not in cli_args
 
     # Try with specified output path
     cli_args, output_path = inference_task.make_predict_cli_call(

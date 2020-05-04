@@ -1,3 +1,4 @@
+import abc
 import attr
 import os
 import subprocess as sub
@@ -17,24 +18,34 @@ SKIP_TRAINING = False
 
 
 @attr.s(auto_attribs=True)
-class ItemForInference:
+class ItemForInference(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def path(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def cli_args(self):
+        pass
+
+
+@attr.s(auto_attribs=True)
+class VideoItemForInference(ItemForInference):
     video: Video
-    video_path: Optional[str] = None
     frames: Optional[List[int]] = None
+    use_absolute_path: bool = False
 
     @property
     def path(self):
-        if self.video_path is not None:
-            return self.video_path
+        if self.use_absolute_path:
+            return os.path.abspath(self.video.filename)
         return self.video.filename
 
     @property
     def cli_args(self):
-        arg_list = []
-        if self.video_path is not None:
-            arg_list.append(self.video_path)
-        else:
-            arg_list.append(self.video.filename)
+        arg_list = list()
+        arg_list.append(self.path)
 
         # TODO: better support for video params
         if hasattr(self.video.backend, "dataset") and self.video.backend.dataset:
@@ -45,7 +56,30 @@ class ItemForInference:
             and self.video.backend.input_format
         ):
             arg_list.extend(("--video.input_format", self.video.backend.input_format))
+
+        arg_list.extend(("--frames", ",".join(map(str, self.frames))))
+
         return arg_list
+
+
+@attr.s(auto_attribs=True)
+class DatasetItemForInference(ItemForInference):
+    labels_path: str
+    frame_filter: str = "user"
+    use_absolute_path: bool = False
+
+    @property
+    def path(self):
+        if self.use_absolute_path:
+            return os.path.abspath(self.labels_path)
+        return self.labels_path
+
+    @property
+    def cli_args(self):
+        args_list = ["--labels", self.path]
+        if self.frame_filter == "user":
+            args_list.append("--only-labeled-frames")
+        return args_list
 
 
 @attr.s(auto_attribs=True)
@@ -60,7 +94,7 @@ class ItemsForInference:
         items = []
         for video, frames in video_frames_dict.items():
             if frames:
-                items.append(ItemForInference(video=video, frames=frames))
+                items.append(VideoItemForInference(video=video, frames=frames))
         return cls(items=items)
 
 
@@ -106,7 +140,7 @@ class InferenceTask:
             timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
             output_path = os.path.join(
                 predictions_dir,
-                f"{os.path.basename(item_for_inference.video.filename)}.{timestamp}.predictions.slp",
+                f"{os.path.basename(item_for_inference.path)}.{timestamp}.predictions.slp",
             )
 
         for job_path in self.trained_job_paths:
@@ -115,8 +149,6 @@ class InferenceTask:
         for key, val in self.inference_params.items():
             if not key.startswith(("_", "outputs.", "model.")):
                 cli_args.extend((f"--{key}", str(val)))
-
-        cli_args.extend(("--frames", ",".join(map(str, item_for_inference.frames))))
 
         cli_args.extend(("-o", output_path))
 
@@ -227,10 +259,6 @@ def write_pipeline_files(
     # Build the script for running inference
     inference_script = "#!/bin/bash\n"
 
-    # Set videos to use absolute paths
-    for item in items_for_inference.items:
-        item.video_path = os.path.abspath(item.path)
-
     # Object with settings for inference
     inference_task = InferenceTask(
         labels_filename=labels_filename,
@@ -243,6 +271,9 @@ def write_pipeline_files(
         prediction_output_path = (
             f"{os.path.basename(item_for_inference.path)}.predictions.slp"
         )
+
+        # Use absolute path to video
+        item_for_inference.use_absolute_path = True
 
         # Get list of cli args
         cli_args, _ = inference_task.make_predict_cli_call(
