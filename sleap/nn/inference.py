@@ -5,7 +5,6 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from typing import Text, Optional, List, Dict
 
 import tensorflow as tf
@@ -16,6 +15,7 @@ from sleap import util
 from sleap.nn.config import TrainingJobConfig
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker, run_tracker
+from sleap.nn.data.grouping import group_examples_iter
 from sleap.nn.data.pipelines import (
     Provider,
     Pipeline,
@@ -40,45 +40,6 @@ from sleap.nn.data.pipelines import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def group_examples(examples):
-    """
-    Group examples into dictionary.
-
-    Key is (video_ind, frame_ind), val is list of examples matching key.
-    """
-    grouped_examples = defaultdict(list)
-    for example in examples:
-        video_ind = example["video_ind"].numpy()
-        frame_ind = example["frame_ind"].numpy()
-        grouped_examples[(video_ind, frame_ind)].append(example)
-    return grouped_examples
-
-
-def group_examples_iter(examples):
-    """
-    Iterator which groups examples.
-
-    Yields ((video_ind, frame_ind), list of examples matching vid/frame).
-    """
-    last_key = None
-    batch = []
-    for example in examples:
-        video_ind = example["video_ind"].numpy()
-        frame_ind = example["frame_ind"].numpy()
-        key = (video_ind, frame_ind)
-
-        if last_key != key:
-            if batch:
-                yield last_key, batch
-            last_key = key
-            batch = [example]
-        else:
-            batch.append(example)
-
-    if batch:
-        yield key, batch
 
 
 def safely_generate(ds: tf.data.Dataset, progress: bool = True):
