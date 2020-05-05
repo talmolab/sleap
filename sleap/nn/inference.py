@@ -1153,11 +1153,7 @@ def make_predictor_from_models(
 
 
 def make_tracker_from_cli(policy_args):
-    tracker_name = "None"
     if "tracking" in policy_args:
-        tracker_name = policy_args["tracking"].get("tracker", "None")
-
-    if tracker_name.lower() != "none":
         tracker = Tracker.make_tracker_by_name(**policy_args["tracking"])
         return tracker
 
@@ -1236,9 +1232,11 @@ def main():
 
     # Run inference!
     t0 = time.time()
+    predicted_frames = []
+
     for video_reader in video_readers:
-        print("Frames:", len(video_reader))
-        predicted_frames = predictor.predict(video_reader)
+        video_predicted_frames = predictor.predict(video_reader)
+        predicted_frames.extend(video_predicted_frames)
 
     # Create dictionary of metadata we want to save with predictions
     prediction_metadata = dict()
