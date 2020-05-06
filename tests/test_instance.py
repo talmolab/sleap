@@ -165,6 +165,35 @@ def test_points_array(skeleton):
     assert np.isnan(pts[skeleton.node_to_index("thorax"), :]).all()
 
 
+def test_points_array_copying(skeleton):
+    node_names = ["left-wing", "head", "right-wing"]
+    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+
+    instance1 = Instance(skeleton=skeleton, points=points)
+
+    first_node = skeleton.nodes[0]
+
+    # Make sure that changing *uncopied* points array does change instance.
+    pts = instance1.get_points_array(copy=False)
+    assert pts[0]["x"] == instance1[first_node].x
+    pts[0]["x"] = 123
+    assert pts[0]["x"] == instance1[first_node].x  # these should match
+
+    # Make sure that changing copied points array doesn't change instance.
+    pts = instance1.get_points_array(copy=True)
+    assert pts[0][0] == instance1[first_node].x
+    pts[0][0] = 456
+    assert pts[0][0] != instance1[first_node].x  # these shouldn't match
+
+    # Make sure we can get full copy
+    pts = instance1.get_points_array(copy=True, full=True)
+    assert pts.shape[1] == 4  # x, y, visible, complete
+
+    # Make sure we can get copy with just coordinates
+    pts = instance1.get_points_array(copy=True, full=False)
+    assert pts.shape[1] == 2  # x, y
+
+
 def test_modifying_skeleton(skeleton):
     node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
