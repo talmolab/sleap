@@ -890,6 +890,20 @@ class PredictedInstance(Instance):
         if self.from_predicted is not None:
             raise ValueError("PredictedInstance should not have from_predicted.")
 
+    @property
+    def points_and_scores_array(self) -> np.ndarray:
+        """
+        (N, 3) array of (x, y, score) for predicted points.
+
+        Row in arrow corresponds to order of points in skeleton.
+        Invisible points will have NaNs.
+
+        Returns:
+            ndarray of visible point coordinates and scores.
+        """
+        pts = self.get_points_array(full=True, copy=True, invisible_as_nan=True)
+        return pts[:, (0, 1, 4)]  # (x, y, score)
+
     @classmethod
     def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":
         """

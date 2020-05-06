@@ -194,6 +194,27 @@ def test_points_array_copying(skeleton):
     assert pts.shape[1] == 2  # x, y
 
 
+def test_predicted_points_array_with_score(skeleton):
+    pred_inst = PredictedInstance(
+        skeleton=skeleton,
+        points={
+            skeleton.nodes[0]: PredictedPoint(1, 2, score=0.3),
+            skeleton.nodes[1]: PredictedPoint(4, 5, score=0.6, visible=False),
+        },
+        score=1.0,
+    )
+
+    pts = pred_inst.points_and_scores_array
+
+    # Make sure we got (x, y, score) for first point
+    assert pts[0, 0] == 1
+    assert pts[0, 1] == 2
+    assert pts[0, 2] == 0.3
+
+    # Make sure invisible point has NaNs
+    assert np.isnan(pts[1, 0])
+
+
 def test_modifying_skeleton(skeleton):
     node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
