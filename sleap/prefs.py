@@ -11,6 +11,7 @@ class Preferences(object):
         "color predicted": False,
         "palette": "standard",
         "trail length": 0,
+        "trail width": 4.0,
         "hide videos dock": False,
         "hide skeleton dock": False,
         "hide instances dock": False,
