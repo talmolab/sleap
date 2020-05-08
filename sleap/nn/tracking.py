@@ -510,6 +510,9 @@ class Tracker:
             A list of the instances that were tracked.
         """
 
+        if self.candidate_maker is None:
+            return untracked_instances
+
         # Infer timestep if not provided.
         if t is None:
             if len(self.track_matching_queue) > 0:
