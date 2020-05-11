@@ -39,7 +39,7 @@
 <div class="section" id="matlab">
 <h2>MATLAB<a class="headerlink" href="#matlab" title="Permalink to this headline">¶</a></h2>
 <p>You can read this file in MATLAB like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">occupancy_matrix</span> <span class="o">=</span> <span class="n">h5read</span><span class="p">(</span><span class="s1">&#39;path/to/analysis.h5&#39;</span><span class="p">,</span><span class="s1">&#39;/occupancy&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">occupancy_matrix</span> <span class="o">=</span> <span class="n">h5read</span><span class="p">(</span><span class="s1">&#39;path/to/analysis.h5&#39;</span><span class="p">,</span><span class="s1">&#39;/track_occupancy&#39;</span><span class="p">)</span>
 <span class="n">tracks_matrix</span> <span class="o">=</span> <span class="n">h5read</span><span class="p">(</span><span class="s1">&#39;path/to/analysis.h5&#39;</span><span class="p">,</span><span class="s1">&#39;/tracks&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -50,7 +50,7 @@
 <p>To read the file in Python you’ll first need to install the <a class="reference external" href="http://docs.h5py.org/en/stable/">h5py package</a>. You can then read data from the file like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5py</span>
 <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s1">&#39;path/to/analysis.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">occupancy_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;occupancy&#39;</span><span class="p">][:]</span>
+    <span class="n">occupancy_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;track_occupancy&#39;</span><span class="p">][:]</span>
     <span class="n">tracks_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;tracks&#39;</span><span class="p">][:]</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">occupancy_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
