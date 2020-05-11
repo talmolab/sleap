@@ -155,7 +155,7 @@ Help
 ~~~~
 "**Keyboard Shortcuts**" allows you to view and change keyboard shortcuts for common menu and GUI actions.
 
-Main GUI Window
+Application GUI
 ---------------
 
 Mouse
@@ -225,3 +225,18 @@ Seekbar
 **Alt + drag**: Zoom into a range of frames
 
 **Alt + click**: Zoom out so that all frames are visible in seekbar
+
+.. _suggestion-methods:
+
+Labeling Suggestions
+~~~~~~~~~~~~~~~~~~~~~
+
+There are various methods to generate a list "suggested" frames for labeling or proofreading.
+
+The **sample** method is a quick way to get some number of frames for every video in your project. You can tell it how many samples (frames) to take from each video, and whether they should be evenly spaced throughout a video (the "stride" sampling method) or randomly distributed.
+
+The **image feature** method uses various algorithms to give you visually distinctive frames, since you will be able to train more robust models if the frames you've labeled are more representative of the visual variations in your videos. Generating suggestions based on image features can be slow.
+
+The **prediction score** method will identify frames which have more than some number of instances predicted and where the instance prediction score is below some threshold. This method can be useful when proofreading frame-by-frame prediction results. The instance score depends on your specific skeleton so you'll need to look at the instance scores you're getting to decide an appropriate threshold.
+
+The **velocity** method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity "jump").
