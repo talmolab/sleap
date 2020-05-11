@@ -34,6 +34,7 @@ from sleap.nn.data.pipelines import (
     MockGlobalPeakFinder,
     KeyFilter,
     KeyRenamer,
+    KeyDeviceMover,
     PredictedCenterInstanceNormalizer,
     PartAffinityFieldInstanceGrouper,
     PointsRescaler,
