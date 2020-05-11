@@ -5,32 +5,33 @@ Tracking and proofreading
 
 *Case: You're happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.*
 
-The basics of :ref:`track_proofreading` are covered in :ref:`part2`. You should go read that if you haven't already. Here we'll go into more details.
+The basics of :ref:`track_proofreading` are covered in the :ref:`Tutorial`. You should go read that if you haven't already. Here we'll go into more details.
+
+.. _tracking-method-details:
 
 Tracking methods
 ~~~~~~~~~~~~~~~~
 
 The process of predicting instances frame-by-frame and the process of putting these together into **tracks** (i.e., identities across frames) are distinct, although it's common to run them together during the inference pipeline. Obviously you can only track identities after you've predicted instances, but once you have predictions, it's easy to then run tracking by itself to try out different methods and parameters.
 
-The tracking process itself is fairly modular. You pick a method for generating match candidates, you pick a method for determining the similarity between matches (i.e., a cost function for a match), and you pick a method for selecting the best combinations of matches.
-
 If you're getting poor results, you may want to try out different methods and parameters. Changing the **track window** and the **similarity** method—both explained below—can make a big difference.
 
-**Candidate Generation**
+The tracker will go through the predictions frame by frame and try to match instances on frame N to candidates which already have track identities assigned. These candidates are generated from a certain number of frames immediately prior to frame N (what we refer to as the “tracking window”).
 
-The "simple" candidate method (:code:`--tracker simple`) will simply try to match each instance against all the instances from some number of prior frames.
+If you use the “**simple**” tracker then the frames chosen are the instances from prior frames. If you use “**flow**” as the tracking method then SLEAP takes instances from the prior frames and uses optical flow (`Xiao et al., 2018 <https://arxiv.org/abs/1804.06208>`_) to shift the points in the instances, and then uses these shifted points as the candidate instances.
 
-The "flow" candidate method (:code:`--tracker flow`) uses the `Lukas–Kanade method <https://en.wikipedia.org/wiki/Lucas–Kanade_method>`_ to estimate optical flow and then tries to match instances in a frame against flow-shifted instances from some number of prior frames.
+There are currently three methods for matching instances in frame N against these candidates, each encoded by a cost function:
 
-For each of these methods, you can specify how many prior frames are used for generating match candidates with the :code:`--track_window` argument.
+- “**centroid**” measures similarity by the distance between the instance centroids
+- “**iou**” measures similarity by the intersection/overlap of the instance bounding boxes
+- “**instance**” measures similarity by looking at the distances between corresponding nodes in the instances, normalized by the number of valid nodes in the candidate instance.
 
-**Similarity**
+Once SLEAP has measured the similarity between all the candidates and the instances in frame N, you need to choose a way to pair them up. You can do this either by picking the best match, and the picking the best remaining match for each remaining instance in turn—this is “**greedy**” matching—or you can find the way of matching identities which minimizes the total cost (or: maximizes the total similarity)—this is “**Hungarian**” matching.
 
-You can determine the quality of a match by looking at all of the points for each instance (:code:`--similarity instance`), the centroids (:code:`--similarity instance`), or the intersection over union (:code:`--similarity iou`).
+Finally, you have an option second-pass method which “cleans” the resulting identities. To use this method, you specify a target number of tracks (i.e., how many animals there are in your video). SLEAP then goes frame by frame and removes instances over this target number.
 
-**Match**
+Once you have the desired number of instances in every frame, SLEAP connects identities with a simple heuristic: if exactly one track identity was dropped from frame N and exactly one new track identity was added in frame N+1, it matches up the dropped and the new tracks.
 
-You can determine whether we match tracks "greedily" (:code:`--match greedy`), picking the best match first, and the next best of the remaining candidates, each in turn, **or** we use "Hungarian" matching (:code:`--match hungarian`) which minimizes the total cost of all the matches.
 
 More training data?
 ~~~~~~~~~~~~~~~~~~~
@@ -71,7 +72,7 @@ Sometimes the background in the video will make it hard to see certain colors in
 Proofreading
 ~~~~~~~~~~~~~
 
-As discussed in the :ref:`track_proofreading` section of :ref:`part2`, there are two main types of mistakes made by the tracking code: lost identities and mistaken
+As discussed in the :ref:`track_proofreading` section of the :ref:`Tutorial`, there are two main types of mistakes made by the tracking code: lost identities and mistaken
 identities.
 
 **Lost Identities:** The code may fail to identity an instance in one

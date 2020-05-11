@@ -19,7 +19,7 @@ different projects, mitigating issues of managing complex dependencies. To creat
 
 ::
 
-    (base) C:\>  conda create -n sleap_env -c defaults -c sleap sleap=0.2.1 python=3.6 -y
+    (base) C:\>  conda create -n sleap_env -c defaults -c sleap sleap=1.0.0 python=3.6 -y
 
 Once the environment is finished installing, it can be activated using the following command:
 
@@ -64,7 +64,7 @@ You can then install SLEAP by running:
 
 ::
 
-    pip install --extra-index-url https://test.pypi.org/simple/ sleap==0.2.1
+    pip install sleap==1.0.0
 
 **SLEAP** is now installed you can run the labeling GUI by entering the following command:
 
