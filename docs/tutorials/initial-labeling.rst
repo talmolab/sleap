@@ -1,4 +1,4 @@
-.. _initial_labeling:
+.. _initial-labeling:
 
 Initial Labeling
 --------------------------
