@@ -1392,8 +1392,8 @@ def main():
     window = MainWindow(labels_path=args.labels_path)
     window.showMaximized()
 
-    if not args.labels_path:
-        window.commands.openProject(first_open=True)
+    # if not args.labels_path:
+    #     window.commands.openProject(first_open=True)
 
     app.exec_()
 
