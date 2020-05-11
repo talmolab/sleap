@@ -25,7 +25,7 @@ supports active learning.
 
 .. _LEAP: https://github.com/talmo/leap
 
-SLEAP is released under a `Clear BSD License`_ license.
+SLEAP is released under a `Clear BSD License` .
 
 If you use **SLEAP** in your research, cite `Pereira et al. Nature Methods 2019`_ and `sleap.ai`_.
 
