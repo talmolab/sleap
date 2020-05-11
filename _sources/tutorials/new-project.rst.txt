@@ -37,7 +37,7 @@ edges.
 
 |image2|
 
-Continue to :ref:`initial_labeling`.
+Continue to :ref:`initial-labeling`.
 
 .. |image0| image:: ../_static/add-video.gif
 .. |image1| image:: ../_static/video-options.gif

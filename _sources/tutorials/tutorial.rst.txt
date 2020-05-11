@@ -22,6 +22,7 @@ There are three main stages of using SLEAP:
 
     ../guides/installation
     new-project
+    initial-labeling
     initial-training
     assisted-labeling
     proofreading

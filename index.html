@@ -55,7 +55,7 @@ supports active learning.</p>
 <p>We find that top-down mode works better for some multi-animal datasets while bottom-up works better for others. SLEAP uses UNET as its backbone, but you can choose other backbones (LEAP, resnet, etc.) from a drop down menu.</p>
 <p>Once you have made the choice between a top-down or bottom-up approach and trained models, then you enter into a human-in-the-loop training cycle, in which you receive predictions and use them to continue to label more examples. You will continue to iterate this process until you have achieved the desired pose labeling accuracy for your dataset.</p>
 <p>The goal at this stage is to get accurate pose predictions on individual frames. This means that the points for each body part are predicted in the correct locations and that the points are correctly grouped into distinct animal instances.</p>
-<p>Once you have accurate frame-by-frame prediction, you’re ready to predict for entire video clips and to track animal identities. We use a variety of heuristic algorithms for tracking identities across time (see <a class="reference internal" href="guides/proofreading.html#tracking-method-details"><span class="std std-ref">Tracking methods</span></a> for more details). SLEAP also includes a graphical proof-reading tool for quickly assessing the accuracy of tracking and correcting problems.</p>
+<p>After you have accurate frame-by-frame prediction, you’re ready to predict for entire video clips and to track animal identities. We use a variety of heuristic algorithms for tracking identities across time (see <a class="reference internal" href="guides/proofreading.html#tracking-method-details"><span class="std std-ref">Tracking methods</span></a> for more details). SLEAP also includes a graphical proof-reading tool for quickly assessing the accuracy of tracking and correcting problems.</p>
 </div>
 <div class="section" id="contact">
 <span id="id1"></span><h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
@@ -87,6 +87,7 @@ supports active learning.</p>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/tutorial.html">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/installation.html">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-labeling.html">Initial Labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html">Quick Training and Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/assisted-labeling.html">Prediction-assisted labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
@@ -103,7 +104,7 @@ supports active learning.</p>
 <li class="toctree-l1"><a class="reference internal" href="guides/reference.html">Feature Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/reference.html#command-line-interfaces">Command Line Interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/reference.html#menus">Menus</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/reference.html#main-gui-window">Main GUI Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/reference.html#application-gui">Application GUI</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>

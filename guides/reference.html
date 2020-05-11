@@ -132,8 +132,8 @@
 <p>“<strong>Keyboard Shortcuts</strong>” allows you to view and change keyboard shortcuts for common menu and GUI actions.</p>
 </div>
 </div>
-<div class="section" id="main-gui-window">
-<h2>Main GUI Window<a class="headerlink" href="#main-gui-window" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="application-gui">
+<h2>Application GUI<a class="headerlink" href="#application-gui" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="mouse">
 <h3>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">¶</a></h3>
 <p><strong>Right-click</strong> (or control + click) on node: Toggle visibility</p>
@@ -176,6 +176,14 @@
 <p><strong>Alt + drag</strong>: Zoom into a range of frames</p>
 <p><strong>Alt + click</strong>: Zoom out so that all frames are visible in seekbar</p>
 </div>
+<div class="section" id="labeling-suggestions">
+<span id="suggestion-methods"></span><h3>Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permalink to this headline">¶</a></h3>
+<p>There are various methods to generate a list “suggested” frames for labeling or proofreading.</p>
+<p>The <strong>sample</strong> method is a quick way to get some number of frames for every video in your project. You can tell it how many samples (frames) to take from each video, and whether they should be evenly spaced throughout a video (the “stride” sampling method) or randomly distributed.</p>
+<p>The <strong>image feature</strong> method uses various algorithms to give you visually distinctive frames, since you will be able to train more robust models if the frames you’ve labeled are more representative of the visual variations in your videos. Generating suggestions based on image features can be slow.</p>
+<p>The <strong>prediction score</strong> method will identify frames which have more than some number of instances predicted and where the instance prediction score is below some threshold. This method can be useful when proofreading frame-by-frame prediction results. The instance score depends on your specific skeleton so you’ll need to look at the instance scores you’re getting to decide an appropriate threshold.</p>
+<p>The <strong>velocity</strong> method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity “jump”).</p>
+</div>
 </div>
 </div>
 
@@ -203,7 +211,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Feature Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#command-line-interfaces">Command Line Interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#menus">Menus</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#main-gui-window">Main GUI Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#application-gui">Application GUI</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>

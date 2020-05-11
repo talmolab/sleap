@@ -14,6 +14,8 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Quick Training and Inference" href="initial-training.html" />
+    <link rel="prev" title="Creating a project" href="new-project.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -39,6 +41,8 @@ evenly-spaced samples, or it can try to give you distinctive groups of
 frames by taking the image features into account.</p>
 <p>For now, let’s just get 20 random frames. Choose “sample” as the method and “random” as the sampling method, then click “<strong>Generate Suggestions</strong>”.</p>
 <p><img alt="image3" src="../_images/suggestions.jpg" /></p>
+<p>(See <a class="reference internal" href="../guides/reference.html#suggestion-methods"><span class="std std-ref">Labeling Suggestions</span></a> for more information about the suggestion methods.)</p>
+<p>You can then move between suggested frames by double-clicking the frame information in the table or by clicking the “Prev” or “Next” buttons.</p>
 <div class="section" id="labeling-the-first-frame">
 <h2>Labeling the first frame<a class="headerlink" href="#labeling-the-first-frame" title="Permalink to this headline">¶</a></h2>
 <p>Start by adding an <strong>instance</strong> of the skeleton to the current image by
@@ -105,9 +109,19 @@ predicting body part locations.</p>
 
 
 <h3>Navigation</h3>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Export Data For Analysis</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
@@ -117,6 +131,10 @@ predicting body part locations.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="tutorial.html">Tutorial</a><ul>
+      <li>Previous: <a href="new-project.html" title="previous chapter">Creating a project</a></li>
+      <li>Next: <a href="initial-training.html" title="next chapter">Quick Training and Inference</a></li>
+  </ul></li>
   </ul></li>
 </ul>
 </div>
