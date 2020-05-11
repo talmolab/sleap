@@ -1,0 +1,936 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.gui.learning.dialog &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.learning.dialog</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">cattr</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.dialogs.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.learning</span> <span class="kn">import</span> <span class="n">runners</span><span class="p">,</span> <span class="n">utils</span><span class="p">,</span> <span class="n">configs</span><span class="p">,</span> <span class="n">datagen</span><span class="p">,</span> <span class="n">receptivefield</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+
+<span class="c1"># Debug option to skip the training run</span>
+<span class="n">SKIP_TRAINING</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1"># List of fields which should show list of skeleton nodes</span>
+<span class="n">NODE_LIST_FIELDS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;data.instance_cropping.center_on_part&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;model.heads.centered_instance.anchor_part&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;model.heads.centroid.anchor_part&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="LearningDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.dialog.html#sleap.gui.learning.dialog.LearningDialog">[docs]</a><span class="k">class</span> <span class="nc">LearningDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+
+    <span class="n">learningFinished</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+        <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Labels</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LearningDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">skeleton</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">:</span>
+            <span class="n">skeleton</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_pipeline</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">TrainingConfigsGetter</span><span class="o">.</span><span class="n">make_from_labels_filename</span><span class="p">(</span>
+            <span class="n">labels_filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Layout for buttons</span>
+        <span class="n">buttons</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel_button</span> <span class="o">=</span> <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">Cancel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_button</span> <span class="o">=</span> <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span>
+            <span class="s2">&quot;Save configuration files...&quot;</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">ApplyRole</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_button</span> <span class="o">=</span> <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span>
+            <span class="s2">&quot;Run&quot;</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">AcceptRole</span>
+        <span class="p">)</span>
+
+        <span class="n">buttons_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+
+        <span class="n">buttons_layout_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">buttons_layout_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">buttons_layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span> <span class="o">=</span> <span class="n">TrainingPipelineWidget</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;training&quot;</span><span class="p">:</span>
+            <span class="n">tab_label</span> <span class="o">=</span> <span class="s2">&quot;Training Pipeline&quot;</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span><span class="p">:</span>
+            <span class="c1"># self.pipeline_form_widget = InferencePipelineWidget()</span>
+            <span class="n">tab_label</span> <span class="o">=</span> <span class="s2">&quot;Inference Pipeline&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid LearningDialog mode: </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTabWidget</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="p">,</span> <span class="n">tab_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_tabs</span><span class="p">()</span>
+
+        <span class="c1"># Layout for entire dialog</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons_layout_widget</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+        <span class="c1"># Default to most recently trained pipeline (if there is one)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_pipeline_from_most_recent</span><span class="p">()</span>
+
+        <span class="c1"># Connect functions to update pipeline tabs when pipeline changes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">updatePipeline</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">set_pipeline</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">emitPipeline</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_signals</span><span class="p">()</span>
+
+        <span class="c1"># Connect actions for buttons</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">rejected</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reject</span><span class="p">)</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_button_click</span><span class="p">)</span>
+
+        <span class="c1"># Connect button for previewing the training data</span>
+        <span class="k">if</span> <span class="s2">&quot;_view_datagen&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">buttons</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="s2">&quot;_view_datagen&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">view_datagen</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_file_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">tab</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">tab</span><span class="o">.</span><span class="n">update_file_list</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frame_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns dictionary with frames that user has selected for learning.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span>
+
+    <span class="nd">@frame_selection</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">frame_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_selection</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]):</span>
+        <span class="sd">&quot;&quot;&quot;Sets options of frames on which to run learning.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span> <span class="o">=</span> <span class="n">frame_selection</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_predict_frames&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">prediction_options</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">def</span> <span class="nf">count_total_frames</span><span class="p">(</span><span class="n">videos_frames</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">videos_frames</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">frame_list</span> <span class="ow">in</span> <span class="n">videos_frames</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="c1"># Check for [x, Y] range given as X, -Y</span>
+                    <span class="c1"># (we&#39;re not using typical [X, Y)-style range here)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="o">-</span><span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">frame_list</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">count</span>
+
+            <span class="n">total_random</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">total_suggestions</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">total_user</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">random_video</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">clip_length</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">video_length</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Determine which options are available given _frame_selection</span>
+            <span class="k">if</span> <span class="s2">&quot;random&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">:</span>
+                <span class="n">total_random</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;random_video&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">:</span>
+                <span class="n">random_video</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random_video&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;suggestions&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">:</span>
+                <span class="n">total_suggestions</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;user&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">:</span>
+                <span class="n">total_user</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;clip&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">:</span>
+                <span class="n">clip_length</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;video&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">:</span>
+                <span class="n">video_length</span> <span class="o">=</span> <span class="n">count_total_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">])</span>
+
+            <span class="c1"># Build list of options</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">&quot;inference&quot;</span><span class="p">:</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;nothing&quot;</span><span class="p">)</span>
+            <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;current frame&quot;</span><span class="p">)</span>
+
+            <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;random frames (</span><span class="si">{</span><span class="n">total_random</span><span class="si">}</span><span class="s2"> total frames)&quot;</span>
+            <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+            <span class="n">default_option</span> <span class="o">=</span> <span class="n">option</span>
+
+            <span class="k">if</span> <span class="n">random_video</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;random frames in current video (</span><span class="si">{</span><span class="n">random_video</span><span class="si">}</span><span class="s2"> frames)&quot;</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">total_suggestions</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;suggested frames (</span><span class="si">{</span><span class="n">total_suggestions</span><span class="si">}</span><span class="s2"> total frames)&quot;</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+                <span class="n">default_option</span> <span class="o">=</span> <span class="n">option</span>
+
+            <span class="k">if</span> <span class="n">total_user</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;user labeled frames (</span><span class="si">{</span><span class="n">total_user</span><span class="si">}</span><span class="s2"> total frames)&quot;</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">clip_length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">option</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;selected clip (</span><span class="si">{</span><span class="n">clip_length</span><span class="si">}</span><span class="s2"> frames)&quot;</span>
+                <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+                <span class="n">default_option</span> <span class="o">=</span> <span class="n">option</span>
+
+            <span class="n">prediction_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;entire video (</span><span class="si">{</span><span class="n">video_length</span><span class="si">}</span><span class="s2"> frames)&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;_predict_frames&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+                <span class="n">prediction_options</span><span class="p">,</span> <span class="n">default_option</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">connect_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_tab_data_change</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">head_name</span><span class="p">,</span> <span class="n">tab</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">tab</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">n</span><span class="o">=</span><span class="n">head_name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_tab_data_change</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">disconnect_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">head_name</span><span class="p">,</span> <span class="n">tab</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">tab</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">make_tabs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">heads</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;single_instance&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;centered_instance&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_instance&quot;</span><span class="p">)</span>
+
+        <span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">head_name</span> <span class="ow">in</span> <span class="n">heads</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">head_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">TrainingEditorWidget</span><span class="p">(</span>
+                <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span>
+                <span class="n">skeleton</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">,</span>
+                <span class="n">head</span><span class="o">=</span><span class="n">head_name</span><span class="p">,</span>
+                <span class="n">cfg_getter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="p">,</span>
+                <span class="n">require_trained</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">adjust_data_to_update_other_tabs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_data</span><span class="p">,</span> <span class="n">updated_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">updated_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">updated_data</span> <span class="o">=</span> <span class="n">source_data</span>
+
+        <span class="n">anchor_part</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">set_anchor</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="s2">&quot;model.heads.centroid.anchor_part&quot;</span> <span class="ow">in</span> <span class="n">source_data</span><span class="p">:</span>
+            <span class="n">anchor_part</span> <span class="o">=</span> <span class="n">source_data</span><span class="p">[</span><span class="s2">&quot;model.heads.centroid.anchor_part&quot;</span><span class="p">]</span>
+            <span class="n">set_anchor</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="s2">&quot;model.heads.centered_instance.anchor_part&quot;</span> <span class="ow">in</span> <span class="n">source_data</span><span class="p">:</span>
+            <span class="n">anchor_part</span> <span class="o">=</span> <span class="n">source_data</span><span class="p">[</span><span class="s2">&quot;model.heads.centered_instance.anchor_part&quot;</span><span class="p">]</span>
+            <span class="n">set_anchor</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">set_anchor</span><span class="p">:</span>
+            <span class="n">updated_data</span><span class="p">[</span><span class="s2">&quot;model.heads.centroid.anchor_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">anchor_part</span>
+            <span class="n">updated_data</span><span class="p">[</span><span class="s2">&quot;model.heads.centered_instance.anchor_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">anchor_part</span>
+
+    <span class="k">def</span> <span class="nf">update_tabs_from_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjust_data_to_update_other_tabs</span><span class="p">(</span><span class="n">source_data</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">tab</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">tab</span><span class="o">.</span><span class="n">set_fields_from_key_val_dict</span><span class="p">(</span><span class="n">source_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_tabs_from_tab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_data</span><span class="p">):</span>
+        <span class="n">data_to_transfer</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjust_data_to_update_other_tabs</span><span class="p">(</span><span class="n">source_data</span><span class="p">,</span> <span class="n">data_to_transfer</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data_to_transfer</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">tab</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">tab</span><span class="o">.</span><span class="n">set_fields_from_key_val_dict</span><span class="p">(</span><span class="n">data_to_transfer</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">on_tab_data_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tab_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disconnect_signals</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tab_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Move data from pipeline tab to other tabs</span>
+            <span class="n">source_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_tabs_from_pipeline</span><span class="p">(</span><span class="n">source_data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Get data from head-specific tab</span>
+            <span class="n">source_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">]</span><span class="o">.</span><span class="n">get_all_form_data</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_tabs_from_tab</span><span class="p">(</span><span class="n">source_data</span><span class="p">)</span>
+
+            <span class="c1"># Update pipeline tab</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">source_data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_pipeline</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_signals</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_most_recent_pipeline_trained</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="n">recent_cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">get_first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">recent_cfg_info</span> <span class="ow">and</span> <span class="n">recent_cfg_info</span><span class="o">.</span><span class="n">head_name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">recent_cfg_info</span><span class="o">.</span><span class="n">head_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;centered_instance&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;top-down&quot;</span>
+            <span class="k">if</span> <span class="n">recent_cfg_info</span><span class="o">.</span><span class="n">head_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;multi_instance&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;bottom-up&quot;</span>
+            <span class="k">if</span> <span class="n">recent_cfg_info</span><span class="o">.</span><span class="n">head_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;single_instance&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;single&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">set_pipeline_from_most_recent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">recent_pipeline_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_most_recent_pipeline_trained</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">recent_pipeline_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">current_pipeline</span> <span class="o">=</span> <span class="n">recent_pipeline_name</span>
+
+    <span class="k">def</span> <span class="nf">add_tab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tab_name</span><span class="p">):</span>
+        <span class="n">tab_labels</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;single_instance&quot;</span><span class="p">:</span> <span class="s2">&quot;Single Instance Model Configuration&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;centroid&quot;</span><span class="p">:</span> <span class="s2">&quot;Centroid Model Configuration&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;centered_instance&quot;</span><span class="p">:</span> <span class="s2">&quot;Centered Instance Model Configuration&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;multi_instance&quot;</span><span class="p">:</span> <span class="s2">&quot;Bottom-Up Model Configuration&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">],</span> <span class="n">tab_labels</span><span class="p">[</span><span class="n">tab_name</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tab_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">remove_tabs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span><span class="o">.</span><span class="n">removeTab</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">set_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pipeline</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_pipeline</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_tabs</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">pipeline</span> <span class="o">==</span> <span class="s2">&quot;top-down&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_tab</span><span class="p">(</span><span class="s2">&quot;centroid&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_tab</span><span class="p">(</span><span class="s2">&quot;centered_instance&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">pipeline</span> <span class="o">==</span> <span class="s2">&quot;bottom-up&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_tab</span><span class="p">(</span><span class="s2">&quot;multi_instance&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">pipeline</span> <span class="o">==</span> <span class="s2">&quot;single&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_tab</span><span class="p">(</span><span class="s2">&quot;single_instance&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_pipeline</span> <span class="o">=</span> <span class="n">pipeline</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_pipeline</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">change_tab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tab_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">tab_idx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">merge_pipeline_and_head_config_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head_name</span><span class="p">,</span> <span class="n">head_data</span><span class="p">,</span> <span class="n">pipeline_data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># if key.starts_with(&quot;_&quot;):</span>
+            <span class="c1">#     continue</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;model.heads.&quot;</span><span class="p">):</span>
+                <span class="n">key_scope</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">key_scope</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">head_name</span><span class="p">:</span>
+                    <span class="k">continue</span>
+            <span class="n">head_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">get_every_head_config_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_form_data</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="n">cfg_info_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">tab_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span><span class="p">:</span>
+            <span class="n">trained_cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">]</span><span class="o">.</span><span class="n">trained_config_info_to_use</span>
+            <span class="k">if</span> <span class="n">trained_cfg_info</span><span class="p">:</span>
+                <span class="n">trained_cfg_info</span><span class="o">.</span><span class="n">dont_retrain</span> <span class="o">=</span> <span class="n">trained_cfg_info</span>
+                <span class="n">cfg_info_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trained_cfg_info</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">tab_cfg_key_val_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">]</span><span class="o">.</span><span class="n">get_all_form_data</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">merge_pipeline_and_head_config_data</span><span class="p">(</span>
+                    <span class="n">head_name</span><span class="o">=</span><span class="n">tab_name</span><span class="p">,</span>
+                    <span class="n">head_data</span><span class="o">=</span><span class="n">tab_cfg_key_val_dict</span><span class="p">,</span>
+                    <span class="n">pipeline_data</span><span class="o">=</span><span class="n">pipeline_form_data</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="n">cfg</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">make_training_config_from_key_val_dict</span><span class="p">(</span><span class="n">tab_cfg_key_val_dict</span><span class="p">)</span>
+                <span class="n">cfg_info</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">head_name</span><span class="o">=</span><span class="n">tab_name</span><span class="p">)</span>
+
+                <span class="n">cfg_info_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cfg_info_list</span>
+
+    <span class="k">def</span> <span class="nf">get_selected_frames_to_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_form_data</span><span class="p">):</span>
+        <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">predict_frames_choice</span> <span class="o">=</span> <span class="n">pipeline_form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_predict_frames&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;current frame&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;random frames in current video&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random_video&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;selected clip&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;suggested&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;entire video&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">):</span>
+                <span class="n">frames_to_predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_selection</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Convert [X, Y+1) ranges to [X, Y] ranges for learning cli</span>
+            <span class="k">for</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_list</span> <span class="ow">in</span> <span class="n">frames_to_predict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># Check for [A, -B] list representing [A, B) range</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">frame_list</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frame_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">frames_to_predict</span><span class="p">[</span><span class="n">video</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame_list</span>
+
+        <span class="k">return</span> <span class="n">frames_to_predict</span>
+
+    <span class="k">def</span> <span class="nf">get_items_for_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_form_data</span><span class="p">):</span>
+        <span class="n">predict_frames_choice</span> <span class="o">=</span> <span class="n">pipeline_form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_predict_frames&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">):</span>
+            <span class="c1"># For inference on user labeled frames, we&#39;ll have a single</span>
+            <span class="c1"># inference item.</span>
+            <span class="n">items_for_inference</span> <span class="o">=</span> <span class="n">runners</span><span class="o">.</span><span class="n">ItemsForInference</span><span class="p">(</span>
+                <span class="n">items</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">runners</span><span class="o">.</span><span class="n">DatasetItemForInference</span><span class="p">(</span>
+                        <span class="n">labels_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">,</span> <span class="n">frame_filter</span><span class="o">=</span><span class="s2">&quot;user&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">predict_frames_choice</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;suggested&quot;</span><span class="p">):</span>
+            <span class="c1"># For inference on all suggested frames, we&#39;ll have a single</span>
+            <span class="c1"># inference item.</span>
+            <span class="n">items_for_inference</span> <span class="o">=</span> <span class="n">runners</span><span class="o">.</span><span class="n">ItemsForInference</span><span class="p">(</span>
+                <span class="n">items</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">runners</span><span class="o">.</span><span class="n">DatasetItemForInference</span><span class="p">(</span>
+                        <span class="n">labels_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">,</span> <span class="n">frame_filter</span><span class="o">=</span><span class="s2">&quot;suggested&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise, make an inference item for each video with list of frames.</span>
+            <span class="n">items_for_inference</span> <span class="o">=</span> <span class="n">runners</span><span class="o">.</span><span class="n">ItemsForInference</span><span class="o">.</span><span class="n">from_video_frames_dict</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_selected_frames_to_predict</span><span class="p">(</span><span class="n">pipeline_form_data</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">items_for_inference</span>
+
+    <span class="k">def</span> <span class="nf">_validate_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">can_run</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span><span class="p">:</span>
+            <span class="c1"># Make sure we have trained models for each required head</span>
+            <span class="k">for</span> <span class="n">tab_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span><span class="p">:</span>
+                <span class="n">tab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">tab</span><span class="o">.</span><span class="n">has_trained_config_selected</span><span class="p">:</span>
+                    <span class="n">can_run</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">break</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_button</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">can_run</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">view_datagen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pipeline_form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">config_info_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_every_head_config_data</span><span class="p">(</span><span class="n">pipeline_form_data</span><span class="p">)</span>
+        <span class="n">datagen</span><span class="o">.</span><span class="n">show_datagen_preview</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">config_info_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">on_button_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">button</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_button</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LearningDialog.run"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.dialog.html#sleap.gui.learning.dialog.LearningDialog.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run with current dialog settings.&quot;&quot;&quot;</span>
+
+        <span class="n">pipeline_form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">items_for_inference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_items_for_inference</span><span class="p">(</span><span class="n">pipeline_form_data</span><span class="p">)</span>
+
+        <span class="n">config_info_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_every_head_config_data</span><span class="p">(</span><span class="n">pipeline_form_data</span><span class="p">)</span>
+
+        <span class="c1"># Close the dialog now that we have the data from it</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+
+        <span class="c1"># Run training/learning pipeline using the TrainingJobs</span>
+        <span class="n">new_counts</span> <span class="o">=</span> <span class="n">runners</span><span class="o">.</span><span class="n">run_learning_pipeline</span><span class="p">(</span>
+            <span class="n">labels_filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">config_info_list</span><span class="o">=</span><span class="n">config_info_list</span><span class="p">,</span>
+            <span class="n">inference_params</span><span class="o">=</span><span class="n">pipeline_form_data</span><span class="p">,</span>
+            <span class="n">items_for_inference</span><span class="o">=</span><span class="n">items_for_inference</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">learningFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">new_counts</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">new_counts</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Inference has finished. Instances were predicted on </span><span class="si">{</span><span class="n">new_counts</span><span class="si">}</span><span class="s2"> frames.&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">models_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;/models&quot;</span><span class="p">)</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">openDir</span><span class="p">(</span>
+            <span class="kc">None</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">models_dir</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Select directory to save scripts&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">output_dir</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">pipeline_form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">items_for_inference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_items_for_inference</span><span class="p">(</span><span class="n">pipeline_form_data</span><span class="p">)</span>
+        <span class="n">config_info_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_every_head_config_data</span><span class="p">(</span><span class="n">pipeline_form_data</span><span class="p">)</span>
+
+        <span class="n">runners</span><span class="o">.</span><span class="n">write_pipeline_files</span><span class="p">(</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+            <span class="n">labels_filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">,</span>
+            <span class="n">config_info_list</span><span class="o">=</span><span class="n">config_info_list</span><span class="p">,</span>
+            <span class="n">inference_params</span><span class="o">=</span><span class="n">pipeline_form_data</span><span class="p">,</span>
+            <span class="n">items_for_inference</span><span class="o">=</span><span class="n">items_for_inference</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TrainingPipelineWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.dialog.html#sleap.gui.learning.dialog.TrainingPipelineWidget">[docs]</a><span class="k">class</span> <span class="nc">TrainingPipelineWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="n">updatePipeline</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TrainingPipelineWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span>
+            <span class="s2">&quot;pipeline_form&quot;</span><span class="p">,</span> <span class="n">which_form</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Training Pipeline&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">skeleton</span><span class="p">,</span> <span class="s2">&quot;node_names&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="n">NODE_LIST_FIELDS</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_field_options</span><span class="p">(</span>
+                    <span class="n">field_name</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Connect actions for change to pipeline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">find_field</span><span class="p">(</span><span class="s2">&quot;_pipeline&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_field</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emitPipeline</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">form_layout</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">fields</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">buttons</span>
+
+    <span class="k">def</span> <span class="nf">get_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">emitPipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_pipeline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updatePipeline</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pipeline_selected_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_field</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;top-down&quot;</span> <span class="ow">in</span> <span class="n">pipeline_selected_label</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;top-down&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;bottom-up&quot;</span> <span class="ow">in</span> <span class="n">pipeline_selected_label</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;bottom-up&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;single&quot;</span> <span class="ow">in</span> <span class="n">pipeline_selected_label</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;single&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="nd">@current_pipeline</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">current_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;top-down&quot;</span><span class="p">,</span> <span class="s2">&quot;bottom-up&quot;</span><span class="p">,</span> <span class="s2">&quot;single&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot set pipeline to </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Match short name to full pipeline name shown in menu</span>
+        <span class="k">for</span> <span class="n">full_option_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_field</span><span class="o">.</span><span class="n">option_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">full_option_name</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">full_option_name</span>
+                <span class="k">break</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_field</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emitPipeline</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TrainingEditorWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.dialog.html#sleap.gui.learning.dialog.TrainingEditorWidget">[docs]</a><span class="k">class</span> <span class="nc">TrainingEditorWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog for viewing and modifying training profiles.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        video: Video to use for receptive field preview</span>
+<span class="sd">        skeleton: Skeleton to use for node option list</span>
+<span class="sd">        head: If given, then only show configs with specified head name</span>
+<span class="sd">        cfg_getter: Object to use for getting list of config files.</span>
+<span class="sd">            If given, then menu of config files will be shown.</span>
+<span class="sd">        require_trained: If True, then only show configs that are trained,</span>
+<span class="sd">            and don&#39;t allow user to uncheck &quot;use trained&quot; setting.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">head</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cfg_getter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TrainingConfigsGetter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">require_trained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TrainingEditorWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video</span> <span class="o">=</span> <span class="n">video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span> <span class="o">=</span> <span class="n">cfg_getter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_trained</span> <span class="o">=</span> <span class="n">require_trained</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">head</span>
+
+        <span class="n">yaml_name</span> <span class="o">=</span> <span class="s2">&quot;training_editor_form&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;augmentation&quot;</span><span class="p">,</span> <span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;outputs&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span>
+                <span class="n">yaml_name</span><span class="p">,</span> <span class="n">which_form</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">key</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emitValueChanged</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_receptive_field</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_receptive_field</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">skeleton</span><span class="p">,</span> <span class="s2">&quot;node_names&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="n">NODE_LIST_FIELDS</span><span class="p">:</span>
+                <span class="n">form_name</span> <span class="o">=</span> <span class="n">field_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="n">form_name</span><span class="p">]</span><span class="o">.</span><span class="n">set_field_options</span><span class="p">(</span>
+                    <span class="n">field_name</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_video</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span> <span class="o">=</span> <span class="n">receptivefield</span><span class="o">.</span><span class="n">ReceptiveFieldWidget</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">head</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="o">.</span><span class="n">setImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_video</span><span class="o">.</span><span class="n">test_frame</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_head</span><span class="p">()</span>
+
+        <span class="c1"># Layout for header and columns</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="c1"># Two column layout for config parameters</span>
+        <span class="n">col1_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">col2_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">col3_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+        <span class="n">col2_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;optimization&quot;</span><span class="p">])</span>
+        <span class="n">col2_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;augmentation&quot;</span><span class="p">])</span>
+        <span class="n">col3_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">])</span>
+
+        <span class="n">col_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col1_layout</span><span class="p">))</span>
+        <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col2_layout</span><span class="p">))</span>
+        <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col3_layout</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="p">:</span>
+            <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="p">)</span>
+
+        <span class="c1"># If we have an object which gets a list of config files,</span>
+        <span class="c1"># then we&#39;ll show a menu to allow selection from the list.</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">TrainingConfigFilesWidget</span><span class="p">(</span>
+                <span class="n">cfg_getter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="p">,</span>
+                <span class="n">head_name</span><span class="o">=</span><span class="n">head</span><span class="p">,</span>
+                <span class="n">require_trained</span><span class="o">=</span><span class="n">require_trained</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="o">.</span><span class="n">onConfigSelection</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">acceptSelectedConfigInfo</span>
+            <span class="p">)</span>
+            <span class="c1"># self._cfg_list_widget.setDataDict.connect(self.set_fields_from_key_val_dict)</span>
+
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="p">)</span>
+
+            <span class="c1"># Add option for using trained model from selected config</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_trained</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_use_trained</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;Use Trained Model&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_use_trained</span><span class="p">)</span>
+
+                <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col_layout</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_layout_widget</span><span class="p">(</span><span class="n">layout</span><span class="p">):</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">widget</span>
+
+    <span class="k">def</span> <span class="nf">emitValueChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+        <span class="c1"># When there&#39;s a config getter, we want to inform it that the data</span>
+        <span class="c1"># has changed so that it can activate/update the &quot;user&quot; config</span>
+        <span class="c1"># if self._cfg_list_widget:</span>
+        <span class="c1">#     self._set_user_config()</span>
+
+    <span class="k">def</span> <span class="nf">acceptSelectedConfigInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+
+        <span class="n">has_trained_model</span> <span class="o">=</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">has_trained_model</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">has_trained_model</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">has_trained_model</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_receptive_field</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">update_receptive_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data_form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="n">model_cfg</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">make_model_config_from_key_val_dict</span><span class="p">(</span>
+            <span class="n">key_val_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="n">rf_image_scale</span> <span class="o">=</span> <span class="n">data_form_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data.preprocessing.input_scaling&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="o">.</span><span class="n">setModelConfig</span><span class="p">(</span><span class="n">model_cfg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">rf_image_scale</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="o">.</span><span class="n">repaint</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">update_file_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_load_config_or_key_val_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cfg_data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">cfg_data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_fields_from_key_val_dict</span><span class="p">(</span><span class="n">cfg_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cfg_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span>
+        <span class="n">cfg_dict</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="n">key_val_dict</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">ScopedKeyDict</span><span class="o">.</span><span class="n">from_hierarchical_dict</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">)</span><span class="o">.</span><span class="n">key_val_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_fields_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span>
+
+    <span class="c1"># def _set_user_config(self):</span>
+    <span class="c1">#     cfg_form_data_dict = self.get_all_form_data()</span>
+    <span class="c1">#     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)</span>
+
+    <span class="k">def</span> <span class="nf">_update_use_trained</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">check_state</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_trained</span><span class="p">:</span>
+            <span class="n">use_trained</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">use_trained</span> <span class="o">=</span> <span class="n">check_state</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">CheckState</span><span class="o">.</span><span class="n">Checked</span>
+
+        <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">set_enabled</span><span class="p">(</span><span class="ow">not</span> <span class="n">use_trained</span><span class="p">)</span>
+
+        <span class="c1"># If user wants to use trained model, then reset form to match config</span>
+        <span class="k">if</span> <span class="n">use_trained</span><span class="p">:</span>
+            <span class="n">cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="o">.</span><span class="n">getSelectedConfigInfo</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_head</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_set_head</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_fields_from_key_val_dict</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">&quot;_heads_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">,}</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_field_enabled</span><span class="p">(</span><span class="s2">&quot;_heads_name&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_fields_from_key_val_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_key_val_dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">cfg_key_val_dict</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_backbone_from_key_val_dict</span><span class="p">(</span><span class="n">cfg_key_val_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_backbone_from_key_val_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_key_val_dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">cfg_key_val_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;model.backbone.&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">backbone_name</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_fields_from_key_val_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">_backbone_name</span><span class="o">=</span><span class="n">backbone_name</span><span class="p">))</span>
+                <span class="k">break</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">trained_config_info_to_use</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="n">use_trained</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_trained</span><span class="p">:</span>
+            <span class="n">use_trained</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="n">use_trained</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">use_trained</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="o">.</span><span class="n">getSelectedConfigInfo</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_trained_config_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="o">.</span><span class="n">getSelectedConfigInfo</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cfg_info</span> <span class="ow">and</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">has_trained_model</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">get_all_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">form_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">form_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">form_data</span></div>
+
+
+<span class="k">def</span> <span class="nf">demo_training_dialog</span><span class="p">():</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;tests/data/json_format_v1/centered_pair.json&quot;</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">LearningDialog</span><span class="p">(</span><span class="s2">&quot;training&quot;</span><span class="p">,</span> <span class="n">labels_filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">win</span><span class="o">.</span><span class="n">frame_selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;clip&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)}}</span>
+    <span class="c1"># win.training_editor_widget.set_fields_from_key_val_dict({</span>
+    <span class="c1">#     &quot;_backbone_name&quot;: &quot;unet&quot;,</span>
+    <span class="c1">#     &quot;_heads_name&quot;: &quot;centered_instance&quot;,</span>
+    <span class="c1"># })</span>
+    <span class="c1">#</span>
+    <span class="c1"># win.training_editor_widget.form_widgets[&quot;model&quot;].set_field_enabled(&quot;_heads_name&quot;, False)</span>
+
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">demo_training_dialog</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

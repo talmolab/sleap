@@ -15,7 +15,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="sleap.io.format.adaptor" href="sleap.io.format.adaptor.html" />
-    <link rel="prev" title="sleap.io.video" href="sleap.io.video.html" />
+    <link rel="prev" title="sleap.io.videowriter" href="sleap.io.videowriter.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -37,7 +37,7 @@
 <p>Module for generating videos with visual annotation overlays.</p>
 <dl class="py function">
 <dt id="sleap.io.visuals.get_frame_image">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">get_frame_image</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video_frame</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#get_frame_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.get_frame_image" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">get_frame_image</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video_frame</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#get_frame_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.get_frame_image" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns single annotated frame image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -62,7 +62,7 @@
 
 <dl class="py function">
 <dt id="sleap.io.visuals.marker">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">marker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#marker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.marker" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">marker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#marker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.marker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Annotate frame images (draw instances).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -82,7 +82,7 @@
 
 <dl class="py function">
 <dt id="sleap.io.visuals.plot_instance_cv">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instance_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span></em>, <em class="sig-param"><span class="n">color</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">, </span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">marker_radius</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">4</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instance_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instance_cv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instance_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span></em>, <em class="sig-param"><span class="n">color</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">unscaled_marker_radius</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instance_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instance_cv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add visual annotations for single instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -90,7 +90,8 @@
 <li><p><strong>img</strong> – The ndarray of the frame image.</p></li>
 <li><p><strong>instance</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> to add to frame image.</p></li>
 <li><p><strong>color</strong> – (r, g, b) color for this instance.</p></li>
-<li><p><strong>marker_radius</strong> – Radius of marker for instance points (nodes).</p></li>
+<li><p><strong>unscaled_marker_radius</strong> – Radius of marker for instance points (nodes).</p></li>
+<li><p><strong>scale</strong> – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -101,7 +102,7 @@
 
 <dl class="py function">
 <dt id="sleap.io.visuals.plot_instances_cv">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instances_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instances_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instances_cv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instances_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instances_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instances_cv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds visuals annotations to single frame image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -120,7 +121,7 @@
 
 <dl class="py function">
 <dt id="sleap.io.visuals.reader">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">reader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.reader" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">reader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.reader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read frame images from video and send them into queue.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -129,6 +130,7 @@
 for chunks of video.</p></li>
 <li><p><strong>video</strong> – The <cite>Video</cite> object to read.</p></li>
 <li><p><strong>frames</strong> – Full list frame indexes we want to read.</p></li>
+<li><p><strong>scale</strong> – Output scale for frame images.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -138,8 +140,14 @@ for chunks of video.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt id="sleap.io.visuals.resize_image">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">resize_image</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#resize_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.resize_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resizes single image with shape (height, width, channels).</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="sleap.io.visuals.save_labeled_video">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">save_labeled_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">15</span></em>, <em class="sig-param"><span class="n">gui_progress</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#save_labeled_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.save_labeled_video" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">save_labeled_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">15</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gui_progress</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#save_labeled_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.save_labeled_video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to generate and save video with annotations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -199,7 +207,6 @@ Send (-1, elapsed time) when done.</p></li>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
@@ -221,6 +228,7 @@ Send (-1, elapsed time) when done.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
@@ -230,9 +238,9 @@ Send (-1, elapsed time) when done.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.training.html">sleap.gui.learning.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
@@ -256,6 +264,7 @@ Send (-1, elapsed time) when done.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.io.visuals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
@@ -302,6 +311,7 @@ Send (-1, elapsed time) when done.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
@@ -320,7 +330,7 @@ Send (-1, elapsed time) when done.</p></li>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api.html">Developer API</a><ul>
-      <li>Previous: <a href="sleap.io.video.html" title="previous chapter">sleap.io.video</a></li>
+      <li>Previous: <a href="sleap.io.videowriter.html" title="previous chapter">sleap.io.videowriter</a></li>
       <li>Next: <a href="sleap.io.format.adaptor.html" title="next chapter">sleap.io.format.adaptor</a></li>
   </ul></li>
   </ul></li>

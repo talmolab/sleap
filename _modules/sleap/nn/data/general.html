@@ -97,7 +97,7 @@
 
 <div class="viewcode-block" id="KeyFilter.transform_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.general.html#sleap.nn.data.general.KeyFilter.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ds</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create a dataset that contains filtered data.&quot;&quot;&quot;</span>
-        
+
         <span class="k">def</span> <span class="nf">filter_keys</span><span class="p">(</span><span class="n">example</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;Local processing function for dataset mapping.&quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_keys</span><span class="p">}</span>
@@ -105,6 +105,43 @@
         <span class="c1"># Map the main processing function to each example.</span>
         <span class="n">output_ds</span> <span class="o">=</span> <span class="n">input_ds</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
             <span class="n">filter_keys</span><span class="p">,</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output_ds</span></div></div>
+
+
+<div class="viewcode-block" id="KeyDeviceMover"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.general.html#sleap.nn.data.general.KeyDeviceMover">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">KeyDeviceMover</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Transformer for moving example keys to cpu.&quot;&quot;&quot;</span>
+
+    <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that incoming elements are expected to have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that outgoing elements will have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span>
+
+<div class="viewcode-block" id="KeyDeviceMover.transform_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.general.html#sleap.nn.data.general.KeyDeviceMover.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ds</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a dataset that contains data but moved to cpu.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">move_keys</span><span class="p">(</span><span class="n">example</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local processing function for dataset mapping.&quot;&quot;&quot;</span>
+            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;/cpu:0&quot;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">example</span><span class="p">:</span>
+                        <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">example</span>
+
+        <span class="c1"># Map the main processing function to each example.</span>
+        <span class="n">output_ds</span> <span class="o">=</span> <span class="n">input_ds</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="n">move_keys</span><span class="p">,</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">output_ds</span></div></div>
@@ -126,7 +163,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>

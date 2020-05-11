@@ -1613,6 +1613,28 @@
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">okay</span><span class="p">:</span>
                         <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># True for stop</span>
 
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">use_gui</span> <span class="ow">and</span> <span class="nb">sum</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+                <span class="c1"># If we got the same number of paths as there are videos</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;HERE a&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_paths</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;HERE b&quot;</span><span class="p">)</span>
+                    <span class="c1"># and the file extensions match</span>
+                    <span class="n">exts_match</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="n">old</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">new</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="n">new_paths</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">exts_match</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;HERE c&quot;</span><span class="p">)</span>
+                        <span class="c1"># then the search paths should be a list of all the</span>
+                        <span class="c1"># video paths, so we can get the new path for the missing</span>
+                        <span class="c1"># old path.</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">filenames</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">missing</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                                <span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_paths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
             <span class="c1"># Replace the video filenames with changes by user</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">video_list</span><span class="p">):</span>
                 <span class="n">item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -1804,7 +1826,13 @@
         <span class="n">current_basename</span> <span class="o">=</span> <span class="n">current_basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="c1"># Look for file with that name in each of the search path directories</span>
-    <span class="k">for</span> <span class="n">path_dir</span> <span class="ow">in</span> <span class="n">search_paths</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">search_path</span> <span class="ow">in</span> <span class="n">search_paths</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">search_path</span><span class="p">):</span>
+            <span class="n">path_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">search_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path_dir</span> <span class="o">=</span> <span class="n">search_path</span>
+
         <span class="n">check_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_dir</span><span class="p">,</span> <span class="n">current_basename</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">check_path</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">check_path</span>
@@ -1828,7 +1856,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>

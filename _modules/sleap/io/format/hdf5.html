@@ -135,9 +135,9 @@
             <span class="c1"># If the callback is an iterable, then we&#39;ll expect it to be a</span>
             <span class="c1"># list of strings and build a non-gui callback with those as</span>
             <span class="c1"># the search paths.</span>
-            <span class="c1"># When path is to a file, use the path of parent directory.</span>
             <span class="n">search_paths</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">else</span> <span class="n">path</span>
+                <span class="c1"># os.path.dirname(path) if os.path.isfile(path) else path</span>
+                <span class="n">path</span>
                 <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">video_search</span>
             <span class="p">]</span>
 
@@ -542,7 +542,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>

@@ -14,7 +14,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Guides" href="../guides/index.html" />
+    <link rel="next" title="Export Data For Analysis" href="analysis.html" />
     <link rel="prev" title="Prediction-assisted labeling" href="assisted-labeling.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -39,8 +39,9 @@
 recently trained set of models.</p>
 <p>The inference dialog is almost identical to the training dialog with a few key differences.</p>
 <p>The inference dialog allows you to choose a method to use for tracking
-instance identities:</p>
+instance identities but also has a place to select the <strong>tracker</strong>.</p>
 <p><img alt="tracker" src="../_images/tracker.jpg" /></p>
+<p>See <a class="reference internal" href="../guides/proofreading.html#tracking-method-details"><span class="std std-ref">Tracking methods</span></a> for more information about the tracker methods and options.</p>
 <p>By default the inference dialog will use the most recently train model (or set
 of models), but if you want to choose another trained model, you can do this
 by using the dropdown menu on the tab for the relevant model type.</p>
@@ -81,6 +82,7 @@ instance track to the track from previous frames. The “Next Track Spawn
 Frame” command in the “Labels” menu will take you to the next frame in
 which a new track is spawned.</p>
 <p>For more tools and tips, see the <a class="reference internal" href="../guides/proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> guide.</p>
+<p>Once you’re done proofreading, you’ll want to <a class="reference internal" href="analysis.html#export-analysis"><span class="std std-ref">Export Data For Analysis</span></a>.</p>
 </div>
 </div>
 
@@ -101,7 +103,6 @@ which a new track is spawned.</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
@@ -111,6 +112,7 @@ which a new track is spawned.</p>
 <li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
@@ -124,7 +126,7 @@ which a new track is spawned.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="tutorial.html">Tutorial</a><ul>
       <li>Previous: <a href="assisted-labeling.html" title="previous chapter">Prediction-assisted labeling</a></li>
-      <li>Next: <a href="../guides/index.html" title="next chapter">Guides</a></li>
+      <li>Next: <a href="analysis.html" title="next chapter">Export Data For Analysis</a></li>
   </ul></li>
   </ul></li>
 </ul>

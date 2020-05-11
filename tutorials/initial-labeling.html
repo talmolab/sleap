@@ -56,6 +56,9 @@ that it’s marked as “not visible”. If you can determine where an
 occluded node would be in the image, you may label it as “visible” in
 order to train the model to predict the node even when it’s occluded.</p>
 <p><img alt="image5" src="../_images/toggle-visibility.gif" /></p>
+<p>When you label a frame, it’s best if you can label <strong>all</strong> the instances of
+your animal in the frame. Otherwise, the models may learn to not
+identify things that look like the instances you didn’t label.</p>
 </div>
 <div class="section" id="saving">
 <h2>Saving<a class="headerlink" href="#saving" title="Permalink to this headline">¶</a></h2>
@@ -81,9 +84,6 @@ have a male and a female. It’s fine to label the male with the blue
 instance in some frames and the orange instance in others. Tracking (and
 track proofreading) is the final stage in the workflow and occurs after
 predicting body part locations.</p>
-<p>When you label a frame, it’s best if you can label all the instances of
-your animal in the frame. Otherwise, the models may learn to not
-identify things that look like the instances you didn’t label.</p>
 <p>Continue to <a class="reference internal" href="initial-training.html#initial-training"><span class="std std-ref">Quick Training and Inference</span></a>.</p>
 </div>
 </div>
@@ -105,7 +105,6 @@ identify things that look like the instances you didn’t label.</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>

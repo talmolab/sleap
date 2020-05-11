@@ -255,12 +255,27 @@
     <span class="k">def</span> <span class="nf">get_filtered_configs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">head_filter</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">only_trained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="n">cfg_info</span>
-            <span class="k">for</span> <span class="n">cfg_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span>
-            <span class="k">if</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">head_name</span> <span class="o">==</span> <span class="n">head_filter</span>
-            <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">only_trained</span> <span class="ow">or</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">has_trained_model</span><span class="p">)</span>
-        <span class="p">]</span>
+
+        <span class="n">cfgs_to_return</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">paths_included</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">cfg_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">head_name</span> <span class="o">==</span> <span class="n">head_filter</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">only_trained</span> <span class="ow">or</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">has_trained_model</span><span class="p">:</span>
+                    <span class="c1"># At this point we know that config is appropriate</span>
+                    <span class="c1"># for this head type and is trained if that is required.</span>
+
+                    <span class="c1"># We just want a single config from each model directory.</span>
+                    <span class="c1"># Taking the first config we see in the directory means</span>
+                    <span class="c1"># we&#39;ll get the *trained* config if there is one, since</span>
+                    <span class="c1"># it will be newer and we&#39;ve sorted by desc date modified.</span>
+
+                    <span class="n">cfg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">cfg_dir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths_included</span><span class="p">:</span>
+                        <span class="n">paths_included</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_dir</span><span class="p">)</span>
+                        <span class="n">cfgs_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cfgs_to_return</span>
 
     <span class="k">def</span> <span class="nf">get_first</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="p">:</span>
@@ -340,7 +355,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>

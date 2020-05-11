@@ -24,6 +24,7 @@ Developer API
    sleap.gui.state
    sleap.gui.suggestions
    sleap.gui.dialogs.delete
+   sleap.gui.dialogs.export_clip
    sleap.gui.dialogs.filedialog
    sleap.gui.dialogs.formbuilder
    sleap.gui.dialogs.importvideos
@@ -33,9 +34,9 @@ Developer API
    sleap.gui.dialogs.shortcuts
    sleap.gui.learning.configs
    sleap.gui.learning.datagen
+   sleap.gui.learning.dialog
    sleap.gui.learning.receptivefield
    sleap.gui.learning.runners
-   sleap.gui.learning.training
    sleap.gui.learning.utils
    sleap.gui.overlays.anchors
    sleap.gui.overlays.base
@@ -59,6 +60,7 @@ Developer API
    sleap.io.legacy
    sleap.io.pathutils
    sleap.io.video
+   sleap.io.videowriter
    sleap.io.visuals
    sleap.io.format.adaptor
    sleap.io.format.coco
@@ -105,6 +107,7 @@ Developer API
    sleap.nn.data.dataset_ops
    sleap.nn.data.edge_maps
    sleap.nn.data.general
+   sleap.nn.data.grouping
    sleap.nn.data.inference
    sleap.nn.data.instance_centroids
    sleap.nn.data.instance_cropping

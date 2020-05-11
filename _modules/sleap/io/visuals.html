@@ -36,6 +36,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.io.videowriter</span> <span class="kn">import</span> <span class="n">VideoWriter</span>
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 <span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">usable_cpu_count</span>
 
@@ -44,7 +45,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span><span class="p">,</span> <span class="n">clock</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
 <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
@@ -57,7 +58,7 @@
 <span class="n">_sentinel</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="reader"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.reader">[docs]</a><span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="n">out_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+<div class="viewcode-block" id="reader"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.reader">[docs]</a><span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="n">out_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Read frame images from video and send them into queue.</span>
 
 <span class="sd">    Args:</span>
@@ -65,6 +66,7 @@
 <span class="sd">            for chunks of video.</span>
 <span class="sd">        video: The `Video` object to read.</span>
 <span class="sd">        frames: Full list frame indexes we want to read.</span>
+<span class="sd">        scale: Output scale for frame images.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        None.</span>
@@ -88,21 +90,26 @@
 
         <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
 
-        <span class="c1"># Load frames from video</span>
-        <span class="n">video_frame_images</span> <span class="o">=</span> <span class="n">video</span><span class="p">[</span><span class="n">frames_idx_chunk</span><span class="p">]</span>
+        <span class="c1"># Safely load frames from video, skipping frames we can&#39;t load</span>
+        <span class="n">loaded_chunk_idxs</span><span class="p">,</span> <span class="n">video_frame_images</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">get_frames_safely</span><span class="p">(</span>
+            <span class="n">frames_idx_chunk</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">video_frame_images</span> <span class="o">=</span> <span class="n">resize_images</span><span class="p">(</span><span class="n">video_frame_images</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
 
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
-        <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames_idx_chunk</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loaded_chunk_idxs</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;reading chunk </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2"> fps&quot;</span><span class="p">)</span>
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
-        <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">frames_idx_chunk</span><span class="p">,</span> <span class="n">video_frame_images</span><span class="p">))</span>
+        <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">loaded_chunk_idxs</span><span class="p">,</span> <span class="n">video_frame_images</span><span class="p">))</span>
 
     <span class="c1"># send _sentinal object into queue to signal that we&#39;re done</span>
     <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">_sentinel</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="marker"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.marker">[docs]</a><span class="k">def</span> <span class="nf">marker</span><span class="p">(</span><span class="n">in_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">out_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="marker"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.marker">[docs]</a><span class="k">def</span> <span class="nf">marker</span><span class="p">(</span><span class="n">in_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">out_q</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Annotate frame images (draw instances).</span>
 
 <span class="sd">    Args:</span>
@@ -130,16 +137,15 @@
         <span class="n">frames_idx_chunk</span><span class="p">,</span> <span class="n">video_frame_images</span> <span class="o">=</span> <span class="n">data</span>
 
         <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
-        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frames_idx_chunk</span><span class="p">):</span>
-            <span class="n">img</span> <span class="o">=</span> <span class="n">get_frame_image</span><span class="p">(</span>
-                <span class="n">video_frame</span><span class="o">=</span><span class="n">video_frame_images</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                <span class="n">video_idx</span><span class="o">=</span><span class="n">video_idx</span><span class="p">,</span>
-                <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-            <span class="p">)</span>
 
-            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="n">mark_images</span><span class="p">(</span>
+            <span class="n">frame_indices</span><span class="o">=</span><span class="n">frames_idx_chunk</span><span class="p">,</span>
+            <span class="n">frame_images</span><span class="o">=</span><span class="n">video_frame_images</span><span class="p">,</span>
+            <span class="n">video_idx</span><span class="o">=</span><span class="n">video_idx</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
         <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;drawing chunk </span><span class="si">{</span><span class="n">chunk_i</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2"> fps&quot;</span><span class="p">)</span>
@@ -174,10 +180,12 @@
 
     <span class="n">cv2</span><span class="o">.</span><span class="n">setNumThreads</span><span class="p">(</span><span class="n">usable_cpu_count</span><span class="p">())</span>
 
-    <span class="n">fourcc</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter_fourcc</span><span class="p">(</span><span class="o">*</span><span class="s2">&quot;MJPG&quot;</span><span class="p">)</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">fourcc</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="n">img_w_h</span><span class="p">)</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">img_w_h</span>
+
+    <span class="n">writer_object</span> <span class="o">=</span> <span class="n">VideoWriter</span><span class="o">.</span><span class="n">safe_builder</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">)</span>
 
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+    <span class="n">total_elapsed</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">total_frames_written</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
@@ -191,7 +199,7 @@
 
         <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">writer_object</span><span class="o">.</span><span class="n">add_frame</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">bgr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
         <span class="n">fps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="n">elapsed</span>
@@ -202,7 +210,7 @@
         <span class="n">total_elapsed</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
         <span class="n">progress_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">total_frames_written</span><span class="p">,</span> <span class="n">total_elapsed</span><span class="p">))</span>
 
-    <span class="n">out</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">writer_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="c1"># send (-1, time) to signal done</span>
     <span class="n">progress_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_elapsed</span><span class="p">))</span></div>
 
@@ -211,8 +219,9 @@
     <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
     <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span>
-    <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">gui_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function to generate and save video with annotations.</span>
@@ -228,9 +237,9 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">output_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
-
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing video with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span><span class="si">}</span><span class="s2"> frame images...&quot;</span><span class="p">)</span>
+
+    <span class="n">output_width_height</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">scale</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="n">scale</span><span class="p">))</span>
 
     <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
 
@@ -238,13 +247,12 @@
     <span class="n">q2</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="n">progress_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
 
-    <span class="n">thread_read</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">reader</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frames</span><span class="p">))</span>
+    <span class="n">thread_read</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">reader</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frames</span><span class="p">,</span> <span class="n">scale</span><span class="p">))</span>
     <span class="n">thread_mark</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span>
-        <span class="n">target</span><span class="o">=</span><span class="n">marker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">video</span><span class="p">))</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">marker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">video</span><span class="p">),</span> <span class="n">scale</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="n">thread_write</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span>
-        <span class="n">target</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span>
-        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q2</span><span class="p">,</span> <span class="n">progress_queue</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">)),</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">q2</span><span class="p">,</span> <span class="n">progress_queue</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="n">output_width_height</span><span class="p">),</span>
     <span class="p">)</span>
 
     <span class="n">thread_read</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
@@ -283,19 +291,27 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">}</span><span class="s2"> s, fps = </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="img_to_cv"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.img_to_cv">[docs]</a><span class="k">def</span> <span class="nf">img_to_cv</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Prepares frame image as needed for opencv.&quot;&quot;&quot;</span>
-    <span class="c1"># Convert RGB to BGR for OpenCV</span>
-    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span>
-    <span class="c1"># Convert grayscale to BGR</span>
-    <span class="k">elif</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_GRAY2BGR</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">img</span></div>
+<span class="k">def</span> <span class="nf">mark_images</span><span class="p">(</span><span class="n">frame_indices</span><span class="p">,</span> <span class="n">frame_images</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+    <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frame_indices</span><span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">get_frame_image</span><span class="p">(</span>
+            <span class="n">video_frame</span><span class="o">=</span><span class="n">frame_images</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">video_idx</span><span class="o">=</span><span class="n">video_idx</span><span class="p">,</span>
+            <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">imgs</span>
 
 
 <div class="viewcode-block" id="get_frame_image"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.get_frame_image">[docs]</a><span class="k">def</span> <span class="nf">get_frame_image</span><span class="p">(</span>
-    <span class="n">video_frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span>
+    <span class="n">video_frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Returns single annotated frame image.</span>
 
@@ -308,18 +324,29 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray of frame image with visual annotations added.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">img_to_cv</span><span class="p">(</span><span class="n">video_frame</span><span class="p">)</span>
-    <span class="n">plot_instances_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="c1"># Use OpenCV to convert to BGR color image</span>
+    <span class="n">video_frame</span> <span class="o">=</span> <span class="n">img_to_cv</span><span class="p">(</span><span class="n">video_frame</span><span class="p">)</span>
+
+    <span class="c1"># Add the instances to the image</span>
+    <span class="n">plot_instances_cv</span><span class="p">(</span><span class="n">video_frame</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">video_frame</span></div>
+
+
+<div class="viewcode-block" id="img_to_cv"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.img_to_cv">[docs]</a><span class="k">def</span> <span class="nf">img_to_cv</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Prepares frame image as needed for opencv.&quot;&quot;&quot;</span>
+    <span class="c1"># Convert RGB to BGR for OpenCV</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span>
+    <span class="c1"># Convert grayscale to BGR</span>
+    <span class="k">elif</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_GRAY2BGR</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">img</span></div>
 
 
-<span class="k">def</span> <span class="nf">_point_int_tuple</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns (x, y) tuple from :class:`Point`.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
-
-
 <div class="viewcode-block" id="plot_instances_cv"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.plot_instances_cv">[docs]</a><span class="k">def</span> <span class="nf">plot_instances_cv</span><span class="p">(</span>
-    <span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span>
+    <span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Adds visuals annotations to single frame image.</span>
 
@@ -355,16 +382,22 @@
             <span class="n">track_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span> <span class="o">+</span> <span class="n">count_no_track</span>
             <span class="n">count_no_track</span> <span class="o">+=</span> <span class="mi">1</span>
 
-        <span class="n">inst_color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">[</span><span class="n">track_idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)]</span>
+        <span class="c1"># Get color for instance and convert RGB to BGR for OpenCV</span>
+        <span class="n">inst_color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">[</span><span class="n">track_idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="n">plot_instance_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">inst_color</span><span class="p">)</span></div>
+        <span class="n">plot_instance_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">inst_color</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">has_nans</span><span class="p">(</span><span class="o">*</span><span class="n">vals</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="plot_instance_cv"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.plot_instance_cv">[docs]</a><span class="k">def</span> <span class="nf">plot_instance_cv</span><span class="p">(</span>
     <span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">instance</span><span class="p">:</span> <span class="s2">&quot;Instance&quot;</span><span class="p">,</span>
-    <span class="n">color</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-    <span class="n">marker_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">color</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">unscaled_marker_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add visual annotations for single instance.</span>
@@ -373,46 +406,70 @@
 <span class="sd">        img: The ndarray of the frame image.</span>
 <span class="sd">        instance: The :class:`Instance` to add to frame image.</span>
 <span class="sd">        color: (r, g, b) color for this instance.</span>
-<span class="sd">        marker_radius: Radius of marker for instance points (nodes).</span>
+<span class="sd">        unscaled_marker_radius: Radius of marker for instance points (nodes).</span>
+<span class="sd">        scale: </span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray of frame image with visual annotations for instance added.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># RGB -&gt; BGR for cv2</span>
-    <span class="n">cv_color</span> <span class="o">=</span> <span class="n">color</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Get matrix of all point locations</span>
+    <span class="n">points_array</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">points_array</span>
 
-    <span class="k">for</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">nodes_points</span><span class="p">:</span>
-        <span class="c1"># plot node at point</span>
-        <span class="k">if</span> <span class="n">point</span><span class="o">.</span><span class="n">visible</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">point</span><span class="o">.</span><span class="n">isnan</span><span class="p">():</span>
+    <span class="c1"># Rescale point locations</span>
+    <span class="n">points_array</span> <span class="o">*=</span> <span class="n">scale</span>
+
+    <span class="n">marker_radius</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">unscaled_marker_radius</span> <span class="o">//</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">points_array</span><span class="p">:</span>
+        <span class="c1"># Make sure this is a valid and visible point</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_nans</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+            <span class="c1"># Convert to ints for opencv (now that we know these aren&#39;t nans)</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="c1"># Draw circle to mark node</span>
             <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span>
-                <span class="n">img</span><span class="p">,</span>
-                <span class="n">_point_int_tuple</span><span class="p">(</span><span class="n">point</span><span class="p">),</span>
-                <span class="n">marker_radius</span><span class="p">,</span>
-                <span class="n">cv_color</span><span class="p">,</span>
-                <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+                <span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">marker_radius</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
             <span class="p">)</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">edge_inds</span><span class="p">:</span>
+        <span class="c1"># Get points for the nodes connected by this edge</span>
+        <span class="n">src_x</span><span class="p">,</span> <span class="n">src_y</span> <span class="o">=</span> <span class="n">points_array</span><span class="p">[</span><span class="n">src</span><span class="p">]</span>
+        <span class="n">dst_x</span><span class="p">,</span> <span class="n">dst_y</span> <span class="o">=</span> <span class="n">points_array</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span>
+
         <span class="c1"># Make sure that both nodes are present in this instance before drawing edge</span>
-        <span class="k">if</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">instance</span> <span class="ow">and</span> <span class="n">dst</span> <span class="ow">in</span> <span class="n">instance</span><span class="p">:</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">instance</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span>
-                <span class="ow">and</span> <span class="n">instance</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span>
-                <span class="ow">and</span> <span class="ow">not</span> <span class="n">instance</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="o">.</span><span class="n">isnan</span><span class="p">()</span>
-                <span class="ow">and</span> <span class="ow">not</span> <span class="n">instance</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span><span class="o">.</span><span class="n">isnan</span><span class="p">()</span>
-            <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_nans</span><span class="p">(</span><span class="n">src_x</span><span class="p">,</span> <span class="n">src_y</span><span class="p">,</span> <span class="n">dst_x</span><span class="p">,</span> <span class="n">dst_y</span><span class="p">):</span>
 
-                <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
-                    <span class="n">img</span><span class="p">,</span>
-                    <span class="n">_point_int_tuple</span><span class="p">(</span><span class="n">instance</span><span class="p">[</span><span class="n">src</span><span class="p">]),</span>
-                    <span class="n">_point_int_tuple</span><span class="p">(</span><span class="n">instance</span><span class="p">[</span><span class="n">dst</span><span class="p">]),</span>
-                    <span class="n">cv_color</span><span class="p">,</span>
-                    <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
-                <span class="p">)</span></div>
+            <span class="c1"># Convert to ints for opencv</span>
+            <span class="n">src_x</span><span class="p">,</span> <span class="n">src_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">src_x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">src_y</span><span class="p">)</span>
+            <span class="n">dst_x</span><span class="p">,</span> <span class="n">dst_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dst_x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">dst_y</span><span class="p">)</span>
+
+            <span class="c1"># Draw line to mark edge between nodes</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                <span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">src_x</span><span class="p">,</span> <span class="n">src_y</span><span class="p">),</span> <span class="p">(</span><span class="n">dst_x</span><span class="p">,</span> <span class="n">dst_y</span><span class="p">),</span> <span class="n">color</span><span class="p">,</span> <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+            <span class="p">)</span></div>
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="resize_image"><a class="viewcode-back" href="../../../_autosummary/sleap.io.visuals.html#sleap.io.visuals.resize_image">[docs]</a><span class="k">def</span> <span class="nf">resize_image</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Resizes single image with shape (height, width, channels).&quot;&quot;&quot;</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">channels</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">new_height</span><span class="p">,</span> <span class="n">new_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">height</span> <span class="o">//</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">width</span> <span class="o">//</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">scale</span><span class="p">))</span>
 
+    <span class="c1"># Note that OpenCV takes shape as (width, height).</span>
+
+    <span class="k">if</span> <span class="n">channels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># opencv doesn&#39;t want a single channel to have its own dimension</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">img</span><span class="p">[:,</span> <span class="p">:],</span> <span class="p">(</span><span class="n">new_width</span><span class="p">,</span> <span class="n">new_height</span><span class="p">))[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">new_width</span><span class="p">,</span> <span class="n">new_height</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<span class="k">def</span> <span class="nf">resize_images</span><span class="p">(</span><span class="n">images</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">resize_image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">images</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">main_cli</span><span class="p">():</span>
     <span class="kn">import</span> <span class="nn">argparse</span>
     <span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">frame_list</span>
 
@@ -426,6 +483,7 @@
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The output filename for the video&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;--fps&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Frames per second&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--scale&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output image scale&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--frames&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="n">frame_list</span><span class="p">,</span>
@@ -433,13 +491,19 @@
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;list of frames to predict. Either comma separated list (e.g. 1,2,3) or &quot;</span>
         <span class="s2">&quot;a range separated by hyphen (e.g. 1-3). (default is entire video)&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--video-index&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Index of video in labels dataset&quot;</span>
+    <span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span>
         <span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">video_search</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">data_path</span><span class="p">)]</span>
     <span class="p">)</span>
 
-    <span class="n">vid</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">video_index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There is no video with index </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">video_index</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="n">vid</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">video_index</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">frames</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">frames</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">)])</span>
@@ -451,12 +515,17 @@
     <span class="n">save_labeled_video</span><span class="p">(</span>
         <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
         <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-        <span class="n">video</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">video</span><span class="o">=</span><span class="n">vid</span><span class="p">,</span>
         <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span>
         <span class="n">fps</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Video saved as: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main_cli</span><span class="p">()</span>
 </pre></div>
 
           </div>
@@ -475,7 +544,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>

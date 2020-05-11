@@ -121,22 +121,23 @@ predicted instance.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>copy</strong> – If True, the return a copy of the points array as an
-Nx2 ndarray where first column is x and second is y.
+<li><p><strong>copy</strong> – If True, the return a copy of the points array as an ndarray.
 If False, return a view of the underlying recarray.</p></li>
-<li><p><strong>invisible_as_nan</strong> – Should invisible points be marked as NaN.</p></li>
-<li><p><strong>full</strong> – If True, return the raw underlying recarray with all
-attributes of the point.
-Otherwise, return just the x and y coordinate.
-Assumes copy is False and invisible_as_nan is False.</p></li>
+<li><p><strong>invisible_as_nan</strong> – Should invisible points be marked as NaN.
+If copy is False, then invisible_as_nan is ignored since we
+don’t want to set invisible points to NaNs in original data.</p></li>
+<li><p><strong>full</strong> – If True, return all data for points. Otherwise, return just
+the x and y coordinates.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A Nx2 array containing x and y coordinates of each point
-as the rows of the array and N is the number of nodes in the
-skeleton. The order of the rows corresponds to the ordering
-of the skeleton nodes. Any skeleton node not defined will
-have NaNs present.</p>
+<dd class="field-even"><p><p>Either a recarray (if copy is False) or an ndarray (if copy True).</p>
+<p>The order of the rows corresponds to the ordering of the skeleton
+nodes. Any skeleton node not defined will have NaNs present.</p>
+<p>Columns in recarray are accessed by name, e.g., [“x”], [“y”].</p>
+<p>Columns in ndarray are accessed by number. The order matches
+the order in <cite>Point.dtype</cite> or <cite>PredictedPoint.dtype</cite>.</p>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -528,6 +529,19 @@ is created with score set to default value.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="sleap.instance.PredictedInstance.points_and_scores_array">
+<em class="property">property </em><code class="sig-name descname">points_and_scores_array</code><a class="headerlink" href="#sleap.instance.PredictedInstance.points_and_scores_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>(N, 3) array of (x, y, score) for predicted points.</p>
+<p>Row in arrow corresponds to order of points in skeleton.
+Invisible points will have NaNs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ndarray of visible point coordinates and scores.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -653,7 +667,6 @@ class when the attributes of one class are a subset of another.</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
@@ -675,6 +688,7 @@ class when the attributes of one class are a subset of another.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
@@ -684,9 +698,9 @@ class when the attributes of one class are a subset of another.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.training.html">sleap.gui.learning.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
@@ -710,6 +724,7 @@ class when the attributes of one class are a subset of another.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
@@ -756,6 +771,7 @@ class when the attributes of one class are a subset of another.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>

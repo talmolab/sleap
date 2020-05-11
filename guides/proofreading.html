@@ -35,20 +35,22 @@
   <div class="section" id="tracking-and-proofreading">
 <span id="proofreading"></span><h1>Tracking and proofreading<a class="headerlink" href="#tracking-and-proofreading" title="Permalink to this headline">¶</a></h1>
 <p><em>Case: You’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</em></p>
-<p>The basics of <a class="reference internal" href="../tutorials/proofreading.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> are covered in <span class="xref std std-ref">part2</span>. You should go read that if you haven’t already. Here we’ll go into more details.</p>
+<p>The basics of <a class="reference internal" href="../tutorials/proofreading.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> are covered in the <a class="reference internal" href="../tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>. You should go read that if you haven’t already. Here we’ll go into more details.</p>
 <div class="section" id="tracking-methods">
-<h2>Tracking methods<a class="headerlink" href="#tracking-methods" title="Permalink to this headline">¶</a></h2>
+<span id="tracking-method-details"></span><h2>Tracking methods<a class="headerlink" href="#tracking-methods" title="Permalink to this headline">¶</a></h2>
 <p>The process of predicting instances frame-by-frame and the process of putting these together into <strong>tracks</strong> (i.e., identities across frames) are distinct, although it’s common to run them together during the inference pipeline. Obviously you can only track identities after you’ve predicted instances, but once you have predictions, it’s easy to then run tracking by itself to try out different methods and parameters.</p>
-<p>The tracking process itself is fairly modular. You pick a method for generating match candidates, you pick a method for determining the similarity between matches (i.e., a cost function for a match), and you pick a method for selecting the best combinations of matches.</p>
 <p>If you’re getting poor results, you may want to try out different methods and parameters. Changing the <strong>track window</strong> and the <strong>similarity</strong> method—both explained below—can make a big difference.</p>
-<p><strong>Candidate Generation</strong></p>
-<p>The “simple” candidate method (<code class="code docutils literal notranslate"><span class="pre">--tracker</span> <span class="pre">simple</span></code>) will simply try to match each instance against all the instances from some number of prior frames.</p>
-<p>The “flow” candidate method (<code class="code docutils literal notranslate"><span class="pre">--tracker</span> <span class="pre">flow</span></code>) uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Lucas–Kanade_method">Lukas–Kanade method</a> to estimate optical flow and then tries to match instances in a frame against flow-shifted instances from some number of prior frames.</p>
-<p>For each of these methods, you can specify how many prior frames are used for generating match candidates with the <code class="code docutils literal notranslate"><span class="pre">--track_window</span></code> argument.</p>
-<p><strong>Similarity</strong></p>
-<p>You can determine the quality of a match by looking at all of the points for each instance (<code class="code docutils literal notranslate"><span class="pre">--similarity</span> <span class="pre">instance</span></code>), the centroids (<code class="code docutils literal notranslate"><span class="pre">--similarity</span> <span class="pre">instance</span></code>), or the intersection over union (<code class="code docutils literal notranslate"><span class="pre">--similarity</span> <span class="pre">iou</span></code>).</p>
-<p><strong>Match</strong></p>
-<p>You can determine whether we match tracks “greedily” (<code class="code docutils literal notranslate"><span class="pre">--match</span> <span class="pre">greedy</span></code>), picking the best match first, and the next best of the remaining candidates, each in turn, <strong>or</strong> we use “Hungarian” matching (<code class="code docutils literal notranslate"><span class="pre">--match</span> <span class="pre">hungarian</span></code>) which minimizes the total cost of all the matches.</p>
+<p>The tracker will go through the predictions frame by frame and try to match instances on frame N to candidates which already have track identities assigned. These candidates are generated from a certain number of frames immediately prior to frame N (what we refer to as the “tracking window”).</p>
+<p>If you use the “<strong>simple</strong>” tracker then the frames chosen are the instances from prior frames. If you use “<strong>flow</strong>” as the tracking method then SLEAP takes instances from the prior frames and uses optical flow (<a class="reference external" href="https://arxiv.org/abs/1804.06208">Xiao et al., 2018</a>) to shift the points in the instances, and then uses these shifted points as the candidate instances.</p>
+<p>There are currently three methods for matching instances in frame N against these candidates, each encoded by a cost function:</p>
+<ul class="simple">
+<li><p>“<strong>centroid</strong>” measures similarity by the distance between the instance centroids</p></li>
+<li><p>“<strong>iou</strong>” measures similarity by the intersection/overlap of the instance bounding boxes</p></li>
+<li><p>“<strong>instance</strong>” measures similarity by looking at the distances between corresponding nodes in the instances, normalized by the number of valid nodes in the candidate instance.</p></li>
+</ul>
+<p>Once SLEAP has measured the similarity between all the candidates and the instances in frame N, you need to choose a way to pair them up. You can do this either by picking the best match, and the picking the best remaining match for each remaining instance in turn—this is “<strong>greedy</strong>” matching—or you can find the way of matching identities which minimizes the total cost (or: maximizes the total similarity)—this is “<strong>Hungarian</strong>” matching.</p>
+<p>Finally, you have an option second-pass method which “cleans” the resulting identities. To use this method, you specify a target number of tracks (i.e., how many animals there are in your video). SLEAP then goes frame by frame and removes instances over this target number.</p>
+<p>Once you have the desired number of instances in every frame, SLEAP connects identities with a simple heuristic: if exactly one track identity was dropped from frame N and exactly one new track identity was added in frame N+1, it matches up the dropped and the new tracks.</p>
 </div>
 <div class="section" id="more-training-data">
 <h2>More training data?<a class="headerlink" href="#more-training-data" title="Permalink to this headline">¶</a></h2>
@@ -74,7 +76,7 @@
 </div>
 <div class="section" id="id1">
 <h2>Proofreading<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p>As discussed in the <a class="reference internal" href="../tutorials/proofreading.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> section of <span class="xref std std-ref">part2</span>, there are two main types of mistakes made by the tracking code: lost identities and mistaken
+<p>As discussed in the <a class="reference internal" href="../tutorials/proofreading.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> section of the <a class="reference internal" href="../tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>, there are two main types of mistakes made by the tracking code: lost identities and mistaken
 identities.</p>
 <p><strong>Lost Identities:</strong> The code may fail to identity an instance in one
 frame with any instances from previous frames.</p>
@@ -126,7 +128,6 @@ which track.</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>

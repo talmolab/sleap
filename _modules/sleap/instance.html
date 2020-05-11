@@ -782,36 +782,44 @@
 
 <div class="viewcode-block" id="Instance.get_points_array"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.Instance.get_points_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_points_array</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">invisible_as_nan</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">full</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the instance&#39;s points in array form.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            copy: If True, the return a copy of the points array as an</span>
-<span class="sd">                Nx2 ndarray where first column is x and second is y.</span>
+<span class="sd">            copy: If True, the return a copy of the points array as an ndarray.</span>
 <span class="sd">                If False, return a view of the underlying recarray.</span>
 <span class="sd">            invisible_as_nan: Should invisible points be marked as NaN.</span>
-<span class="sd">            full: If True, return the raw underlying recarray with all</span>
-<span class="sd">                attributes of the point.</span>
-<span class="sd">                Otherwise, return just the x and y coordinate.</span>
-<span class="sd">                Assumes copy is False and invisible_as_nan is False.</span>
+<span class="sd">                If copy is False, then invisible_as_nan is ignored since we</span>
+<span class="sd">                don&#39;t want to set invisible points to NaNs in original data.</span>
+<span class="sd">            full: If True, return all data for points. Otherwise, return just</span>
+<span class="sd">                the x and y coordinates.</span>
+
 <span class="sd">        Returns:</span>
-<span class="sd">            A Nx2 array containing x and y coordinates of each point</span>
-<span class="sd">            as the rows of the array and N is the number of nodes in the</span>
-<span class="sd">            skeleton. The order of the rows corresponds to the ordering</span>
-<span class="sd">            of the skeleton nodes. Any skeleton node not defined will</span>
-<span class="sd">            have NaNs present.</span>
+<span class="sd">            Either a recarray (if copy is False) or an ndarray (if copy True).</span>
+
+<span class="sd">            The order of the rows corresponds to the ordering of the skeleton</span>
+<span class="sd">            nodes. Any skeleton node not defined will have NaNs present.</span>
+
+<span class="sd">            Columns in recarray are accessed by name, e.g., [&quot;x&quot;], [&quot;y&quot;].</span>
+
+<span class="sd">            Columns in ndarray are accessed by number. The order matches</span>
+<span class="sd">            the order in `Point.dtype` or `PredictedPoint.dtype`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fix_array</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">full</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">invisible_as_nan</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">full</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">parray</span> <span class="o">=</span> <span class="n">structured_to_unstructured</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">full</span><span class="p">:</span>
+                <span class="n">parray</span> <span class="o">=</span> <span class="n">structured_to_unstructured</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">parray</span> <span class="o">=</span> <span class="n">structured_to_unstructured</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]])</span>
 
+            <span class="c1"># Note that invisible_as_nan assumes copy is True.</span>
             <span class="k">if</span> <span class="n">invisible_as_nan</span><span class="p">:</span>
                 <span class="n">parray</span><span class="p">[</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">visible</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
 
@@ -914,6 +922,20 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;PredictedInstance should not have from_predicted.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">points_and_scores_array</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        (N, 3) array of (x, y, score) for predicted points.</span>
+
+<span class="sd">        Row in arrow corresponds to order of points in skeleton.</span>
+<span class="sd">        Invisible points will have NaNs.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ndarray of visible point coordinates and scores.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_points_array</span><span class="p">(</span><span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">invisible_as_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pts</span><span class="p">[:,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>  <span class="c1"># (x, y, score)</span>
 
 <div class="viewcode-block" id="PredictedInstance.from_instance"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.PredictedInstance.from_instance">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">score</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PredictedInstance&quot;</span><span class="p">:</span>
@@ -1522,7 +1544,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorial.html">Tutorial</a></li>

@@ -3,9 +3,7 @@
 Creating a project
 ---------------------------
 
-When you first start SLEAP you’ll see an open dialog. Since you don’t
-yet have a project to open, click “**Cancel**” and you’ll be left with a
-new, empty project.
+When you first start SLEAP you’ll see a new, empty project.
 
 Opening a video
 ~~~~~~~~~~~~~~~

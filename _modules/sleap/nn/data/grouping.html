@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.data.grouping &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.data.grouping</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="group_examples"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.grouping.html#sleap.nn.data.grouping.group_examples">[docs]</a><span class="k">def</span> <span class="nf">group_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Group examples into dictionary.</span>
+
+<span class="sd">    Key is (video_ind, frame_ind), val is list of examples matching key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grouped_examples</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">example</span> <span class="ow">in</span> <span class="n">examples</span><span class="p">:</span>
+        <span class="n">video_ind</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="s2">&quot;video_ind&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="s2">&quot;frame_ind&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">grouped_examples</span><span class="p">[(</span><span class="n">video_ind</span><span class="p">,</span> <span class="n">frame_ind</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">example</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">grouped_examples</span></div>
+
+
+<div class="viewcode-block" id="group_examples_iter"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.grouping.html#sleap.nn.data.grouping.group_examples_iter">[docs]</a><span class="k">def</span> <span class="nf">group_examples_iter</span><span class="p">(</span><span class="n">examples</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterator which groups examples.</span>
+
+<span class="sd">    Yields ((video_ind, frame_ind), list of examples matching vid/frame).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">last_key</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">example</span> <span class="ow">in</span> <span class="n">examples</span><span class="p">:</span>
+        <span class="n">video_ind</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="s2">&quot;video_ind&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="s2">&quot;frame_ind&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">video_ind</span><span class="p">,</span> <span class="n">frame_ind</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">last_key</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">batch</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">last_key</span><span class="p">,</span> <span class="n">batch</span>
+            <span class="n">last_key</span> <span class="o">=</span> <span class="n">key</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">example</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">example</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">batch</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">key</span><span class="p">,</span> <span class="n">batch</span></div>
+
+
+<span class="c1"># @attr.s(auto_attribs=True)</span>
+<span class="c1"># class ExampleGrouper:</span>
+<span class="c1">#     grouping_key_list: List[Text] = [&quot;video_ind&quot;, &quot;frame_ind&quot;]</span>
+<span class="c1">#</span>
+<span class="c1">#     @property</span>
+<span class="c1">#     def input_keys(self) -&gt; List[Text]:</span>
+<span class="c1">#         &quot;&quot;&quot;Return the keys that incoming elements are expected to have.&quot;&quot;&quot;</span>
+<span class="c1">#         return self.grouping_key_list</span>
+<span class="c1">#</span>
+<span class="c1">#     @property</span>
+<span class="c1">#     def output_keys(self) -&gt; List[Text]:</span>
+<span class="c1">#         &quot;&quot;&quot;Return the keys that outgoing elements will have.&quot;&quot;&quot;</span>
+<span class="c1">#         return self.grouping_key_list + [&quot;grouped_examples&quot;]</span>
+<span class="c1">#</span>
+<span class="c1">#     def transform_dataset(self, ds_input: tf.data.Dataset) -&gt; tf.data.Dataset:</span>
+<span class="c1">#         # The group_by_reducer op groups on a single tf.int64 key</span>
+<span class="c1">#         # so we&#39;ll encode video_ind (upper 32 bits) and frame_ind (lower 32)</span>
+<span class="c1">#</span>
+<span class="c1">#         def encode_group_key(example):</span>
+<span class="c1">#             # upper_bits = tf.bitwise.right_shift(</span>
+<span class="c1">#             #     tf.dtypes.cast(example[&quot;video_ind&quot;], tf.int64),</span>
+<span class="c1">#             #     tf.constant([32], dtype=tf.int64)</span>
+<span class="c1">#             # )</span>
+<span class="c1">#             # lower_bits = tf.dtypes.cast(example[&quot;frame_ind&quot;], tf.int64)</span>
+<span class="c1">#             # example[&quot;group_key&quot;] = upper_bits + lower_bits</span>
+<span class="c1">#             example[&quot;group_key&quot;] = tf.cast(example[&quot;video_ind&quot;], tf.int64)</span>
+<span class="c1">#             return example</span>
+<span class="c1">#</span>
+<span class="c1">#         # Here we apply the encoder</span>
+<span class="c1">#         encoded_key_ds = ds_input.map(</span>
+<span class="c1">#             encode_group_key, num_parallel_calls=tf.data.experimental.AUTOTUNE</span>
+<span class="c1">#         )</span>
+<span class="c1">#</span>
+<span class="c1">#         # We&#39;ll want to &quot;reduce&quot; matching keys by creating a list of examples</span>
+<span class="c1">#         reducer = tf.data.experimental.Reducer(</span>
+<span class="c1">#             init_func=lambda _: np.int64(0.0),</span>
+<span class="c1">#             reduce_func=lambda x, y: x + y,</span>
+<span class="c1">#             finalize_func=lambda x: x)</span>
+<span class="c1">#</span>
+<span class="c1">#         # Now apply the grouping reduction</span>
+<span class="c1">#         encoded_key_ds.apply(tf.data.experimental.group_by_reducer(</span>
+<span class="c1">#             key_func=lambda example: example[&quot;group_key&quot;],</span>
+<span class="c1">#             reducer=reducer,</span>
+<span class="c1">#         ))</span>
+<span class="c1">#</span>
+<span class="c1">#         return encoded_key_ds</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

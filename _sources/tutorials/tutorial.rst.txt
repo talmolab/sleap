@@ -25,3 +25,4 @@ There are three main stages of using SLEAP:
     initial-training
     assisted-labeling
     proofreading
+    analysis

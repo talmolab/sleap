@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Export Data For Analysis &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Guides" href="../guides/index.html" />
+    <link rel="prev" title="Tracking instances across frames" href="proofreading.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="export-data-for-analysis">
+<span id="export-analysis"></span><h1>Export Data For Analysis<a class="headerlink" href="#export-data-for-analysis" title="Permalink to this headline">¶</a></h1>
+<p>The easiest way to work with the data from SLEAP is to export an HDF5 file by choosing “<strong>Export Analysis HDF5…</strong>” in the “File” menu.</p>
+<p>See <a class="reference internal" href="../_autosummary/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for an explanation of the datasets inside the file.</p>
+<div class="section" id="matlab">
+<h2>MATLAB<a class="headerlink" href="#matlab" title="Permalink to this headline">¶</a></h2>
+<p>You can read this file in MATLAB like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">occupancy_matrix</span> <span class="o">=</span> <span class="n">h5read</span><span class="p">(</span><span class="s1">&#39;path/to/analysis.h5&#39;</span><span class="p">,</span><span class="s1">&#39;/occupancy&#39;</span><span class="p">)</span>
+<span class="n">tracks_matrix</span> <span class="o">=</span> <span class="n">h5read</span><span class="p">(</span><span class="s1">&#39;path/to/analysis.h5&#39;</span><span class="p">,</span><span class="s1">&#39;/tracks&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="https://www.mathworks.com/help/matlab/ref/h5read.html">here</a> for more information about working with HDF5 files in MATLAB.</p>
+</div>
+<div class="section" id="python">
+<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
+<p>To read the file in Python you’ll first need to install the <a class="reference external" href="http://docs.h5py.org/en/stable/">h5py package</a>. You can then read data from the file like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5py</span>
+<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s1">&#39;path/to/analysis.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">occupancy_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;occupancy&#39;</span><span class="p">][:]</span>
+    <span class="n">tracks_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;tracks&#39;</span><span class="p">][:]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">occupancy_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tracks_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Note</strong>: The datasets are stored column-major as expected by MATLAB. This means that if you’re working with the file in Python you may want to first transpose the datasets so they match the shapes described in <a class="reference internal" href="../_autosummary/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Export Data For Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="tutorial.html">Tutorial</a><ul>
+      <li>Previous: <a href="proofreading.html" title="previous chapter">Tracking instances across frames</a></li>
+      <li>Next: <a href="../guides/index.html" title="next chapter">Guides</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/tutorials/analysis.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

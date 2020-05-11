@@ -91,8 +91,8 @@
 <span class="sd">            &quot;channels_first&quot;.</span>
 <span class="sd">            This specifies whether the underlying video data is stored as:</span>
 
-<span class="sd">                * &quot;channels_first&quot;: shape = (frames, channels, width, height)</span>
-<span class="sd">                * &quot;channels_last&quot;: shape = (frames, width, height, channels)</span>
+<span class="sd">                * &quot;channels_first&quot;: shape = (frames, channels, height, width)</span>
+<span class="sd">                * &quot;channels_last&quot;: shape = (frames, height, width, channels)</span>
 <span class="sd">        convert_range: Whether we should convert data to [0, 255]-range</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -393,6 +393,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader_</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__frames_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_COUNT</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">test_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Load if not already loaded</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_test_frame_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -429,12 +433,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_COUNT</span><span class="p">))</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">frames_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;See :class:`Video`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_COUNT</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__frames_float</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -470,7 +469,10 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_POS_FRAMES</span><span class="p">)</span> <span class="o">!=</span> <span class="n">idx</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_POS_FRAMES</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
 
-            <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">success</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span> <span class="ow">or</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to load frame </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">grayscale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">grayscale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grayscale</span>
@@ -492,16 +494,16 @@
 <span class="sd">    Args:</span>
 <span class="sd">        filename: Either a file to load or a numpy array of the data.</span>
 
-<span class="sd">        * numpy data shape: (frames, width, height, channels)</span>
+<span class="sd">        * numpy data shape: (frames, height, width, channels)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">filename</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">__frame_idx</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__width_idx</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__height_idx</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__height_idx</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__width_idx</span> <span class="o">=</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__channel_idx</span> <span class="o">=</span> <span class="mi">3</span>
 
         <span class="c1"># Handle cases where the user feeds in np.array instead of filename</span>
@@ -932,7 +934,7 @@
 
 <span class="sd">            * :code:`get_frame(frame_index: int) -&gt; np.ndarray`:</span>
 <span class="sd">              Get a single frame from the underlying video data with</span>
-<span class="sd">              output shape=(width, height, channels).</span>
+<span class="sd">              output shape=(height, width, channels).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -986,7 +988,7 @@
 <span class="sd">            idx: The index of the video frame</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            The video frame with shape (width, height, channels)</span>
+<span class="sd">            The video frame with shape (height, width, channels)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div>
 
@@ -999,11 +1001,38 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The requested video frames with shape</span>
-<span class="sd">            (len(idxs), width, height, channels)</span>
+<span class="sd">            (len(idxs), height, width, channels)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">idxs</span><span class="p">):</span>
             <span class="n">idxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">idxs</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Video.get_frames_safely"><a class="viewcode-back" href="../../../_autosummary/sleap.io.video.html#sleap.io.video.Video.get_frames_safely">[docs]</a>    <span class="k">def</span> <span class="nf">get_frames_safely</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns list of frame indices and frames which were successfully loaded.</span>
+
+<span class="sd">        idxs: An iterable object that contains the indices of frames.</span>
+
+<span class="sd">        Returns: A tuple of (frame indices, frames), where</span>
+<span class="sd">            * frame indices is a subset of the specified idxs, and</span>
+<span class="sd">            * frames has shape (len(frame indices), height, width, channels).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">idxs_found</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="c1"># quietly ignore frames which we couldn&#39;t load</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+                <span class="n">idxs_found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+        <span class="n">frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">idxs_found</span><span class="p">,</span> <span class="n">frames</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idxs</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
@@ -1089,7 +1118,9 @@
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Video&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Create an instance of a SingleImageVideo from individual image file(s).&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an instance of a SingleImageVideo from individual image file(s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">SingleImageVideo</span><span class="p">(</span><span class="n">filenames</span><span class="o">=</span><span class="n">filenames</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">height</span><span class="p">:</span>
             <span class="n">backend</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
@@ -1453,7 +1484,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>

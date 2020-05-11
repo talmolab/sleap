@@ -1195,7 +1195,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span>
         <span class="p">)</span></div>
 
-
 <div class="viewcode-block" id="MainWindow.setSeekbarHeader"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.setSeekbarHeader">[docs]</a>    <span class="k">def</span> <span class="nf">setSeekbarHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates graph shown in seekbar header.&quot;&quot;&quot;</span>
         <span class="n">data_obj</span> <span class="o">=</span> <span class="n">StatisticSeries</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
@@ -1298,7 +1297,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">sleap.gui.learning.training</span> <span class="kn">import</span> <span class="n">LearningDialog</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.learning.dialog</span> <span class="kn">import</span> <span class="n">LearningDialog</span>
 
         <span class="k">if</span> <span class="s2">&quot;inference&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">:</span>
             <span class="n">QMessageBox</span><span class="p">(</span>
@@ -1426,8 +1425,8 @@
     <span class="n">window</span> <span class="o">=</span> <span class="n">MainWindow</span><span class="p">(</span><span class="n">labels_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">labels_path</span><span class="p">)</span>
     <span class="n">window</span><span class="o">.</span><span class="n">showMaximized</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">labels_path</span><span class="p">:</span>
-        <span class="n">window</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">openProject</span><span class="p">(</span><span class="n">first_open</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># if not args.labels_path:</span>
+    <span class="c1">#     window.commands.openProject(first_open=True)</span>
 
     <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
 
@@ -1452,7 +1451,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>

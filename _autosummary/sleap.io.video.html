@@ -14,7 +14,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.io.visuals" href="sleap.io.visuals.html" />
+    <link rel="next" title="sleap.io.videowriter" href="sleap.io.videowriter.html" />
     <link rel="prev" title="sleap.io.pathutils" href="sleap.io.pathutils.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -60,8 +60,8 @@ is stored.</p></li>
 This specifies whether the underlying video data is stored as:</p>
 <blockquote>
 <div><ul>
-<li><p>”channels_first”: shape = (frames, channels, width, height)</p></li>
-<li><p>”channels_last”: shape = (frames, width, height, channels)</p></li>
+<li><p>”channels_first”: shape = (frames, channels, height, width)</p></li>
+<li><p>”channels_last”: shape = (frames, height, width, channels)</p></li>
 </ul>
 </div></blockquote>
 </p></li>
@@ -331,12 +331,6 @@ based on first frame.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.video.MediaVideo.frames_float">
-<em class="property">property </em><code class="sig-name descname">frames_float</code><a class="headerlink" href="#sleap.io.video.MediaVideo.frames_float" title="Permalink to this definition">¶</a></dt>
-<dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.io.video.MediaVideo.get_frame">
 <code class="sig-name descname">get_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">grayscale</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/video.html#MediaVideo.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.get_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
@@ -378,13 +372,13 @@ based on first frame.</p></li>
 
 <dl class="py class">
 <dt id="sleap.io.video.NumpyVideo">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.io.video.</code><code class="sig-name descname">NumpyVideo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">_CountingAttr(counter=37, _default=NOTHING, repr=True, eq=True, order=True, hash=None, init=True, metadata={})</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/video.html#NumpyVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.video.</code><code class="sig-name descname">NumpyVideo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>numpy.ndarray<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/video.html#NumpyVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Video data stored as Numpy array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – Either a file to load or a numpy array of the data.</p></li>
-<li><p><strong>numpy data shape</strong> (<em>*</em>) – (frames, width, height, channels)</p></li>
+<li><p><strong>numpy data shape</strong> (<em>*</em>) – (frames, height, width, channels)</p></li>
 </ul>
 </dd>
 </dl>
@@ -548,7 +542,7 @@ required methods and properties</p></li>
 <li><p><strong>Methods</strong> (<em>*</em>) – <ul>
 <li><p><code class="code docutils literal notranslate"><span class="pre">get_frame(frame_index:</span> <span class="pre">int)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray</span></code>:
 Get a single frame from the underlying video data with
-output shape=(width, height, channels).</p></li>
+output shape=(height, width, channels).</p></li>
 </ul>
 </p></li>
 </ul>
@@ -700,7 +694,7 @@ or “channels_last”</p></li>
 <dd class="field-odd"><p><strong>idx</strong> – The index of the video frame</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The video frame with shape (width, height, channels)</p>
+<dd class="field-even"><p>The video frame with shape (height, width, channels)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -715,7 +709,21 @@ or “channels_last”</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The requested video frames with shape
-(len(idxs), width, height, channels)</p>
+(len(idxs), height, width, channels)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.video.Video.get_frames_safely">
+<code class="sig-name descname">get_frames_safely</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idxs</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>List<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>numpy.ndarray<span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/video.html#Video.get_frames_safely"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.get_frames_safely" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of frame indices and frames which were successfully loaded.</p>
+<p>idxs: An iterable object that contains the indices of frames.</p>
+<dl class="simple">
+<dt>Returns: A tuple of (frame indices, frames), where</dt><dd><ul class="simple">
+<li><p>frame indices is a subset of the specified idxs, and</p></li>
+<li><p>frames has shape (len(frame indices), height, width, channels).</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -835,7 +843,6 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
@@ -857,6 +864,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
@@ -866,9 +874,9 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.training.html">sleap.gui.learning.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
@@ -892,6 +900,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
@@ -938,6 +947,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
@@ -957,7 +967,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api.html">Developer API</a><ul>
       <li>Previous: <a href="sleap.io.pathutils.html" title="previous chapter">sleap.io.pathutils</a></li>
-      <li>Next: <a href="sleap.io.visuals.html" title="next chapter">sleap.io.visuals</a></li>
+      <li>Next: <a href="sleap.io.videowriter.html" title="next chapter">sleap.io.videowriter</a></li>
   </ul></li>
   </ul></li>
 </ul>

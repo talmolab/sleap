@@ -131,6 +131,7 @@
         <span class="n">training</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">],</span>
         <span class="n">validation</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">test</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">video_search_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">update_config</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataReaders&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create data readers from a (possibly incomplete) configuration.&quot;&quot;&quot;</span>
@@ -158,7 +159,12 @@
 
         <span class="c1"># Build class.</span>
         <span class="c1"># TODO: use labels_config.search_path_hints for loading</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_labels</span><span class="p">(</span><span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">validation</span><span class="o">=</span><span class="n">validation</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_labels</span><span class="p">(</span>
+            <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span>
+            <span class="n">validation</span><span class="o">=</span><span class="n">validation</span><span class="p">,</span>
+            <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
+            <span class="n">video_search_paths</span><span class="o">=</span><span class="n">video_search_paths</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="DataReaders.from_labels"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.training.html#sleap.nn.training.DataReaders.from_labels">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_labels</span><span class="p">(</span>
@@ -166,19 +172,24 @@
         <span class="n">training</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">],</span>
         <span class="n">validation</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">test</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">video_search_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataReaders&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create data readers from sleap.Labels datasets as data providers.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">training</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">training</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">training</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;video search paths: &quot;</span><span class="p">,</span> <span class="n">video_search_paths</span><span class="p">)</span>
+            <span class="n">training</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">training</span><span class="p">,</span> <span class="n">video_search</span><span class="o">=</span><span class="n">video_search_paths</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">training</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">validation</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">validation</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">validation</span><span class="p">)</span>
+            <span class="n">validation</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span>
+                <span class="n">validation</span><span class="p">,</span> <span class="n">video_search</span><span class="o">=</span><span class="n">video_search_paths</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">validation</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
             <span class="n">training</span><span class="p">,</span> <span class="n">validation</span> <span class="o">=</span> <span class="n">split_labels</span><span class="p">(</span><span class="n">training</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">validation</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">test</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">video_search</span><span class="o">=</span><span class="n">video_search_paths</span><span class="p">)</span>
 
         <span class="n">test_reader</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">test</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -550,6 +561,7 @@
         <span class="n">training_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">validation_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">test_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">video_search_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Trainer&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Initialize the trainer from a training job configuration.</span>
 <span class="sd">        </span>
@@ -572,6 +584,7 @@
             <span class="n">training</span><span class="o">=</span><span class="n">training_labels</span><span class="p">,</span>
             <span class="n">validation</span><span class="o">=</span><span class="n">validation_labels</span><span class="p">,</span>
             <span class="n">test</span><span class="o">=</span><span class="n">test_labels</span><span class="p">,</span>
+            <span class="n">video_search_paths</span><span class="o">=</span><span class="n">video_search_paths</span><span class="p">,</span>
             <span class="n">update_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span> <span class="o">=</span> <span class="n">data_readers</span><span class="o">.</span><span class="n">training_labels</span><span class="o">.</span><span class="n">skeletons</span>
@@ -1272,6 +1285,12 @@
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;labels_path&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to labels file to use for training.&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--video-paths&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of paths for finding videos in case paths inside labels file need fixing.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--val_labels&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--val&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to labels file to use for validation (overrides training job path if set).&quot;</span><span class="p">,</span>
@@ -1349,6 +1368,7 @@
         <span class="n">training_labels</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">labels_path</span><span class="p">,</span>
         <span class="n">validation_labels</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">val_labels</span><span class="p">,</span>
         <span class="n">test_labels</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">test_labels</span><span class="p">,</span>
+        <span class="n">video_search_paths</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">video_paths</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span></div>
 
@@ -1373,7 +1393,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>

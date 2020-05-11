@@ -44,7 +44,7 @@
 advantages to using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">Anaconda Environments</a> is the ability to create separate Python installations (environments) for
 different projects, mitigating issues of managing complex dependencies. To create a new conda environment for
 <strong>SLEAP</strong> related development and use:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>  <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span><span class="o">=</span><span class="mf">0.2</span><span class="o">.</span><span class="mi">1</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>  <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_env</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span><span class="o">=</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">0</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
 </pre></div>
 </div>
 <p>Once the environment is finished installing, it can be activated using the following command:</p>
@@ -71,7 +71,7 @@ you can run the labeling GUI by entering the following command:</p>
 </div>
 <p>If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow</a> with GPU support. There is no TensorFlow GPU support on MacOS X.</p>
 <p>You can then install SLEAP by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">extra</span><span class="o">-</span><span class="n">index</span><span class="o">-</span><span class="n">url</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">test</span><span class="o">.</span><span class="n">pypi</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">simple</span><span class="o">/</span> <span class="n">sleap</span><span class="o">==</span><span class="mf">0.2</span><span class="o">.</span><span class="mi">1</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span><span class="o">==</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">0</span>
 </pre></div>
 </div>
 <p><strong>SLEAP</strong> is now installed you can run the labeling GUI by entering the following command:</p>
@@ -102,7 +102,6 @@ you can run the labeling GUI by entering the following command:</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a></li>
@@ -117,6 +116,7 @@ you can run the labeling GUI by entering the following command:</p>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html">Prediction-assisted labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Guides</a></li>

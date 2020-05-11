@@ -813,35 +813,61 @@
             <span class="n">frames</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">])),</span>
             <span class="n">fps</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">],</span>
             <span class="n">gui_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;open_when_done&quot;</span><span class="p">]:</span>
+            <span class="c1"># Open the file using default video playing app</span>
+            <span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">open_file</span>
+
+            <span class="n">open_file</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="ExportLabeledClip.ask"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportLabeledClip.ask">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;has_frame_range&quot;</span><span class="p">]:</span>
 
-            <span class="n">fps</span><span class="p">,</span> <span class="n">okay</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QInputDialog</span><span class="o">.</span><span class="n">getInt</span><span class="p">(</span>
-                <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="p">,</span>
-                <span class="s2">&quot;Frames per second&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Frames per second:&quot;</span><span class="p">,</span>
-                <span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="s2">&quot;fps&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
-                <span class="mi">1</span><span class="p">,</span>
-                <span class="mi">300</span><span class="p">,</span>
+            <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.export_clip</span> <span class="kn">import</span> <span class="n">ExportClipDialog</span>
+
+            <span class="n">dialog</span> <span class="o">=</span> <span class="n">ExportClipDialog</span><span class="p">()</span>
+
+            <span class="c1"># Set default fps from video (if video has fps attribute)</span>
+            <span class="n">dialog</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">fps</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="s2">&quot;fps&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">okay</span><span class="p">:</span>
+
+            <span class="c1"># Show modal dialog and get form results</span>
+            <span class="n">export_options</span> <span class="o">=</span> <span class="n">dialog</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+
+            <span class="c1"># Check if user hit cancel</span>
+            <span class="k">if</span> <span class="n">export_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
+            <span class="c1"># Use VideoWriter to determine default video type to use</span>
+            <span class="kn">from</span> <span class="nn">sleap.io.videowriter</span> <span class="kn">import</span> <span class="n">VideoWriter</span>
+
+            <span class="c1"># For OpenCV we default to avi since the bundled ffmpeg</span>
+            <span class="c1"># makes mp4&#39;s that most programs can&#39;t open (VLC can).</span>
+            <span class="n">default_out_filename</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.avi&quot;</span>
+
+            <span class="c1"># But if we can write mpegs using sci-kit video, use .mp4</span>
+            <span class="c1"># since it has trouble writing .avi files.</span>
+            <span class="k">if</span> <span class="n">VideoWriter</span><span class="o">.</span><span class="n">can_use_skvideo</span><span class="p">():</span>
+                <span class="n">default_out_filename</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.mp4&quot;</span>
+
+            <span class="c1"># Ask where use wants to save video file</span>
             <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
                 <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="p">,</span>
                 <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save Video As...&quot;</span><span class="p">,</span>
-                <span class="nb">dir</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.avi&quot;</span><span class="p">,</span>
-                <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;AVI Video (*.avi)&quot;</span><span class="p">,</span>
+                <span class="nb">dir</span><span class="o">=</span><span class="n">default_out_filename</span><span class="p">,</span>
+                <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;Video (*.avi *mp4)&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
+            <span class="c1"># Check if user hit cancel</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
             <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fps</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">]</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;open_when_done&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;open_when_done&quot;</span><span class="p">]</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
@@ -2043,7 +2069,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
