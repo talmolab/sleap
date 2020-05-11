@@ -36,6 +36,10 @@ order to train the model to predict the node even when it’s occluded.
 
 |image5|
 
+When you label a frame, it’s best if you can label **all** the instances of
+your animal in the frame. Otherwise, the models may learn to not
+identify things that look like the instances you didn’t label.
+
 Saving
 ~~~~~~
 
@@ -65,10 +69,6 @@ have a male and a female. It’s fine to label the male with the blue
 instance in some frames and the orange instance in others. Tracking (and
 track proofreading) is the final stage in the workflow and occurs after
 predicting body part locations.
-
-When you label a frame, it’s best if you can label all the instances of
-your animal in the frame. Otherwise, the models may learn to not
-identify things that look like the instances you didn’t label.
 
 Continue to :ref:`initial-training`.
 

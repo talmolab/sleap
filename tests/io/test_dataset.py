@@ -809,6 +809,25 @@ def test_path_fix(tmpdir):
     assert labels.videos[0].filename == "tests/data/videos/small_robot.mp4"
 
 
+def test_path_fix_with_new_full_path(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+
+    # Add video with bad filename
+    labels.add_video(Video.from_filename("foo.mp4"))
+
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    # Pass list of full video paths to use instead of those in labels
+    labels = Labels.load_file(
+        filename, video_search=["tests/data/videos/small_robot.mp4"]
+    )
+
+    # Make sure we got the actual video path by searching that directory
+    assert len(labels.videos) == 1
+    assert labels.videos[0].filename == "tests/data/videos/small_robot.mp4"
+
+
 def test_local_path_save(tmpdir, monkeypatch):
 
     filename = "test.h5"

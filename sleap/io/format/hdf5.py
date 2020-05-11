@@ -102,9 +102,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             # If the callback is an iterable, then we'll expect it to be a
             # list of strings and build a non-gui callback with those as
             # the search paths.
-            # When path is to a file, use the path of parent directory.
             search_paths = [
-                os.path.dirname(path) if os.path.isfile(path) else path
+                # os.path.dirname(path) if os.path.isfile(path) else path
+                path
                 for path in video_search
             ]
 

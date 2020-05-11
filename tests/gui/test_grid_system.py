@@ -15,8 +15,8 @@ def test_grid_system_midpoint_gui(qtbot, midpoint_grid_labels):
 
     assert inst.points[0].x == -0.5
     assert inst.points[0].y == -0.5
-    assert inst.points[1].x == 0.
-    assert inst.points[1].y == 0.
+    assert inst.points[1].x == 0.0
+    assert inst.points[1].y == 0.0
     assert inst.points[2].x == -0.5
     assert inst.points[2].y == 0.5
 
@@ -78,7 +78,9 @@ def test_grid_system_legacy_gui(qtbot, legacy_grid_labels):
 
 def test_grid_system_midpoint_labels(midpoint_grid_labels):
     inst = midpoint_grid_labels[0][0]
-    np.testing.assert_array_equal(inst.points_array, [[-0.5, -0.5], [0, 0], [-0.5, 0.5]])
+    np.testing.assert_array_equal(
+        inst.points_array, [[-0.5, -0.5], [0, 0], [-0.5, 0.5]]
+    )
 
 
 def test_grid_system_legacy_labels(legacy_grid_labels):

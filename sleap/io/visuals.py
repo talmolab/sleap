@@ -3,6 +3,7 @@ Module for generating videos with visual annotation overlays.
 """
 
 from sleap.io.video import Video
+from sleap.io.videowriter import VideoWriter
 from sleap.io.dataset import Labels
 from sleap.util import usable_cpu_count
 
@@ -11,7 +12,7 @@ import os
 import numpy as np
 import math
 from time import time, clock
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
 
 from queue import Queue
 from threading import Thread
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 _sentinel = object()
 
 
-def reader(out_q: Queue, video: Video, frames: List[int]):
+def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
     """Read frame images from video and send them into queue.
 
     Args:
@@ -32,6 +33,7 @@ def reader(out_q: Queue, video: Video, frames: List[int]):
             for chunks of video.
         video: The `Video` object to read.
         frames: Full list frame indexes we want to read.
+        scale: Output scale for frame images.
 
     Returns:
         None.
@@ -55,21 +57,26 @@ def reader(out_q: Queue, video: Video, frames: List[int]):
 
         t0 = clock()
 
-        # Load frames from video
-        video_frame_images = video[frames_idx_chunk]
+        # Safely load frames from video, skipping frames we can't load
+        loaded_chunk_idxs, video_frame_images = video.get_frames_safely(
+            frames_idx_chunk
+        )
+
+        if scale != 1.0:
+            video_frame_images = resize_images(video_frame_images, scale)
 
         elapsed = clock() - t0
-        fps = len(frames_idx_chunk) / elapsed
+        fps = len(loaded_chunk_idxs) / elapsed
         logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
         i += 1
 
-        out_q.put((frames_idx_chunk, video_frame_images))
+        out_q.put((loaded_chunk_idxs, video_frame_images))
 
     # send _sentinal object into queue to signal that we're done
     out_q.put(_sentinel)
 
 
-def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
+def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int, scale: float):
     """Annotate frame images (draw instances).
 
     Args:
@@ -97,16 +104,15 @@ def marker(in_q: Queue, out_q: Queue, labels: Labels, video_idx: int):
         frames_idx_chunk, video_frame_images = data
 
         t0 = clock()
-        imgs = []
-        for i, frame_idx in enumerate(frames_idx_chunk):
-            img = get_frame_image(
-                video_frame=video_frame_images[i],
-                video_idx=video_idx,
-                frame_idx=frame_idx,
-                labels=labels,
-            )
 
-            imgs.append(img)
+        imgs = mark_images(
+            frame_indices=frames_idx_chunk,
+            frame_images=video_frame_images,
+            video_idx=video_idx,
+            labels=labels,
+            scale=scale,
+        )
+
         elapsed = clock() - t0
         fps = len(imgs) / elapsed
         logger.debug(f"drawing chunk {chunk_i} in {elapsed} s = {fps} fps")
@@ -141,10 +147,12 @@ def writer(
 
     cv2.setNumThreads(usable_cpu_count())
 
-    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-    out = cv2.VideoWriter(filename, fourcc, fps, img_w_h)
+    w, h = img_w_h
+
+    writer_object = VideoWriter.safe_builder(filename, height=h, width=w, fps=fps)
 
     start_time = clock()
+    total_elapsed = 0
     total_frames_written = 0
 
     i = 0
@@ -158,7 +166,7 @@ def writer(
 
         t0 = clock()
         for img in data:
-            out.write(img)
+            writer_object.add_frame(img, bgr=True)
 
         elapsed = clock() - t0
         fps = len(data) / elapsed
@@ -169,7 +177,7 @@ def writer(
         total_elapsed = clock() - start_time
         progress_queue.put((total_frames_written, total_elapsed))
 
-    out.release()
+    writer_object.close()
     # send (-1, time) to signal done
     progress_queue.put((-1, total_elapsed))
 
@@ -178,8 +186,9 @@ def save_labeled_video(
     filename: str,
     labels: Labels,
     video: Video,
-    frames: List[int],
+    frames: Iterable[int],
     fps: int = 15,
+    scale: float = 1.0,
     gui_progress: bool = False,
 ):
     """Function to generate and save video with annotations.
@@ -195,9 +204,9 @@ def save_labeled_video(
     Returns:
         None.
     """
-    output_size = (video.height, video.width)
-
     print(f"Writing video with {len(frames)} frame images...")
+
+    output_width_height = (int(video.width * scale), int(video.height * scale))
 
     t0 = clock()
 
@@ -205,13 +214,12 @@ def save_labeled_video(
     q2 = Queue(maxsize=10)
     progress_queue = Queue()
 
-    thread_read = Thread(target=reader, args=(q1, video, frames))
+    thread_read = Thread(target=reader, args=(q1, video, frames, scale))
     thread_mark = Thread(
-        target=marker, args=(q1, q2, labels, labels.videos.index(video))
+        target=marker, args=(q1, q2, labels, labels.videos.index(video), scale)
     )
     thread_write = Thread(
-        target=writer,
-        args=(q2, progress_queue, filename, fps, (video.width, video.height)),
+        target=writer, args=(q2, progress_queue, filename, fps, output_width_height),
     )
 
     thread_read.start()
@@ -250,19 +258,27 @@ def save_labeled_video(
     print(f"Done in {elapsed} s, fps = {fps}.")
 
 
-def img_to_cv(img: np.ndarray) -> np.ndarray:
-    """Prepares frame image as needed for opencv."""
-    # Convert RGB to BGR for OpenCV
-    if img.shape[-1] == 3:
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    # Convert grayscale to BGR
-    elif img.shape[-1] == 1:
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    return img
+def mark_images(frame_indices, frame_images, video_idx, labels, scale):
+    imgs = []
+    for i, frame_idx in enumerate(frame_indices):
+        img = get_frame_image(
+            video_frame=frame_images[i],
+            video_idx=video_idx,
+            frame_idx=frame_idx,
+            labels=labels,
+            scale=scale,
+        )
+
+        imgs.append(img)
+    return imgs
 
 
 def get_frame_image(
-    video_frame: np.ndarray, video_idx: int, frame_idx: int, labels: Labels
+    video_frame: np.ndarray,
+    video_idx: int,
+    frame_idx: int,
+    labels: Labels,
+    scale: float,
 ) -> np.ndarray:
     """Returns single annotated frame image.
 
@@ -275,18 +291,29 @@ def get_frame_image(
     Returns:
         ndarray of frame image with visual annotations added.
     """
-    img = img_to_cv(video_frame)
-    plot_instances_cv(img, video_idx, frame_idx, labels)
+
+    # Use OpenCV to convert to BGR color image
+    video_frame = img_to_cv(video_frame)
+
+    # Add the instances to the image
+    plot_instances_cv(video_frame, video_idx, frame_idx, labels, scale)
+
+    return video_frame
+
+
+def img_to_cv(img: np.ndarray) -> np.ndarray:
+    """Prepares frame image as needed for opencv."""
+    # Convert RGB to BGR for OpenCV
+    if img.shape[-1] == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    # Convert grayscale to BGR
+    elif img.shape[-1] == 1:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     return img
 
 
-def _point_int_tuple(point):
-    """Returns (x, y) tuple from :class:`Point`."""
-    return int(point.x), int(point.y)
-
-
 def plot_instances_cv(
-    img: np.ndarray, video_idx: int, frame_idx: int, labels: Labels
+    img: np.ndarray, video_idx: int, frame_idx: int, labels: Labels, scale: float
 ) -> np.ndarray:
     """Adds visuals annotations to single frame image.
 
@@ -322,16 +349,22 @@ def plot_instances_cv(
             track_idx = len(labels.tracks) + count_no_track
             count_no_track += 1
 
-        inst_color = cmap[track_idx % len(cmap)]
+        # Get color for instance and convert RGB to BGR for OpenCV
+        inst_color = cmap[track_idx % len(cmap)][::-1]
 
-        plot_instance_cv(img, instance, inst_color)
+        plot_instance_cv(img, instance, inst_color, scale=scale)
+
+
+def has_nans(*vals):
+    return any((np.isnan(val) for val in vals))
 
 
 def plot_instance_cv(
     img: np.ndarray,
     instance: "Instance",
-    color: Tuple[int, int, int],
-    marker_radius: float = 4,
+    color: Iterable[int],
+    unscaled_marker_radius: float = 4,
+    scale: float = 1.0,
 ) -> np.ndarray:
     """
     Add visual annotations for single instance.
@@ -340,46 +373,70 @@ def plot_instance_cv(
         img: The ndarray of the frame image.
         instance: The :class:`Instance` to add to frame image.
         color: (r, g, b) color for this instance.
-        marker_radius: Radius of marker for instance points (nodes).
+        unscaled_marker_radius: Radius of marker for instance points (nodes).
+        scale: 
 
     Returns:
         ndarray of frame image with visual annotations for instance added.
     """
 
-    # RGB -> BGR for cv2
-    cv_color = color[::-1]
+    # Get matrix of all point locations
+    points_array = instance.points_array
 
-    for (node, point) in instance.nodes_points:
-        # plot node at point
-        if point.visible and not point.isnan():
+    # Rescale point locations
+    points_array *= scale
+
+    marker_radius = max(1, int(unscaled_marker_radius // (1 / scale)))
+
+    for x, y in points_array:
+        # Make sure this is a valid and visible point
+        if not has_nans(x, y):
+            # Convert to ints for opencv (now that we know these aren't nans)
+            x, y = int(x), int(y)
+            # Draw circle to mark node
             cv2.circle(
-                img,
-                _point_int_tuple(point),
-                marker_radius,
-                cv_color,
-                lineType=cv2.LINE_AA,
+                img, (x, y), marker_radius, color, lineType=cv2.LINE_AA,
             )
-    for (src, dst) in instance.skeleton.edges:
+
+    for (src, dst) in instance.skeleton.edge_inds:
+        # Get points for the nodes connected by this edge
+        src_x, src_y = points_array[src]
+        dst_x, dst_y = points_array[dst]
+
         # Make sure that both nodes are present in this instance before drawing edge
-        if src in instance and dst in instance:
-            if (
-                instance[src].visible
-                and instance[dst].visible
-                and not instance[src].isnan()
-                and not instance[dst].isnan()
-            ):
+        if not has_nans(src_x, src_y, dst_x, dst_y):
 
-                cv2.line(
-                    img,
-                    _point_int_tuple(instance[src]),
-                    _point_int_tuple(instance[dst]),
-                    cv_color,
-                    lineType=cv2.LINE_AA,
-                )
+            # Convert to ints for opencv
+            src_x, src_y = int(src_x), int(src_y)
+            dst_x, dst_y = int(dst_x), int(dst_y)
+
+            # Draw line to mark edge between nodes
+            cv2.line(
+                img, (src_x, src_y), (dst_x, dst_y), color, lineType=cv2.LINE_AA,
+            )
 
 
-if __name__ == "__main__":
+def resize_image(img: np.ndarray, scale: float) -> np.ndarray:
+    """Resizes single image with shape (height, width, channels)."""
+    height, width, channels = img.shape
+    new_height, new_width = int(height // (1 / scale)), int(width // (1 / scale))
 
+    # Note that OpenCV takes shape as (width, height).
+
+    if channels == 1:
+        # opencv doesn't want a single channel to have its own dimension
+        img = cv2.resize(img[:, :], (new_width, new_height))[..., None]
+    else:
+        img = cv2.resize(img, (new_width, new_height))
+
+    return img
+
+
+def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
+    return np.stack([resize_image(img, scale) for img in images])
+
+
+def main_cli():
     import argparse
     from sleap.util import frame_list
 
@@ -393,6 +450,7 @@ if __name__ == "__main__":
         help="The output filename for the video",
     )
     parser.add_argument("-f", "--fps", type=int, default=15, help="Frames per second")
+    parser.add_argument("--scale", type=float, default=1.0, help="Output image scale")
     parser.add_argument(
         "--frames",
         type=frame_list,
@@ -400,13 +458,19 @@ if __name__ == "__main__":
         help="list of frames to predict. Either comma separated list (e.g. 1,2,3) or "
         "a range separated by hyphen (e.g. 1-3). (default is entire video)",
     )
+    parser.add_argument(
+        "--video-index", type=int, default=0, help="Index of video in labels dataset"
+    )
     args = parser.parse_args()
 
     labels = Labels.load_file(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
     )
 
-    vid = labels.videos[0]
+    if args.video_index >= len(labels.videos):
+        raise IndexError(f"There is no video with index {args.video_index}.")
+
+    vid = labels.videos[args.video_index]
 
     if args.frames is None:
         frames = sorted([lf.frame_idx for lf in labels if len(lf.instances)])
@@ -418,9 +482,14 @@ if __name__ == "__main__":
     save_labeled_video(
         filename=filename,
         labels=labels,
-        video=labels.videos[0],
+        video=vid,
         frames=frames,
         fps=args.fps,
+        scale=args.scale,
     )
 
     print(f"Video saved as: {filename}")
+
+
+if __name__ == "__main__":
+    main_cli()

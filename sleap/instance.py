@@ -749,36 +749,44 @@ class Instance:
 
     def get_points_array(
         self, copy: bool = True, invisible_as_nan: bool = False, full: bool = False
-    ) -> np.ndarray:
+    ) -> Union[np.ndarray, np.recarray]:
         """
         Return the instance's points in array form.
 
         Args:
-            copy: If True, the return a copy of the points array as an
-                Nx2 ndarray where first column is x and second is y.
+            copy: If True, the return a copy of the points array as an ndarray.
                 If False, return a view of the underlying recarray.
             invisible_as_nan: Should invisible points be marked as NaN.
-            full: If True, return the raw underlying recarray with all
-                attributes of the point.
-                Otherwise, return just the x and y coordinate.
-                Assumes copy is False and invisible_as_nan is False.
+                If copy is False, then invisible_as_nan is ignored since we
+                don't want to set invisible points to NaNs in original data.
+            full: If True, return all data for points. Otherwise, return just
+                the x and y coordinates.
+
         Returns:
-            A Nx2 array containing x and y coordinates of each point
-            as the rows of the array and N is the number of nodes in the
-            skeleton. The order of the rows corresponds to the ordering
-            of the skeleton nodes. Any skeleton node not defined will
-            have NaNs present.
+            Either a recarray (if copy is False) or an ndarray (if copy True).
+
+            The order of the rows corresponds to the ordering of the skeleton
+            nodes. Any skeleton node not defined will have NaNs present.
+
+            Columns in recarray are accessed by name, e.g., ["x"], ["y"].
+
+            Columns in ndarray are accessed by number. The order matches
+            the order in `Point.dtype` or `PredictedPoint.dtype`.
         """
         self._fix_array()
 
-        if full:
-            return self._points
-
-        if not copy and not invisible_as_nan:
-            return self._points[["x", "y"]]
+        if not copy:
+            if full:
+                return self._points
+            else:
+                return self._points[["x", "y"]]
         else:
-            parray = structured_to_unstructured(self._points[["x", "y"]])
+            if full:
+                parray = structured_to_unstructured(self._points)
+            else:
+                parray = structured_to_unstructured(self._points[["x", "y"]])
 
+            # Note that invisible_as_nan assumes copy is True.
             if invisible_as_nan:
                 parray[~self._points.visible] = math.nan
 
@@ -881,6 +889,20 @@ class PredictedInstance(Instance):
 
         if self.from_predicted is not None:
             raise ValueError("PredictedInstance should not have from_predicted.")
+
+    @property
+    def points_and_scores_array(self) -> np.ndarray:
+        """
+        (N, 3) array of (x, y, score) for predicted points.
+
+        Row in arrow corresponds to order of points in skeleton.
+        Invisible points will have NaNs.
+
+        Returns:
+            ndarray of visible point coordinates and scores.
+        """
+        pts = self.get_points_array(full=True, copy=True, invisible_as_nan=True)
+        return pts[:, (0, 1, 4)]  # (x, y, score)
 
     @classmethod
     def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":

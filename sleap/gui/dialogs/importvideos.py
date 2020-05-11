@@ -120,12 +120,6 @@ class ImportParamDialog(QDialog):
                 "params": [{"name": "grayscale", "type": "check"}],
             },
             {
-                "video_type": "numpy",
-                "match": "npy",
-                "video_class": Video.from_numpy,
-                "params": [],
-            },
-            {
                 "video_type": "imgstore",
                 "match": "json",
                 "video_class": Video.from_filename,

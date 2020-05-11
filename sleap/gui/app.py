@@ -1162,7 +1162,6 @@ class MainWindow(QMainWindow):
             self.player.seekbar, self.labels, self.state["video"], self.color_manager
         )
 
-
     def setSeekbarHeader(self, graph_name):
         """Updates graph shown in seekbar header."""
         data_obj = StatisticSeries(self.labels)
@@ -1265,7 +1264,7 @@ class MainWindow(QMainWindow):
         Returns:
             None.
         """
-        from sleap.gui.learning.training import LearningDialog
+        from sleap.gui.learning.dialog import LearningDialog
 
         if "inference" in self.overlays:
             QMessageBox(
@@ -1393,8 +1392,8 @@ def main():
     window = MainWindow(labels_path=args.labels_path)
     window.showMaximized()
 
-    if not args.labels_path:
-        window.commands.openProject(first_open=True)
+    # if not args.labels_path:
+    #     window.commands.openProject(first_open=True)
 
     app.exec_()
 

@@ -13,8 +13,6 @@ environment:
   TWINE_USERNAME: ntabris
   TWINE_PASSWORD:
     secure: wZhRRgqJ8AdK4LpRBLPg8kA/udXvNrOpeMaaEGnUdUQ=
-  # use the test PyPi server until we're ready for public release
-  TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
   BUILD_DIR: "build"
 

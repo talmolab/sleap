@@ -10,9 +10,11 @@ recently trained set of models.
 The inference dialog is almost identical to the training dialog with a few key differences.
 
 The inference dialog allows you to choose a method to use for tracking
-instance identities:
+instance identities but also has a place to select the **tracker**.
 
 |tracker|
+
+See :ref:`tracking-method-details` for more information about the tracker methods and options.
 
 By default the inference dialog will use the most recently train model (or set
 of models), but if you want to choose another trained model, you can do this
@@ -68,6 +70,8 @@ Frame” command in the “Labels” menu will take you to the next frame in
 which a new track is spawned.
 
 For more tools and tips, see the :ref:`proofreading` guide.
+
+Once you're done proofreading, you'll want to :ref:`export-analysis`.
 
 .. |image0| image:: ../_static/add-video.gif
 .. |image1| image:: ../_static/video-options.gif

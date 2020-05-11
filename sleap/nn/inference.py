@@ -5,7 +5,6 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from typing import Text, Optional, List, Dict
 
 import tensorflow as tf
@@ -16,6 +15,7 @@ from sleap import util
 from sleap.nn.config import TrainingJobConfig
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker, run_tracker
+from sleap.nn.data.grouping import group_examples_iter
 from sleap.nn.data.pipelines import (
     Provider,
     Pipeline,
@@ -34,51 +34,13 @@ from sleap.nn.data.pipelines import (
     MockGlobalPeakFinder,
     KeyFilter,
     KeyRenamer,
+    KeyDeviceMover,
     PredictedCenterInstanceNormalizer,
     PartAffinityFieldInstanceGrouper,
     PointsRescaler,
 )
 
 logger = logging.getLogger(__name__)
-
-
-def group_examples(examples):
-    """
-    Group examples into dictionary.
-
-    Key is (video_ind, frame_ind), val is list of examples matching key.
-    """
-    grouped_examples = defaultdict(list)
-    for example in examples:
-        video_ind = example["video_ind"].numpy()
-        frame_ind = example["frame_ind"].numpy()
-        grouped_examples[(video_ind, frame_ind)].append(example)
-    return grouped_examples
-
-
-def group_examples_iter(examples):
-    """
-    Iterator which groups examples.
-
-    Yields ((video_ind, frame_ind), list of examples matching vid/frame).
-    """
-    last_key = None
-    batch = []
-    for example in examples:
-        video_ind = example["video_ind"].numpy()
-        frame_ind = example["frame_ind"].numpy()
-        key = (video_ind, frame_ind)
-
-        if last_key != key:
-            if batch:
-                yield last_key, batch
-            last_key = key
-            batch = [example]
-        else:
-            batch.append(example)
-
-    if batch:
-        yield key, batch
 
 
 def safely_generate(ds: tf.data.Dataset, progress: bool = True):
@@ -973,7 +935,9 @@ def make_cli_parser():
     parser = argparse.ArgumentParser()
 
     # Add args for entire pipeline
-    parser.add_argument("data_path", help="Path to video file")
+    parser.add_argument(
+        "video_path", type=str, nargs="?", default="", help="Path to video file"
+    )
     parser.add_argument(
         "-m",
         "--model",
@@ -991,6 +955,18 @@ def make_cli_parser():
         "a range separated by hyphen (e.g. 1-3, for 1,2,3). (default is entire video)",
     )
     parser.add_argument(
+        "--only-labeled-frames",
+        action="store_true",
+        default=False,
+        help="Only run inference on labeled frames (when running on labels dataset file).",
+    )
+    parser.add_argument(
+        "--only-suggested-frames",
+        action="store_true",
+        default=False,
+        help="Only run inference on suggested frames (when running on labels dataset file).",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=str,
@@ -1001,7 +977,7 @@ def make_cli_parser():
         "--labels",
         type=str,
         default=None,
-        help="Path to labels file (for re-tracking pre-existing predictions).",
+        help="Path to labels dataset file (for inference on multiple videos or for re-tracking pre-existing predictions).",
     )
 
     # TODO: better video parameters
@@ -1065,18 +1041,48 @@ def make_cli_parser():
     return parser
 
 
-def make_video_reader_from_cli(args):
-    # TODO: better support for video params
-    video_kwargs = dict(
-        dataset=vars(args).get("video.dataset"),
-        input_format=vars(args).get("video.input_format"),
-    )
+def make_video_readers_from_cli(args) -> List[VideoReader]:
+    if args.video_path:
+        # TODO: better support for video params
+        video_kwargs = dict(
+            dataset=vars(args).get("video.dataset"),
+            input_format=vars(args).get("video.input_format"),
+        )
 
-    video_reader = VideoReader.from_filepath(
-        filename=args.data_path, example_indices=args.frames, **video_kwargs
-    )
+        video_reader = VideoReader.from_filepath(
+            filename=args.video_path, example_indices=args.frames, **video_kwargs
+        )
 
-    return video_reader
+        return [video_reader]
+
+    if args.labels:
+        labels = sleap.Labels.load_file(args.labels)
+
+        readers = []
+
+        if args.only_labeled_frames:
+            user_labeled_frames = labels.user_labeled_frames
+        else:
+            user_labeled_frames = []
+
+        for video in labels.videos:
+            if args.only_labeled_frames:
+                frame_indices = [
+                    lf.frame_idx for lf in user_labeled_frames if lf.video == video
+                ]
+                readers.append(VideoReader(video=video, example_indices=frame_indices))
+            elif args.only_suggested_frames:
+                readers.append(
+                    VideoReader(
+                        video=video, example_indices=labels.get_video_suggestions(video)
+                    )
+                )
+            else:
+                readers.append(VideoReader(video=video))
+
+        return readers
+
+    raise ValueError("You must specify either video_path or labels dataset path.")
 
 
 def make_predictor_from_paths(paths) -> Predictor:
@@ -1148,11 +1154,7 @@ def make_predictor_from_models(
 
 
 def make_tracker_from_cli(policy_args):
-    tracker_name = "None"
     if "tracking" in policy_args:
-        tracker_name = policy_args["tracking"].get("tracker", "None")
-
-    if tracker_name.lower() != "none":
         tracker = Tracker.make_tracker_by_name(**policy_args["tracking"])
         return tracker
 
@@ -1164,10 +1166,17 @@ def save_predictions_from_cli(args, predicted_frames, prediction_metadata=None):
 
     if args.output:
         output_path = args.output
-    else:
-        out_dir = os.path.dirname(args.data_path)
-        out_name = os.path.basename(args.data_path) + ".predictions.slp"
+    elif args.video_path:
+        out_dir = os.path.dirname(args.video_path)
+        out_name = os.path.basename(args.video_path) + ".predictions.slp"
         output_path = os.path.join(out_dir, out_name)
+    elif args.labels:
+        out_dir = os.path.dirname(args.labels)
+        out_name = os.path.basename(args.labels) + ".predictions.slp"
+        output_path = os.path.join(out_dir, out_name)
+    else:
+        # We shouldn't ever get here but if we do, just save in working dir.
+        output_path = "predictions.slp"
 
     labels = Labels(labeled_frames=predicted_frames, provenance=prediction_metadata)
 
@@ -1196,8 +1205,7 @@ def main():
     print("System:")
     sleap.nn.system.summary()
 
-    video_reader = make_video_reader_from_cli(args)
-    print("Frames:", len(video_reader))
+    video_readers = make_video_readers_from_cli(args)
 
     # Find the specified models
     model_paths_by_head = find_heads_for_model_paths(args.models)
@@ -1225,7 +1233,11 @@ def main():
 
     # Run inference!
     t0 = time.time()
-    predicted_frames = predictor.predict(video_reader)
+    predicted_frames = []
+
+    for video_reader in video_readers:
+        video_predicted_frames = predictor.predict(video_reader)
+        predicted_frames.extend(video_predicted_frames)
 
     # Create dictionary of metadata we want to save with predictions
     prediction_metadata = dict()
@@ -1234,7 +1246,7 @@ def main():
     for scope in policy_args.keys():
         for key, val in policy_args[scope].items():
             prediction_metadata[f"{scope}.{key}"] = val
-    prediction_metadata["video.path"] = args.data_path
+    prediction_metadata["video.path"] = args.video_path
     prediction_metadata["sleap.version"] = sleap.__version__
 
     save_predictions_from_cli(args, predicted_frames, prediction_metadata)

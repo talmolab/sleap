@@ -58,8 +58,8 @@ class HDF5Video:
             "channels_first".
             This specifies whether the underlying video data is stored as:
 
-                * "channels_first": shape = (frames, channels, width, height)
-                * "channels_last": shape = (frames, width, height, channels)
+                * "channels_first": shape = (frames, channels, height, width)
+                * "channels_last": shape = (frames, height, width, channels)
         convert_range: Whether we should convert data to [0, 255]-range
     """
 
@@ -360,6 +360,10 @@ class MediaVideo:
         return self._reader_
 
     @property
+    def __frames_float(self):
+        return self.__reader.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    @property
     def test_frame(self):
         # Load if not already loaded
         if self._test_frame_ is None:
@@ -396,12 +400,7 @@ class MediaVideo:
     @property
     def frames(self):
         """See :class:`Video`."""
-        return int(self.__reader.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    @property
-    def frames_float(self):
-        """See :class:`Video`."""
-        return self.__reader.get(cv2.CAP_PROP_FRAME_COUNT)
+        return int(self.__frames_float)
 
     @property
     def channels(self):
@@ -437,7 +436,10 @@ class MediaVideo:
             if self.__reader.get(cv2.CAP_PROP_POS_FRAMES) != idx:
                 self.__reader.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
-            ret, frame = self.__reader.read()
+            success, frame = self.__reader.read()
+
+        if not success or frame is None:
+            raise KeyError(f"Unable to load frame {idx} from {self}.")
 
         if grayscale is None:
             grayscale = self.grayscale
@@ -459,16 +461,16 @@ class NumpyVideo:
     Args:
         filename: Either a file to load or a numpy array of the data.
 
-        * numpy data shape: (frames, width, height, channels)
+        * numpy data shape: (frames, height, width, channels)
     """
 
-    filename: attr.ib()
+    filename: Union[str, np.ndarray] = attr.ib()
 
     def __attrs_post_init__(self):
 
         self.__frame_idx = 0
-        self.__width_idx = 1
-        self.__height_idx = 2
+        self.__height_idx = 1
+        self.__width_idx = 2
         self.__channel_idx = 3
 
         # Handle cases where the user feeds in np.array instead of filename
@@ -899,7 +901,7 @@ class Video:
 
             * :code:`get_frame(frame_index: int) -> np.ndarray`:
               Get a single frame from the underlying video data with
-              output shape=(width, height, channels).
+              output shape=(height, width, channels).
 
     """
 
@@ -953,7 +955,7 @@ class Video:
             idx: The index of the video frame
 
         Returns:
-            The video frame with shape (width, height, channels)
+            The video frame with shape (height, width, channels)
         """
         return self.backend.get_frame(idx)
 
@@ -966,11 +968,38 @@ class Video:
 
         Returns:
             The requested video frames with shape
-            (len(idxs), width, height, channels)
+            (len(idxs), height, width, channels)
         """
         if np.isscalar(idxs):
             idxs = [idxs]
         return np.stack([self.get_frame(idx) for idx in idxs], axis=0)
+
+    def get_frames_safely(self, idxs: Iterable[int]) -> Tuple[List[int], np.ndarray]:
+        """
+        Returns list of frame indices and frames which were successfully loaded.
+
+        idxs: An iterable object that contains the indices of frames.
+
+        Returns: A tuple of (frame indices, frames), where
+            * frame indices is a subset of the specified idxs, and
+            * frames has shape (len(frame indices), height, width, channels).
+        """
+        frames = []
+        idxs_found = []
+
+        for idx in idxs:
+            try:
+                frame = self.get_frame(idx)
+            except:
+                # quietly ignore frames which we couldn't load
+                frame = None
+
+            if frame is not None:
+                frames.append(frame)
+                idxs_found.append(idx)
+
+        frames = np.stack(frames, axis=0)
+        return idxs_found, frames
 
     def __getitem__(self, idxs):
         if isinstance(idxs, slice):
@@ -1056,7 +1085,9 @@ class Video:
         *args,
         **kwargs,
     ) -> "Video":
-        """Create an instance of a SingleImageVideo from individual image file(s)."""
+        """
+        Create an instance of a SingleImageVideo from individual image file(s).
+        """
         backend = SingleImageVideo(filenames=filenames)
         if height:
             backend.height = height

@@ -222,12 +222,27 @@ class TrainingConfigsGetter:
     def get_filtered_configs(
         self, head_filter: Text, only_trained: bool = False
     ) -> List[ConfigFileInfo]:
-        return [
-            cfg_info
-            for cfg_info in self._configs
-            if cfg_info.head_name == head_filter
-            and (not only_trained or cfg_info.has_trained_model)
-        ]
+
+        cfgs_to_return = []
+        paths_included = []
+
+        for cfg_info in self._configs:
+            if cfg_info.head_name == head_filter:
+                if not only_trained or cfg_info.has_trained_model:
+                    # At this point we know that config is appropriate
+                    # for this head type and is trained if that is required.
+
+                    # We just want a single config from each model directory.
+                    # Taking the first config we see in the directory means
+                    # we'll get the *trained* config if there is one, since
+                    # it will be newer and we've sorted by desc date modified.
+
+                    cfg_dir = os.path.dirname(cfg_info.path)
+                    if cfg_dir not in paths_included:
+                        paths_included.append(cfg_dir)
+                        cfgs_to_return.append(cfg_info)
+
+        return cfgs_to_return
 
     def get_first(self) -> Optional[ConfigFileInfo]:
         if self._configs:

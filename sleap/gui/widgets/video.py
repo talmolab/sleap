@@ -1315,7 +1315,11 @@ class QtNode(QGraphicsEllipseItem):
         )
 
         if self.name is not None:
-            self.setToolTip(self.name)
+            if hasattr(self.point, "score"):
+                tt_text = f"{self.name}\n(score: {self.point.score:.2f})"
+            else:
+                tt_text = self.name
+            self.setToolTip(tt_text)
 
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 

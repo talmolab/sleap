@@ -4,6 +4,7 @@ Module that handles track-related overlays (including track color).
 from sleap.instance import Track
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
+from sleap.prefs import prefs
 
 import attr
 
@@ -161,7 +162,7 @@ class TrackTrailOverlay:
                 # Draw each segment, which each later segment (i.e., the part of
                 # trail further back from current frame) with a thinner line.
 
-                width = 2.0
+                width = prefs["trail width"]
                 for segment in segments:
                     pen.setWidthF(width)
                     path = self.map_to_qt_path(segment)

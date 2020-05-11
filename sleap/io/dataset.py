@@ -1580,6 +1580,28 @@ class Labels(MutableSequence):
                     if not okay:
                         return True  # True for stop
 
+            if not use_gui and sum(missing):
+                # If we got the same number of paths as there are videos
+                print("HERE a")
+                if len(filenames) == len(new_paths):
+                    print("HERE b")
+                    # and the file extensions match
+                    exts_match = all(
+                        (
+                            old.split(".")[-1] == new.split(".")[-1]
+                            for old, new in zip(filenames, new_paths)
+                        )
+                    )
+
+                    if exts_match:
+                        print("HERE c")
+                        # then the search paths should be a list of all the
+                        # video paths, so we can get the new path for the missing
+                        # old path.
+                        for i, filename in enumerate(filenames):
+                            if missing[i]:
+                                filenames[i] = new_paths[i]
+
             # Replace the video filenames with changes by user
             for i, item in enumerate(video_list):
                 item["backend"]["filename"] = filenames[i]
@@ -1771,7 +1793,13 @@ def find_path_using_paths(missing_path, search_paths):
         current_basename = current_basename.split("\\")[-1]
 
     # Look for file with that name in each of the search path directories
-    for path_dir in search_paths:
+    for search_path in search_paths:
+
+        if os.path.isfile(search_path):
+            path_dir = os.path.dirname(search_path)
+        else:
+            path_dir = search_path
+
         check_path = os.path.join(path_dir, current_basename)
         if os.path.exists(check_path):
             return check_path

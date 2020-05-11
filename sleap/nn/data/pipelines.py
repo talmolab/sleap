@@ -22,7 +22,7 @@ from sleap.nn.data.instance_cropping import InstanceCropper, PredictedInstanceCr
 from sleap.nn.data.confidence_maps import (
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
-    SingleInstanceConfidenceMapGenerator
+    SingleInstanceConfidenceMapGenerator,
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
 from sleap.nn.data.dataset_ops import (
@@ -32,10 +32,10 @@ from sleap.nn.data.dataset_ops import (
     Repeater,
     Prefetcher,
     Preloader,
-    LambdaFilter
+    LambdaFilter,
 )
 from sleap.nn.data.training import KeyMapper
-from sleap.nn.data.general import KeyFilter, KeyRenamer
+from sleap.nn.data.general import KeyFilter, KeyRenamer, KeyDeviceMover
 from sleap.nn.data.inference import (
     KerasModelPredictor,
     GlobalPeakFinder,
@@ -52,7 +52,7 @@ from sleap.nn.heads import (
     PartAffinityFieldsHead,
     CentroidConfmapsHead,
     CenteredInstanceConfmapsHead,
-    SingleInstanceConfmapsHead
+    SingleInstanceConfmapsHead,
 )
 
 
@@ -83,6 +83,7 @@ TRANSFORMERS = (
     PredictedCenterInstanceNormalizer,
     KeyFilter,
     KeyRenamer,
+    KeyDeviceMover,
     PartAffinityFieldInstanceGrouper,
     PointsRescaler,
 )
