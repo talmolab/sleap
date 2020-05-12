@@ -47,7 +47,8 @@ supports active learning.</p>
 <div class="section" id="getting-started-with-sleap">
 <h2>Getting started with SLEAP<a class="headerlink" href="#getting-started-with-sleap" title="Permalink to this headline">¶</a></h2>
 <p>Once you install SLEAP (see our <a class="reference internal" href="guides/installation.html#installation"><span class="std std-ref">Installation</span></a> instructions) you should start by following the step-by-step <a class="reference internal" href="tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>. This will guide you through the process of creating a project, adding videos, creating a skeleton for each animal in the video, labeling a few frames, and then training a model.</p>
-<p>You will have three choices for models: single animal, multi-animal top-down, or multi-animal bottom-up. To deal with more than one animal (multiple instances), we implement both “top-down” and “bottom-up” approaches.</p>
+<p>After installation you can also try running SLEAP on our <a class="reference external" href="https://github.com/murthylab/sleap-datasets">sample datasets</a>—this allows you to try out training and inference before you’ve labeled your own data for training.</p>
+<p>When you’re ready to train you will have three choices for models: single animal, multi-animal top-down, or multi-animal bottom-up. To deal with more than one animal (multiple instances), we implement both “top-down” and “bottom-up” approaches.</p>
 <p>In <strong>top-down</strong> mode, a network first finds each animal and then a separate network estimates the pose of each animal:</p>
 <img alt="_images/topdown_approach.jpg" src="_images/topdown_approach.jpg" />
 <p>In <strong>bottom-up</strong> mode, a network first finds all of the body parts in an image, and then another network groups them into instances using part affinity fields (<a class="reference external" href="https://arxiv.org/abs/1611.08050">Cao et al., 2017</a>):</p>
