@@ -425,7 +425,7 @@ class PredictedInstanceCropper:
     centroid_confidences_key: Text = "predicted_centroid_confidences"
     full_image_key: Text = "full_image"
     full_image_scale_key: Text = "full_image_scale"
-    keep_full_image: bool = False
+    other_keys_to_keep: List[Text] = attr.ib(factory=list)
     keep_instances_gt: bool = False
 
     @property
@@ -458,8 +458,8 @@ class PredictedInstanceCropper:
             "video_ind",
             "frame_ind",
         ]
-        if self.keep_full_image:
-            output_keys.append(self.full_image_key)
+        if self.other_keys_to_keep:
+            output_keys.extend(self.other_keys_to_keep)
         if self.keep_instances_gt:
             output_keys.append("instances")
         return output_keys
@@ -467,9 +467,9 @@ class PredictedInstanceCropper:
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         """Create a dataset that contains instance cropped data."""
         keys_to_expand = ["scale", "video_ind", "frame_ind"]
-        # keys_to_expand = ["video_ind", "frame_ind"]
-        if self.keep_full_image:
-            keys_to_expand.append(self.full_image_key)
+
+        if self.other_keys_to_keep:
+            keys_to_expand.extend(self.other_keys_to_keep)
         if self.keep_instances_gt:
             keys_to_expand.append("instances")
 
