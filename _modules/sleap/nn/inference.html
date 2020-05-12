@@ -420,7 +420,7 @@
 
     <span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Provider</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
 
-        <span class="n">keep_full_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">uses_image</span>
+        <span class="n">keep_original_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">uses_image</span>
 
         <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">data_provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -433,6 +433,15 @@
             <span class="n">new_key_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;full_image&quot;</span><span class="p">,</span> <span class="s2">&quot;full_image_scale&quot;</span><span class="p">],</span>
             <span class="n">drop_old</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">keep_original_image</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KeyRenamer</span><span class="p">(</span>
+                <span class="n">old_key_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">],</span>
+                <span class="n">new_key_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;original_image&quot;</span><span class="p">,</span> <span class="s2">&quot;original_image_scale&quot;</span><span class="p">],</span>
+                <span class="n">drop_old</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KeyDeviceMover</span><span class="p">([</span><span class="s2">&quot;original_image&quot;</span><span class="p">])</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Infer colorspace preprocessing if not explicit.</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
@@ -451,7 +460,6 @@
             <span class="n">points_key</span> <span class="o">=</span> <span class="s2">&quot;instances&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroid_model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span>
-                <span class="n">keep_full_image</span><span class="o">=</span><span class="n">keep_full_image</span><span class="p">,</span>
                 <span class="n">points_key</span><span class="o">=</span><span class="n">points_key</span><span class="p">,</span>
                 <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;full_image&quot;</span><span class="p">,</span>
                 <span class="n">scale_key</span><span class="o">=</span><span class="s2">&quot;full_image_scale&quot;</span><span class="p">,</span>
@@ -472,9 +480,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;image&quot;</span>
             <span class="p">)</span>
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span>
-                <span class="n">keep_full_image</span><span class="o">=</span><span class="n">keep_full_image</span><span class="p">,</span>
-                <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="c1"># Predict centroids using model.</span>
@@ -514,8 +520,10 @@
                 <span class="n">full_image_key</span><span class="o">=</span><span class="s2">&quot;full_image&quot;</span><span class="p">,</span>
                 <span class="n">full_image_scale_key</span><span class="o">=</span><span class="s2">&quot;full_image_scale&quot;</span><span class="p">,</span>
                 <span class="n">keep_instances_gt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmap_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="n">keep_full_image</span><span class="o">=</span><span class="n">keep_full_image</span><span class="p">,</span>
+                <span class="n">other_keys_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;original_image&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">keep_original_image</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="n">keep_original_image</span><span class="p">:</span>
+                <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KeyDeviceMover</span><span class="p">([</span><span class="s2">&quot;original_image&quot;</span><span class="p">])</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Generate ground truth centroids and crops.</span>
@@ -533,7 +541,6 @@
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCropper</span><span class="p">(</span>
                 <span class="n">crop_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">instance_cropping</span><span class="o">.</span><span class="n">crop_size</span><span class="p">,</span>
                 <span class="n">crop_height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">instance_cropping</span><span class="o">.</span><span class="n">crop_size</span><span class="p">,</span>
-                <span class="n">keep_full_image</span><span class="o">=</span><span class="n">keep_full_image</span><span class="p">,</span>
                 <span class="n">mock_centroid_confidence</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -575,8 +582,8 @@
             <span class="s2">&quot;predicted_center_instance_confidences&quot;</span><span class="p">,</span>
         <span class="p">]</span>
 
-        <span class="k">if</span> <span class="n">keep_full_image</span><span class="p">:</span>
-            <span class="n">keep_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;full_image&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">keep_original_image</span><span class="p">:</span>
+            <span class="n">keep_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;original_image&quot;</span><span class="p">)</span>
 
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KeyFilter</span><span class="p">(</span><span class="n">keep_keys</span><span class="o">=</span><span class="n">keep_keys</span><span class="p">)</span>
 
@@ -623,7 +630,7 @@
                 <span class="n">frame_examples</span><span class="o">=</span><span class="n">frame_examples</span><span class="p">,</span>
                 <span class="n">videos</span><span class="o">=</span><span class="n">data_provider</span><span class="o">.</span><span class="n">videos</span><span class="p">,</span>
                 <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span>
-                <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;full_image&quot;</span><span class="p">,</span>
+                <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;original_image&quot;</span><span class="p">,</span>
                 <span class="n">points_key</span><span class="o">=</span><span class="s2">&quot;predicted_instance&quot;</span><span class="p">,</span>
                 <span class="n">point_confidences_key</span><span class="o">=</span><span class="s2">&quot;predicted_instance_confidences&quot;</span><span class="p">,</span>
                 <span class="n">instance_score_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_confidence&quot;</span><span class="p">,</span>
@@ -1257,10 +1264,22 @@
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">test_pipeline</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">()</span>
+
         <span class="nb">print</span><span class="p">(</span><span class="n">policy_args</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
+
         <span class="nb">print</span><span class="p">(</span><span class="n">predictor</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
+
+        <span class="n">predictor</span><span class="o">.</span><span class="n">make_pipeline</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;===pipeline transformers===&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">transformer</span> <span class="ow">in</span> <span class="n">predictor</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">transformers</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">transformer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">-&gt; </span><span class="si">{</span><span class="n">transformer</span><span class="o">.</span><span class="n">input_keys</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">   </span><span class="si">{</span><span class="n">transformer</span><span class="o">.</span><span class="n">output_keys</span><span class="si">}</span><span class="s2"> -&gt;&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span>
+
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--test-pipeline arg set so stopping here.&quot;</span><span class="p">)</span>
         <span class="k">return</span>
 
