@@ -1,4 +1,4 @@
-.. _initial_labeling:
+.. _initial-labeling:
 
 Initial Labeling
 --------------------------
@@ -12,6 +12,10 @@ frames by taking the image features into account.
 For now, let's just get 20 random frames. Choose "sample" as the method and "random" as the sampling method, then click "**Generate Suggestions**".
 
 |image3|
+
+(See :ref:`suggestion-methods` for more information about the suggestion methods.)
+
+You can then move between suggested frames by double-clicking the frame information in the table or by clicking the "Prev" or "Next" buttons.
 
 Labeling the first frame
 ~~~~~~~~~~~~~~~~~~~~~~~~

@@ -12,7 +12,7 @@ MATLAB
 
 You can read this file in MATLAB like this::
 
-    occupancy_matrix = h5read('path/to/analysis.h5','/occupancy')
+    occupancy_matrix = h5read('path/to/analysis.h5','/track_occupancy')
     tracks_matrix = h5read('path/to/analysis.h5','/tracks')
 
 See `here <https://www.mathworks.com/help/matlab/ref/h5read.html>`_ for more information about working with HDF5 files in MATLAB.
@@ -24,7 +24,7 @@ To read the file in Python you'll first need to install the `h5py package <http:
 
     import h5py
     with h5py.File('path/to/analysis.h5', 'r') as f:
-        occupancy_matrix = f['occupancy'][:]
+        occupancy_matrix = f['track_occupancy'][:]
         tracks_matrix = f['tracks'][:]
 
     print(occupancy_matrix.shape)
