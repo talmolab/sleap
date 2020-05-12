@@ -387,7 +387,7 @@ class TopdownPredictor(Predictor):
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
-        keep_full_image = self.tracker and self.tracker.uses_image
+        keep_original_image = self.tracker and self.tracker.uses_image
 
         pipeline = Pipeline()
         if data_provider is not None:
@@ -400,6 +400,15 @@ class TopdownPredictor(Predictor):
             new_key_names=["full_image", "full_image_scale"],
             drop_old=False,
         )
+
+        if keep_original_image:
+            pipeline += KeyRenamer(
+                old_key_names=["image", "scale"],
+                new_key_names=["original_image", "original_image_scale"],
+                drop_old=False,
+            )
+            pipeline += KeyDeviceMover(["original_image"])
+
         if self.confmap_config is not None:
             # Infer colorspace preprocessing if not explicit.
             if not (
@@ -418,7 +427,6 @@ class TopdownPredictor(Predictor):
             points_key = "instances" if self.centroid_model is None else None
             pipeline += Resizer.from_config(
                 self.confmap_config.data.preprocessing,
-                keep_full_image=keep_full_image,
                 points_key=points_key,
                 image_key="full_image",
                 scale_key="full_image_scale",
@@ -439,9 +447,7 @@ class TopdownPredictor(Predictor):
                 self.centroid_config.data.preprocessing, image_key="image"
             )
             pipeline += Resizer.from_config(
-                self.centroid_config.data.preprocessing,
-                keep_full_image=keep_full_image,
-                points_key=None,
+                self.centroid_config.data.preprocessing, points_key=None,
             )
 
             # Predict centroids using model.
@@ -481,8 +487,10 @@ class TopdownPredictor(Predictor):
                 full_image_key="full_image",
                 full_image_scale_key="full_image_scale",
                 keep_instances_gt=self.confmap_model is None,
-                keep_full_image=keep_full_image,
+                other_keys_to_keep=["original_image"] if keep_original_image else None,
             )
+            if keep_original_image:
+                pipeline += KeyDeviceMover(["original_image"])
 
         else:
             # Generate ground truth centroids and crops.
@@ -500,7 +508,6 @@ class TopdownPredictor(Predictor):
             pipeline += InstanceCropper(
                 crop_width=self.confmap_config.data.instance_cropping.crop_size,
                 crop_height=self.confmap_config.data.instance_cropping.crop_size,
-                keep_full_image=keep_full_image,
                 mock_centroid_confidence=True,
             )
 
@@ -542,8 +549,8 @@ class TopdownPredictor(Predictor):
             "predicted_center_instance_confidences",
         ]
 
-        if keep_full_image:
-            keep_keys.append("full_image")
+        if keep_original_image:
+            keep_keys.append("original_image")
 
         pipeline += KeyFilter(keep_keys=keep_keys)
 
@@ -590,7 +597,7 @@ class TopdownPredictor(Predictor):
                 frame_examples=frame_examples,
                 videos=data_provider.videos,
                 skeleton=skeleton,
-                image_key="full_image",
+                image_key="original_image",
                 points_key="predicted_instance",
                 point_confidences_key="predicted_instance_confidences",
                 instance_score_key="predicted_centroid_confidence",
@@ -1224,10 +1231,22 @@ def main():
 
     if args.test_pipeline:
         print()
+
         print(policy_args)
         print()
+
         print(predictor)
         print()
+
+        predictor.make_pipeline()
+        print("===pipeline transformers===")
+        print()
+        for transformer in predictor.pipeline.transformers:
+            print(transformer.__class__.__name__)
+            print(f"\t-> {transformer.input_keys}")
+            print(f"\t   {transformer.output_keys} ->")
+            print()
+
         print("--test-pipeline arg set so stopping here.")
         return
 
