@@ -24,7 +24,7 @@ requirements:
 
   run:
     - python=3.6
-    - attrs
+    - attrs=19.3
     - jsonpickle=1.2
     - networkx
     - tensorflow-gpu=2.1
