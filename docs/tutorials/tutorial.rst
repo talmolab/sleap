@@ -17,8 +17,9 @@ There are three main stages of using SLEAP:
 3. Prediction and proofreading, final network predictions of body-part
    positions and proofreading of track identities in full videos.
 
+The tutorial will walk you through this entire process. You can read through the tutorial and then try running SLEAP on our `sample datasets <https://github.com/murthylab/sleap-datasets>`_—this will allow you to try out training and inference before you’ve labeled your own data for training.
+
 .. toctree::
-    :caption: Tutorials
 
     ../guides/installation
     new-project
