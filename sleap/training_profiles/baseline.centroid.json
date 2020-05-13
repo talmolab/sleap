@@ -17,7 +17,7 @@
         },
         "instance_cropping": {
             "center_on_part": "thorax",
-            "crop_size": 160,
+            "crop_size": null,
             "crop_size_detection_padding": 16
         }
     },
