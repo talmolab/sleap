@@ -645,17 +645,22 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         col3_layout = QtWidgets.QVBoxLayout()
 
         col1_layout.addWidget(self.form_widgets["data"])
-        col2_layout.addWidget(self.form_widgets["optimization"])
+        col1_layout.addWidget(self.form_widgets["optimization"])
         col2_layout.addWidget(self.form_widgets["augmentation"])
         col3_layout.addWidget(self.form_widgets["model"])
 
+        if self._receptive_field_widget:
+            col0_layout = QtWidgets.QVBoxLayout()
+            col0_layout.addWidget(self._receptive_field_widget)
+        else:
+            col0_layout = None
+
         col_layout = QtWidgets.QHBoxLayout()
+        if col0_layout:
+            col_layout.addWidget(self._layout_widget(col0_layout))
         col_layout.addWidget(self._layout_widget(col1_layout))
         col_layout.addWidget(self._layout_widget(col2_layout))
         col_layout.addWidget(self._layout_widget(col3_layout))
-
-        if self._receptive_field_widget:
-            col1_layout.addWidget(self._receptive_field_widget)
 
         # If we have an object which gets a list of config files,
         # then we'll show a menu to allow selection from the list.
