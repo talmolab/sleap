@@ -678,17 +678,22 @@
         <span class="n">col3_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
 
         <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
-        <span class="n">col2_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;optimization&quot;</span><span class="p">])</span>
+        <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;optimization&quot;</span><span class="p">])</span>
         <span class="n">col2_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;augmentation&quot;</span><span class="p">])</span>
         <span class="n">col3_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">])</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="p">:</span>
+            <span class="n">col0_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+            <span class="n">col0_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">col0_layout</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="n">col_layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">col0_layout</span><span class="p">:</span>
+            <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col0_layout</span><span class="p">))</span>
         <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col1_layout</span><span class="p">))</span>
         <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col2_layout</span><span class="p">))</span>
         <span class="n">col_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col3_layout</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="p">:</span>
-            <span class="n">col1_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_receptive_field_widget</span><span class="p">)</span>
 
         <span class="c1"># If we have an object which gets a list of config files,</span>
         <span class="c1"># then we&#39;ll show a menu to allow selection from the list.</span>
