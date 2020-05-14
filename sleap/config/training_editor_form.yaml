@@ -496,6 +496,24 @@ optimization:
   label: Initial Learning Rate
   name: optimization.initial_learning_rate
   type: sci
+
+
+
+- default: true
+  help: If True, the training will terminate automatically when the validation set loss plateaus. This can save time and compute resources when there are minimal improvements to be gained from further training, as well as to prevent training into the overfitting regime.
+  label: Stop Training on Plateau
+  name: optimization.early_stopping.stop_training_on_plateau
+  type: bool
+- default: 1e-6
+  help: Minimum absolute decrease in the loss in order to consider an epoch as not in a plateau.
+  label: Plateau Min. Delta
+  name: optimization.early_stopping.plateau_min_delta
+  type: sci
+- default: 10
+  help: Number of epochs without an improvement of at least `plateau_min_delta` in order for a plateau to be detected.
+  label: Plateau Patience
+  name: optimization.early_stopping.plateau_patience
+  type: int
 - default: true
   help: If True, online hard keypoint mining (OHKM) will be enabled. When this is
     enabled, the loss is computed per keypoint (or edge for PAFs) and sorted from
