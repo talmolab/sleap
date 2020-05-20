@@ -364,3 +364,11 @@ def test_safe_frame_loading(small_robot_mp4_vid):
 
     assert idxs == [1, 2]
     assert len(frames) == 2
+
+
+def test_numpy_video_backend():
+    vid = Video.from_numpy(np.zeros((1, 2, 3, 1)))
+    assert vid.test_frame.shape == (2, 3, 1)
+
+    vid.backend.set_video_ndarray(np.ones((2, 3, 4, 1)))
+    assert vid.get_frame(1).shape == (3, 4, 1)
