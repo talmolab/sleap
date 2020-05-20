@@ -37,7 +37,8 @@ model:
     help: Determines the number of upsampling blocks in the network.
     label: Output Stride
     name: model.backbone.hourglass.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   - default: 128
     help: ''
     label: Stem Filters
@@ -71,7 +72,8 @@ model:
     help: Determines the number of upsampling blocks in the network.
     label: Output Stride
     name: model.backbone.leap.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   - default: 64
     help: Base number of filters in the network.
     label: Filters
@@ -180,7 +182,8 @@ model:
       backbone.
     label: Output Stride
     name: model.backbone.resnet.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   type: stacked
   unet:
   - default: null
@@ -201,7 +204,8 @@ model:
     help: Determines the number of upsampling blocks in the network.
     label: Output Stride
     name: model.backbone.unet.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   - default: 64
     help: Base number of filters in the network.
     label: Filters
@@ -259,7 +263,8 @@ model:
       the cost of decreased spatial resolution.
     label: Output Stride
     name: model.heads.centered_instance.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   centroid:
   - default: null
     help: Text name of a body part (node) to use as the anchor point. If None, the
@@ -289,7 +294,8 @@ model:
       the cost of decreased spatial resolution.
     label: Output Stride
     name: model.heads.centroid.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   default: ''
   label: Heads
   multi_instance:
@@ -311,7 +317,8 @@ model:
       the cost of decreased spatial resolution.
     label: Output Stride
     name: model.heads.multi_instance.confmaps.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   - default: 1.0
     help: Scalar float used to weigh the loss term for this head during training.
       Increase this to encourage the optimization to focus on improving this specific
@@ -339,7 +346,8 @@ model:
       decreased spatial resolution.
     label: Output Stride
     name: model.heads.multi_instance.pafs.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   - default: 1.0
     help: Scalar float used to weigh the loss term for this head during training.
       Increase this to encourage the optimization to focus on improving this specific
@@ -368,7 +376,8 @@ model:
       the cost of decreased spatial resolution.
     label: Output Stride
     name: model.heads.single_instance.output_stride
-    type: int
+    type: list
+    options: 1,2,4,8,16,32,64
   type: stacked
 augmentation:
 - default: false

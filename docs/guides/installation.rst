@@ -5,11 +5,23 @@ Installation
 
 **SLEAP** is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.
 
+GPU Support
+-----------
+
+**SLEAP** relies on `TensorFlow <www.tensorflow.org>`_ for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the `TensorFlow GPU support <https://www.tensorflow.org/install/gpu>`_ documentation.
+
+(It's possible you can run TensorFlow on AMD GPUs using `AMD ROCm <https://rocmdocs.amd.com/en/latest/Deep_learning/Deep-learning.html#tensorflow-installation>`_. We haven't tried this but if you're brave enough to try and you get it to work, let us know!)
+
+Without a supported GPU you'll still be able to use **SLEAP** although training on your local machine will be very, very slow; inference will be  slower than it would be with a GPU but may be tolerable.
+
+If you don't have a supported GPU installed, we suggest using your local computer for labeling your dataset and then training models using `Google Colab <https://colab.research.google.com>`_ (free!) or an HPC cluster (if you have access to one). See our :ref:`guides` for more information about running **SLEAP** remotely.
+
 Windows
 -------
 
-Since **SLEAP** has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
-Anaconda_ Python distribution to simplify installation. If you don't already have Anaconda installed, go to the Anaconda_ website and follow their installation instructions.
+Since **SLEAP** has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the Anaconda_ Python distribution to simplify installation. Anaconda will also install the NVIDIA GPU drivers which TensorFlow needs for running on the GPU.
+
+If you don't already have Anaconda installed, go to the Anaconda_ website and follow their installation instructions.
 
 Once Anaconda_ has been installed, go to start menu and type in *Anaconda*, which should bring up a menu entry
 **Anaconda Prompt** which opens a command line with the base anaconda environment activated. One of the key
