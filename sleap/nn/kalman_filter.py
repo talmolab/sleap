@@ -266,6 +266,22 @@ class TrackKalman:
 
 def filter_frames (frames, instance_count, keep_non_tracked = False, init_len = 10):
 
+    '''
+    Attempts to track two instances using a Kalman Filter.
+
+    Args:
+        frames: The list of `LabeldFrame` objects with predictions.
+        instance_count: The number of expected instances per frame.
+        keep_non_tracked: Bool if non-tracked frames should be kept. False
+            by default.
+        init_len: The number of frames that should be used to initialize 
+            the Kalman filter.
+
+    Returns:
+        None; modifies frames in place.
+
+    '''
+
     # Initialize the filter
     kalman_filter = TrackKalman.initialize(frames[:init_len], instance_count)
 
@@ -346,5 +362,3 @@ def filter_frames (frames, instance_count, keep_non_tracked = False, init_len = 
                     
                     # Break if assigned, to avoid another assignment
                     break
-
-    return frames
