@@ -186,6 +186,8 @@ class DeleteDialog(QtWidgets.QDialog):
         # Delete the instances
         for lf, inst in lf_inst_list:
             self.context.labels.remove_instance(lf, inst, in_transaction=True)
+            if not lf.instances:
+                self.context.labels.remove(lf)
 
         # Update caches since we skipped doing this after each deletion
         self.context.labels.update_cache()

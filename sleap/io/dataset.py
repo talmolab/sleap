@@ -188,7 +188,11 @@ class LabelsDataCache:
     def remove_frame(self, frame: LabeledFrame):
         """Updates cache as needed."""
         self._lf_by_video[frame.video].remove(frame)
-        del self._frame_idx_map[frame.video][frame.frame_idx]
+        # we'll assume that there's only a single LabeledFrame for this video
+        # and frame_idx, and remove the frame_idx from the cache
+        if frame.video in self._frame_idx_map:
+            if frame.frame_idx in self._frame_idx_map[frame.video]:
+                del self._frame_idx_map[frame.video][frame.frame_idx]
 
     def remove_video(self, video: Video):
         """Updates cache as needed."""

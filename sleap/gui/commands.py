@@ -1334,6 +1334,8 @@ class InstanceDeleteCommand(EditCommand):
         # Delete the instances
         for lf, inst in lf_inst_list:
             context.labels.remove_instance(lf, inst, in_transaction=True)
+            if not lf.instances:
+                context.labels.remove(lf)
 
         # Update caches since we skipped doing this after each deletion
         context.labels.update_cache()
