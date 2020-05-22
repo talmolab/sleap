@@ -8,7 +8,7 @@ Installation
 GPU Support
 -----------
 
-**SLEAP** relies on `TensorFlow <www.tensorflow.org>`_ for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the `TensorFlow GPU support <https://www.tensorflow.org/install/gpu>`_ documentation.
+**SLEAP** relies on `TensorFlow <https://www.tensorflow.org>`_ for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the `TensorFlow GPU support <https://www.tensorflow.org/install/gpu>`_ documentation.
 
 (It's possible you can run TensorFlow on AMD GPUs using `AMD ROCm <https://rocmdocs.amd.com/en/latest/Deep_learning/Deep-learning.html#tensorflow-installation>`_. We haven't tried this but if you're brave enough to try and you get it to work, let us know!)
 
