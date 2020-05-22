@@ -35,10 +35,17 @@
   <div class="section" id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p><strong>SLEAP</strong> is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.</p>
+<div class="section" id="gpu-support">
+<h2>GPU Support<a class="headerlink" href="#gpu-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>SLEAP</strong> relies on <a class="reference external" href="www.tensorflow.org">TensorFlow</a> for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow GPU support</a> documentation.</p>
+<p>(It’s possible you can run TensorFlow on AMD GPUs using <a class="reference external" href="https://rocmdocs.amd.com/en/latest/Deep_learning/Deep-learning.html#tensorflow-installation">AMD ROCm</a>. We haven’t tried this but if you’re brave enough to try and you get it to work, let us know!)</p>
+<p>Without a supported GPU you’ll still be able to use <strong>SLEAP</strong> although training on your local machine will be very, very slow; inference will be  slower than it would be with a GPU but may be tolerable.</p>
+<p>If you don’t have a supported GPU installed, we suggest using your local computer for labeling your dataset and then training models using <a class="reference external" href="https://colab.research.google.com">Google Colab</a> (free!) or an HPC cluster (if you have access to one). See our <a class="reference internal" href="index.html#guides"><span class="std std-ref">Guides</span></a> for more information about running <strong>SLEAP</strong> remotely.</p>
+</div>
 <div class="section" id="windows">
 <h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
-<p>Since <strong>SLEAP</strong> has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the
-<a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> Python distribution to simplify installation. If you don’t already have Anaconda installed, go to the <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> website and follow their installation instructions.</p>
+<p>Since <strong>SLEAP</strong> has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> Python distribution to simplify installation. Anaconda will also install the NVIDIA GPU drivers which TensorFlow needs for running on the GPU.</p>
+<p>If you don’t already have Anaconda installed, go to the <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> website and follow their installation instructions.</p>
 <p>Once <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> has been installed, go to start menu and type in <em>Anaconda</em>, which should bring up a menu entry
 <strong>Anaconda Prompt</strong> which opens a command line with the base anaconda environment activated. One of the key
 advantages to using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">Anaconda Environments</a> is the ability to create separate Python installations (environments) for
@@ -69,7 +76,7 @@ you can run the labeling GUI by entering the following command:</p>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">sleap_env</span>
 </pre></div>
 </div>
-<p>If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow</a> with GPU support. There is no TensorFlow GPU support on MacOS X.</p>
+<p>If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing <a href="#id3"><span class="problematic" id="id4">TensorFlow_</span></a> with GPU support. There is no TensorFlow GPU support on MacOS X.</p>
 <p>You can then install SLEAP by running:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span><span class="o">==</span><span class="mf">1.0</span>
 </pre></div>
@@ -104,6 +111,7 @@ you can run the labeling GUI by entering the following command:</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#gpu-support">GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#linux-and-macos-x">Linux and MacOS X</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#developer-installation">Developer Installation</a></li>

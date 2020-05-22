@@ -435,6 +435,9 @@
             <span class="n">SetInstancePointVisibility</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="n">visible</span>
         <span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">addUserInstancesFromPredictions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">AddUserInstancesFromPredictions</span><span class="p">)</span>
+
 <div class="viewcode-block" id="CommandContext.deleteSelectedInstance"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.deleteSelectedInstance">[docs]</a>    <span class="k">def</span> <span class="nf">deleteSelectedInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Deletes currently selected instance.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">DeleteSelectedInstance</span><span class="p">)</span></div>
@@ -1367,6 +1370,8 @@
         <span class="c1"># Delete the instances</span>
         <span class="k">for</span> <span class="n">lf</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf_inst_list</span><span class="p">:</span>
             <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">,</span> <span class="n">in_transaction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">lf</span><span class="p">)</span>
 
         <span class="c1"># Update caches since we skipped doing this after each deletion</span>
         <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">update_cache</span><span class="p">()</span>
@@ -2051,6 +2056,55 @@
 
         <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">node_positions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">visible</span><span class="o">=</span><span class="n">visible</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AddUserInstancesFromPredictions"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.AddUserInstancesFromPredictions">[docs]</a><span class="k">class</span> <span class="nc">AddUserInstancesFromPredictions</span><span class="p">(</span><span class="n">EditCommand</span><span class="p">):</span>
+    <span class="n">topics</span> <span class="o">=</span> <span class="p">[</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">UpdateTopic</span><span class="o">.</span><span class="n">project_instances</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_instance_from_predicted_instance</span><span class="p">(</span>
+        <span class="n">copy_instance</span><span class="p">:</span> <span class="n">PredictedInstance</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Instance</span><span class="p">:</span>
+        <span class="c1"># create the new instance</span>
+        <span class="n">new_instance</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span>
+            <span class="n">skeleton</span><span class="o">=</span><span class="n">copy_instance</span><span class="o">.</span><span class="n">skeleton</span><span class="p">,</span>
+            <span class="n">from_predicted</span><span class="o">=</span><span class="n">copy_instance</span><span class="p">,</span>
+            <span class="n">frame</span><span class="o">=</span><span class="n">copy_instance</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># go through each node in skeleton</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">new_instance</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span><span class="p">:</span>
+            <span class="c1"># if we&#39;re copying from a skeleton that has this node</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">copy_instance</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">copy_instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">isnan</span><span class="p">():</span>
+                <span class="c1"># just copy x, y, and visible</span>
+                <span class="c1"># we don&#39;t want to copy a PredictedPoint or score attribute</span>
+                <span class="n">new_instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">copy_instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">copy_instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                    <span class="n">visible</span><span class="o">=</span><span class="n">copy_instance</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span><span class="p">,</span>
+                    <span class="n">complete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># copy the track</span>
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">track</span> <span class="o">=</span> <span class="n">copy_instance</span><span class="o">.</span><span class="n">track</span>
+
+        <span class="k">return</span> <span class="n">new_instance</span>
+
+<div class="viewcode-block" id="AddUserInstancesFromPredictions.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.AddUserInstancesFromPredictions.do_action">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">new_instances</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">unused_predictions</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unused_predictions</span>
+        <span class="k">for</span> <span class="n">predicted_instance</span> <span class="ow">in</span> <span class="n">unused_predictions</span><span class="p">:</span>
+            <span class="n">new_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">make_instance_from_predicted_instance</span><span class="p">(</span><span class="n">predicted_instance</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Add the instances</span>
+        <span class="k">for</span> <span class="n">new_instance</span> <span class="ow">in</span> <span class="n">new_instances</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">add_instance</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">],</span> <span class="n">new_instance</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

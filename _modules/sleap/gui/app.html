@@ -590,6 +590,15 @@
 
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">predictionMenu</span><span class="p">,</span>
+            <span class="s2">&quot;add instances from all frame predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Add Instances from All Predictions on Current Frame&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">addUserInstancesFromPredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">predictionMenu</span><span class="p">,</span>
             <span class="s2">&quot;delete frame predictions&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Delete Predictions on Current Frame&quot;</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteFramePredictions</span><span class="p">,</span>
