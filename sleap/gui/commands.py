@@ -402,6 +402,9 @@ class CommandContext(object):
             SetInstancePointVisibility, instance=instance, node=node, visible=visible
         )
 
+    def addUserInstancesFromPredictions(self):
+        self.execute(AddUserInstancesFromPredictions)
+
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
         self.execute(DeleteSelectedInstance)
@@ -2020,3 +2023,52 @@ class AddMissingInstanceNodes(EditCommand):
 
         for node, pos in node_positions.items():
             instance[node] = Point(x=pos[0], y=pos[1], visible=visible)
+
+
+class AddUserInstancesFromPredictions(EditCommand):
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @staticmethod
+    def make_instance_from_predicted_instance(
+        copy_instance: PredictedInstance,
+    ) -> Instance:
+        # create the new instance
+        new_instance = Instance(
+            skeleton=copy_instance.skeleton,
+            from_predicted=copy_instance,
+            frame=copy_instance.frame,
+        )
+
+        # go through each node in skeleton
+        for node in new_instance.skeleton.node_names:
+            # if we're copying from a skeleton that has this node
+            if node in copy_instance and not copy_instance[node].isnan():
+                # just copy x, y, and visible
+                # we don't want to copy a PredictedPoint or score attribute
+                new_instance[node] = Point(
+                    x=copy_instance[node].x,
+                    y=copy_instance[node].y,
+                    visible=copy_instance[node].visible,
+                    complete=False,
+                )
+
+        # copy the track
+        new_instance.track = copy_instance.track
+
+        return new_instance
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        if context.state["labeled_frame"] is None:
+            return
+
+        new_instances = []
+        unused_predictions = context.state["labeled_frame"].unused_predictions
+        for predicted_instance in unused_predictions:
+            new_instances.append(
+                cls.make_instance_from_predicted_instance(predicted_instance)
+            )
+
+        # Add the instances
+        for new_instance in new_instances:
+            context.labels.add_instance(context.state["labeled_frame"], new_instance)
