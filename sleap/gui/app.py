@@ -557,6 +557,15 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             predictionMenu,
+            "add instances from all frame predictions",
+            "Add Instances from All Predictions on Current Frame",
+            self.commands.addUserInstancesFromPredictions,
+        )
+
+        predictionMenu.addSeparator()
+
+        add_menu_item(
+            predictionMenu,
             "delete frame predictions",
             "Delete Predictions on Current Frame",
             self.commands.deleteFramePredictions,

@@ -2,6 +2,7 @@ name: sleap
 
 dependencies:
 - python=3.6
+- numpy>=1.16
 - attrs=19.3
 - jsonpickle=1.2
 - networkx

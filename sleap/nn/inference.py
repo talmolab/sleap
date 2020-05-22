@@ -100,7 +100,7 @@ def make_grouped_labeled_frame(
     img = None
     for example in frame_examples:
         if instance_score_key is None:
-            instance_scores = np.nansum(example[point_confidences_key].numpy())
+            instance_scores = np.nansum(example[point_confidences_key].numpy(), axis=-1)
         else:
             instance_scores = example[instance_score_key]
 
@@ -108,6 +108,21 @@ def make_grouped_labeled_frame(
             for points, confidences, instance_score in zip(
                 example[points_key], example[point_confidences_key], instance_scores
             ):
+                if not np.isnan(points).all():
+                    predicted_instances.append(
+                        sleap.PredictedInstance.from_arrays(
+                            points=points,
+                            point_confidences=confidences,
+                            instance_score=instance_score,
+                            skeleton=skeleton,
+                        )
+                    )
+        else:
+            points = example[points_key]
+            confidences = example[point_confidences_key]
+            instance_score = instance_scores
+
+            if not np.isnan(points).all():
                 predicted_instances.append(
                     sleap.PredictedInstance.from_arrays(
                         points=points,
@@ -116,19 +131,6 @@ def make_grouped_labeled_frame(
                         skeleton=skeleton,
                     )
                 )
-        else:
-            points = example[points_key]
-            confidences = example[point_confidences_key]
-            instance_score = instance_scores
-
-            predicted_instances.append(
-                sleap.PredictedInstance.from_arrays(
-                    points=points,
-                    point_confidences=confidences,
-                    instance_score=instance_score,
-                    skeleton=skeleton,
-                )
-            )
 
         if image_key is not None and image_key in example:
             img = example[image_key]
