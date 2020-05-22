@@ -66,11 +66,7 @@ We recommend installing SLEAP into an environment with Python 3.6. If you are us
     conda create -n sleap_env python=3.6 -y
     conda activate sleap_env
 
-If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing TensorFlow_ with GPU support. There is no TensorFlow GPU support on MacOS X.
-
-.. _TensorFlow: https://www.tensorflow.org/install/gpu
-
-
+If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing `TensorFlow with GPU support <https://www.tensorflow.org/install/gpu>`_. There is no TensorFlow GPU support on MacOS X.
 
 You can then install SLEAP by running:
 
