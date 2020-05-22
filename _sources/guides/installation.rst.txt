@@ -8,7 +8,7 @@ Installation
 GPU Support
 -----------
 
-**SLEAP** relies on `TensorFlow <www.tensorflow.org>`_ for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the `TensorFlow GPU support <https://www.tensorflow.org/install/gpu>`_ documentation.
+**SLEAP** relies on `TensorFlow <https://www.tensorflow.org>`_ for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the `TensorFlow GPU support <https://www.tensorflow.org/install/gpu>`_ documentation.
 
 (It's possible you can run TensorFlow on AMD GPUs using `AMD ROCm <https://rocmdocs.amd.com/en/latest/Deep_learning/Deep-learning.html#tensorflow-installation>`_. We haven't tried this but if you're brave enough to try and you get it to work, let us know!)
 
@@ -66,11 +66,7 @@ We recommend installing SLEAP into an environment with Python 3.6. If you are us
     conda create -n sleap_env python=3.6 -y
     conda activate sleap_env
 
-If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing TensorFlow_ with GPU support. There is no TensorFlow GPU support on MacOS X.
-
-.. _TensorFlow: https://www.tensorflow.org/install/gpu
-
-
+If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing `TensorFlow with GPU support <https://www.tensorflow.org/install/gpu>`_. There is no TensorFlow GPU support on MacOS X.
 
 You can then install SLEAP by running:
 
