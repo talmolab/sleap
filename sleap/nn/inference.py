@@ -1065,7 +1065,7 @@ def make_cli_parser():
             default_val = attr.fields_dict(predictor_class)["batch_size"].default
             parser.add_argument(
                 f"--{predictor_name}.batch_size",
-                type=float,
+                type=int,
                 default=None,
                 help=f"Batch size to use for model inference in {predictor_class.__name__} (default: {default_val}).",
             )
