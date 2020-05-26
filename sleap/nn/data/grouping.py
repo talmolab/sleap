@@ -21,16 +21,15 @@ def group_examples(examples):
 
 
 def group_examples_iter(examples):
-    """
-    Iterator which groups examples.
+    """Iterator which groups examples.
 
     Yields ((video_ind, frame_ind), list of examples matching vid/frame).
     """
     last_key = None
     batch = []
     for example in examples:
-        video_ind = example["video_ind"].numpy()
-        frame_ind = example["frame_ind"].numpy()
+        video_ind = int(example["video_ind"].numpy().squeeze())
+        frame_ind = int(example["frame_ind"].numpy().squeeze())
         key = (video_ind, frame_ind)
 
         if last_key != key:
