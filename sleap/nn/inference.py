@@ -323,6 +323,7 @@ class TopdownPredictor(Predictor):
     confmap_model: Optional[Model] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    batch_size: int = 1
     peak_threshold: float = 0.2
     integral_refinement: bool = True
     integral_patch_size: int = 7
@@ -332,6 +333,7 @@ class TopdownPredictor(Predictor):
         cls,
         centroid_model_path: Optional[Text] = None,
         confmap_model_path: Optional[Text] = None,
+        batch_size: int = 1,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 7,
@@ -382,6 +384,7 @@ class TopdownPredictor(Predictor):
             centroid_model=centroid_model,
             confmap_config=confmap_config,
             confmap_model=confmap_model,
+            batch_size=batch_size,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
@@ -449,7 +452,7 @@ class TopdownPredictor(Predictor):
                 self.centroid_config.data.preprocessing, image_key="image"
             )
             pipeline += Resizer.from_config(
-                self.centroid_config.data.preprocessing, points_key=None,
+                self.centroid_config.data.preprocessing, points_key=None
             )
 
             # Predict centroids using model.
@@ -461,7 +464,7 @@ class TopdownPredictor(Predictor):
 
             pipeline += LocalPeakFinder(
                 confmaps_stride=self.centroid_model.heads[0].output_stride,
-                peak_threshold=0.2,
+                peak_threshold=self.peak_threshold,
                 confmaps_key="predicted_centroid_confidence_maps",
                 peaks_key="predicted_centroids",
                 peak_vals_key="predicted_centroid_confidences",
@@ -515,11 +518,17 @@ class TopdownPredictor(Predictor):
 
         if self.confmap_model is not None:
             # Predict confidence maps using model.
+            if self.batch_size > 1:
+                pipeline += sleap.nn.data.pipelines.Batcher(
+                    batch_size=self.batch_size, drop_remainder=False
+                )
             pipeline += KerasModelPredictor(
                 keras_model=self.confmap_model.keras_model,
                 model_input_keys="instance_image",
                 model_output_keys="predicted_instance_confidence_maps",
             )
+            if self.batch_size > 1:
+                pipeline += sleap.nn.data.pipelines.Unbatcher()
             pipeline += GlobalPeakFinder(
                 confmaps_key="predicted_instance_confidence_maps",
                 peaks_key="predicted_center_instance_points",
@@ -527,6 +536,7 @@ class TopdownPredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 integral=self.integral_refinement,
                 integral_patch_size=self.integral_patch_size,
+                keep_confmaps=False,
             )
 
         else:
@@ -652,6 +662,7 @@ class BottomupPredictor(Predictor):
     bottomup_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
 
     @classmethod
     def from_trained_models(cls, bottomup_model_path: Text) -> "BottomupPredictor":
@@ -700,7 +711,7 @@ class BottomupPredictor(Predictor):
         )
         pipeline += LocalPeakFinder(
             confmaps_stride=self.bottomup_model.heads[0].output_stride,
-            peak_threshold=0.2,
+            peak_threshold=self.peak_threshold,
             confmaps_key="predicted_confidence_maps",
             peaks_key="predicted_peaks",
             peak_vals_key="predicted_peak_confidences",
@@ -1048,6 +1059,15 @@ def make_cli_parser():
                 type=float,
                 default=None,
                 help=f"Threshold to use when finding peaks in {predictor_class.__name__} (default: {default_val}).",
+            )
+
+        if "batch_size" in attr.fields_dict(predictor_class):
+            default_val = attr.fields_dict(predictor_class)["batch_size"].default
+            parser.add_argument(
+                f"--{predictor_name}.batch_size",
+                type=float,
+                default=None,
+                help=f"Batch size to use for model inference in {predictor_class.__name__} (default: {default_val}).",
             )
 
     # Add args for tracking
