@@ -17,6 +17,7 @@ from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
 from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
 from PySide2.QtWidgets import QMessageBox
 
+import sleap
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance
 from sleap.io.dataset import Labels
@@ -102,7 +103,8 @@ class MainWindow(QMainWindow):
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
         if value is not None:
-            super(MainWindow, self).setWindowTitle(value)
+            super(MainWindow, self).setWindowTitle(
+                f"{value} - SLEAP Label v{sleap.version.__version__}")
 
     def event(self, e: QEvent) -> bool:
         """Custom event handler.
@@ -1396,7 +1398,7 @@ def main():
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
     app = QApplication([])
-    app.setApplicationName("SLEAP Label")
+    app.setApplicationName(f"SLEAP Label v{sleap.version.__version__}")
 
     window = MainWindow(labels_path=args.labels_path)
     window.showMaximized()
