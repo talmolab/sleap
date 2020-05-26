@@ -77,7 +77,7 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
                         f"Finished {i} examples in {elapsed_time:.2f} seconds (inference + postprocessing)"
                     )
                     if elapsed_time:
-                        logger.info(f"FPS={i/elapsed_time}")
+                        logger.info(f"examples/s = {i/elapsed_time}")
 
 
 def make_grouped_labeled_frame(
@@ -621,16 +621,29 @@ class TopdownPredictor(Predictor):
         make_instances: bool = True,
         make_labels: bool = False,
     ):
+        t0_gen = time.time()
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
             lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            elapsed = time.time() - t0_gen
+            logger.info(
+                f"Predicted {len(lfs)} labeled frames in {elapsed:.3f} secs [{len(lfs)/elapsed:.1f} FPS]"
+            )
+
             if make_labels:
                 return sleap.Labels(lfs)
             else:
                 return lfs
 
-        return list(generator)
+        else:
+            examples = list(generator)
+            elapsed = time.time() - t0_gen
+            logger.info(
+                f"Predicted {len(examples)} examples in {elapsed:.3f} secs [{len(examples)/elapsed:.1f} FPS]"
+            )
+
+            return examples
 
 
 @attr.s(auto_attribs=True)
