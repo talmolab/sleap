@@ -727,8 +727,11 @@ class VideoSlider(QtWidgets.QGraphicsView):
             self._mark_labels[new_mark] = self.scene.addSimpleText(
                 mark_label_text, self._base_font
             )
+        elif new_mark.type == "track":
+            # Show tracks over tick marks
+            self._mark_items[new_mark].setZValue(2)
         else:
-            # Show in front of tick marks
+            # Show in front of tick marks and behind track lines
             self._mark_items[new_mark].setZValue(1)
 
         if update:
