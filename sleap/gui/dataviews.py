@@ -135,7 +135,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         """Overrides Qt method, returns column (attribute) names."""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return self.properties[idx]
+                return str(self.properties[idx]).title()
             elif orientation == QtCore.Qt.Vertical:
                 # Add 1 to the row index so that we index from 1 instead of 0
                 return str(idx + 1)
