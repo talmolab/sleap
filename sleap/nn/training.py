@@ -188,10 +188,16 @@ class DataReaders:
 
 def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer:
     """Set up model optimizer from config."""
-    if config.optimizer == "adam":
+    if config.optimizer.lower() == "adam":
         optimizer = tf.keras.optimizers.Adam(
             learning_rate=config.initial_learning_rate, amsgrad=True
         )
+    elif config.optimizer.lower() == "rmsprop":
+        optimizer = tf.keras.optimizers.RMSprop(
+            learning_rate=config.initial_learning_rate
+        )
+    elif config.optimizer.lower() == "sgd":
+        optimizer = tf.keras.optimizers.SGD(learning_rate=config.initial_learning_rate)
     else:
         # TODO: explicit lookup
         optimizer = config.optimizer
