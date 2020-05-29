@@ -93,6 +93,9 @@ class HDF5Video:
             self.__height_idx = 1
 
     def _load(self):
+        if self.__tried_to_load:
+            return
+
         self.__tried_to_load = True
 
         # Handle cases where the user feeds in h5.File objects instead of filename
@@ -134,6 +137,7 @@ class HDF5Video:
                 d = json_loads(
                     self.__file_h5.require_group(source_video_group).attrs["json"]
                 )
+
                 self._source_video_ = Video.cattr().structure(d, Video)
 
     @property
@@ -200,9 +204,10 @@ class HDF5Video:
             raise ValueError(f"Frame index {idx} not in original index.")
 
     @property
-    def _source_video(self) -> "HDF5Video":
-        if self.enable_source_video and hasattr(self, "_source_video_"):
-            return self._source_video_
+    def _source_video(self) -> "Video":
+        if self.enable_source_video:
+            if hasattr(self, "_source_video_") and self._source_video_:
+                return self._source_video_
         return None
 
     # The properties and methods below complete our contract with the
