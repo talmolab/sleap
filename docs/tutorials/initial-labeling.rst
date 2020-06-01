@@ -28,9 +28,9 @@ scroll-wheel to **zoom**.
 
 |image4|
 
-You can **move the entire instance** by holding down the Alt key while
-you click and drag the instance. You can **rotate the instance** by
-using the scroll-wheel while holding down the Alt key (or Option on a Mac).
+You can **move the entire instance** by holding down the Alt key (or Option on a Mac), then click 
+on a node and drag the instance. You can **rotate the instance** by holding 
+down the Alt key, then click on a node and use the scroll-wheel.
 
 For body parts that are not visible in the frame, right-click the node
 (or its name) to **toggle visibility**. The node will appear smaller to show
