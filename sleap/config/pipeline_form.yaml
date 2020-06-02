@@ -240,12 +240,12 @@ inference:
       type: list
       default: instance
       options: instance,centroid,iou
-    - name: tracking.matching
+    - name: tracking.match
       label: Matching Method
       type: list
       default: greedy
       options: greedy,hungarian
-    - name: tracking.window
+    - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
@@ -260,12 +260,12 @@ inference:
       type: list
       default: iou
       options: instance,centroid,iou
-    - name: tracking.matching
+    - name: tracking.match
       label: Matching Method
       type: list
       default: hungarian
       options: greedy,hungarian
-    - name: tracking.window
+    - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
