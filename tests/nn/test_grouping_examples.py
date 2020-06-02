@@ -1,10 +1,11 @@
 import tensorflow as tf
+import numpy as np
 from sleap.nn.data.grouping import group_examples, group_examples_iter
 
 
 class DummyTfVal(object):
     def __init__(self, val):
-        self._val = val
+        self._val = np.array(val)
 
     def numpy(self):
         return self._val
