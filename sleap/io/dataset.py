@@ -1586,9 +1586,7 @@ class Labels(MutableSequence):
 
             if not use_gui and sum(missing):
                 # If we got the same number of paths as there are videos
-                print("HERE a")
                 if len(filenames) == len(new_paths):
-                    print("HERE b")
                     # and the file extensions match
                     exts_match = all(
                         (
@@ -1598,7 +1596,6 @@ class Labels(MutableSequence):
                     )
 
                     if exts_match:
-                        print("HERE c")
                         # then the search paths should be a list of all the
                         # video paths, so we can get the new path for the missing
                         # old path.
