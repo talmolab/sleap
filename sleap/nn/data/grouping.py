@@ -14,8 +14,8 @@ def group_examples(examples):
     """
     grouped_examples = defaultdict(list)
     for example in examples:
-        video_ind = example["video_ind"].numpy()
-        frame_ind = example["frame_ind"].numpy()
+        video_ind = int(example["video_ind"].numpy().squeeze())
+        frame_ind = int(example["frame_ind"].numpy().squeeze())
         grouped_examples[(video_ind, frame_ind)].append(example)
     return grouped_examples
 
