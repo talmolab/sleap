@@ -28,9 +28,9 @@ scroll-wheel to **zoom**.
 
 |image4|
 
-You can **move the entire instance** by holding down the Alt key (or Option on a Mac), then click 
-on a node and drag the instance. You can **rotate the instance** by holding 
-down the Alt key, then click on a node and use the scroll-wheel.
+You can **move the entire instance** by holding down the Alt key (or Option on a Mac) which you then click
+on a node and drag the instance. You can **rotate the instance** by holding
+down the Alt key while you then click on a node and use the scroll-wheel.
 
 For body parts that are not visible in the frame, right-click the node
 (or its name) to **toggle visibility**. The node will appear smaller to show
@@ -58,11 +58,10 @@ Labeling more frames
 ~~~~~~~~~~~~~~~~~~~~
 
 After labeling the first frame and saving the project, it’s time to label
-more frames. Since you generated a list of suggested frames, you can go to the next frame in the labeling set by clicking “**Next**” under the list of suggested frames. Node positions will be copied from the instances in the
-prior labeled frame to increase labeling speed. Also try adding an instance by **right-clicking** on the location of the animal in the video. You'll see a pop-up menu with options for how we determine the initial node placement. Feel free to try the different options.
-
-You can also always pick a frame to label by using the seekbar under
+more frames. Since you generated a list of suggested frames, you can go to the next frame in the labeling set by clicking “**Next**” under the list of suggested frames. You can also always pick a frame to label by using the seekbar under
 the video. Suggested and labeled frames will be shown as empty and filled blue bars, respectively.
+
+When you add instances on subsequent frames, node positions will be copied from the instances in the prior labeled frame to increase labeling speed. Also try adding an instance by **right-clicking** on the location of the animal in the video. You'll see a pop-up menu with options for how we determine the initial node placement. Feel free to try the different options.
 
 There’s no need to be consistent about which animal you label with which
 instance for the case of multiple animals. For instance, suppose you
