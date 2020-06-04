@@ -110,7 +110,7 @@
                         <span class="sa">f</span><span class="s2">&quot;Finished </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> examples in </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds (inference + postprocessing)&quot;</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">elapsed_time</span><span class="p">:</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FPS=</span><span class="si">{</span><span class="n">i</span><span class="o">/</span><span class="n">elapsed_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;examples/s = </span><span class="si">{</span><span class="n">i</span><span class="o">/</span><span class="n">elapsed_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">make_grouped_labeled_frame</span><span class="p">(</span>
@@ -356,6 +356,7 @@
     <span class="n">confmap_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">tracker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tracker</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
     <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
@@ -365,6 +366,7 @@
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">centroid_model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">confmap_model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
         <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
@@ -415,6 +417,7 @@
             <span class="n">centroid_model</span><span class="o">=</span><span class="n">centroid_model</span><span class="p">,</span>
             <span class="n">confmap_config</span><span class="o">=</span><span class="n">confmap_config</span><span class="p">,</span>
             <span class="n">confmap_model</span><span class="o">=</span><span class="n">confmap_model</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">peak_threshold</span><span class="o">=</span><span class="n">peak_threshold</span><span class="p">,</span>
             <span class="n">integral_refinement</span><span class="o">=</span><span class="n">integral_refinement</span><span class="p">,</span>
             <span class="n">integral_patch_size</span><span class="o">=</span><span class="n">integral_patch_size</span><span class="p">,</span>
@@ -482,7 +485,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;image&quot;</span>
             <span class="p">)</span>
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">centroid_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">,</span> <span class="n">points_key</span><span class="o">=</span><span class="kc">None</span>
             <span class="p">)</span>
 
             <span class="c1"># Predict centroids using model.</span>
@@ -494,7 +497,7 @@
 
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">LocalPeakFinder</span><span class="p">(</span>
                 <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_model</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
-                <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">peak_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_threshold</span><span class="p">,</span>
                 <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_confidence_maps&quot;</span><span class="p">,</span>
                 <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroids&quot;</span><span class="p">,</span>
                 <span class="n">peak_vals_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_confidences&quot;</span><span class="p">,</span>
@@ -548,11 +551,17 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Predict confidence maps using model.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">Batcher</span><span class="p">(</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">)</span>
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KerasModelPredictor</span><span class="p">(</span>
                 <span class="n">keras_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmap_model</span><span class="o">.</span><span class="n">keras_model</span><span class="p">,</span>
                 <span class="n">model_input_keys</span><span class="o">=</span><span class="s2">&quot;instance_image&quot;</span><span class="p">,</span>
                 <span class="n">model_output_keys</span><span class="o">=</span><span class="s2">&quot;predicted_instance_confidence_maps&quot;</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">Unbatcher</span><span class="p">()</span>
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">GlobalPeakFinder</span><span class="p">(</span>
                 <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_instance_confidence_maps&quot;</span><span class="p">,</span>
                 <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_center_instance_points&quot;</span><span class="p">,</span>
@@ -560,6 +569,7 @@
                 <span class="n">peak_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_threshold</span><span class="p">,</span>
                 <span class="n">integral</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">integral_refinement</span><span class="p">,</span>
                 <span class="n">integral_patch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">integral_patch_size</span><span class="p">,</span>
+                <span class="n">keep_confmaps</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -654,16 +664,29 @@
         <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">make_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="n">t0_gen</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">make_instances</span> <span class="ow">or</span> <span class="n">make_labels</span><span class="p">:</span>
             <span class="n">lfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_labeled_frames_from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">)</span>
+            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0_gen</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Predicted </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span><span class="si">}</span><span class="s2"> labeled frames in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> secs [</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span><span class="o">/</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> FPS]&quot;</span>
+            <span class="p">)</span>
+
             <span class="k">if</span> <span class="n">make_labels</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">lfs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">lfs</span>
 
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span></div>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">examples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
+            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0_gen</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Predicted </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span><span class="si">}</span><span class="s2"> examples in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> secs [</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span><span class="o">/</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> FPS]&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">examples</span></div>
 
 
 <div class="viewcode-block" id="BottomupPredictor"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.BottomupPredictor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -672,6 +695,7 @@
     <span class="n">bottomup_model</span><span class="p">:</span> <span class="n">Model</span>
     <span class="n">pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">tracker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tracker</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
 
 <div class="viewcode-block" id="BottomupPredictor.from_trained_models"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.BottomupPredictor.from_trained_models">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">bottomup_model_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BottomupPredictor&quot;</span><span class="p">:</span>
@@ -720,7 +744,7 @@
         <span class="p">)</span>
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">LocalPeakFinder</span><span class="p">(</span>
             <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bottomup_model</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
-            <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_threshold</span><span class="p">,</span>
             <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_confidence_maps&quot;</span><span class="p">,</span>
             <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_peaks&quot;</span><span class="p">,</span>
             <span class="n">peak_vals_key</span><span class="o">=</span><span class="s2">&quot;predicted_peak_confidences&quot;</span><span class="p">,</span>
@@ -1070,6 +1094,15 @@
                 <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Threshold to use when finding peaks in </span><span class="si">{</span><span class="n">predictor_class</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (default: </span><span class="si">{</span><span class="n">default_val</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="k">if</span> <span class="s2">&quot;batch_size&quot;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields_dict</span><span class="p">(</span><span class="n">predictor_class</span><span class="p">):</span>
+            <span class="n">default_val</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields_dict</span><span class="p">(</span><span class="n">predictor_class</span><span class="p">)[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">predictor_name</span><span class="si">}</span><span class="s2">.batch_size&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Batch size to use for model inference in </span><span class="si">{</span><span class="n">predictor_class</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (default: </span><span class="si">{</span><span class="n">default_val</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
     <span class="c1"># Add args for tracking</span>
     <span class="n">Tracker</span><span class="o">.</span><span class="n">add_cli_parser_args</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">arg_scope</span><span class="o">=</span><span class="s2">&quot;tracking&quot;</span><span class="p">)</span>
 
@@ -1370,7 +1403,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

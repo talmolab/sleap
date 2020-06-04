@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Creating a custom training profile &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Add more training data to a project" href="merging.html" />
+    <link rel="prev" title="Run training and/or inference on Colab" href="colab.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="creating-a-custom-training-profile">
+<span id="custom-training"></span><h1>Creating a custom training profile<a class="headerlink" href="#creating-a-custom-training-profile" title="Permalink to this headline">¶</a></h1>
+<p><em>Case: You’ve created a project with training data on one computer, and you want to use a different computer for training models with custom hyperparameters.</em></p>
+<p>Hyperparameters include the model architecture, learning rate, and data augmentation settings. While model <strong>parameters</strong> are learned from your data during training, <strong>hyperparameters</strong> are not learned from your data—they have to be set before training since they control the training process.</p>
+<p>This guide will explain how to create a custom training profile but doesn’t cover how to decide what the hyperpameters should be. For more information about the hyperparameters, see our guide to <a class="reference internal" href="choosing-models.html#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
+<p>Training profiles are JSON files. The JSON format is fairly easy to read (and edit) with a text-editor and you can use the default “baseline” profiles as a starting point for creating your own training profiles. For example, take a look at the <a class="reference external" href="https://github.com/murthylab/sleap/blob/master/sleap/training_profiles/baseline.bottomup.json">baseline bottom-up profile</a> or our <a class="reference external" href="https://github.com/murthylab/sleap/blob/master/sleap/training_profiles">other baseline profiles</a>.</p>
+<p>But if this sounds intimidating, you don’t have to edit the JSON file by hand! You can use the same GUI that’s used for training on a local machine to export custom training profiles.</p>
+<p>If it isn’t open already, run SLEAP and open the SLEAP project with your training dataset. Then select the “<strong>Run Training…</strong>” command in the “<strong>Predict</strong>” menu. You’ll see the training GUI which lets you configure the pipeline type and the hyperparameters for each model:</p>
+<img alt="../_images/training-dialog.jpg" src="../_images/training-dialog.jpg" />
+<p>First pick the desired pipeline (i.e., top-down, bottom-up, or single animal). For each model in the pipeline, you’ll then see a “<strong>Model Configuration</strong>” tab—in the image above with the top-down pipeline, there’s one tab for configuring the centroid model and one for the centered instance model. Other pipelines will only have one model to configure.</p>
+<p>You can click on each model configuration tab to configure the hyperpameters for training that model:</p>
+<img alt="../_images/training-model-dialog.jpg" src="../_images/training-model-dialog.jpg" />
+<p>For advice about what you might want to customize with this dialog, see our guide to <a class="reference internal" href="choosing-models.html#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
+<p>Once you’ve configured each of your models, click the “<strong>Save configuration files…</strong>” button at the bottom of the dialog. You’ll be prompted for where to save the files. It’s a good idea to create a new folder which will contain the files since there will be multiple files exported.</p>
+<p>Wherever you selected to save your files, you’ll now have a custom training profile(s) with the settings you selected in the dialog. The filename of the training profile(s) will be:</p>
+<ul class="simple">
+<li><p><cite>multi_instance.json</cite> for a bottom-up pipeline,</p></li>
+<li><p><cite>centroid.json</cite> and <cite>centered_instance.json</cite> for a top-down pipeline, and</p></li>
+<li><p><cite>single_instance.json</cite> for a single animal pipeline.</p></li>
+</ul>
+<p>(There will also be a <cite>train-script.sh</cite> file with the command-line command you could use to train your dataset using these training profiles, and possibly an <cite>inference-script.sh</cite> file if you selected frames for inference after training.)</p>
+<p>If you’re running training on a remote machine (including Colab), copy your training profile(s) along with your training package so they’re available on the remote machine. Then call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">train</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">custom</span><span class="o">/</span><span class="n">profile</span><span class="o">.</span><span class="n">json</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">dataset</span><span class="o">.</span><span class="n">pkg</span><span class="o">.</span><span class="n">slp</span>
+</pre></div>
+</div>
+<p>for each model you want to train (where <cite>path/to/custom/profile.json</cite> should be replaced with the path to your custom training profile and <cite>path/to/dataset.pkg.slp</cite> replaced with the path to your training package). See our guide to <a class="reference internal" href="remote.html#remote-train"><span class="std std-ref">Remote training</span></a> for more details.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#getting-better-results">Getting better results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#running-remotely">Running remotely</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#all-guides">All Guides</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Guides</a><ul>
+      <li>Previous: <a href="colab.html" title="previous chapter">Run training and/or inference on Colab</a></li>
+      <li>Next: <a href="merging.html" title="next chapter">Add more training data to a project</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/guides/custom-training.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

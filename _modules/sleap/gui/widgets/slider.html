@@ -760,8 +760,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addSimpleText</span><span class="p">(</span>
                 <span class="n">mark_label_text</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span>
             <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span><span class="p">:</span>
+            <span class="c1"># Show tracks over tick marks</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Show in front of tick marks</span>
+            <span class="c1"># Show in front of tick marks and behind track lines</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
@@ -1438,7 +1441,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

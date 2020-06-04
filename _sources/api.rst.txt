@@ -78,6 +78,7 @@ Developer API
    sleap.nn.evals
    sleap.nn.heads
    sleap.nn.inference
+   sleap.nn.kalman_filter
    sleap.nn.losses
    sleap.nn.model
    sleap.nn.monitor

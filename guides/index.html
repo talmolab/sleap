@@ -46,6 +46,7 @@
 <p><a class="reference internal" href="training-package.html#training-package"><span class="std std-ref">Export a training package</span></a> when you’ve created a project with training data on one computer and you want to <strong>move your training data</strong> for training models on a different computer.</p>
 <p><a class="reference internal" href="colab.html#colab"><span class="std std-ref">Run training and/or inference on Colab</span></a> when you have a project with labeled training data and you’d like to run training or inference in a <strong>Colab</strong> notebook.</p>
 <p><a class="reference internal" href="remote.html#remote-train"><span class="std std-ref">Remote training</span></a> when you have a project with training data and you want to train on a different machine using a <strong>command-line interface</strong>.</p>
+<p><a class="reference internal" href="custom-training.html#custom-training"><span class="std std-ref">Creating a custom training profile</span></a> for creating <strong>custom training profiles</strong> (i.e., non-default model hyperparameters) from the GUI.</p>
 <p><a class="reference internal" href="remote.html#remote-inference"><span class="std std-ref">Remote inference</span></a> when you trained models and you want to run inference on a different machine using a <strong>command-line interface</strong>.</p>
 <p><a class="reference internal" href="remote.html#pretrained-weights-remote"><span class="std std-ref">Downloading pretrained weights for remote training</span></a> explains how to download pretrained weights if you’re training a network with pretrained weights on a machine without internet access.</p>
 </div>
@@ -55,7 +56,12 @@
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="choosing-models.html">Choosing a set of models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="colab.html">Run training and/or inference on Colab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="colab.html">Run training and/or inference on Colab</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="colab.html#about-colab">About Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="colab.html#moving-data-to-from-colab">Moving Data to/from Colab</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#gpu-support">GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#windows">Windows</a></li>
@@ -177,7 +183,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
