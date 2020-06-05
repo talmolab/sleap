@@ -77,7 +77,9 @@ def hungarian_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
 
 
 def greedy_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
-    """Performs greedy bipartite matching."""
+    """
+    Performs greedy bipartite matching.
+    """
 
     # Sort edges by ascending cost.
     rows, cols = np.unravel_index(np.argsort(cost_matrix, axis=None), cost_matrix.shape)
@@ -834,83 +836,111 @@ class TrackCleaner:
     iou_threshold: Optional[float] = None
 
     def run(self, frames: List["LabeledFrame"]):
-        """
-        Attempts to merge tracks for given frames.
+        cull_instances(frames, self.instance_count, self.iou_threshold)
+        connect_single_track_breaks(frames, self.instance_count)
 
-        Args:
-            frames: The list of `LabeldFrame` objects with predictions.
 
-        Returns:
-            None; modifies frames in place.
-        """
-        if not frames:
-            return
+def cull_instances(
+    frames: List["LabeledFrame"],
+    instance_count: int,
+    iou_threshold: Optional[float] = None,
+):
+    """
+    Removes instances from frames over instance per frame threshold.
 
-        frames.sort(key=lambda lf: lf.frame_idx)
+    Args:
+        frames: The list of `LabeledFrame` objects with predictions.
+        instance_count: The maximum number of instances we want per frame.
+        iou_threshold: Intersection over Union (IOU) threshold to use when
+            removing overlapping instances over target count; if None, then
+            only use score to determine which instances to remove.
 
-        lf_inst_list = []
-        # Find all frames with more instances than the desired threshold
-        for lf in frames:
-            if len(lf.predicted_instances) > self.instance_count:
-                # List of instances which we'll pare down
-                keep_instances = lf.predicted_instances
+    Returns:
+        None; modifies frames in place.
+    """
+    if not frames:
+        return
 
-                # Use NMS to remove overlapping instances over target count
-                if self.iou_threshold:
-                    keep_instances, extra_instances = nms_instances(
-                        keep_instances,
-                        iou_threshold=self.iou_threshold,
-                        target_count=self.instance_count,
-                    )
-                    # Mark for removal
-                    lf_inst_list.extend([(lf, inst) for inst in extra_instances])
+    frames.sort(key=lambda lf: lf.frame_idx)
 
-                # Use lower score to remove instances over target count
-                if len(keep_instances) > self.instance_count:
-                    # Sort by ascending score, get target number of instances
-                    # from the end of list (i.e., with highest score)
-                    extra_instances = sorted(
-                        keep_instances, key=operator.attrgetter("score")
-                    )[: -self.instance_count]
+    lf_inst_list = []
+    # Find all frames with more instances than the desired threshold
+    for lf in frames:
+        if len(lf.predicted_instances) > instance_count:
+            # List of instances which we'll pare down
+            keep_instances = lf.predicted_instances
 
-                    # Mark for removal
-                    lf_inst_list.extend([(lf, inst) for inst in extra_instances])
+            # Use NMS to remove overlapping instances over target count
+            if iou_threshold:
+                keep_instances, extra_instances = nms_instances(
+                    keep_instances,
+                    iou_threshold=iou_threshold,
+                    target_count=instance_count,
+                )
+                # Mark for removal
+                lf_inst_list.extend([(lf, inst) for inst in extra_instances])
 
-        # Remove instances over per frame threshold
-        for lf, inst in lf_inst_list:
-            lf.instances.remove(inst)
+            # Use lower score to remove instances over target count
+            if len(keep_instances) > instance_count:
+                # Sort by ascending score, get target number of instances
+                # from the end of list (i.e., with highest score)
+                extra_instances = sorted(
+                    keep_instances, key=operator.attrgetter("score")
+                )[:-instance_count]
 
-        # Move instances in new tracks into tracks that disappeared on previous frame
-        fix_track_map = dict()
-        last_good_frame_tracks = {inst.track for inst in frames[0].instances}
-        for lf in frames:
-            frame_tracks = {inst.track for inst in lf.instances}
+                # Mark for removal
+                lf_inst_list.extend([(lf, inst) for inst in extra_instances])
 
-            tracks_fixed_before = frame_tracks.intersection(set(fix_track_map.keys()))
-            if tracks_fixed_before:
-                for inst in lf.instances:
-                    if (
-                        inst.track in fix_track_map
-                        and fix_track_map[inst.track] not in frame_tracks
-                    ):
-                        inst.track = fix_track_map[inst.track]
-                        frame_tracks = {inst.track for inst in lf.instances}
+    # Remove instances over per frame threshold
+    for lf, inst in lf_inst_list:
+        lf.instances.remove(inst)
 
-            extra_tracks = frame_tracks - last_good_frame_tracks
-            missing_tracks = last_good_frame_tracks - frame_tracks
 
-            if len(extra_tracks) == 1 and len(missing_tracks) == 1:
-                for inst in lf.instances:
-                    if inst.track in extra_tracks:
-                        old_track = inst.track
-                        new_track = missing_tracks.pop()
-                        fix_track_map[old_track] = new_track
-                        inst.track = new_track
+def connect_single_track_breaks(frames: List["LabeledFrame"], instance_count: int):
+    """
+    Merges breaks in tracks by connecting single lost with single new track.
 
-                        break
-            else:
-                if len(frame_tracks) == self.instance_count:
-                    last_good_frame_tracks = frame_tracks
+    Args:
+        frames: The list of `LabeledFrame` objects with predictions.
+        instance_count: The maximum number of instances we want per frame.
+
+    Returns:
+        None; modifies frames in place.
+    """
+    if not frames:
+        return
+
+    # Move instances in new tracks into tracks that disappeared on previous frame
+    fix_track_map = dict()
+    last_good_frame_tracks = {inst.track for inst in frames[0].instances}
+    for lf in frames:
+        frame_tracks = {inst.track for inst in lf.instances}
+
+        tracks_fixed_before = frame_tracks.intersection(set(fix_track_map.keys()))
+        if tracks_fixed_before:
+            for inst in lf.instances:
+                if (
+                    inst.track in fix_track_map
+                    and fix_track_map[inst.track] not in frame_tracks
+                ):
+                    inst.track = fix_track_map[inst.track]
+                    frame_tracks = {inst.track for inst in lf.instances}
+
+        extra_tracks = frame_tracks - last_good_frame_tracks
+        missing_tracks = last_good_frame_tracks - frame_tracks
+
+        if len(extra_tracks) == 1 and len(missing_tracks) == 1:
+            for inst in lf.instances:
+                if inst.track in extra_tracks:
+                    old_track = inst.track
+                    new_track = missing_tracks.pop()
+                    fix_track_map[old_track] = new_track
+                    inst.track = new_track
+
+                    break
+        else:
+            if len(frame_tracks) == instance_count:
+                last_good_frame_tracks = frame_tracks
 
 
 def run_tracker(frames, tracker):

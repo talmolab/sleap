@@ -1,9 +1,36 @@
+import pytest
 import numpy as np
 
-from sleap.nn.tracking import nms_fast, nms_instances
+from sleap.nn.tracking import Tracker, cull_instances, nms_fast, nms_instances
 
 from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
+
+
+@pytest.mark.parametrize("tracker", ["simple", "flow"])
+@pytest.mark.parametrize("similarity", ["instance", "iou", "centroid"])
+@pytest.mark.parametrize("match", ["greedy", "hungarian"])
+@pytest.mark.parametrize("count", [0, 2])
+def test_tracker_by_name(tracker, similarity, match, count):
+    t = Tracker.make_tracker_by_name(
+        "flow", "instance", "greedy", clean_instance_count=2
+    )
+    t.track([])
+    t.final_pass([])
+
+
+def test_cull_instances(centered_pair_predictions):
+    frames = centered_pair_predictions.labeled_frames[352:360]
+    cull_instances(frames=frames, instance_count=2)
+
+    for frame in frames:
+        assert len(frame.instances) == 2
+
+    frames = centered_pair_predictions.labeled_frames[:5]
+    cull_instances(frames=frames, instance_count=1)
+
+    for frame in frames:
+        assert len(frame.instances) == 1
 
 
 def test_nms():
