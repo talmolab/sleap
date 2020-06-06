@@ -1,10 +1,35 @@
-"""This module contains evaluation utilities for measuring pose estimation accuracy."""
+"""
+Evaluation utilities for measuring pose estimation accuracy.
 
-import os
+To generate metrics, you'll need two `Labels` datasets, one with ground truth
+data and one with predicted data. The video paths in the datasets must match.
+Load both datasets and call `evaluate`, like so:
+
+> labels_gt = Labels.load_file("path/to/ground/truth.slp")
+> labels_pr = Labels.load_file("path/to/predictions.slp")
+> metrics = evaluate(labels_gt, labels_pr)
+
+`evaluate` returns a dictionary, keys are strings which name the metric,
+values are either floats or numpy arrays.
+
+A good place to start if you want to understand how well your models are
+performing is to look at:
+
+    * oks_voc.mAP
+    * vis.precision
+    * vis.recall
+    * dist.p95
+"""
+
 import numpy as np
+from typing import Any, Dict, List, Optional, Text, Tuple, Union
+
+from sleap import Labels, LabeledFrame, Instance
 
 
-def replace_path(video_list, new_paths):
+def replace_path(video_list: List[dict], new_paths: List[Text]):
+    """Replaces video paths in *unstructured* video objects."""
+
     if isinstance(new_paths, str):
         new_paths = [new_paths] * len(video_list)
 
@@ -12,14 +37,18 @@ def replace_path(video_list, new_paths):
         video["backend"]["filename"] = new_path
 
 
-def find_frame_pairs(labels_gt, labels_pr):
+def find_frame_pairs(
+    labels_gt: Labels, labels_pr: Labels
+) -> List[Tuple[LabeledFrame, LabeledFrame]]:
     frame_pairs = []
     for video_gt in labels_gt.videos:
 
         # Find matching video instance in predictions.
         video_pr = None
         for video in labels_pr.videos:
-            if isinstance(video.backend, type(video_gt.backend)) and video.matches(video_gt):
+            if isinstance(video.backend, type(video_gt.backend)) and video.matches(
+                video_gt
+            ):
                 video_pr = video
                 break
 
@@ -50,7 +79,7 @@ def find_frame_pairs(labels_gt, labels_pr):
     return frame_pairs
 
 
-def compute_instance_area(points):
+def compute_instance_area(points: np.ndarray) -> np.ndarray:
     """Computes the area of the bounding box of a set of keypoints."""
 
     if points.ndim == 2:
@@ -62,7 +91,12 @@ def compute_instance_area(points):
     return np.prod(max_pt - min_pt, axis=-1)
 
 
-def compute_oks(points_gt, points_pr, scale=None, stddev=0.025):
+def compute_oks(
+    points_gt: np.ndarray,
+    points_pr: np.ndarray,
+    scale: Optional[float] = None,
+    stddev: float = 0.025,
+) -> np.ndarray:
     """Computes the object keypoints similarity between sets of points.
 
     Args:
@@ -164,7 +198,13 @@ def compute_oks(points_gt, points_pr, scale=None, stddev=0.025):
     return oks
 
 
-def match_instances(frame_gt, frame_pr, stddev=0.025, scale=None, threshold=0):
+def match_instances(
+    frame_gt: LabeledFrame,
+    frame_pr: LabeledFrame,
+    stddev: float = 0.025,
+    scale: Optional[float] = None,
+    threshold: float = 0,
+):
     # Sort predicted instances by score.
     scores_pr = np.array(
         [
@@ -214,8 +254,13 @@ def match_instances(frame_gt, frame_pr, stddev=0.025, scale=None, threshold=0):
     return positive_pairs, false_negatives
 
 
-def match_frame_pairs(frame_pairs, stddev=0.025, scale=None, threshold=0):
-    # Match instances within each frame pair.
+def match_frame_pairs(
+    frame_pairs: List[Tuple[LabeledFrame, LabeledFrame]],
+    stddev: float = 0.025,
+    scale: Optional[float] = None,
+    threshold: float = 0,
+):
+    """Matches instances within each frame pair."""
     positive_pairs = []
     false_negatives = []
     for frame_gt, frame_pr in frame_pairs:
@@ -296,7 +341,9 @@ def compute_generalized_voc_metrics(
     }
 
 
-def compute_dists(positive_pairs):
+def compute_dists(
+    positive_pairs: List[Tuple[Instance, Instance, Any]]
+) -> np.ndarray:
     dists = []
     for instance_gt, instance_pr, _ in positive_pairs:
         points_gt = instance_gt.points_array
@@ -308,19 +355,29 @@ def compute_dists(positive_pairs):
     return dists
 
 
-def compute_dist_metrics(dists):
-    return {
+def compute_dist_metrics(dists: np.ndarray) -> dict:
+    results = {
         "dist.dists": dists,
         "dist.avg": np.nanmean(dists),
-        "dist.p50": np.percentile(dists[~np.isnan(dists)], 50),
-        "dist.p75": np.percentile(dists[~np.isnan(dists)], 75),
-        "dist.p90": np.percentile(dists[~np.isnan(dists)], 90),
-        "dist.p95": np.percentile(dists[~np.isnan(dists)], 95),
-        "dist.p99": np.percentile(dists[~np.isnan(dists)], 99),
+        "dist.p50": np.nan,
+        "dist.p75": np.nan,
+        "dist.p90": np.nan,
+        "dist.p95": np.nan,
+        "dist.p99": np.nan,
     }
 
+    is_non_nan = ~np.isnan(dists)
+    if np.any(is_non_nan):
+        non_nans = dists[is_non_nan]
+        for ptile in (50, 75, 90, 95, 99):
+            results[f"dist.p{ptile}"] = np.percentile(non_nans, ptile)
 
-def compute_pck_metrics(dists, thresholds=np.linspace(1, 10, 10)):
+    return results
+
+
+def compute_pck_metrics(
+    dists: np.ndarray, thresholds=np.linspace(1, 10, 10)
+) -> dict:
 
     dists = np.copy(dists)
     dists[np.isnan(dists)] = np.inf
@@ -336,7 +393,9 @@ def compute_pck_metrics(dists, thresholds=np.linspace(1, 10, 10)):
     }
 
 
-def compute_visibility_conf(positive_pairs):
+def compute_visibility_conf(
+    positive_pairs: List[Tuple[Instance, Instance, Any]]
+) -> Dict[Text, float]:
 
     vis_tp = 0
     vis_fn = 0
@@ -357,20 +416,47 @@ def compute_visibility_conf(positive_pairs):
         "vis.fp": vis_fp,
         "vis.tn": vis_tn,
         "vis.fn": vis_fn,
-        "vis.precision": vis_tp / (vis_tp + vis_fp),
-        "vis.recall": vis_tp / (vis_tp + vis_fn),
+        "vis.precision": vis_tp / (vis_tp + vis_fp) if (vis_tp + vis_fp) else np.nan,
+        "vis.recall": vis_tp / (vis_tp + vis_fn) if (vis_tp + vis_fn) else np.nan,
     }
 
 
-def evaluate(labels_gt, labels_pr, oks_stddev=0.025, oks_scale=None, match_threshold=0):
+def evaluate(
+    labels_gt: Labels,
+    labels_pr: Labels,
+    oks_stddev: float = 0.025,
+    oks_scale: Optional[float] = None,
+    match_threshold: float = 0,
+) -> Dict[Text, Union[float, np.ndarray]]:
+    """
+    Calculates all metrics from ground truth and predicted labels.
+
+    Args:
+        labels_gt: The `Labels` dataset object with ground truth labels.
+        labels_pr: The `Labels` dataset object with predicted labels.
+        oks_stddev: The standard deviation to use for calculating object
+            keypoint similarity; see `compute_oks` function for details.
+        oks_scale: The scale to use for calculating object
+            keypoint similarity; see `compute_oks` function for details.
+        match_threshold: The threshold to use on oks scores when determining
+            which instances match between ground truth and predicted frames.
+
+    Returns:
+        Dict, keys are strings, values are metrics (floats or ndarrays).
+    """
+
+    metrics = dict()
 
     frame_pairs = find_frame_pairs(labels_gt, labels_pr)
+
+    if not frame_pairs:
+        return metrics
+
     positive_pairs, false_negatives = match_frame_pairs(
         frame_pairs, stddev=oks_stddev, scale=oks_scale, threshold=match_threshold
     )
     dists = compute_dists(positive_pairs)
 
-    metrics = {}
     metrics.update(compute_visibility_conf(positive_pairs))
     metrics.update(compute_dist_metrics(dists))
     metrics.update(compute_pck_metrics(dists))
