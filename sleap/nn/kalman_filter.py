@@ -201,7 +201,7 @@ class TrackKalman:
         results = dict()
 
         # Update each Kalman filter, one per tracked identity
-        for track, filter in self.kalman_filters.items():
+        for track, kf in self.kalman_filters.items():
 
             if track_instance_matches and track in track_instance_matches:
 
@@ -221,7 +221,7 @@ class TrackKalman:
             else:
                 points_array = ma.masked
 
-            exp_mean, exp_covariance = filter.filter_update(
+            exp_mean, exp_covariance = kf.filter_update(
                 self.last_results[track]["means"],
                 self.last_results[track]["covariances"],
                 points_array,
@@ -426,6 +426,8 @@ def remove_second_bests_from_similarity_matrix(
     # Invalidate rows where best match is already invalidated or is too close
     # to second best match.
     for r in range(rows):
+        # Similar logic to the loop over columns, except for the additional
+        # check whether the best match in row is still valid.
         row = cost_matrix[r]
 
         if np.all(np.isnan(row)):
@@ -437,14 +439,7 @@ def remove_second_bests_from_similarity_matrix(
         row_min_val = row[row_min_idx]
         is_min_item_valid = row_validity_mask[row_min_idx]
 
-        # print("row", row)
-        # print("row_validity_mask", row_validity_mask)
-        # print("row_min_val", row_min_val)
-        # print("thresh", thresh)
-
         close_match_count = (row < (row_min_val + thresh)).sum()
-
-        # print("close_match_count", close_match_count)
 
         # Make sure the best match for row isn't too close to second best match
         # and hasn't already been ruled out (this would happen if the column was
@@ -458,22 +453,11 @@ def remove_second_bests_from_similarity_matrix(
             valid_match_mask[r] = False
 
     # Copy the similarity matrix (so we don't modify in place) and set invalid
-    # matches to nans.
+    # matches to specified invalid value.
     valid_similarity_matrix = np.copy(cost_matrix)
-    valid_similarity_matrix[~valid_match_mask] = np.nan
+    valid_similarity_matrix[~valid_match_mask] = invalid_val
 
     return valid_similarity_matrix
-
-
-def too_close(inst_a: Instance, inst_b: Instance, thresh: float):
-    point_difference = abs(inst_a.points - inst_b.points)
-
-    if not all(np.isnan(point_difference)):
-        point_difference_mean = np.nanmean(point_difference)
-
-        return point_difference_mean < thresh
-
-    return False
 
 
 def filter_frames(
