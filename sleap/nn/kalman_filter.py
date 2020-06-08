@@ -1,34 +1,54 @@
+"""
+Module to use Kalman filters for tracking instance identities.
+
+The Kalman filters needs a small number of frames already tracked in order
+to initialize the filters. Then you can use the module for tracking on the
+remaining frames.
+
+It's a good idea to cull the instances (i.e., N best instances per frame) before
+trying to track with the Kalman filter, since the skeleton fragments can mess
+up the filters.
+
+Usage:
+
+> filter_frames(frames, instance_count=2, node_indices=[0, 1, 2])
+"""
+import itertools
 from collections import defaultdict
-from typing import List
+from typing import Any, Dict, List, Optional, Text, Tuple
 
 import attr
 import numpy as np
 import pykalman
+
 from numpy import ma
 from pykalman import KalmanFilter
 
-from sleap.instance import Track
+from sleap import Instance, PredictedInstance, LabeledFrame, Track
 
 
 @attr.s(auto_attribs=True)
 class TrackKalman:
-    kalman_filters: List[pykalman.KalmanFilter]
-    state_means: List[list]
-    state_covariances: List[list]
-    tracks: List[str]
-    frame_tracking: List[list]
+    kalman_filters: Dict[Track, pykalman.KalmanFilter]
+    last_results: Dict[Track, Dict[Text, Any]]
+    tracks: List[Track]
     instance_count: int
+    instance_score_thresh: float
     node_indices: List[int]  # indices of rows for points to use
 
     @classmethod
-    def initialize(cls, frames: List["LabeledFrame"], instance_count: int, node_indices: List[int]) -> "TrackKalman":
+    def initialize(
+        cls,
+        frames: List[LabeledFrame],
+        instance_count: int,
+        node_indices: List[int],
+        instance_score_thresh: float = 0.3,
+    ) -> "TrackKalman":
         frame_array_dict = defaultdict(list)
 
-        kalman_filter_list = []
-        state_means_list = []
-        state_covariances_list = []
         track_list = []
-        frame_tracking_list = []
+        filters = dict()
+        last_results = dict()
 
         instances = [inst for lf in frames for inst in lf.instances]
 
@@ -39,9 +59,9 @@ class TrackKalman:
 
         for inst in instances:
             point_coords = inst.points_array[node_indices, 0:2].flatten()
-            frame_array_dict[inst.track.name].append(point_coords)
+            frame_array_dict[inst.track].append(point_coords)
 
-        for track_name, frame_array in frame_array_dict.items():
+        for track, frame_array in frame_array_dict.items():
 
             frame_array = ma.asarray(frame_array)
             frame_array = ma.masked_invalid(frame_array)
@@ -77,210 +97,399 @@ class TrackKalman:
                     [int(x == (coord_idx * 2)) for x in range(initial_frame_size * 2)]
                 )
 
+            # Make the filter for this track
             kf = KalmanFilter(
                 transition_matrices=transition_matrix,
                 observation_matrices=observation_matrix,
                 initial_state_mean=initial_state_means,
             )
-
             kf = kf.em(frame_array, n_iter=20)
-
             state_means, state_covariances = kf.filter(frame_array)
 
-            kalman_filter_list.append(kf)
-            state_means_list.append(list(state_means))
-            state_covariances_list.append(list(state_covariances))
-            track_list.append(track_name)
-            frame_tracking_list.append([track_name] * len(frames))
+            # Store necessary objects/data for this track
+            track_list.append(track)
+            filters[track] = kf
+            last_results[track] = {
+                "means": list(state_means)[-1],
+                "covariances": list(state_covariances)[-1],
+            }
 
         return cls(
-            kalman_filters=kalman_filter_list,
-            state_means=state_means_list,
-            state_covariances=state_covariances_list,
+            kalman_filters=filters,
+            last_results=last_results,
             tracks=track_list,
-            frame_tracking=frame_tracking_list,
             instance_count=instance_count,
             node_indices=node_indices,
+            instance_score_thresh=instance_score_thresh,
         )
 
-    def track_frames(self, frames):
-        pa_row_idxs = self.node_indices
-
+    def track_frames(self, frames: List[LabeledFrame]):
+        """
+        Runs tracking for every frame in list using initialized Kalman filters.
+        """
         for lf in frames:
-            smallest_distance_mean = [None] * len(self.kalman_filters)
-            smallest_distance_track = [None] * len(self.kalman_filters)
-            smallest_distance_points_array = [None] * len(self.kalman_filters)
+            # Only track predicted instances in frame
+            # (one reason is that we use predicted point score, which doesn't
+            # exist for user instances).
+            untracked_instances = lf.predicted_instances
 
-            def set_smallest(idx, dist_mean, instance):
-                points = instance.points_array[pa_row_idxs, 0:2]  # x, y
+            # Get expected positions for each track.
+            # Doesn't update "last results" since we don't want this updated
+            # until after we process the frame (below).
+            filter_results = self.update_filters(only_update_matches=False)
 
-                smallest_distance_mean[idx] = dist_mean
-                smallest_distance_track[idx] = instance.track.name
-                smallest_distance_points_array[idx] = points.flatten()
+            # Measure similarity (inverse cost) between each instance
+            # and each track, based on expected position for track.
+            sim_matrix = self.frame_cost_matrix(
+                untracked_instances=untracked_instances, filter_results=filter_results
+            )
 
-            def clear_smallest(idx, clear_mean=True):
-                if clear_mean:
-                    smallest_distance_mean[idx] = None
-                smallest_distance_points_array[idx] = ma.masked
-                smallest_distance_track[idx] = None
+            # FIXME: why all nans? is this the right thing to do?
+            if np.all(np.isnan(sim_matrix)):
+                continue
 
-            # Update each Kalman filter, one per tracked identity
-            for kalman_idx, kalman_filter in enumerate(self.kalman_filters):
+            # Only count best matches which are sufficiently better than next
+            # best match (by threshold determined from data).
+            best_vs_second_thresh = self.get_best_vs_second_threshold(
+                sim_matrix, untracked_instances
+            )
 
-                exp_mean, exp_covariance = kalman_filter.filter_update(
-                    self.state_means[kalman_idx][-1],
-                    self.state_covariances[kalman_idx][-1],
-                    ma.masked,
+            sim_matrix = remove_second_bests_from_similarity_matrix(
+                sim_matrix, thresh=best_vs_second_thresh
+            )
+
+            # Match instances to tracks based on similarity matrix.
+            track_inst_matches = self.get_track_instance_matches(
+                sim_matrix, instances=untracked_instances
+            )
+
+            # Update filters with points for each matched instance.
+            self.last_results.update(
+                self.update_filters(track_inst_matches, only_update_matches=True)
+            )
+
+            # Set tracks on matched instances
+            for track, inst in track_inst_matches.items():
+                inst.track = track
+
+    def update_filters(
+        self,
+        track_instance_matches: Optional[Dict[Track, Instance]] = None,
+        only_update_matches: bool = False,
+    ):
+        """
+        Updates state of Kalman filters.
+
+        For matching tracks to instances on a frame, we update the filters
+        to get the expected means and covariances for each tracked identity.
+
+        After matching tracks and instances on a frame, we update the filters
+        which matched with the points from the matched instance.
+
+        Args:
+            track_instance_matches: Dictionary with instance that matched to
+                each track. Only used when updating after matches for frame.
+            only_update_matches: Whether to update all filters (using
+                ma.masked as points when we don't have match) or to skip
+                updating filters without a match. Should be False when updating
+                when getting data to use for frame matching and True when
+                updating after we've determined matches.
+
+        Returns:
+            None; modifies `last_results` attribute.
+        """
+        results = dict()
+
+        # Update each Kalman filter, one per tracked identity
+        for track, filter in self.kalman_filters.items():
+
+            if track_instance_matches and track in track_instance_matches:
+
+                inst = track_instance_matches[track]
+
+                # x1, 0, y1, 0, x2, 0, y2, 0, ...
+                # points_array = np.zeros(len(self.node_indices) * 4)
+                # points_array[::2] = inst.points_array[self.node_indices, 0:2].flatten()
+                points_array = inst.points_array[self.node_indices, 0:2].flatten()
+
+                # convert to masked array
+                points_array = ma.masked_invalid(ma.asarray(points_array))
+
+            elif only_update_matches:
+                continue
+
+            else:
+                points_array = ma.masked
+
+            exp_mean, exp_covariance = filter.filter_update(
+                self.last_results[track]["means"],
+                self.last_results[track]["covariances"],
+                points_array,
+            )
+
+            # The outputs from filter_update are lists which give 4 values for
+            # for each node: x, x_velocity, y, y_velocity.
+
+            # When matching instances to tracks we just use (x, y), so make
+            # list of (x0, y0, x1, y1, ...) with (x_n, y_n) for each node.
+            exp_coord_means = np.array(exp_mean[::2])
+
+            results[track] = {
+                "means": exp_mean,
+                "covariances": exp_covariance,
+                "coordinate_means": exp_coord_means,
+            }
+
+        return results
+
+    def get_instance_points_weight(
+        self, instance: PredictedInstance
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Returns points (and weights, i.e., scores) for tracked nodes."""
+        # For predicted instances, the *full* points array will be (N, 5)
+        # where N is the number of nodes.
+        # Each row has: x, y, visible, complete, score
+        point_array = instance.get_points_array(
+            copy=True, invisible_as_nan=True, full=True
+        )
+
+        # inst_points: [x1, y1, x2, y2, ...]
+        # weights: [score1, score1, score2, score2, ...]
+        # distances: [abs(x1 - x1_hat), ...]
+        inst_points = point_array[self.node_indices, 0:2].flatten()
+        weights = point_array[self.node_indices, 4].flatten().repeat(2)
+
+        return inst_points, weights
+
+    def get_best_vs_second_threshold(
+        self, sim_matrix: np.ndarray, instances: List[PredictedInstance]
+    ) -> float:
+        """"Returns threshold to use when comparing best and second-best matches."""
+
+        # Best vs second-best threshold (see below) determined by:
+        #  cost of best best match (i.e., min for whole cost matrix),
+        #  min mean dist between relevant nodes in instances (pairwise).
+        best_best_match_cost = np.nanmin(sim_matrix)
+        min_mean_dist = self.min_mean_inst_dist(instances)
+
+        # If the mean point distance between the closest pair of instances
+        # is less than 5 pixels, make sure the best match cost is at least
+        # 5 better than the second-best cost when matching.
+        if min_mean_dist < 5:
+            best_vs_second_thresh = max(best_best_match_cost, 5)
+        else:
+            # Otherwise, use best match value as threshold since this is
+            # the minimum mean distance between actual and expected point.
+            best_vs_second_thresh = best_best_match_cost
+
+        return best_vs_second_thresh
+
+    @staticmethod
+    def instance_points_match_cost(
+        instance_points: np.ndarray,
+        instance_weights: np.ndarray,
+        expected_points: np.ndarray,
+    ) -> float:
+        """Returns match cost between instance and expected (filter) points."""
+        distances = np.absolute(expected_points - instance_points)
+
+        if all(np.isnan(distances)):
+            return np.nan
+
+        distances = ma.MaskedArray(distances, mask=np.isnan(distances))
+
+        # "cost" for matching mean point distance weighted by point score
+        return ma.average(distances, weights=instance_weights)
+
+    def min_mean_inst_dist(self, instances: List[PredictedInstance]) -> float:
+        """Returns minimum mean distance between instances compared pairwise."""
+        inst_points = dict()
+        for inst in instances:
+            inst_points[inst], _ = self.get_instance_points_weight(inst)
+
+        def pair_mean_dist(inst_a, inst_b):
+            d = np.absolute(inst_points[inst_a] - inst_points[inst_b])
+            return np.nanmean(d) if not np.all(np.isnan(d)) else np.nan
+
+        return min(
+            (
+                pair_mean_dist(inst_a, inst_b)
+                for inst_a, inst_b in itertools.combinations(instances, 2)
+            ),
+            default=np.nan,
+        )
+
+    def frame_cost_matrix(
+        self,
+        untracked_instances: List[PredictedInstance],
+        filter_results: Dict[Track, Dict[Text, Any]],
+    ) -> np.ndarray:
+        """
+        Returns full cost matrix for matches.
+
+        Instances are rows, tracks (filters) are columns.
+        """
+        # Matrix of matching similarity: [inst, track]
+        matching_similarity = np.full(
+            (len(untracked_instances), len(self.kalman_filters)), np.nan
+        )
+
+        for inst_idx, inst in enumerate(untracked_instances):
+
+            if hasattr(inst, "score") and inst.score < self.instance_score_thresh:
+                # Don't try to match to instances with sufficiently low score.
+                # FIXME: Maybe we should still do match since otherwise we might
+                #  match a track that should have matched the low scoring instance
+                #  to another instance.
+                continue
+
+            inst_points, inst_weights = self.get_instance_points_weight(inst)
+
+            for track_idx, track in enumerate(self.tracks):
+                inst_sim = self.instance_points_match_cost(
+                    inst_points,
+                    inst_weights,
+                    expected_points=filter_results[track]["coordinate_means"],
                 )
 
-                exp_coord_means = np.array(exp_mean[::2])
+                matching_similarity[inst_idx, track_idx] = inst_sim
 
-                for inst in lf.instances:
-                    if inst.score <= 0.30:
-                        if not smallest_distance_track[kalman_idx]:
-                            smallest_distance_points_array[kalman_idx] = ma.masked
-                        continue
+        return matching_similarity
 
-                    point_array = inst.get_points_array(
-                        copy=True, invisible_as_nan=True, full=True
-                    )
+    def get_track_instance_matches(
+        self, similarity_matrix: np.ndarray, instances: List[Instance]
+    ) -> Dict[Track, Instance]:
+        """
+        Greedily matches tracks to instances using similarity matrix.
+        """
+        from sleap.nn.tracking import greedy_matching
 
-                    # row of full points array: x, y, visible, complete, score
-                    inst_points = point_array[pa_row_idxs, 0:2].flatten()
-                    weights = point_array[pa_row_idxs, 4].flatten().repeat(2)
-                    distances = abs(exp_coord_means - inst_points)
+        matches = greedy_matching(similarity_matrix)
 
-                    if all(np.isnan(distances)):
-                        if not smallest_distance_track[kalman_idx]:
-                            smallest_distance_points_array[kalman_idx] = ma.masked
-                        continue
+        track_inst_match = dict()
 
-                    distances = ma.MaskedArray(distances, mask=np.isnan(distances))
-                    current_distance_mean = ma.average(distances, weights=weights)
+        for i, j in matches:
+            track = self.tracks[j]
+            inst = instances[i]
 
-                    if smallest_distance_mean[kalman_idx] is None or current_distance_mean < smallest_distance_mean[kalman_idx]:
-                        set_smallest(kalman_idx, current_distance_mean, inst)
+            track_inst_match[track] = inst
 
-            # single instance and (...?)
-            if (
-                len(lf.instances) == 1
-                and smallest_distance_track[0]
-                and smallest_distance_track[0] == smallest_distance_track[1]
-            ):
+        return track_inst_match
 
-                inst_difference = abs(smallest_distance_mean[0] - smallest_distance_mean[1])
-                inst_function = min(smallest_distance_mean)
 
-                if (inst_difference / inst_function) <= 1:
-                    # clear all
-                    for i in range(len(smallest_distance_track)):
-                        clear_smallest(i, clear_mean=False)
+def remove_second_bests_from_similarity_matrix(
+    cost_matrix: np.ndarray, thresh: float, invalid_val: float = np.nan,
+) -> np.ndarray:
+    """
+    Removes unclear matches from cost matrix.
 
-            # one distinct track and (...?)
-            if len(set(smallest_distance_track)) == 1 and smallest_distance_track[0]:
+    If the best match for a given track is too close to the second best match,
+    then this will clear all the matches for that track (and ensure that any
+    instance where that track was the best match won't be matched to another
+    track).
 
-                if smallest_distance_mean[0] < smallest_distance_mean[1]:
-                    # one instance
-                    if len(lf.instances) == 1:
-                        clear_smallest(1)
+    It removes the matches by setting the appropriate rows/columns to the
+    specified invalid_val (usually nan or inf).
 
-                    # two instances
-                    elif len(lf.instances) == 2:
-                        for inst in lf.instances:
-                            if inst.track.name != smallest_distance_track[1]:
-                                set_smallest(1, dist_mean=None, instance=inst)
-                                break
+    Args:
+        cost_matrix: This is a negative cost matrix.
+        thresh: Best match must be better than second best + threshold
+            to be valid.
+        invalid_val: Value to set invalid rows/columns to.
 
-                    # more than two instances
-                    else:
-                        clear_smallest(1)
+    Returns:
+         cost matrix with invalid matches set to specified invalid value.
+    """
 
-                else:
-                    # one instance in frame
-                    if len(lf.instances) == 1:
-                        clear_smallest(0)
+    valid_match_mask = np.full_like(cost_matrix, True, dtype=np.bool)
 
-                    # two instances
-                    elif len(lf.instances) == 2:
-                        for inst in lf.instances:
-                            if inst.track.name != smallest_distance_track[0]:
-                                set_smallest(0, dist_mean=None, instance=inst)
-                                break
+    rows, columns = cost_matrix.shape
 
-                    # more than two instances
-                    else:
-                        clear_smallest(0)
+    # Invalidate columns with best match too close to second best match.
+    for c in range(columns):
+        column = cost_matrix[:, c]
 
-            # distinct tracks
-            if (
-                smallest_distance_track[0] != smallest_distance_track[1]
-                and smallest_distance_track[0]
-                and smallest_distance_track[1]
-                and smallest_distance_mean[0]
-                and smallest_distance_mean[1]
-            ):
+        # Skip columns with all nans
+        if all(np.isnan(column)):
+            continue
 
-                point_difference = abs(smallest_distance_points_array[0] - smallest_distance_points_array[1])
+        # Get best match value for this column.
+        col_min_val = column.min()
 
-                if not all(np.isnan(point_difference)):
-                    point_difference_mean = np.nanmean(point_difference)
+        # Count the number of column within threshold of best match.
+        close_match_count = (column < (col_min_val + thresh)).sum()
 
-                    is_diff_smaller = all((point_difference_mean < dist for dist in smallest_distance_mean))
-                    if is_diff_smaller:
+        # Best match is already 1, so check if more than one close match
+        if close_match_count > 1:
+            valid_match_mask[:, c] = False
 
-                        # TODO: find id with smallest mean, clear the others?
+    # Invalidate rows where best match is already invalidated or is too close
+    # to second best match.
+    for r in range(rows):
+        row = cost_matrix[r]
 
-                        # id 0 has larger mean
-                        if smallest_distance_mean[0] > smallest_distance_mean[1]:
-                            clear_smallest(0, clear_mean=False)
+        if np.all(np.isnan(row)):
+            continue
 
-                        # id 0 has larger mean
-                        elif smallest_distance_mean[1] > smallest_distance_mean[0]:
-                            clear_smallest(1, clear_mean=False)
+        row_validity_mask = valid_match_mask[r]
 
-            # Now do the actual track assignments (?)
-            for smallest_idx in range(len(smallest_distance_track)):
-                if ma.is_masked(smallest_distance_points_array[smallest_idx]):
-                    last_mean = self.state_means[smallest_idx][-1]
-                    last_covariance = self.state_covariances[smallest_idx][-1]
-                    last_track = None
+        row_min_idx = row.argmin()
+        row_min_val = row[row_min_idx]
+        is_min_item_valid = row_validity_mask[row_min_idx]
 
-                else:
-                    points_array = ma.asarray(smallest_distance_points_array[smallest_idx])
-                    points_array = ma.masked_invalid(points_array)
+        # print("row", row)
+        # print("row_validity_mask", row_validity_mask)
+        # print("row_min_val", row_min_val)
+        # print("thresh", thresh)
 
-                    last_mean, last_covariance = self.kalman_filters[smallest_idx].filter_update(
-                        self.state_means[smallest_idx][-1],
-                        self.state_covariances[smallest_idx][-1],
-                        points_array,
-                    )
-                    last_track = smallest_distance_track[smallest_idx]
+        close_match_count = (row < (row_min_val + thresh)).sum()
 
-                self.state_means[smallest_idx].append(last_mean)
-                self.state_covariances[smallest_idx].append(last_covariance)
-                self.frame_tracking[smallest_idx].append(last_track)
+        # print("close_match_count", close_match_count)
 
-    def get_tracking_array(self):
-        return np.asarray(self.frame_tracking)
+        # Make sure the best match for row isn't too close to second best match
+        # and hasn't already been ruled out (this would happen if the column was
+        # invalidated because the best and second best matches were too close).
+        # For instance there could be a track (column) which is ruled out
+        # and an instance (row) where the best match for that *instance* is
+        # the row that's already ruled out. In this case, we want to make sure
+        # that we don't match anything (i.e., the best valid match) for that
+        # instance.
+        if close_match_count > 1 or not is_min_item_valid:
+            valid_match_mask[r] = False
+
+    # Copy the similarity matrix (so we don't modify in place) and set invalid
+    # matches to nans.
+    valid_similarity_matrix = np.copy(cost_matrix)
+    valid_similarity_matrix[~valid_match_mask] = np.nan
+
+    return valid_similarity_matrix
+
+
+def too_close(inst_a: Instance, inst_b: Instance, thresh: float):
+    point_difference = abs(inst_a.points - inst_b.points)
+
+    if not all(np.isnan(point_difference)):
+        point_difference_mean = np.nanmean(point_difference)
+
+        return point_difference_mean < thresh
+
+    return False
 
 
 def filter_frames(
-    frames: List["LabeledFrame"],
+    frames: List[LabeledFrame],
     instance_count: int,
     node_indices: List[int],
-    keep_non_tracked: bool = False,
     init_len: int = 10,
 ):
     """
     Attempts to track N instances using a Kalman Filter.
 
     Args:
-        frames: The list of `LabeldFrame` objects with predictions.
+        frames: The list of `LabeledFrame` objects with predictions.
         instance_count: The number of expected instances per frame.
         node_indices: Indices of nodes to use for tracking.
-        keep_non_tracked: Bool if non-tracked frames should be kept. False
-            by default.
-        init_len: The number of frames that should be used to initialize 
+        init_len: The number of frames that should be used to initialize
             the Kalman filter.
 
     Returns:
@@ -288,69 +497,9 @@ def filter_frames(
     """
 
     # Initialize the filter
-    kalman_filter = TrackKalman.initialize(frames[:init_len], instance_count, node_indices)
+    kalman_filter = TrackKalman.initialize(
+        frames[:init_len], instance_count, node_indices
+    )
 
     # Run the filter, frame by frame
     kalman_filter.track_frames(frames[init_len:])
-
-    # Assign the tracking array
-    tracking_array = kalman_filter.get_tracking_array()
-
-    # Create list to store the initial tracks
-    initial_tracks = [None] * tracking_array.shape[0]
-
-    # Loop the frames
-    for frame_idx, lf in enumerate(frames):
-
-        # Assign the predicted tracks
-        predicted_track_names = tracking_array[:, frame_idx]
-
-        # Check if this is the first frame
-        if frame_idx == 0:
-
-            # Loop the frame tracking data
-            for track_idx in range(len(predicted_track_names)):
-
-                # Assign the initial track name
-                initial_track_name = predicted_track_names[track_idx]
-
-                # Loop the instances
-                for inst in lf.instances:
-
-                    # Check if current instance is the correct initial track
-                    if inst.track.name == initial_track_name:
-                        initial_tracks[track_idx] = inst.track
-
-        # Create list of instances that were not tracked
-        non_tracked_instances = []
-
-        for inst in lf.instances:
-            # Check if current instances is on the predicted track
-            if inst.track.name not in predicted_track_names:
-                non_tracked_instances.append(inst)
-
-        # Clear track if we want to keep non-tracked instances
-        if keep_non_tracked:
-            for inst in non_tracked_instances:
-                inst.track = None
-
-        # Otherwise remove the non-tracked instances
-        else:
-            for non_tracked_instance in non_tracked_instances:
-                lf.instances.remove(non_tracked_instance)
-
-        # Update tracks by matching on name (FIXME)
-        for inst in lf.instances:
-
-            # Loop the frame tracking data
-            for initial_track, predicted_track_name in zip(
-                initial_tracks, predicted_track_names
-            ):
-
-                # Check if current instances is on the predicted track
-                if inst.track and inst.track.name == predicted_track_name:
-                    # Update the track assignment
-                    inst.track = initial_track
-
-                    # Break if assigned, to avoid another assignment
-                    break
