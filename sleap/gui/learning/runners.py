@@ -57,7 +57,11 @@ class VideoItemForInference(ItemForInference):
         ):
             arg_list.extend(("--video.input_format", self.video.backend.input_format))
 
-        arg_list.extend(("--frames", ",".join(map(str, self.frames))))
+        # -Y represents endpoint of [X, Y) range but inference cli expects
+        # [X, Y-1] range (so add 1 since negative).
+        frame_int_list = [i + 1 if i < 0 else i for i in self.frames]
+
+        arg_list.extend(("--frames", ",".join(map(str, frame_int_list))))
 
         return arg_list
 
@@ -87,17 +91,20 @@ class DatasetItemForInference(ItemForInference):
 @attr.s(auto_attribs=True)
 class ItemsForInference:
     items: List[ItemForInference]
+    total_frame_count: int
 
     def __len__(self):
         return len(self.items)
 
     @classmethod
-    def from_video_frames_dict(cls, video_frames_dict):
+    def from_video_frames_dict(
+        cls, video_frames_dict: Dict[Video, List[int]], total_frame_count: int
+    ):
         items = []
         for video, frames in video_frames_dict.items():
             if frames:
                 items.append(VideoItemForInference(video=video, frames=frames))
-        return cls(items=items)
+        return cls(items=items, total_frame_count=total_frame_count)
 
 
 @attr.s(auto_attribs=True)
