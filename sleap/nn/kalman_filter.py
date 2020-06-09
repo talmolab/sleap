@@ -27,6 +27,16 @@ from pykalman import KalmanFilter
 from sleap import Instance, PredictedInstance, LabeledFrame, Track
 
 
+TOO_CLOSE_DIST = 5
+
+
+@attr.s(auto_attribs=True, slots=True)
+class Match:
+    track: Track
+    instance: Instance
+    score: Optional[float] = None
+
+
 @attr.s(auto_attribs=True)
 class TrackKalman:
     kalman_filters: Dict[Track, pykalman.KalmanFilter]
@@ -140,28 +150,30 @@ class TrackKalman:
 
             # Measure similarity (inverse cost) between each instance
             # and each track, based on expected position for track.
-            sim_matrix = self.frame_cost_matrix(
+            cost_matrix = self.frame_cost_matrix(
                 untracked_instances=untracked_instances, filter_results=filter_results
             )
 
             # FIXME: why all nans? is this the right thing to do?
-            if np.all(np.isnan(sim_matrix)):
+            if np.all(np.isnan(cost_matrix)):
                 continue
 
             # Only count best matches which are sufficiently better than next
             # best match (by threshold determined from data).
             best_vs_second_thresh = self.get_best_vs_second_threshold(
-                sim_matrix, untracked_instances
+                cost_matrix, untracked_instances
             )
 
-            sim_matrix = remove_second_bests_from_similarity_matrix(
-                sim_matrix, thresh=best_vs_second_thresh
+            cost_matrix = remove_second_bests_from_cost_matrix(
+                cost_matrix, thresh=best_vs_second_thresh
             )
 
             # Match instances to tracks based on similarity matrix.
-            track_inst_matches = self.get_track_instance_matches(
-                sim_matrix, instances=untracked_instances
+            matches = self.get_track_instance_matches(
+                cost_matrix, instances=untracked_instances
             )
+
+            track_inst_matches = {match.track: match.instance for match in matches}
 
             # Update filters with points for each matched instance.
             self.last_results.update(
@@ -169,8 +181,9 @@ class TrackKalman:
             )
 
             # Set tracks on matched instances
-            for track, inst in track_inst_matches.items():
-                inst.track = track
+            for match in matches:
+                # print(f"set track to {match.track.name} ({match.score})")
+                match.instance.track = match.track
 
     def update_filters(
         self,
@@ -262,21 +275,21 @@ class TrackKalman:
         return inst_points, weights
 
     def get_best_vs_second_threshold(
-        self, sim_matrix: np.ndarray, instances: List[PredictedInstance]
+        self, cost_matrix: np.ndarray, instances: List[PredictedInstance]
     ) -> float:
         """"Returns threshold to use when comparing best and second-best matches."""
 
         # Best vs second-best threshold (see below) determined by:
         #  cost of best best match (i.e., min for whole cost matrix),
         #  min mean dist between relevant nodes in instances (pairwise).
-        best_best_match_cost = np.nanmin(sim_matrix)
+        best_best_match_cost = np.nanmin(cost_matrix)
         min_mean_dist = self.min_mean_inst_dist(instances)
 
         # If the mean point distance between the closest pair of instances
-        # is less than 5 pixels, make sure the best match cost is at least
-        # 5 better than the second-best cost when matching.
-        if min_mean_dist < 5:
-            best_vs_second_thresh = max(best_best_match_cost, 5)
+        # is less than TOO_CLOSE_DIST pixels, make sure the best match cost is at least
+        # TOO_CLOSE_DIST better than the second-best cost when matching.
+        if min_mean_dist < TOO_CLOSE_DIST:
+            best_vs_second_thresh = max(best_best_match_cost, TOO_CLOSE_DIST)
         else:
             # Otherwise, use best match value as threshold since this is
             # the minimum mean distance between actual and expected point.
@@ -357,27 +370,30 @@ class TrackKalman:
         return matching_similarity
 
     def get_track_instance_matches(
-        self, similarity_matrix: np.ndarray, instances: List[Instance]
-    ) -> Dict[Track, Instance]:
+        self, cost_matrix: np.ndarray, instances: List[Instance]
+    ) -> List[Match]:
         """
         Greedily matches tracks to instances using similarity matrix.
         """
         from sleap.nn.tracking import greedy_matching
 
-        matches = greedy_matching(similarity_matrix)
+        match_indices = greedy_matching(cost_matrix)
 
-        track_inst_match = dict()
+        matches = []
 
-        for i, j in matches:
-            track = self.tracks[j]
-            inst = instances[i]
+        for i, j in match_indices:
+            match_score = cost_matrix[i, j]
+            if np.isfinite(match_score):
+                matches.append(
+                    Match(
+                        track=self.tracks[j], instance=instances[i], score=match_score
+                    )
+                )
 
-            track_inst_match[track] = inst
-
-        return track_inst_match
+        return matches
 
 
-def remove_second_bests_from_similarity_matrix(
+def remove_second_bests_from_cost_matrix(
     cost_matrix: np.ndarray, thresh: float, invalid_val: float = np.nan,
 ) -> np.ndarray:
     """
@@ -454,10 +470,10 @@ def remove_second_bests_from_similarity_matrix(
 
     # Copy the similarity matrix (so we don't modify in place) and set invalid
     # matches to specified invalid value.
-    valid_similarity_matrix = np.copy(cost_matrix)
-    valid_similarity_matrix[~valid_match_mask] = invalid_val
+    valid_cost_matrix = np.copy(cost_matrix)
+    valid_cost_matrix[~valid_match_mask] = invalid_val
 
-    return valid_similarity_matrix
+    return valid_cost_matrix
 
 
 def filter_frames(
