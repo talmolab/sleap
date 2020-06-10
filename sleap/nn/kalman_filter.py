@@ -27,9 +27,6 @@ from pykalman import KalmanFilter
 from sleap import Instance, PredictedInstance, LabeledFrame, Track
 
 
-TOO_CLOSE_DIST = 5
-
-
 @attr.s(auto_attribs=True, slots=True)
 class Match:
     track: Track
@@ -45,6 +42,7 @@ class TrackKalman:
     instance_count: int
     instance_score_thresh: float
     node_indices: List[int]  # indices of rows for points to use
+    reset_gap_size: int
 
     @classmethod
     def initialize(
@@ -53,6 +51,7 @@ class TrackKalman:
         instance_count: int,
         node_indices: List[int],
         instance_score_thresh: float = 0.3,
+        reset_gap_size: int = 5,
     ) -> "TrackKalman":
         frame_array_dict = defaultdict(list)
 
@@ -131,12 +130,29 @@ class TrackKalman:
             instance_count=instance_count,
             node_indices=node_indices,
             instance_score_thresh=instance_score_thresh,
+            reset_gap_size=reset_gap_size,
         )
+
+    def replace_track(self, old_track: Track):
+        """
+        Replaces track identity tied to a Kalman filter.
+
+        This is used when there's a significant gap in the tracking so we're
+        no longer confident that the filter is tracking the same identity as
+        before.
+        """
+        new_track = Track(spawned_on=-1, name=old_track.name)
+        self.kalman_filters[new_track] = self.kalman_filters.pop(old_track)
+        self.tracks[self.tracks.index(old_track)] = new_track
+        if old_track in self.last_results:
+            self.last_results[new_track] = self.last_results.pop(old_track)
 
     def track_frames(self, frames: List[LabeledFrame]):
         """
         Runs tracking for every frame in list using initialized Kalman filters.
         """
+        last_frame_for_track = dict()
+
         for lf in frames:
             # Only track predicted instances in frame
             # (one reason is that we use predicted point score, which doesn't
@@ -193,6 +209,25 @@ class TrackKalman:
             for match in matches:
                 # print(f"set track to {match.track.name} ({match.score})")
                 match.instance.track = match.track
+                last_frame_for_track[match.track] = lf.frame_idx
+
+                # When tracks are reset during a gap we don't know when the
+                # track will be used first so we set spawn to -1 so we can
+                # set it correctly when the reset track is first matched.
+                if match.track.spawned_on < 0:
+                    match.track.spawned_on = lf.frame_idx
+
+            # Check how many tracks have a gap since they were last matched
+            tracks_with_gap = [
+                track
+                for track, last_frame_idx in last_frame_for_track.items()
+                if (lf.frame_idx - last_frame_idx) > self.reset_gap_size
+            ]
+            # If multiple tracks, then we want to start new tracks for each.
+            if len(tracks_with_gap) > 1:
+                for track in tracks_with_gap:
+                    self.replace_track(track)
+                    last_frame_for_track.pop(track)
 
     def update_filters(
         self,
