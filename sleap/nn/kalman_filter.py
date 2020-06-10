@@ -15,7 +15,7 @@ Usage:
 """
 import itertools
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Text, Tuple
+from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 
 import attr
 import numpy as np
@@ -160,17 +160,26 @@ class TrackKalman:
 
             # Only count best matches which are sufficiently better than next
             # best match (by threshold determined from data).
-            best_vs_second_thresh = self.get_best_vs_second_threshold(
-                cost_matrix, untracked_instances
+            min_dist_from_expected_location = float(np.nanmin(cost_matrix))
+            cost_matrix = remove_second_bests_from_cost_matrix(
+                cost_matrix, thresh=min_dist_from_expected_location
             )
 
-            cost_matrix = remove_second_bests_from_cost_matrix(
-                cost_matrix, thresh=best_vs_second_thresh
+            # Make function which determines whether instances are "too close"
+            # for one of the instances to use its second choice match.
+            # "too close" is determined by the same threshold used for
+            # making sure best match is sufficiently better than second best,
+            # i.e., the minimum (mean point) distance between any instance
+            # and any of the expected coordinates (which correspond to tracks).
+            too_close_funct = self.get_too_close_checking_function(
+                untracked_instances, dist_thresh=min_dist_from_expected_location
             )
 
             # Match instances to tracks based on similarity matrix.
             matches = self.get_track_instance_matches(
-                cost_matrix, instances=untracked_instances
+                cost_matrix,
+                instances=untracked_instances,
+                are_too_close_function=too_close_funct,
             )
 
             track_inst_matches = {match.track: match.instance for match in matches}
@@ -274,28 +283,30 @@ class TrackKalman:
 
         return inst_points, weights
 
-    def get_best_vs_second_threshold(
-        self, cost_matrix: np.ndarray, instances: List[PredictedInstance]
-    ) -> float:
-        """"Returns threshold to use when comparing best and second-best matches."""
+    def get_too_close_checking_function(
+        self, instances: List[Instance], dist_thresh: float
+    ) -> Callable:
+        """"
+        Returns a function which determines if two instances are too close.
 
-        # Best vs second-best threshold (see below) determined by:
-        #  cost of best best match (i.e., min for whole cost matrix),
-        #  min mean dist between relevant nodes in instances (pairwise).
-        best_best_match_cost = np.nanmin(cost_matrix)
-        min_mean_dist = self.min_mean_inst_dist(instances)
+        Args:
+            instances: Function should take pairs of instances in this list.
+            dist_thresh: Pairs of instances with mean point distance less
+                than this threshold count as "too close".
 
-        # If the mean point distance between the closest pair of instances
-        # is less than TOO_CLOSE_DIST pixels, make sure the best match cost is at least
-        # TOO_CLOSE_DIST better than the second-best cost when matching.
-        if min_mean_dist < TOO_CLOSE_DIST:
-            best_vs_second_thresh = max(best_best_match_cost, TOO_CLOSE_DIST)
-        else:
-            # Otherwise, use best match value as threshold since this is
-            # the minimum mean distance between actual and expected point.
-            best_vs_second_thresh = best_best_match_cost
+        Returns:
+            Function with signature (Instance, Instance) -> bool.
+        """
 
-        return best_vs_second_thresh
+        mean_distance_lookup = self.get_mean_instance_distances(instances)
+
+        def too_close_funct(inst_a: Instance, inst_b: Instance) -> bool:
+            if (inst_a, inst_b) in mean_distance_lookup:
+                return mean_distance_lookup[(inst_a, inst_b)] < dist_thresh
+            else:
+                return mean_distance_lookup[(inst_b, inst_a)] < dist_thresh
+
+        return too_close_funct
 
     @staticmethod
     def instance_points_match_cost(
@@ -314,7 +325,9 @@ class TrackKalman:
         # "cost" for matching mean point distance weighted by point score
         return ma.average(distances, weights=instance_weights)
 
-    def min_mean_inst_dist(self, instances: List[PredictedInstance]) -> float:
+    def get_mean_instance_distances(
+        self, instances: List[PredictedInstance]
+    ) -> Dict[Tuple[Instance, Instance], float]:
         """Returns minimum mean distance between instances compared pairwise."""
         inst_points = dict()
         for inst in instances:
@@ -324,13 +337,10 @@ class TrackKalman:
             d = np.absolute(inst_points[inst_a] - inst_points[inst_b])
             return np.nanmean(d) if not np.all(np.isnan(d)) else np.nan
 
-        return min(
-            (
-                pair_mean_dist(inst_a, inst_b)
-                for inst_a, inst_b in itertools.combinations(instances, 2)
-            ),
-            default=np.nan,
-        )
+        return {
+            (inst_a, inst_b): pair_mean_dist(inst_a, inst_b)
+            for inst_a, inst_b in itertools.combinations(instances, 2)
+        }
 
     def frame_cost_matrix(
         self,
@@ -370,27 +380,124 @@ class TrackKalman:
         return matching_similarity
 
     def get_track_instance_matches(
-        self, cost_matrix: np.ndarray, instances: List[Instance]
+        self,
+        cost_matrix: np.ndarray,
+        instances: List[Instance],
+        are_too_close_function: Callable,
     ) -> List[Match]:
         """
-        Greedily matches tracks to instances using similarity matrix.
+        Matches track identities (from filters) to instances in frame.
+
+        Algorithm is modified greedy matching.
+
+        Standard greedy matching:
+        0. Start with list of all possible matches, sorted by ascending cost.
+        1. Find the match with minimum cost.
+        2. Use this match.
+        3. Remove other matches from list with same row or same column.
+        4. Go back to (1).
+
+        The algorithm implemented here replaces step (2) with this:
+
+        2'. If the instance for the match would have preferred a track which
+            was already matched by another instance, then only use the match
+            under consideration now if these instances aren't "too close".
+
+        Whenever the greedy matching would assign an instance to a track that
+        wasn't its first choice (i.e., another instance was a better match for
+        the track that would have been our current instance's first choice),
+        then we make sure that the two instances aren't too close together.
+
+        The upshot is that if two nearby instances are competing for the same
+        track, then the looser won't be given its second choice (since it's more
+        likely to be a redundant instance), but if nearby instances both match
+        best to distinct tracks, both matches are used.
+
+        What counts as "too close" is determined by the `are_too_close_function`
+        argument, which should have this signature:
+
+            are_too_close_function(Instance, Instance) -> bool
         """
         from sleap.nn.tracking import greedy_matching
 
-        match_indices = greedy_matching(cost_matrix)
+        first_choice_matches_by_track = match_dict_from_match_function(
+            cost_matrix=cost_matrix,
+            row_items=instances,
+            column_items=self.tracks,
+            match_function=first_choice_matching,
+        )
 
-        matches = []
+        greedy_matches = matches_from_match_tuples(
+            match_tuples_from_match_function(
+                cost_matrix=cost_matrix,
+                row_items=instances,
+                column_items=self.tracks,
+                match_function=greedy_matching,
+            )
+        )
 
-        for i, j in match_indices:
-            match_score = cost_matrix[i, j]
-            if np.isfinite(match_score):
-                matches.append(
-                    Match(
-                        track=self.tracks[j], instance=instances[i], score=match_score
-                    )
-                )
+        good_matches = []
+        for match in greedy_matches:
+            # Check if this instance got its first choice match.
+            if match.track in first_choice_matches_by_track:
+                competing_instance = first_choice_matches_by_track[match.track]
+                if match.instance != competing_instance:
+                    # Check if instances are too close.
+                    if are_too_close_function(match.instance, competing_instance):
+                        continue
 
-        return matches
+            good_matches.append(match)
+
+        return good_matches
+
+
+def first_choice_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
+    """
+    Returns match indices where each row gets matched to best column.
+
+    The means that multiple rows might be matched to the same column.
+    """
+    row_count = len(cost_matrix)
+    best_matches_vector = cost_matrix.argmax(axis=1)
+    match_indices = list(zip(range(row_count), best_matches_vector))
+
+    return match_indices
+
+
+def match_dict_from_match_function(
+    cost_matrix: np.ndarray,
+    row_items: List[Any],
+    column_items: List[Any],
+    match_function,
+) -> Dict[Any, Any]:
+    """Dict keys are from column (tracks), values are from row (instances)."""
+    return {
+        column_items[j]: row_items[i]
+        for (i, j) in match_function(cost_matrix)
+        if np.isfinite(cost_matrix[i, j])
+    }
+
+
+def match_tuples_from_match_function(
+    cost_matrix: np.ndarray,
+    row_items: List[Any],
+    column_items: List[Any],
+    match_function,
+) -> List[Tuple[Any, Any, float]]:
+    return [
+        (row_items[i], column_items[j], cost_matrix[i, j])
+        for (i, j) in match_function(cost_matrix)
+        if np.isfinite(cost_matrix[i, j])
+    ]
+
+
+def matches_from_match_tuples(
+    match_tuples: List[Tuple[Instance, Track, float]]
+) -> List[Match]:
+    return [
+        Match(instance=inst, track=track, score=score)
+        for (inst, track, score) in match_tuples
+    ]
 
 
 def remove_second_bests_from_cost_matrix(
