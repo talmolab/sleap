@@ -190,7 +190,7 @@ class Model:
         # Make sure main and intermediate feature outputs are lists.
         if isinstance(x_main, tf.Tensor):
             x_main = [x_main]
-        if isinstance(x_mid[0], IntermediateFeature):
+        if len(x_mid) > 0 and isinstance(x_mid[0], IntermediateFeature):
             x_mid = [x_mid]
 
         # Build output layers for each head.
