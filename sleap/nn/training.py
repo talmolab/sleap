@@ -210,7 +210,7 @@ def setup_losses(config: OptimizationConfig) -> Callable[[tf.Tensor], tf.Tensor]
 
     if config.hard_keypoint_mining.online_mining:
         losses.append(OHKMLoss.from_config(config.hard_keypoint_mining))
-        logging.info(f"  OHKM enabled: {config.hard_keypoint_mining}")
+        logger.info(f"  OHKM enabled: {config.hard_keypoint_mining}")
 
     def loss_fn(y_gt, y_pr):
         loss = 0
@@ -255,7 +255,7 @@ def setup_optimization_callbacks(
                 verbose=1,
             )
         )
-    logging.info(f"  Learning rate schedule: {config.learning_rate_schedule}")
+    logger.info(f"  Learning rate schedule: {config.learning_rate_schedule}")
 
     if config.early_stopping.stop_training_on_plateau:
         callbacks.append(
@@ -267,7 +267,7 @@ def setup_optimization_callbacks(
                 verbose=1,
             )
         )
-    logging.info(f"  Early stopping: {config.early_stopping}")
+    logger.info(f"  Early stopping: {config.early_stopping}")
 
     return callbacks
 
