@@ -97,7 +97,7 @@ def test_make_multi_confmaps():
 def test_multi_confidence_map_generator(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
     multi_confmap_generator = MultiConfidenceMapGenerator(
-        sigma=3, output_stride=2, centroids=False
+        sigma=3 / 2, output_stride=2, centroids=False
     )
     ds = labels_reader.make_dataset()
     ds = multi_confmap_generator.transform_dataset(ds)
@@ -132,7 +132,7 @@ def test_multi_confidence_map_generator_centroids(min_labels):
         skeletons=labels_reader.labels.skeletons,
     )
     multi_confmap_generator = MultiConfidenceMapGenerator(
-        sigma=5, output_stride=2, centroids=True
+        sigma=5 / 2, output_stride=2, centroids=True
     )
     ds = labels_reader.make_dataset()
     ds = instance_centroid_finder.transform_dataset(ds)
@@ -164,7 +164,7 @@ def test_instance_confidence_map_generator(min_labels):
         crop_width=160, crop_height=160
     )
     instance_confmap_generator = InstanceConfidenceMapGenerator(
-        sigma=5, output_stride=2, all_instances=False
+        sigma=5 / 2, output_stride=2, all_instances=False
     )
     ds = labels_reader.make_dataset()
     ds = instance_centroid_finder.transform_dataset(ds)
@@ -198,7 +198,7 @@ def test_instance_confidence_map_generator_with_all_instances(min_labels):
         crop_width=160, crop_height=160
     )
     instance_confmap_generator = InstanceConfidenceMapGenerator(
-        sigma=5, output_stride=2, all_instances=True
+        sigma=5 / 2, output_stride=2, all_instances=True
     )
     ds = labels_reader.make_dataset()
     ds = instance_centroid_finder.transform_dataset(ds)
