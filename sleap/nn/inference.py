@@ -326,7 +326,7 @@ class TopdownPredictor(Predictor):
     batch_size: int = 1
     peak_threshold: float = 0.2
     integral_refinement: bool = True
-    integral_patch_size: int = 7
+    integral_patch_size: int = 5
 
     @classmethod
     def from_trained_models(
@@ -336,7 +336,7 @@ class TopdownPredictor(Predictor):
         batch_size: int = 1,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
-        integral_patch_size: int = 7,
+        integral_patch_size: int = 5,
     ) -> "TopdownPredictor":
         """Create predictor from saved models.
 
@@ -830,7 +830,7 @@ class SingleInstancePredictor(Predictor):
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     peak_threshold: float = 0.2
     integral_refinement: bool = True
-    integral_patch_size: int = 7
+    integral_patch_size: int = 5
 
     @classmethod
     def from_trained_models(
@@ -838,7 +838,7 @@ class SingleInstancePredictor(Predictor):
         confmap_model_path: Text,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
-        integral_patch_size: int = 7,
+        integral_patch_size: int = 5,
     ) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
         # Load confmap model.
