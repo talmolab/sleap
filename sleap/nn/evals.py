@@ -26,7 +26,21 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Text, Tuple, Union
 import logging
 import sleap
-from sleap import Labels, LabeledFrame, Instance
+from sleap import Labels, LabeledFrame, Instance, PredictedInstance
+from sleap.nn.config import (
+    TrainingJobConfig,
+    CentroidsHeadConfig,
+    CenteredInstanceConfmapsHeadConfig,
+    MultiInstanceConfig,
+    SingleInstanceConfmapsHeadConfig,
+)
+from sleap.nn.model import Model
+from sleap.nn.data.pipelines import LabelsReader
+from sleap.nn.inference import (
+    TopdownPredictor,
+    BottomupPredictor,
+    SingleInstancePredictor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -223,9 +237,7 @@ def match_instances(
     stddev: float = 0.025,
     scale: Optional[float] = None,
     threshold: float = 0,
-) -> Tuple[
-    List[Tuple[sleap.Instance, sleap.PredictedInstance, float]], List[sleap.Instance]
-]:
+) -> Tuple[List[Tuple[Instance, PredictedInstance, float]], List[Instance]]:
     """Match pairs of instances between ground truth and predictions in a frame.
 
     Args:
@@ -309,9 +321,7 @@ def match_frame_pairs(
     stddev: float = 0.025,
     scale: Optional[float] = None,
     threshold: float = 0,
-) -> Tuple[
-    List[Tuple[sleap.Instance, sleap.PredictedInstance, float]], List[sleap.Instance]
-]:
+) -> Tuple[List[Tuple[Instance, PredictedInstance, float]], List[Instance]]:
     """Match all ground truth and predicted instances within each pair of frames.
 
     This is a wrapper for `match_instances()` but operates on lists of frames.
@@ -348,8 +358,8 @@ def match_frame_pairs(
 
 
 def compute_generalized_voc_metrics(
-    positive_pairs: List[sleap.Instance, sleap.PredictedInstance, Any],
-    false_negatives: List[sleap.Instance],
+    positive_pairs: List[Tuple[Instance, PredictedInstance, Any]],
+    false_negatives: List[Instance],
     match_scores: List[float],
     match_score_thresholds: np.ndarray = np.linspace(0.5, 0.95, 10),  # 0.5:0.05:0.95
     recall_thresholds: np.ndarray = np.linspace(0, 1, 101),  # 0.0:0.01:1.00
@@ -430,7 +440,9 @@ def compute_generalized_voc_metrics(
     }
 
 
-def compute_dists(positive_pairs: List[Tuple[Instance, Instance, Any]]) -> np.ndarray:
+def compute_dists(
+    positive_pairs: List[Tuple[Instance, PredictedInstance, Any]]
+) -> np.ndarray:
     """Compute Euclidean distances between matched pairs of instances.
 
     Args:
@@ -598,12 +610,12 @@ def evaluate(
 
 
 def evaluate_model(
-    cfg: sleap.nn.config.TrainingJobConfig,
-    labels_reader: sleap.nn.data.pipelines.LabelsReader,
-    model: sleap.nn.model.Model,
+    cfg: TrainingJobConfig,
+    labels_reader: LabelsReader,
+    model: Model,
     save: bool = True,
     split_name: Text = "test",
-) -> Tuple[sleap.Labels, Dict[Text, Any]]:
+) -> Tuple[Labels, Dict[Text, Any]]:
     """Evaluate a trained model and save metrics and predictions.
 
     Args:
@@ -624,25 +636,25 @@ def evaluate_model(
     """
     # Setup predictor for evaluation.
     head_config = cfg.model.heads.which_oneof()
-    if isinstance(head_config, sleap.nn.config.CentroidsHeadConfig):
-        predictor = sleap.nn.inference.TopdownPredictor(
+    if isinstance(head_config, CentroidsHeadConfig):
+        predictor = TopdownPredictor(
             centroid_config=cfg,
             centroid_model=model,
             confmap_config=None,
             confmap_model=None,
         )
-    elif isinstance(head_config, sleap.nn.config.CenteredInstanceConfmapsHeadConfig):
-        predictor = sleap.nn.inference.TopdownPredictor(
+    elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
+        predictor = TopdownPredictor(
             centroid_config=None,
             centroid_model=None,
             confmap_config=cfg,
             confmap_model=model,
         )
-    elif isinstance(head_config, sleap.nn.config.MultiInstanceConfig):
+    elif isinstance(head_config, MultiInstanceConfig):
         predictor = sleap.nn.inference.BottomupPredictor(
             bottomup_config=cfg, bottomup_model=model
         )
-    elif isinstance(head_config, sleap.nn.config.SingleInstanceConfmapsHeadConfig):
+    elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
         predictor = sleap.nn.inference.SingleInstancePredictor(
             confmap_config=cfg, confmap_model=model
         )
@@ -664,14 +676,13 @@ def evaluate_model(
         labels_pr_path = os.path.join(
             cfg.outputs.run_path, f"labels_pr.{split_name}.slp"
         )
-        sleap.Labels.save_file(labels_pr, labels_pr_path)
+        Labels.save_file(labels_pr, labels_pr_path)
         logger.info("Saved predictions:", labels_pr_path)
 
     if metrics is not None:
         metrics_path = os.path.join(cfg.outputs.run_path, f"metrics.{split_name}.npz")
         np.savez_compressed(metrics_path, **{"metrics": metrics})
         logger.info("Saved metrics:", metrics_path)
-
-        logger.info("mAP:", metrics["oks_voc.mAP"])
+        logger.info("OKS mAP:", metrics["oks_voc.mAP"])
 
     return labels_pr, metrics
