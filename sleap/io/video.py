@@ -1382,7 +1382,9 @@ class Video:
         return vid_cattr
 
     @staticmethod
-    def fixup_path(path: str, raise_error: bool = False) -> str:
+    def fixup_path(
+        path: str, raise_error: bool = False, raise_warning: bool = False
+    ) -> str:
         """
         Tries to locate video if the given path doesn't work.
 
@@ -1401,6 +1403,7 @@ class Video:
         Args:
             path: The path the video asset.
             raise_error: Whether to raise error if we cannot find video.
+            raise_warning: Whether to raise warning if we cannot find video.
 
         Raises:
             FileNotFoundError: If file still cannot be found and raise_error
@@ -1436,5 +1439,6 @@ class Video:
         if raise_error:
             raise FileNotFoundError(f"Cannot find a video file: {path}")
         else:
-            logger.warning(f"Cannot find a video file: {path}")
+            if raise_warning:
+                logger.warning(f"Cannot find a video file: {path}")
             return path
