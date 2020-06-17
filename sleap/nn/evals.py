@@ -21,10 +21,14 @@ performing is to look at:
     * dist.p95
 """
 
+import os
 import numpy as np
 from typing import Any, Dict, List, Optional, Text, Tuple, Union
-
+import logging
+import sleap
 from sleap import Labels, LabeledFrame, Instance
+
+logger = logging.getLogger(__name__)
 
 
 def replace_path(video_list: List[dict], new_paths: List[Text]):
@@ -40,6 +44,15 @@ def replace_path(video_list: List[dict], new_paths: List[Text]):
 def find_frame_pairs(
     labels_gt: Labels, labels_pr: Labels
 ) -> List[Tuple[LabeledFrame, LabeledFrame]]:
+    """Find corresponding frames across two sets of labels.
+
+    Args:
+        labels_gt: A `sleap.Labels` instance with ground truth instances.
+        labels_pr: A `sleap.Labels` instance with predicted instances.
+
+    Returns:
+        A list of pairs of `sleap.LabeledFrame`s in the form `(frame_gt, frame_pr)`.
+    """
     frame_pairs = []
     for video_gt in labels_gt.videos:
 
@@ -80,8 +93,14 @@ def find_frame_pairs(
 
 
 def compute_instance_area(points: np.ndarray) -> np.ndarray:
-    """Computes the area of the bounding box of a set of keypoints."""
+    """Computes the area of the bounding box of a set of keypoints.
 
+    Args:
+        points: A numpy array of coordinates.
+
+    Returns:
+        The area of the bounding box of the points.
+    """
     if points.ndim == 2:
         points = np.expand_dims(points, axis=0)
 
@@ -204,7 +223,38 @@ def match_instances(
     stddev: float = 0.025,
     scale: Optional[float] = None,
     threshold: float = 0,
-):
+) -> Tuple[
+    List[Tuple[sleap.Instance, sleap.PredictedInstance, float]], List[sleap.Instance]
+]:
+    """Match pairs of instances between ground truth and predictions in a frame.
+
+    Args:
+        frame_gt: A `sleap.LabeledFrame` with ground truth instances.
+        frame_pr: A `sleap.LabeledFrame` with predicted instances.
+        stddev: The expected spread of coordinates for OKS computation.
+        scale: The scale for normalizing the OKS. If not set, the bounding box area will
+            be used.
+        threshold: The minimum OKS between a candidate pair of instances to be
+            considered a match.
+
+    Returns:
+        A tuple of (`positive_pairs`, `false_negatives`).
+
+        `positive_pairs` is a list of 3-tuples of the form
+        `(instance_gt, instance_pr, oks)` containing the matched pair of instances and
+        their OKS.
+
+        `false_negatives` is a list of ground truth `sleap.Instance`s that could not be
+        matched.
+
+    Notes:
+        This function uses the approach from the PASCAL VOC scoring procedure. Briefly,
+        predictions are sorted descending by their instance-level prediction scores and
+        greedily matched to ground truth instances which are then removed from the pool
+        of available instances.
+
+        Ground truth instances that remain unmatched are considered false negatives.
+    """
     # Sort predicted instances by score.
     scores_pr = np.array(
         [
@@ -259,8 +309,32 @@ def match_frame_pairs(
     stddev: float = 0.025,
     scale: Optional[float] = None,
     threshold: float = 0,
-):
-    """Matches instances within each frame pair."""
+) -> Tuple[
+    List[Tuple[sleap.Instance, sleap.PredictedInstance, float]], List[sleap.Instance]
+]:
+    """Match all ground truth and predicted instances within each pair of frames.
+
+    This is a wrapper for `match_instances()` but operates on lists of frames.
+
+    Args:
+        frame_pairs: A list of pairs of `sleap.LabeledFrame`s in the form
+            `(frame_gt, frame_pr)`. These can be obtained with `find_frame_pairs()`.
+        stddev: The expected spread of coordinates for OKS computation.
+        scale: The scale for normalizing the OKS. If not set, the bounding box area will
+            be used.
+        threshold: The minimum OKS between a candidate pair of instances to be
+            considered a match.
+
+    Returns:
+        A tuple of (`positive_pairs`, `false_negatives`).
+
+        `positive_pairs` is a list of 3-tuples of the form
+        `(instance_gt, instance_pr, oks)` containing the matched pair of instances and
+        their OKS.
+
+        `false_negatives` is a list of ground truth `sleap.Instance`s that could not be
+        matched.
+    """
     positive_pairs = []
     false_negatives = []
     for frame_gt, frame_pr in frame_pairs:
@@ -274,14 +348,29 @@ def match_frame_pairs(
 
 
 def compute_generalized_voc_metrics(
-    positive_pairs,
-    false_negatives,
-    match_scores,
-    match_score_thresholds=np.linspace(0.5, 0.95, 10),  # 0.5:0.05:0.95
-    recall_thresholds=np.linspace(0, 1, 101),  # 0.0:0.01:1.00
-    name="gvoc",
-):
+    positive_pairs: List[sleap.Instance, sleap.PredictedInstance, Any],
+    false_negatives: List[sleap.Instance],
+    match_scores: List[float],
+    match_score_thresholds: np.ndarray = np.linspace(0.5, 0.95, 10),  # 0.5:0.05:0.95
+    recall_thresholds: np.ndarray = np.linspace(0, 1, 101),  # 0.0:0.01:1.00
+    name: Text = "gvoc",
+) -> Dict[Text, Any]:
+    """Compute VOC metrics given matched pairs of instances.
 
+    Args:
+        positive_pairs: A list of tuples of the form `(instance_gt, instance_pr, _)`
+            containing the matched pair of instances.
+        false_negatives: A list of unmatched instances.
+        match_scores: The score obtained in the matching procedure for each matched pair
+            (e.g., OKS).
+        match_score_thresholds: Score thresholds at which to consider matches as a true
+            positive match.
+        recall_thresholds: Recall thresholds at which to evaluate Average Precision.
+        name: Name to use to prefix returned metric keys.
+
+    Returns:
+        A dictionary of VOC metrics.
+    """
     detection_scores = np.array([pp[1].score for pp in positive_pairs])
 
     inds = np.argsort(-detection_scores, kind="mergesort")
@@ -341,9 +430,16 @@ def compute_generalized_voc_metrics(
     }
 
 
-def compute_dists(
-    positive_pairs: List[Tuple[Instance, Instance, Any]]
-) -> np.ndarray:
+def compute_dists(positive_pairs: List[Tuple[Instance, Instance, Any]]) -> np.ndarray:
+    """Compute Euclidean distances between matched pairs of instances.
+
+    Args:
+        positive_pairs: A list of tuples of the form `(instance_gt, instance_pr, _)`
+            containing the matched pair of instances.
+
+    Returns:
+        An array of pairwise distances of shape `(n_positive_pairs, n_nodes)`.
+    """
     dists = []
     for instance_gt, instance_pr, _ in positive_pairs:
         points_gt = instance_gt.points_array
@@ -355,7 +451,15 @@ def compute_dists(
     return dists
 
 
-def compute_dist_metrics(dists: np.ndarray) -> dict:
+def compute_dist_metrics(dists: np.ndarray) -> Dict[Text, np.ndarray]:
+    """Compute the Euclidean distance error at different percentiles.
+
+    Args:
+        dists: An array of pairwise distances of shape `(n_positive_pairs, n_nodes)`.
+
+    Returns:
+        A dictionary of distance metrics.
+    """
     results = {
         "dist.dists": dists,
         "dist.avg": np.nanmean(dists),
@@ -376,9 +480,17 @@ def compute_dist_metrics(dists: np.ndarray) -> dict:
 
 
 def compute_pck_metrics(
-    dists: np.ndarray, thresholds=np.linspace(1, 10, 10)
-) -> dict:
+    dists: np.ndarray, thresholds: np.ndarray = np.linspace(1, 10, 10)
+) -> Dict[Text, np.ndarray]:
+    """Compute PCK across a range of thresholds.
 
+    Args:
+        dists: An array of pairwise distances of shape `(n_positive_pairs, n_nodes)`.
+        thresholds: A list of distance thresholds in pixels.
+
+    Returns:
+        A dictionary of PCK metrics evaluated at each threshold.
+    """
     dists = np.copy(dists)
     dists[np.isnan(dists)] = np.inf
     pcks = np.expand_dims(dists, -1) < np.reshape(thresholds, (1, 1, -1))
@@ -396,7 +508,15 @@ def compute_pck_metrics(
 def compute_visibility_conf(
     positive_pairs: List[Tuple[Instance, Instance, Any]]
 ) -> Dict[Text, float]:
+    """Compute node visibility metrics.
 
+    Args:
+        positive_pairs: A list of tuples of the form `(instance_gt, instance_pr, _)`
+            containing the matched pair of instances.
+
+    Returns:
+        A dictionary of visibility metrics, including the confusion matrix.
+    """
     vis_tp = 0
     vis_fn = 0
     vis_fp = 0
@@ -428,8 +548,7 @@ def evaluate(
     oks_scale: Optional[float] = None,
     match_threshold: float = 0,
 ) -> Dict[Text, Union[float, np.ndarray]]:
-    """
-    Calculates all metrics from ground truth and predicted labels.
+    """Calculate all metrics from ground truth and predicted labels.
 
     Args:
         labels_gt: The `Labels` dataset object with ground truth labels.
@@ -444,7 +563,6 @@ def evaluate(
     Returns:
         Dict, keys are strings, values are metrics (floats or ndarrays).
     """
-
     metrics = dict()
 
     frame_pairs = find_frame_pairs(labels_gt, labels_pr)
@@ -477,3 +595,83 @@ def evaluate(
     )
 
     return metrics
+
+
+def evaluate_model(
+    cfg: sleap.nn.config.TrainingJobConfig,
+    labels_reader: sleap.nn.data.pipelines.LabelsReader,
+    model: sleap.nn.model.Model,
+    save: bool = True,
+    split_name: Text = "test",
+) -> Tuple[sleap.Labels, Dict[Text, Any]]:
+    """Evaluate a trained model and save metrics and predictions.
+
+    Args:
+        cfg: The `TrainingJobConfig` associated with the model.
+        labels_reader: A `LabelsReader` pipeline generator that reads the ground truth
+            data to evaluate.
+        model: The `sleap.nn.model.Model` instance to evaluate.
+        save: If True, save the predictions and metrics to the model folder.
+        split_name: String name to append to the saved filenames.
+
+    Returns:
+        A tuple of `(labels_pr, metrics)`.
+
+        `labels_pr` will contain the predicted labels.
+
+        `metrics` will contain the evaluated metrics given the predictions, or None if
+        the metrics failed to be computed.
+    """
+    # Setup predictor for evaluation.
+    head_config = cfg.model.heads.which_oneof()
+    if isinstance(head_config, sleap.nn.config.CentroidsHeadConfig):
+        predictor = sleap.nn.inference.TopdownPredictor(
+            centroid_config=cfg,
+            centroid_model=model,
+            confmap_config=None,
+            confmap_model=None,
+        )
+    elif isinstance(head_config, sleap.nn.config.CenteredInstanceConfmapsHeadConfig):
+        predictor = sleap.nn.inference.TopdownPredictor(
+            centroid_config=None,
+            centroid_model=None,
+            confmap_config=cfg,
+            confmap_model=model,
+        )
+    elif isinstance(head_config, sleap.nn.config.MultiInstanceConfig):
+        predictor = sleap.nn.inference.BottomupPredictor(
+            bottomup_config=cfg, bottomup_model=model
+        )
+    elif isinstance(head_config, sleap.nn.config.SingleInstanceConfmapsHeadConfig):
+        predictor = sleap.nn.inference.SingleInstancePredictor(
+            confmap_config=cfg, confmap_model=model
+        )
+    else:
+        raise ValueError("Unrecognized model type:", head_config)
+
+    # Predict.
+    labels_pr = predictor.predict(labels_reader, make_labels=True)
+
+    # Compute metrics.
+    try:
+        metrics = evaluate(labels_reader.labels, labels_pr)
+    except:
+        logger.warning("Failed to compute metrics.")
+        metrics = None
+
+    # Save.
+    if save:
+        labels_pr_path = os.path.join(
+            cfg.outputs.run_path, f"labels_pr.{split_name}.slp"
+        )
+        sleap.Labels.save_file(labels_pr, labels_pr_path)
+        logger.info("Saved predictions:", labels_pr_path)
+
+    if metrics is not None:
+        metrics_path = os.path.join(cfg.outputs.run_path, f"metrics.{split_name}.npz")
+        np.savez_compressed(metrics_path, **{"metrics": metrics})
+        logger.info("Saved metrics:", metrics_path)
+
+        logger.info("mAP:", metrics["oks_voc.mAP"])
+
+    return labels_pr, metrics
