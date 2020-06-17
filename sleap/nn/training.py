@@ -813,6 +813,31 @@ class Trainer(ABC):
         )
         logger.info(f"Finished training loop. [{(time() - t0) / 60:.1f} min]")
 
+        # Save predictions and evaluations.
+        if self.config.outputs.save_outputs:
+            sleap.nn.evals.evaluate_model(
+                cfg=self.config,
+                labels_reader=self.data_readers.training_labels_reader,
+                model=self.model,
+                save=True,
+                split_name="train",
+            )
+            sleap.nn.evals.evaluate_model(
+                cfg=self.config,
+                labels_reader=self.data_readers.validation_labels_reader,
+                model=self.model,
+                save=True,
+                split_name="val",
+            )
+            if self.data_readers.test_labels_reader is not None:
+                sleap.nn.evals.evaluate_model(
+                    cfg=self.config,
+                    labels_reader=self.data_readers.test_labels_reader,
+                    model=self.model,
+                    save=True,
+                    split_name="test",
+                )
+
 
 @attr.s(auto_attribs=True)
 class CentroidConfmapsModelTrainer(Trainer):
