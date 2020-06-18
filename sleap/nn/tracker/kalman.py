@@ -13,18 +13,20 @@ Usage:
 
 > filter_frames(frames, instance_count=2, node_indices=[0, 1, 2])
 """
-import itertools
-from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, Text, Tuple
-
 import attr
-import numpy as np
-import pykalman
+import itertools
 
+from collections import defaultdict
+from typing import Any, Callable, Dict, Iterable, List, Optional, Text, Tuple
+
+import numpy as np
 from numpy import ma
+
+import pykalman
 from pykalman import KalmanFilter
 
 from sleap import Instance, PredictedInstance, LabeledFrame, Track
+from sleap.nn.tracker.components import greedy_matching, InstanceType
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -35,14 +37,17 @@ class Match:
 
 
 @attr.s(auto_attribs=True)
-class TrackKalman:
-    kalman_filters: Dict[Track, pykalman.KalmanFilter]
-    last_results: Dict[Track, Dict[Text, Any]]
-    tracks: List[Track]
-    instance_count: int
-    instance_score_thresh: float
+class BareKalmanTracker:
     node_indices: List[int]  # indices of rows for points to use
-    reset_gap_size: int
+    instance_count: int
+
+    instance_score_thresh: float = 0.3
+    reset_gap_size: int = 5
+
+    kalman_filters: Dict[Track, pykalman.KalmanFilter] = attr.ib(factory=dict)
+    last_results: Dict[Track, Dict[Text, Any]] = attr.ib(factory=dict)
+    tracks: List[Track] = attr.ib(factory=list)
+    last_frame_for_track: Dict[Track, int] = attr.ib(factory=dict)
 
     @classmethod
     def initialize(
@@ -52,22 +57,39 @@ class TrackKalman:
         node_indices: List[int],
         instance_score_thresh: float = 0.3,
         reset_gap_size: int = 5,
-    ) -> "TrackKalman":
+    ) -> "BareKalmanTracker":
+
+        kf_obj = cls(
+            instance_count=instance_count,
+            node_indices=node_indices,
+            instance_score_thresh=instance_score_thresh,
+            reset_gap_size=reset_gap_size,
+        )
+
+        instances_lists = [lf.predicted_instances for lf in frames]
+
+        kf_obj.init_filters(instances_lists)
+
+        return kf_obj
+
+    def init_filters(
+        self, instances: Iterable[PredictedInstance]
+    ):  # tracked_instances_lists: Iterable[Iterable[PredictedInstance]]):
         frame_array_dict = defaultdict(list)
 
         track_list = []
         filters = dict()
         last_results = dict()
 
-        instances = [inst for lf in frames for inst in lf.instances]
-
         if not instances:
             raise ValueError("Kalman filter must be initialized with instances.")
 
         # TODO: make arg optional and use algorithm to find best nodes to track
 
+        # instances = [inst for inst_list in tracked_instances_lists for inst in inst_list]
+
         for inst in instances:
-            point_coords = inst.points_array[node_indices, 0:2].flatten()
+            point_coords = inst.points_array[self.node_indices, 0:2].flatten()
             frame_array_dict[inst.track].append(point_coords)
 
         for track, frame_array in frame_array_dict.items():
@@ -112,6 +134,7 @@ class TrackKalman:
                 observation_matrices=observation_matrix,
                 initial_state_mean=initial_state_means,
             )
+
             kf = kf.em(frame_array, n_iter=20)
             state_means, state_covariances = kf.filter(frame_array)
 
@@ -123,15 +146,10 @@ class TrackKalman:
                 "covariances": list(state_covariances)[-1],
             }
 
-        return cls(
-            kalman_filters=filters,
-            last_results=last_results,
-            tracks=track_list,
-            instance_count=instance_count,
-            node_indices=node_indices,
-            instance_score_thresh=instance_score_thresh,
-            reset_gap_size=reset_gap_size,
-        )
+        self.kalman_filters = filters
+        self.tracks = track_list
+        self.last_results = last_results
+        self.last_frame_for_track = dict()
 
     def replace_track(self, old_track: Track):
         """
@@ -147,87 +165,99 @@ class TrackKalman:
         if old_track in self.last_results:
             self.last_results[new_track] = self.last_results.pop(old_track)
 
-    def track_frames(self, frames: List[LabeledFrame]):
+    def track_frame(
+        self, untracked_instances: List[PredictedInstance], frame_idx: int
+    ) -> List[PredictedInstance]:
         """
-        Runs tracking for every frame in list using initialized Kalman filters.
+        Tracks instances from single frame using Kalman filters.
+
+        Args:
+            untracked_instances: List of instances from frame.
+            frame_idx: Frame index, used for track spawn frame index and for
+                determining if we've had a large gap in tracking.
+
+        Returns:
+            None; updates tracks on instances in place.
         """
-        last_frame_for_track = dict()
+        # Get expected positions for each track.
+        # Doesn't update "last results" since we don't want this updated
+        # until after we process the frame (below).
+        filter_results = self.update_filters(only_update_matches=False)
 
-        for lf in frames:
-            # Only track predicted instances in frame
-            # (one reason is that we use predicted point score, which doesn't
-            # exist for user instances).
-            untracked_instances = lf.predicted_instances
+        # Measure similarity (inverse cost) between each instance
+        # and each track, based on expected position for track.
+        cost_matrix = self.frame_cost_matrix(
+            untracked_instances=untracked_instances, filter_results=filter_results
+        )
 
-            # Get expected positions for each track.
-            # Doesn't update "last results" since we don't want this updated
-            # until after we process the frame (below).
-            filter_results = self.update_filters(only_update_matches=False)
+        # FIXME: why all nans? is this the right thing to do?
+        if np.all(np.isnan(cost_matrix)):
+            return untracked_instances
 
-            # Measure similarity (inverse cost) between each instance
-            # and each track, based on expected position for track.
-            cost_matrix = self.frame_cost_matrix(
-                untracked_instances=untracked_instances, filter_results=filter_results
-            )
+        # Only count best matches which are sufficiently better than next
+        # best match (by threshold determined from data).
+        min_dist_from_expected_location = float(np.nanmin(cost_matrix))
+        cost_matrix = remove_second_bests_from_cost_matrix(
+            cost_matrix, thresh=min_dist_from_expected_location
+        )
 
-            # FIXME: why all nans? is this the right thing to do?
-            if np.all(np.isnan(cost_matrix)):
-                continue
+        # Make function which determines whether instances are "too close"
+        # for one of the instances to use its second choice match.
+        # "too close" is determined by the same threshold used for
+        # making sure best match is sufficiently better than second best,
+        # i.e., the minimum (mean point) distance between any instance
+        # and any of the expected coordinates (which correspond to tracks).
+        too_close_funct = self.get_too_close_checking_function(
+            untracked_instances, dist_thresh=min_dist_from_expected_location
+        )
 
-            # Only count best matches which are sufficiently better than next
-            # best match (by threshold determined from data).
-            min_dist_from_expected_location = float(np.nanmin(cost_matrix))
-            cost_matrix = remove_second_bests_from_cost_matrix(
-                cost_matrix, thresh=min_dist_from_expected_location
-            )
+        # Match instances to tracks based on similarity matrix.
+        matches = get_track_instance_matches(
+            cost_matrix,
+            instances=untracked_instances,
+            tracks=self.tracks,
+            are_too_close_function=too_close_funct,
+        )
 
-            # Make function which determines whether instances are "too close"
-            # for one of the instances to use its second choice match.
-            # "too close" is determined by the same threshold used for
-            # making sure best match is sufficiently better than second best,
-            # i.e., the minimum (mean point) distance between any instance
-            # and any of the expected coordinates (which correspond to tracks).
-            too_close_funct = self.get_too_close_checking_function(
-                untracked_instances, dist_thresh=min_dist_from_expected_location
-            )
+        track_inst_matches = {match.track: match.instance for match in matches}
 
-            # Match instances to tracks based on similarity matrix.
-            matches = self.get_track_instance_matches(
-                cost_matrix,
-                instances=untracked_instances,
-                are_too_close_function=too_close_funct,
-            )
+        # Update filters with points for each matched instance.
+        self.last_results.update(
+            self.update_filters(track_inst_matches, only_update_matches=True)
+        )
 
-            track_inst_matches = {match.track: match.instance for match in matches}
+        # Set tracks on matched instances
+        for match in matches:
+            # print(f"set track to {match.track.name} ({match.score})")
+            match.instance.track = match.track
+            self.last_frame_for_track[match.track] = frame_idx
 
-            # Update filters with points for each matched instance.
-            self.last_results.update(
-                self.update_filters(track_inst_matches, only_update_matches=True)
-            )
+            # When tracks are reset during a gap we don't know when the
+            # track will be used first so we set spawn to -1 so we can
+            # set it correctly when the reset track is first matched.
+            if match.track.spawned_on < 0:
+                match.track.spawned_on = frame_idx
 
-            # Set tracks on matched instances
-            for match in matches:
-                # print(f"set track to {match.track.name} ({match.score})")
-                match.instance.track = match.track
-                last_frame_for_track[match.track] = lf.frame_idx
+        # Check how many tracks have a gap since they were last matched
+        tracks_with_gap = self.tracks_with_gap(frame_idx)
+        # If multiple tracks, then we want to start new tracks for each.
+        if len(tracks_with_gap) > 1:
+            for track in tracks_with_gap:
+                self.replace_track(track)
+                self.last_frame_for_track.pop(track)
 
-                # When tracks are reset during a gap we don't know when the
-                # track will be used first so we set spawn to -1 so we can
-                # set it correctly when the reset track is first matched.
-                if match.track.spawned_on < 0:
-                    match.track.spawned_on = lf.frame_idx
+        return untracked_instances
 
-            # Check how many tracks have a gap since they were last matched
-            tracks_with_gap = [
-                track
-                for track, last_frame_idx in last_frame_for_track.items()
-                if (lf.frame_idx - last_frame_idx) > self.reset_gap_size
-            ]
-            # If multiple tracks, then we want to start new tracks for each.
-            if len(tracks_with_gap) > 1:
-                for track in tracks_with_gap:
-                    self.replace_track(track)
-                    last_frame_for_track.pop(track)
+    def tracks_with_gap(self, frame_idx):
+        return [
+            track
+            for track, last_frame_idx in self.last_frame_for_track.items()
+            if (frame_idx - last_frame_idx) > self.reset_gap_size
+        ]
+
+    @property
+    def last_frame_with_tracks(self):
+        return max(self.last_frame_for_track.values(), default=0)
 
     def update_filters(
         self,
@@ -302,6 +332,10 @@ class TrackKalman:
     def get_instance_points_weight(
         self, instance: PredictedInstance
     ) -> Tuple[np.ndarray, np.ndarray]:
+
+        if not self.node_indices:
+            raise ValueError("Kalman tracker must have node_indices set.")
+
         """Returns points (and weights, i.e., scores) for tracked nodes."""
         # For predicted instances, the *full* points array will be (N, 5)
         # where N is the number of nodes.
@@ -319,7 +353,7 @@ class TrackKalman:
         return inst_points, weights
 
     def get_too_close_checking_function(
-        self, instances: List[Instance], dist_thresh: float
+        self, instances: List[InstanceType], dist_thresh: float
     ) -> Callable:
         """"
         Returns a function which determines if two instances are too close.
@@ -414,76 +448,88 @@ class TrackKalman:
 
         return matching_similarity
 
-    def get_track_instance_matches(
-        self,
-        cost_matrix: np.ndarray,
-        instances: List[Instance],
-        are_too_close_function: Callable,
-    ) -> List[Match]:
-        """
-        Matches track identities (from filters) to instances in frame.
 
-        Algorithm is modified greedy matching.
+def get_track_instance_matches(
+    cost_matrix: np.ndarray,  # [instance, track] match cost
+    instances: List[InstanceType],  # rows in cost matrix
+    tracks: List[Track],  # columns in cost matrix
+    are_too_close_function: Callable,
+) -> List[Match]:
+    """
+    Matches track identities (from filters) to instances in frame.
 
-        Standard greedy matching:
-        0. Start with list of all possible matches, sorted by ascending cost.
-        1. Find the match with minimum cost.
-        2. Use this match.
-        3. Remove other matches from list with same row or same column.
-        4. Go back to (1).
+    Algorithm is modified greedy matching.
 
-        The algorithm implemented here replaces step (2) with this:
+    Standard greedy matching:
+    0. Start with list of all possible matches, sorted by ascending cost.
+    1. Find the match with minimum cost.
+    2. Use this match.
+    3. Remove other matches from list with same row or same column.
+    4. Go back to (1).
 
-        2'. If the instance for the match would have preferred a track which
-            was already matched by another instance, then only use the match
-            under consideration now if these instances aren't "too close".
+    The algorithm implemented here replaces step (2) with this:
 
-        Whenever the greedy matching would assign an instance to a track that
-        wasn't its first choice (i.e., another instance was a better match for
-        the track that would have been our current instance's first choice),
-        then we make sure that the two instances aren't too close together.
+    2'. If the instance for the match would have preferred a track which
+        was already matched by another instance, then only use the match
+        under consideration now if these instances aren't "too close".
 
-        The upshot is that if two nearby instances are competing for the same
-        track, then the looser won't be given its second choice (since it's more
-        likely to be a redundant instance), but if nearby instances both match
-        best to distinct tracks, both matches are used.
+    Whenever the greedy matching would assign an instance to a track that
+    wasn't its first choice (i.e., another instance was a better match for
+    the track that would have been our current instance's first choice),
+    then we make sure that the two instances aren't too close together.
 
-        What counts as "too close" is determined by the `are_too_close_function`
-        argument, which should have this signature:
+    The upshot is that if two nearby instances are competing for the same
+    track, then the looser won't be given its second choice (since it's more
+    likely to be a redundant instance), but if nearby instances both match
+    best to distinct tracks, both matches are used.
 
-            are_too_close_function(Instance, Instance) -> bool
-        """
-        from sleap.nn.tracking import greedy_matching
+    What counts as "too close" is determined by the `are_too_close_function`
+    argument, which should have this signature:
 
-        first_choice_matches_by_track = match_dict_from_match_function(
+        are_too_close_function(Instance, Instance) -> bool
+    """
+
+    # For each track, determine which instance was the best match in isolation.
+    first_choice_matches_by_track = match_dict_from_match_function(
+        cost_matrix=cost_matrix,
+        row_items=instances,
+        column_items=tracks,
+        match_function=first_choice_matching,
+    )
+
+    # Find the best (greedy) set of compatible matches.
+    greedy_matches = matches_from_match_tuples(
+        match_tuples_from_match_function(
             cost_matrix=cost_matrix,
             row_items=instances,
-            column_items=self.tracks,
-            match_function=first_choice_matching,
+            column_items=tracks,
+            match_function=greedy_matching,
         )
+    )
 
-        greedy_matches = matches_from_match_tuples(
-            match_tuples_from_match_function(
-                cost_matrix=cost_matrix,
-                row_items=instances,
-                column_items=self.tracks,
-                match_function=greedy_matching,
-            )
-        )
+    good_matches = []
+    for match in greedy_matches:
 
-        good_matches = []
-        for match in greedy_matches:
-            # Check if this instance got its first choice match.
-            if match.track in first_choice_matches_by_track:
-                competing_instance = first_choice_matches_by_track[match.track]
-                if match.instance != competing_instance:
-                    # Check if instances are too close.
-                    if are_too_close_function(match.instance, competing_instance):
-                        continue
+        # Was the matched track the first-choice match for any instance?
+        if match.track in first_choice_matches_by_track:
 
-            good_matches.append(match)
+            # Which instance was the best match (in isolation) for this track?
+            competing_instance = first_choice_matches_by_track[match.track]
 
-        return good_matches
+            # Was it a different instance that the instance we're considering
+            # a match now (presumably because this instance may have had its
+            # first choice taken by another instance).
+            if match.instance != competing_instance:
+
+                # The current match instance is distinct from the instance
+                # which was the *best* (isolated) match for this track.
+                # Check if instances are too close for this match to be valid.
+                if are_too_close_function(match.instance, competing_instance):
+                    continue
+
+        good_matches.append(match)
+
+    return good_matches
 
 
 def first_choice_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
@@ -493,7 +539,7 @@ def first_choice_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
     The means that multiple rows might be matched to the same column.
     """
     row_count = len(cost_matrix)
-    best_matches_vector = cost_matrix.argmax(axis=1)
+    best_matches_vector = cost_matrix.argmin(axis=1)
     match_indices = list(zip(range(row_count), best_matches_vector))
 
     return match_indices
@@ -503,14 +549,33 @@ def match_dict_from_match_function(
     cost_matrix: np.ndarray,
     row_items: List[Any],
     column_items: List[Any],
-    match_function,
+    match_function: Callable,
+    key_by_column: bool = True,
 ) -> Dict[Any, Any]:
-    """Dict keys are from column (tracks), values are from row (instances)."""
-    return {
-        column_items[j]: row_items[i]
-        for (i, j) in match_function(cost_matrix)
-        if np.isfinite(cost_matrix[i, j])
-    }
+    """
+    Dict keys are from column (tracks), values are from row (instances).
+
+    If multiple rows (instances) match on the same column (track), then
+    dict will just contain the best match.
+    """
+
+    match_dict = dict()
+    match_cost_dict = dict()
+
+    for i, j in match_function(cost_matrix):
+        match_cost = cost_matrix[i, j]
+        if np.isfinite(match_cost):
+
+            if key_by_column:
+                key, val = column_items[j], row_items[i]
+            else:
+                val, key = column_items[j], row_items[i]
+
+            if key not in match_dict or match_cost < match_cost_dict[key]:
+                match_dict[key] = val
+                match_cost_dict[key] = match_cost
+
+    return match_dict
 
 
 def match_tuples_from_match_function(
@@ -550,7 +615,7 @@ def remove_second_bests_from_cost_matrix(
     specified invalid_val (usually nan or inf).
 
     Args:
-        cost_matrix: This is a negative cost matrix.
+        cost_matrix: Cost matrix for matching, lower means better match.
         thresh: Best match must be better than second best + threshold
             to be valid.
         invalid_val: Value to set invalid rows/columns to.
@@ -639,9 +704,10 @@ def filter_frames(
     """
 
     # Initialize the filter
-    kalman_filter = TrackKalman.initialize(
+    kalman_filter = BareKalmanTracker.initialize(
         frames[:init_len], instance_count, node_indices
     )
 
     # Run the filter, frame by frame
-    kalman_filter.track_frames(frames[init_len:])
+    for lf in frames[init_len:]:
+        kalman_filter.track_frame(lf.predicted_instances, lf.frame_idx)
