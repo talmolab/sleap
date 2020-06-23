@@ -1,7 +1,14 @@
 import pytest
 import numpy as np
 
-from sleap.nn.tracking import Tracker, cull_instances, nms_fast, nms_instances
+from sleap.nn.tracking import Tracker
+from sleap.nn.tracker.components import (
+    nms_instances,
+    nms_fast,
+    cull_instances,
+    FrameMatches,
+    greedy_matching,
+)
 
 from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
@@ -100,3 +107,62 @@ def test_nms_instances_to_remove():
 
     assert len(to_remove) == 1
     assert to_remove[0].matches(instances[1])
+
+
+def test_frame_match_object():
+    instances = ["instance a", "instance b"]
+    tracks = ["track a", "track b"]
+
+    # columns are tracks
+    # rows are instances
+    cost_matrix = np.array(
+        [
+            [10, 200],  # instance a will match track a
+            [75, 150],
+        ]  # instance b will match track b, its second choice
+    )
+
+    frame_matches = FrameMatches.from_cost_matrix(
+        cost_matrix=cost_matrix,
+        instances=instances,
+        tracks=tracks,
+        matching_function=greedy_matching,
+    )
+
+    assert not frame_matches.has_only_first_choice_matches
+
+    matches = frame_matches.matches
+
+    assert len(matches) == 2
+
+    assert matches[0].track == "track a"
+    assert matches[0].instance == "instance a"
+    assert matches[0].score == -10
+
+    assert matches[1].track == "track b"
+    assert matches[1].instance == "instance b"
+    assert matches[1].score == -150
+
+    # columns are tracks
+    # rows are instances
+    cost_matrix = np.array(
+        [
+            [10, 200],  # instance a will match track a
+            [150, 75],
+        ]  # instance b will match track b, now its first choice
+    )
+
+    frame_matches = FrameMatches.from_cost_matrix(
+        cost_matrix=cost_matrix,
+        instances=instances,
+        tracks=tracks,
+        matching_function=greedy_matching,
+    )
+
+    assert frame_matches.has_only_first_choice_matches
+
+    assert matches[0].track == "track a"
+    assert matches[0].instance == "instance a"
+
+    assert matches[1].track == "track b"
+    assert matches[1].instance == "instance b"

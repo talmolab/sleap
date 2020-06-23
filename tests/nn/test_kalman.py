@@ -1,5 +1,6 @@
 import numpy as np
 
+import sleap.nn.tracker.components
 import sleap.nn.tracker.kalman as k
 from sleap.nn.tracker.components import greedy_matching
 
@@ -16,7 +17,7 @@ def test_first_choice_matching():
         cost_matrix=cost_matrix,
         row_items=instances,
         column_items=tracks,
-        match_function=k.first_choice_matching,
+        match_function=sleap.nn.tracker.components.first_choice_matching,
     )
 
     assert len(match_tuples) == 2
@@ -27,7 +28,7 @@ def test_first_choice_matching():
         cost_matrix=cost_matrix,
         row_items=instances,
         column_items=tracks,
-        match_function=k.first_choice_matching,
+        match_function=sleap.nn.tracker.components.first_choice_matching,
     )
 
     assert len(match_by_track) == 1
@@ -37,7 +38,7 @@ def test_first_choice_matching():
         cost_matrix=cost_matrix,
         row_items=instances,
         column_items=tracks,
-        match_function=k.first_choice_matching,
+        match_function=sleap.nn.tracker.components.first_choice_matching,
         key_by_column=False,
     )
 
@@ -52,7 +53,7 @@ def test_first_choice_matching():
         cost_matrix=cost_matrix,
         row_items=instances,
         column_items=tracks,
-        match_function=k.first_choice_matching,
+        match_function=sleap.nn.tracker.components.first_choice_matching,
     )
 
     assert len(match_by_track) == 1

@@ -26,14 +26,12 @@ import pykalman
 from pykalman import KalmanFilter
 
 from sleap import Instance, PredictedInstance, LabeledFrame, Track
-from sleap.nn.tracker.components import greedy_matching, InstanceType
-
-
-@attr.s(auto_attribs=True, slots=True)
-class Match:
-    track: Track
-    instance: Instance
-    score: Optional[float] = None
+from sleap.nn.tracker.components import (
+    greedy_matching,
+    InstanceType,
+    Match,
+    first_choice_matching,
+)
 
 
 @attr.s(auto_attribs=True)
@@ -532,19 +530,6 @@ def get_track_instance_matches(
     return good_matches
 
 
-def first_choice_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
-    """
-    Returns match indices where each row gets matched to best column.
-
-    The means that multiple rows might be matched to the same column.
-    """
-    row_count = len(cost_matrix)
-    best_matches_vector = cost_matrix.argmin(axis=1)
-    match_indices = list(zip(range(row_count), best_matches_vector))
-
-    return match_indices
-
-
 def match_dict_from_match_function(
     cost_matrix: np.ndarray,
     row_items: List[Any],
@@ -681,33 +666,3 @@ def remove_second_bests_from_cost_matrix(
     valid_cost_matrix[~valid_match_mask] = invalid_val
 
     return valid_cost_matrix
-
-
-def filter_frames(
-    frames: List[LabeledFrame],
-    instance_count: int,
-    node_indices: List[int],
-    init_len: int = 10,
-):
-    """
-    Attempts to track N instances using a Kalman Filter.
-
-    Args:
-        frames: The list of `LabeledFrame` objects with predictions.
-        instance_count: The number of expected instances per frame.
-        node_indices: Indices of nodes to use for tracking.
-        init_len: The number of frames that should be used to initialize
-            the Kalman filter.
-
-    Returns:
-        None; modifies frames in place.
-    """
-
-    # Initialize the filter
-    kalman_filter = BareKalmanTracker.initialize(
-        frames[:init_len], instance_count, node_indices
-    )
-
-    # Run the filter, frame by frame
-    for lf in frames[init_len:]:
-        kalman_filter.track_frame(lf.predicted_instances, lf.frame_idx)
