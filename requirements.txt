@@ -20,3 +20,4 @@ imgstore==0.2.9
 qimage2ndarray==1.8
 jsmin
 seaborn
+pykalman==0.9.5

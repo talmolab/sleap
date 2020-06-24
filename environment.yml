@@ -28,5 +28,6 @@ dependencies:
     - jsmin
     - seaborn
     - scikit-video
+    - pykalman==0.9.5
     - "--editable=./"
     - "--requirement=./dev_requirements.txt"
