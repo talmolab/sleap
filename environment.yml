@@ -8,7 +8,6 @@ dependencies:
 - networkx
 - tensorflow-gpu=2.1
 - tensorboard=2.1
-- scipy=1.1
 - scikit-learn
 - h5py
 - pandas
@@ -20,6 +19,7 @@ dependencies:
 - python-rapidjson
 - pip
 - pip:
+    - scipy==1.4.1
     - opencv-python-headless==4.2.0.34
     - PySide2>=5.12.0,<=5.14.1
     - imgaug==0.3.0
