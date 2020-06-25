@@ -155,6 +155,24 @@ class InferenceTask:
         for job_path in self.trained_job_paths:
             cli_args.extend(("-m", job_path))
 
+        optional_items_as_nones = (
+            "tracking.target_instance_count",
+            "tracking.kf_init_frame_count",
+        )
+
+        for key in optional_items_as_nones:
+            if key in self.inference_params and self.inference_params[key] is None:
+                del self.inference_params[key]
+
+        bool_items_as_ints = (
+            "tracking.pre_cull_to_target",
+            "tracking.post_connect_single_breaks",
+        )
+
+        for key in bool_items_as_ints:
+            if key in self.inference_params:
+                self.inference_params[key] = int(self.inference_params[key])
+
         for key, val in self.inference_params.items():
             if not key.startswith(("_", "outputs.", "model.")):
                 cli_args.extend((f"--{key}", str(val)))

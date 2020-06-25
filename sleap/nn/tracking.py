@@ -529,7 +529,7 @@ class Tracker(BaseTracker):
         clean_instance_count: int = 0,
         clean_iou_threshold: Optional[float] = None,
         # Kalman filter options
-        kf_init_frame_count: int = 10,
+        kf_init_frame_count: int = 0,
         kf_node_indices: Optional[list] = None,
         **kwargs,
     ) -> BaseTracker:
@@ -587,7 +587,7 @@ class Tracker(BaseTracker):
             post_connect_single_breaks=post_connect_single_breaks,
         )
 
-        if target_instance_count and kf_node_indices:
+        if target_instance_count and kf_init_frame_count:
             kalman_obj = KalmanTracker.make_tracker(
                 init_tracker=tracker_obj,
                 init_frame_count=kf_init_frame_count,
@@ -597,7 +597,7 @@ class Tracker(BaseTracker):
             )
 
             return kalman_obj
-        elif kf_node_indices and not target_instance_count:
+        elif kf_init_frame_count and not target_instance_count:
             raise ValueError("Kalman filter requires target instance count.")
         else:
             return tracker_obj
@@ -709,14 +709,14 @@ class Tracker(BaseTracker):
         option["type"] = int_list_func
         option[
             "help"
-        ] = "For Kalman filter: Indices of nodes to track. This is what activates Kalman filter-based tracking."
+        ] = "For Kalman filter: Indices of nodes to track."
         options.append(option)
 
-        option = dict(name="kf_init_frame_count", default="10")
+        option = dict(name="kf_init_frame_count", default="0")
         option["type"] = int
         option[
             "help"
-        ] = "For Kalman filter: Number of frames to track with other tracker."
+        ] = "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
         options.append(option)
 
         return options
@@ -977,6 +977,8 @@ class KalmanTracker(BaseTracker):
             if self.init_set.is_set_ready:
                 # Initialize the Kalman filters
                 self.kalman_tracker.init_filters(self.init_set.instances)
+
+                # print(f"Kalman filters initialized (frame {t})")
 
                 # Clear the data used to init filters, so that if the filters
                 # stop tracking and we need to re-init, we won't re-use the

@@ -841,7 +841,7 @@ def demo_training_dialog():
 
     filename = "tests/data/json_format_v1/centered_pair.json"
     labels = Labels.load_file(filename)
-    win = LearningDialog("training", labels_filename=filename, labels=labels)
+    win = LearningDialog("inference", labels_filename=filename, labels=labels)
 
     win.frame_selection = {"clip": {labels.videos[0]: (1, 2, 3, 4)}}
     # win.training_editor_widget.set_fields_from_key_val_dict({
