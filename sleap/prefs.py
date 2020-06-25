@@ -12,6 +12,7 @@ class Preferences(object):
         "palette": "standard",
         "trail length": 0,
         "trail width": 4.0,
+        "trail node count": 1,
         "hide videos dock": False,
         "hide skeleton dock": False,
         "hide instances dock": False,

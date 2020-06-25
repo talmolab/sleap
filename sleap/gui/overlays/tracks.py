@@ -12,8 +12,6 @@ from typing import Iterable, List
 
 from PySide2 import QtCore, QtGui
 
-MAX_NODES_IN_TRAIL = 1
-
 
 @attr.s(auto_attribs=True)
 class TrackTrailOverlay:
@@ -56,8 +54,9 @@ class TrackTrailOverlay:
             return
 
         nodes = self.labels.skeletons[0].nodes
-        if len(nodes) > MAX_NODES_IN_TRAIL:
-            nodes = nodes[:MAX_NODES_IN_TRAIL]
+        max_node_count = prefs["trail node count"]
+        if len(nodes) > max_node_count:
+            nodes = nodes[:max_node_count]
 
         for frame in frame_selection:
 
