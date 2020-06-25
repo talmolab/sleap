@@ -58,18 +58,25 @@ class SleapAnalysisAdaptor(Adaptor):
 
         f = file.file
         tracks_matrix = f["tracks"][:].T
-        track_names_list = f["track_names"][:].T
-        node_names_list = f["node_names"][:].T
 
         # shape: frames * nodes * 2 * tracks
         frame_count, node_count, _, track_count = tracks_matrix.shape
 
-        tracks = [Track(0, track_name.decode()) for track_name in track_names_list]
+        if "track_names" in f:
+            track_names_list = f["track_names"][:].T
+            tracks = [Track(0, track_name.decode()) for track_name in track_names_list]
+        else:
+            tracks = [Track(0, f"track_{i}") for i in range(track_count)]
+
+        if "node_names" in f:
+            node_names_dset = f["node_names"][:].T
+            node_names = [name.decode() for name in node_names_dset]
+        else:
+            node_names = [f"node {i}" for i in range(node_count)]
 
         skeleton = Skeleton()
         last_node_name = None
-        for node_name in node_names_list:
-            node_name = node_name.decode()
+        for node_name in node_names:
             skeleton.add_node(node_name)
             if connect_adj_nodes and last_node_name:
                 skeleton.add_edge(last_node_name, node_name)
