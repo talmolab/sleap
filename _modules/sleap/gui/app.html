@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.gui.app &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -40,7 +41,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">random</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
 <span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QEvent</span>
@@ -137,7 +138,8 @@
         <span class="sd">&quot;&quot;&quot;Sets window title (if value is not None).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">(</span><span class="n">MainWindow</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> - SLEAP Label v</span><span class="si">{</span><span class="n">sleap</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> - SLEAP Label v</span><span class="si">{</span><span class="n">sleap</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="MainWindow.event"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.event">[docs]</a>    <span class="k">def</span> <span class="nf">event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span> <span class="n">QEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Custom event handler.</span>
@@ -466,6 +468,7 @@
             <span class="s2">&quot;Point Score (sum)&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Point Score (min)&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Number of predicted points&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Min Centroid Proximity&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">add_submenu_choices</span><span class="p">(</span>
@@ -1219,6 +1222,7 @@
             <span class="s2">&quot;Point Score (sum)&quot;</span><span class="p">:</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">get_point_score_series</span><span class="p">,</span>
             <span class="s2">&quot;Point Score (min)&quot;</span><span class="p">:</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">get_point_score_series</span><span class="p">,</span>
             <span class="s2">&quot;Number of predicted points&quot;</span><span class="p">:</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">get_point_count_series</span><span class="p">,</span>
+            <span class="s2">&quot;Min Centroid Proximity&quot;</span><span class="p">:</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">get_min_centroid_proximity_series</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">graph_name</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
@@ -1261,11 +1265,13 @@
 
         <span class="c1"># Use negative number in list for range (i.e., &quot;0,-123&quot; means &quot;0-123&quot;)</span>
         <span class="c1"># The ranges should be [X, Y) like standard Python ranges</span>
+        <span class="k">def</span> <span class="nf">encode_range</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span>
+
         <span class="n">clip_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frame_range&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">clip_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">clip_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">clip_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">clip_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="n">clip_range</span><span class="p">}</span>
-        <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">current_video</span><span class="o">.</span><span class="n">num_frames</span><span class="p">)}</span>
+
+        <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;clip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="n">encode_range</span><span class="p">(</span><span class="o">*</span><span class="n">clip_range</span><span class="p">)}</span>
+        <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">current_video</span><span class="p">:</span> <span class="n">encode_range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">current_video</span><span class="o">.</span><span class="n">num_frames</span><span class="p">)}</span>
 
         <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;suggestions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">video</span><span class="p">:</span> <span class="n">remove_user_labeled</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">))</span>
@@ -1505,7 +1511,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

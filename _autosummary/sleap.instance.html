@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.instance &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -176,6 +177,19 @@ the order in <cite>Point.dtype</cite> or <cite>PredictedPoint.dtype</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.instance.Instance.numpy">
+<code class="sig-name descname">numpy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/instance.html#Instance.numpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the instance node coordinates as a numpy array.</p>
+<p>Alias for <cite>points_array</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Array of shape (n_nodes, 2) of dtype float32 containing the coordinates of
+the instance’s nodes. Missing/not visible nodes will be replaced with NaNs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.instance.Instance.points">
 <em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#sleap.instance.Instance.points" title="Permalink to this definition">¶</a></dt>
 <dd><p>The tuple of labelled points, in order they were labelled.</p>
@@ -185,7 +199,7 @@ the order in <cite>Point.dtype</cite> or <cite>PredictedPoint.dtype</cite>.</p>
 <dt id="sleap.instance.Instance.points_array">
 <em class="property">property </em><code class="sig-name descname">points_array</code><a class="headerlink" href="#sleap.instance.Instance.points_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Nx2 array of x and y for visible points.</p>
-<p>Row in arrow corresponds to order of points in skeleton.
+<p>Row in array corresponds to order of points in skeleton.
 Invisible points will have nans.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -277,7 +291,7 @@ and value is list of :class:<a href="#id1"><span class="problematic" id="id2">`<
 
 <dl class="py method">
 <dt id="sleap.instance.LabeledFrame.find">
-<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n">Union[sleap.instance.Track, int, None]</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">user</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/instance.html#LabeledFrame.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.find" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span><a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">, </span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">user</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/instance.html#LabeledFrame.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieves instances (if any) matching specifications.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -406,7 +420,7 @@ a corresponding <a class="reference internal" href="#sleap.instance.Instance" ti
 
 <dl class="py class">
 <dt id="sleap.instance.Point">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Point</code><a class="reference internal" href="../_modules/sleap/instance.html#Point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Point" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">visible</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">complete</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/instance.html#Point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Point" title="Permalink to this definition">¶</a></dt>
 <dd><p>A labelled point and any metadata associated with it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -433,7 +447,7 @@ a corresponding <a class="reference internal" href="#sleap.instance.Instance" ti
 
 <dl class="py class">
 <dt id="sleap.instance.PointArray">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PointArray</code><a class="reference internal" href="../_modules/sleap/instance.html#PointArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PointArray" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PointArray</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">buf</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">strides</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">formats</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">titles</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">byteorder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">aligned</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">order</span><span class="o">=</span><span class="default_value">'C'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/instance.html#PointArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PointArray" title="Permalink to this definition">¶</a></dt>
 <dd><p>PointArray is a sub-class of numpy recarray which stores
 Point objects as records.</p>
 <dl class="py method">
@@ -546,7 +560,7 @@ Invisible points will have NaNs.</p>
 
 <dl class="py class">
 <dt id="sleap.instance.PredictedPoint">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedPoint</code><a class="reference internal" href="../_modules/sleap/instance.html#PredictedPoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPoint" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedPoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">visible</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">complete</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">score</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/instance.html#PredictedPoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>A predicted point is an output of the inference procedure.</p>
 <p>It has all the properties of a labeled point, plus a score.</p>
 <dl class="field-list simple">
@@ -581,7 +595,7 @@ Invisible points will have NaNs.</p>
 
 <dl class="py class">
 <dt id="sleap.instance.PredictedPointArray">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedPointArray</code><a class="reference internal" href="../_modules/sleap/instance.html#PredictedPointArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPointArray" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedPointArray</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">buf</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">strides</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">formats</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">titles</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">byteorder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">aligned</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">order</span><span class="o">=</span><span class="default_value">'C'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/instance.html#PredictedPointArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPointArray" title="Permalink to this definition">¶</a></dt>
 <dd><p>PredictedPointArray is analogous to PointArray except for predicted
 points.</p>
 <dl class="py method">
@@ -742,6 +756,7 @@ class when the attributes of one class are a subset of another.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.kalman_filter.html">sleap.nn.kalman_filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
@@ -781,6 +796,8 @@ class when the attributes of one class are a subset of another.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
 </ul>
 </li>
 </ul>
@@ -822,7 +839,7 @@ class when the attributes of one class are a subset of another.</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

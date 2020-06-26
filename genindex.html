@@ -1,10 +1,10 @@
 
-
 <!DOCTYPE html>
 
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -253,6 +253,8 @@
       </ul></li>
       <li><a href="_autosummary/sleap.nn.config.model.html#sleap.nn.config.model.BackboneConfig">BackboneConfig (class in sleap.nn.config.model)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.BaseTracker">BaseTracker (class in sleap.nn.tracking)</a>
+</li>
       <li><a href="_autosummary/sleap.gui.suggestions.html#sleap.gui.suggestions.VideoFrameSuggestions.basic_sample_suggestion_method">basic_sample_suggestion_method() (sleap.gui.suggestions.VideoFrameSuggestions class method)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm">batch_norm (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
@@ -433,7 +435,7 @@
 </li>
       <li><a href="_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.centroid_confmap_head">centroid_confmap_head (sleap.nn.data.pipelines.CentroidConfmapsPipeline attribute)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.centroid_distance">centroid_distance() (in module sleap.nn.tracking)</a>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.centroid_distance">centroid_distance() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead">CentroidConfmapsHead (class in sleap.nn.heads)</a>
 </li>
@@ -485,8 +487,6 @@
 </li>
       <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.cleaner">cleaner (sleap.nn.tracking.Tracker attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/sleap.gui.widgets.video.html#sleap.gui.widgets.video.GraphicsView.clear">clear() (sleap.gui.widgets.video.GraphicsView method)</a>
 </li>
       <li><a href="_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.clear_edges">clear_edges() (sleap.skeleton.Skeleton method)</a>
@@ -495,6 +495,8 @@
 </li>
       <li><a href="_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.clearHeader">clearHeader() (sleap.gui.widgets.slider.VideoSlider method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.clearMarks">clearMarks() (sleap.gui.widgets.slider.VideoSlider method)</a>
 </li>
       <li><a href="_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.clearSelection">clearSelection() (sleap.gui.widgets.slider.VideoSlider method)</a>
@@ -545,6 +547,12 @@
         <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.complex_merge_between">(sleap.io.dataset.Labels class method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_dist_metrics">compute_dist_metrics() (in module sleap.nn.evals)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_dists">compute_dists() (in module sleap.nn.evals)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_generalized_voc_metrics">compute_generalized_voc_metrics() (in module sleap.nn.evals)</a>
+</li>
       <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_instance_area">compute_instance_area() (in module sleap.nn.evals)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.utils.html#sleap.nn.utils.compute_iou">compute_iou() (in module sleap.nn.utils)</a>
@@ -553,7 +561,11 @@
 </li>
       <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_oks">compute_oks() (in module sleap.nn.evals)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_pck_metrics">compute_pck_metrics() (in module sleap.nn.evals)</a>
+</li>
       <li><a href="_autosummary/sleap.gui.learning.utils.html#sleap.gui.learning.utils.compute_rf">compute_rf() (in module sleap.gui.learning.utils)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.compute_visibility_conf">compute_visibility_conf() (in module sleap.nn.evals)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.config">config (sleap.nn.heads.CenteredInstanceConfmapsHead attribute)</a>
 
@@ -584,6 +596,8 @@
       <li><a href="_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfMapsPlot">ConfMapsPlot (class in sleap.gui.overlays.confmaps)</a>
 </li>
       <li><a href="_autosummary/sleap.gui.state.html#sleap.gui.state.GuiState.connect">connect() (sleap.gui.state.GuiState method)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.connect_single_track_breaks">connect_single_track_breaks() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="_autosummary/sleap.gui.widgets.video.html#sleap.gui.widgets.video.QtEdge.connected_to">connected_to() (sleap.gui.widgets.video.QtEdge method)</a>
 </li>
@@ -618,6 +632,10 @@
       <li><a href="_autosummary/sleap.nn.config.data.html#sleap.nn.config.data.InstanceCroppingConfig.crop_size_detection_padding">crop_size_detection_padding (sleap.nn.config.data.InstanceCroppingConfig attribute)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.data.instance_cropping.html#sleap.nn.data.instance_cropping.InstanceCropper.crop_width">crop_width (sleap.nn.data.instance_cropping.InstanceCropper attribute)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.cull_frame_instances">cull_frame_instances() (in module sleap.nn.tracker.components)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.cull_instances">cull_instances() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.current_groupset">current_groupset() (sleap.info.feature_suggestions.ItemStack property)</a>
 </li>
@@ -977,6 +995,8 @@
 </li>
       <li><a href="_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder">EncoderDecoder (class in sleap.nn.architectures.encoder_decoder)</a>
 </li>
+      <li><a href="_autosummary/sleap.rangelist.html#sleap.rangelist.RangeList.end">end() (sleap.rangelist.RangeList property)</a>
+</li>
       <li><a href="_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.SliderMark.end_val">end_val (sleap.gui.widgets.slider.SliderMark attribute)</a>
 </li>
       <li><a href="_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.endSelection">endSelection() (sleap.gui.widgets.slider.VideoSlider method)</a>
@@ -993,10 +1013,10 @@
       </ul></li>
       <li><a href="_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_grayscale">ensure_grayscale() (in module sleap.nn.data.normalization)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_int">ensure_int() (in module sleap.nn.data.normalization)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/sleap.nn.data.utils.html#sleap.nn.data.utils.ensure_list">ensure_list() (in module sleap.nn.data.utils)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_min_image_rank">ensure_min_image_rank() (in module sleap.nn.data.normalization)</a>
@@ -1017,6 +1037,10 @@
         <li><a href="_autosummary/sleap.nn.data.dataset_ops.html#sleap.nn.data.dataset_ops.Repeater.epochs">(sleap.nn.data.dataset_ops.Repeater attribute)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.evaluate">evaluate() (in module sleap.nn.evals)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.evaluate_model">evaluate_model() (in module sleap.nn.evals)</a>
+</li>
       <li><a href="_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ModelCheckpointOnEvent.event">event (sleap.nn.callbacks.ModelCheckpointOnEvent attribute)</a>
 </li>
       <li><a href="_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.event">event() (sleap.gui.app.MainWindow method)</a>
@@ -1093,6 +1117,8 @@
 </li>
       <li><a href="_autosummary/sleap.nn.data.dataset_ops.html#sleap.nn.data.dataset_ops.LambdaFilter.filter_fn">filter_fn (sleap.nn.data.dataset_ops.LambdaFilter attribute)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.kalman_filter.html#sleap.nn.kalman_filter.filter_frames">filter_frames() (in module sleap.nn.kalman_filter)</a>
+</li>
       <li><a href="_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.filter_increase">filter_increase (sleap.nn.architectures.hourglass.Hourglass attribute)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.filters">filters (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
@@ -1157,6 +1183,8 @@
 </li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.find_first">find_first() (sleap.io.dataset.Labels method)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.find_frame_pairs">find_frame_pairs() (in module sleap.nn.evals)</a>
+</li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.find_frames">find_frames() (sleap.io.dataset.LabelsDataCache method)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.data.inference.html#sleap.nn.data.inference.find_global_peaks">find_global_peaks() (in module sleap.nn.data.inference)</a>
@@ -1191,6 +1219,8 @@
 </li>
       <li><a href="_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeDialog.finishMerge">finishMerge() (sleap.gui.dialogs.merge.MergeDialog method)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.first_choice_matching">first_choice_matching() (in module sleap.nn.tracker.components)</a>
+</li>
       <li><a href="_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.StemBlock.first_conv_stride">first_conv_stride (sleap.nn.architectures.hourglass.StemBlock attribute)</a>
 </li>
       <li><a href="_autosummary/sleap.info.trackcleaner.html#sleap.info.trackcleaner.fit_tracks">fit_tracks() (in module sleap.info.trackcleaner)</a>
@@ -1211,10 +1241,10 @@
 </li>
       <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances">flow_shift_instances() (sleap.nn.tracking.FlowCandidateMaker static method)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker">FlowCandidateMaker (class in sleap.nn.tracking)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker">FlowCandidateMaker (class in sleap.nn.tracking)</a>
+</li>
       <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.FlowTracker">FlowTracker (class in sleap.nn.tracking)</a>
 </li>
       <li><a href="_autosummary/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.formatted_ext_options">formatted_ext_options() (sleap.io.format.adaptor.Adaptor property)</a>
@@ -1234,6 +1264,8 @@
       <li><a href="_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet">FrameGroupSet (class in sleap.info.feature_suggestions)</a>
 </li>
       <li><a href="_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameItem">FrameItem (class in sleap.info.feature_suggestions)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.FrameMatches">FrameMatches (class in sleap.nn.tracker.components)</a>
 </li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.frames">frames() (sleap.io.dataset.Labels method)</a>
 
@@ -1527,6 +1559,8 @@
 </li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_track_count">get_track_count() (sleap.io.dataset.Labels method)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.get_track_instance_matches">get_track_instance_matches() (in module sleap.nn.tracker.kalman)</a>
+</li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_track_occupancy">get_track_occupancy() (sleap.io.dataset.Labels method)</a>
 
       <ul>
@@ -1597,7 +1631,7 @@
 </li>
       <li><a href="_autosummary/sleap.gui.widgets.video.html#sleap.gui.widgets.video.GraphicsView">GraphicsView (class in sleap.gui.widgets.video)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.greedy_matching">greedy_matching() (in module sleap.nn.tracking)</a>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.greedy_matching">greedy_matching() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.utils.html#sleap.nn.utils.group_array">group_array() (in module sleap.nn.utils)</a>
 </li>
@@ -1713,7 +1747,7 @@
 </li>
       <li><a href="_autosummary/sleap.nn.config.model.html#sleap.nn.config.model.HourglassConfig">HourglassConfig (class in sleap.nn.config.model)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.hungarian_matching">hungarian_matching() (in module sleap.nn.tracking)</a>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.hungarian_matching">hungarian_matching() (in module sleap.nn.tracker.components)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1875,9 +1909,9 @@
 </li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.instance_count">instance_count() (sleap.io.dataset.Labels method)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.instance_iou">instance_iou() (in module sleap.nn.tracking)</a>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.instance_iou">instance_iou() (in module sleap.nn.tracker.components)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.instance_similarity">instance_similarity() (in module sleap.nn.tracking)</a>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.instance_similarity">instance_similarity() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder">InstanceCentroidFinder (class in sleap.nn.data.instance_centroids)</a>
 </li>
@@ -1935,6 +1969,8 @@
 </li>
       <li><a href="_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.is_sequence">is_sequence() (sleap.gui.color.ColorManager class method)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.KalmanTracker.is_valid">is_valid() (sleap.nn.tracking.KalmanTracker property)</a>
+</li>
       <li><a href="_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.isMarkedVal">isMarkedVal() (sleap.gui.widgets.slider.VideoSlider method)</a>
 </li>
       <li><a href="_autosummary/sleap.instance.html#sleap.instance.Point.isnan">isnan() (sleap.instance.Point method)</a>
@@ -1971,6 +2007,8 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.KalmanTracker">KalmanTracker (class in sleap.nn.tracking)</a>
+</li>
       <li><a href="_autosummary/sleap.nn.data.instance_cropping.html#sleap.nn.data.instance_cropping.InstanceCropper.keep_full_image">keep_full_image (sleap.nn.data.instance_cropping.InstanceCropper attribute)</a>
 
       <ul>
@@ -2285,6 +2323,8 @@
 </li>
       <li><a href="_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem">make_stem() (sleap.nn.architectures.encoder_decoder.EncoderDecoder method)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.KalmanTracker.make_tracker">make_tracker() (sleap.nn.tracking.KalmanTracker class method)</a>
+</li>
       <li><a href="_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_training_pipeline">make_training_pipeline() (sleap.nn.data.pipelines.BottomUpPipeline method)</a>
 
       <ul>
@@ -2313,9 +2353,15 @@
 </li>
       <li><a href="_autosummary/sleap.io.visuals.html#sleap.io.visuals.marker">marker() (in module sleap.io.visuals)</a>
 </li>
+      <li><a href="_autosummary/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.match_dict_from_match_function">match_dict_from_match_function() (in module sleap.nn.tracker.kalman)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.match_frame_pairs">match_frame_pairs() (in module sleap.nn.evals)</a>
+</li>
       <li><a href="_autosummary/sleap.info.metrics.html#sleap.info.metrics.match_instance_lists">match_instance_lists() (in module sleap.info.metrics)</a>
 </li>
       <li><a href="_autosummary/sleap.info.metrics.html#sleap.info.metrics.match_instance_lists_nodewise">match_instance_lists_nodewise() (in module sleap.info.metrics)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.match_instances">match_instances() (in module sleap.nn.evals)</a>
 </li>
       <li><a href="_autosummary/sleap.info.metrics.html#sleap.info.metrics.matched_instance_distances">matched_instance_distances() (in module sleap.info.metrics)</a>
 </li>
@@ -2631,6 +2677,8 @@
 </li>
         <li><a href="_autosummary/sleap.nn.inference.html#module-sleap.nn.inference">sleap.nn.inference</a>
 </li>
+        <li><a href="_autosummary/sleap.nn.kalman_filter.html#module-sleap.nn.kalman_filter">sleap.nn.kalman_filter</a>
+</li>
         <li><a href="_autosummary/sleap.nn.losses.html#module-sleap.nn.losses">sleap.nn.losses</a>
 </li>
         <li><a href="_autosummary/sleap.nn.model.html#module-sleap.nn.model">sleap.nn.model</a>
@@ -2642,6 +2690,10 @@
         <li><a href="_autosummary/sleap.nn.peak_finding.html#module-sleap.nn.peak_finding">sleap.nn.peak_finding</a>
 </li>
         <li><a href="_autosummary/sleap.nn.system.html#module-sleap.nn.system">sleap.nn.system</a>
+</li>
+        <li><a href="_autosummary/sleap.nn.tracker.components.html#module-sleap.nn.tracker.components">sleap.nn.tracker.components</a>
+</li>
+        <li><a href="_autosummary/sleap.nn.tracker.kalman.html#module-sleap.nn.tracker.kalman">sleap.nn.tracker.kalman</a>
 </li>
         <li><a href="_autosummary/sleap.nn.tracking.html#module-sleap.nn.tracking">sleap.nn.tracking</a>
 </li>
@@ -2766,7 +2818,7 @@
 </li>
       <li><a href="_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.nextUserLabeledFrame">nextUserLabeledFrame() (sleap.gui.commands.CommandContext method)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.nms_fast">nms_fast() (in module sleap.nn.tracking)</a>
+      <li><a href="_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.nms_fast">nms_fast() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="_autosummary/sleap.skeleton.html#sleap.skeleton.Node">Node (class in sleap.skeleton)</a>
 </li>
@@ -2791,6 +2843,8 @@
       <li><a href="_autosummary/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.num_convs">num_convs (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
 </li>
       <li><a href="_autosummary/sleap.io.video.html#sleap.io.video.Video.num_frames">num_frames() (sleap.io.video.Video property)</a>
+</li>
+      <li><a href="_autosummary/sleap.instance.html#sleap.instance.Instance.numpy">numpy() (sleap.instance.Instance method)</a>
 </li>
       <li><a href="_autosummary/sleap.io.video.html#sleap.io.video.NumpyVideo">NumpyVideo (class in sleap.io.video)</a>
 </li>
@@ -3378,6 +3432,8 @@
         <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.remove_instance">(sleap.io.dataset.LabelsDataCache method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.remove_second_bests_from_cost_matrix">remove_second_bests_from_cost_matrix() (in module sleap.nn.tracker.kalman)</a>
+</li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_video">remove_video() (sleap.io.dataset.Labels method)</a>
 
       <ul>
@@ -3397,6 +3453,8 @@
       <li><a href="_autosummary/sleap.nn.data.dataset_ops.html#sleap.nn.data.dataset_ops.Repeater.repeat">repeat (sleap.nn.data.dataset_ops.Repeater attribute)</a>
 </li>
       <li><a href="_autosummary/sleap.nn.data.dataset_ops.html#sleap.nn.data.dataset_ops.Repeater">Repeater (class in sleap.nn.data.dataset_ops)</a>
+</li>
+      <li><a href="_autosummary/sleap.nn.evals.html#sleap.nn.evals.replace_path">replace_path() (in module sleap.nn.evals)</a>
 </li>
       <li><a href="_autosummary/sleap.gui.commands.html#sleap.gui.commands.ReplaceVideo">ReplaceVideo (class in sleap.gui.commands)</a>
 </li>
@@ -3475,7 +3533,7 @@
       <ul>
         <li><a href="_autosummary/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ParallelFeaturePipeline.run">(sleap.info.feature_suggestions.ParallelFeaturePipeline class method)</a>
 </li>
-        <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.TrackCleaner.run">(sleap.nn.tracking.TrackCleaner method)</a>
+        <li><a href="_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.run">(sleap.nn.data.pipelines.Pipeline method)</a>
 </li>
       </ul></li>
       <li><a href="_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.run_gui_inference">run_gui_inference() (in module sleap.gui.learning.runners)</a>
@@ -4034,8 +4092,6 @@
         <li><a href="_autosummary/sleap.gui.overlays.tracks.html#module-sleap.gui.overlays.tracks">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.gui.shortcuts
 
@@ -4043,6 +4099,8 @@
         <li><a href="_autosummary/sleap.gui.shortcuts.html#module-sleap.gui.shortcuts">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.gui.state
 
@@ -4506,6 +4564,13 @@
 </li>
       </ul></li>
       <li>
+    sleap.nn.kalman_filter
+
+      <ul>
+        <li><a href="_autosummary/sleap.nn.kalman_filter.html#module-sleap.nn.kalman_filter">module</a>
+</li>
+      </ul></li>
+      <li>
     sleap.nn.losses
 
       <ul>
@@ -4545,6 +4610,20 @@
 
       <ul>
         <li><a href="_autosummary/sleap.nn.system.html#module-sleap.nn.system">module</a>
+</li>
+      </ul></li>
+      <li>
+    sleap.nn.tracker.components
+
+      <ul>
+        <li><a href="_autosummary/sleap.nn.tracker.components.html#module-sleap.nn.tracker.components">module</a>
+</li>
+      </ul></li>
+      <li>
+    sleap.nn.tracker.kalman
+
+      <ul>
+        <li><a href="_autosummary/sleap.nn.tracker.kalman.html#module-sleap.nn.tracker.kalman">module</a>
 </li>
       </ul></li>
       <li>
@@ -4774,8 +4853,12 @@
 </li>
       <li><a href="_autosummary/sleap.instance.html#sleap.instance.Track">Track (class in sleap.instance)</a>
 </li>
-      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.track">track() (sleap.nn.tracking.Tracker method)</a>
+      <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.KalmanTracker.track">track() (sleap.nn.tracking.KalmanTracker method)</a>
+
+      <ul>
+        <li><a href="_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.track">(sleap.nn.tracking.Tracker method)</a>
 </li>
+      </ul></li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.track_set_instance">track_set_instance() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.track_swap">track_swap() (sleap.io.dataset.Labels method)</a>
@@ -5284,7 +5367,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

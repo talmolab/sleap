@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.nn.inference &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -359,7 +360,7 @@
     <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
     <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
 
 <div class="viewcode-block" id="TopdownPredictor.from_trained_models"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.TopdownPredictor.from_trained_models">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span>
@@ -369,7 +370,7 @@
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
         <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+        <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TopdownPredictor&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create predictor from saved models.</span>
 
@@ -665,6 +666,12 @@
         <span class="n">make_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">t0_gen</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">):</span>
+            <span class="n">data_provider</span> <span class="o">=</span> <span class="n">LabelsReader</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Video</span><span class="p">):</span>
+            <span class="n">data_provider</span> <span class="o">=</span> <span class="n">VideoReader</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
+
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">make_instances</span> <span class="ow">or</span> <span class="n">make_labels</span><span class="p">:</span>
@@ -836,6 +843,10 @@
         <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">make_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">):</span>
+            <span class="n">data_provider</span> <span class="o">=</span> <span class="n">LabelsReader</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Video</span><span class="p">):</span>
+            <span class="n">data_provider</span> <span class="o">=</span> <span class="n">VideoReader</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">make_instances</span> <span class="ow">or</span> <span class="n">make_labels</span><span class="p">:</span>
@@ -855,7 +866,7 @@
     <span class="n">pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
     <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
 
 <div class="viewcode-block" id="SingleInstancePredictor.from_trained_models"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.from_trained_models">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_trained_models</span><span class="p">(</span>
@@ -863,7 +874,7 @@
         <span class="n">confmap_model_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
         <span class="n">peak_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
         <span class="n">integral_refinement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+        <span class="n">integral_patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SingleInstancePredictor&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create predictor from saved models.&quot;&quot;&quot;</span>
         <span class="c1"># Load confmap model.</span>
@@ -975,6 +986,10 @@
         <span class="n">make_instances</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">make_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">):</span>
+            <span class="n">data_provider</span> <span class="o">=</span> <span class="n">LabelsReader</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Video</span><span class="p">):</span>
+            <span class="n">data_provider</span> <span class="o">=</span> <span class="n">VideoReader</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_generator</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">make_instances</span> <span class="ow">or</span> <span class="n">make_labels</span><span class="p">:</span>
@@ -1403,7 +1418,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

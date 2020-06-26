@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.nn.evals &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -34,16 +35,95 @@
             
   <div class="section" id="module-sleap.nn.evals">
 <span id="sleap-nn-evals"></span><h1>sleap.nn.evals<a class="headerlink" href="#module-sleap.nn.evals" title="Permalink to this headline">¶</a></h1>
-<p>This module contains evaluation utilities for measuring pose estimation accuracy.</p>
+<p>Evaluation utilities for measuring pose estimation accuracy.</p>
+<p>To generate metrics, you’ll need two <cite>Labels</cite> datasets, one with ground truth
+data and one with predicted data. The video paths in the datasets must match.
+Load both datasets and call <cite>evaluate</cite>, like so:</p>
+<p>&gt; labels_gt = Labels.load_file(“path/to/ground/truth.slp”)
+&gt; labels_pr = Labels.load_file(“path/to/predictions.slp”)
+&gt; metrics = evaluate(labels_gt, labels_pr)</p>
+<p><cite>evaluate</cite> returns a dictionary, keys are strings which name the metric,
+values are either floats or numpy arrays.</p>
+<p>A good place to start if you want to understand how well your models are
+performing is to look at:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>oks_voc.mAP</p></li>
+<li><p>vis.precision</p></li>
+<li><p>vis.recall</p></li>
+<li><p>dist.p95</p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt id="sleap.nn.evals.compute_dist_metrics">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_dist_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dists</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>numpy.ndarray<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_dist_metrics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_dist_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Euclidean distance error at different percentiles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dists</strong> – An array of pairwise distances of shape <cite>(n_positive_pairs, n_nodes)</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary of distance metrics.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.compute_dists">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_dists</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">positive_pairs</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">, </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">sleap.instance.PredictedInstance</a><span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_dists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_dists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute Euclidean distances between matched pairs of instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>positive_pairs</strong> – A list of tuples of the form <cite>(instance_gt, instance_pr, _)</cite>
+containing the matched pair of instances.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An array of pairwise distances of shape <cite>(n_positive_pairs, n_nodes)</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.compute_generalized_voc_metrics">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_generalized_voc_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">positive_pairs</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">, </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">sleap.instance.PredictedInstance</a><span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">false_negatives</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">match_scores</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">match_score_thresholds</span><span class="p">:</span> <span class="n">numpy.ndarray</span> <span class="o">=</span> <span class="default_value">array([0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])</span></em>, <em class="sig-param"><span class="n">recall_thresholds</span><span class="p">:</span> <span class="n">numpy.ndarray</span> <span class="o">=</span> <span class="default_value">array([0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38, 0.39, 0.4, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.6, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.68, 0.69, 0.7, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1.0])</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'gvoc'</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_generalized_voc_metrics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_generalized_voc_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute VOC metrics given matched pairs of instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>positive_pairs</strong> – A list of tuples of the form <cite>(instance_gt, instance_pr, _)</cite>
+containing the matched pair of instances.</p></li>
+<li><p><strong>false_negatives</strong> – A list of unmatched instances.</p></li>
+<li><p><strong>match_scores</strong> – The score obtained in the matching procedure for each matched pair
+(e.g., OKS).</p></li>
+<li><p><strong>match_score_thresholds</strong> – Score thresholds at which to consider matches as a true
+positive match.</p></li>
+<li><p><strong>recall_thresholds</strong> – Recall thresholds at which to evaluate Average Precision.</p></li>
+<li><p><strong>name</strong> – Name to use to prefix returned metric keys.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary of VOC metrics.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt id="sleap.nn.evals.compute_instance_area">
-<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_instance_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_instance_area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_instance_area" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_instance_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_instance_area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_instance_area" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the area of the bounding box of a set of keypoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>points</strong> – A numpy array of coordinates.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The area of the bounding box of the points.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="sleap.nn.evals.compute_oks">
-<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_oks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points_gt</span></em>, <em class="sig-param"><span class="n">points_pr</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">stddev</span><span class="o">=</span><span class="default_value">0.025</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_oks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_oks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_oks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points_gt</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">points_pr</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">stddev</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.025</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_oks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_oks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the object keypoints similarity between sets of points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -81,6 +161,172 @@ anatomical features and since it is often occluded by clothing.</p>
 <p>The implementation here is based off of the descriptions in:
 Ronch &amp; Perona. “Benchmarking and Error Diagnosis in Multi-Instance Pose
 Estimation.” ICCV (2017).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.compute_pck_metrics">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_pck_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dists</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">thresholds</span><span class="p">:</span> <span class="n">numpy.ndarray</span> <span class="o">=</span> <span class="default_value">array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>numpy.ndarray<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_pck_metrics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_pck_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute PCK across a range of thresholds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dists</strong> – An array of pairwise distances of shape <cite>(n_positive_pairs, n_nodes)</cite>.</p></li>
+<li><p><strong>thresholds</strong> – A list of distance thresholds in pixels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary of PCK metrics evaluated at each threshold.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.compute_visibility_conf">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">compute_visibility_conf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">positive_pairs</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">, </span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#compute_visibility_conf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.compute_visibility_conf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute node visibility metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>positive_pairs</strong> – A list of tuples of the form <cite>(instance_gt, instance_pr, _)</cite>
+containing the matched pair of instances.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary of visibility metrics, including the confusion matrix.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.evaluate">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_gt</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">labels_pr</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">oks_stddev</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.025</span></em>, <em class="sig-param"><span class="n">oks_scale</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">match_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span>float<span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate all metrics from ground truth and predicted labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_gt</strong> – The <cite>Labels</cite> dataset object with ground truth labels.</p></li>
+<li><p><strong>labels_pr</strong> – The <cite>Labels</cite> dataset object with predicted labels.</p></li>
+<li><p><strong>oks_stddev</strong> – The standard deviation to use for calculating object
+keypoint similarity; see <cite>compute_oks</cite> function for details.</p></li>
+<li><p><strong>oks_scale</strong> – The scale to use for calculating object
+keypoint similarity; see <cite>compute_oks</cite> function for details.</p></li>
+<li><p><strong>match_threshold</strong> – The threshold to use on oks scores when determining
+which instances match between ground truth and predicted frames.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict, keys are strings, values are metrics (floats or ndarrays).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.evaluate_model">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">evaluate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a></span></em>, <em class="sig-param"><span class="n">labels_reader</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader">sleap.nn.data.providers.LabelsReader</a></span></em>, <em class="sig-param"><span class="n">model</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a></span></em>, <em class="sig-param"><span class="n">save</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">split_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'test'</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#evaluate_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.evaluate_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate a trained model and save metrics and predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfg</strong> – The <cite>TrainingJobConfig</cite> associated with the model.</p></li>
+<li><p><strong>labels_reader</strong> – A <cite>LabelsReader</cite> pipeline generator that reads the ground truth
+data to evaluate.</p></li>
+<li><p><strong>model</strong> – The <cite>sleap.nn.model.Model</cite> instance to evaluate.</p></li>
+<li><p><strong>save</strong> – If True, save the predictions and metrics to the model folder.</p></li>
+<li><p><strong>split_name</strong> – String name to append to the saved filenames.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of <cite>(labels_pr, metrics)</cite>.</p>
+<p><cite>labels_pr</cite> will contain the predicted labels.</p>
+<p><cite>metrics</cite> will contain the evaluated metrics given the predictions, or None if
+the metrics failed to be computed.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.find_frame_pairs">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">find_frame_pairs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_gt</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">labels_pr</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">, </span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#find_frame_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.find_frame_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find corresponding frames across two sets of labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_gt</strong> – A <cite>sleap.Labels</cite> instance with ground truth instances.</p></li>
+<li><p><strong>labels_pr</strong> – A <cite>sleap.Labels</cite> instance with predicted instances.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of pairs of <cite>sleap.LabeledFrame`s in the form `(frame_gt, frame_pr)</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.match_frame_pairs">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">match_frame_pairs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame_pairs</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">, </span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">stddev</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.025</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">, </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">sleap.instance.PredictedInstance</a><span class="p">, </span>float<span class="p">]</span><span class="p">]</span><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#match_frame_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.match_frame_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match all ground truth and predicted instances within each pair of frames.</p>
+<p>This is a wrapper for <cite>match_instances()</cite> but operates on lists of frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame_pairs</strong> – A list of pairs of <cite>sleap.LabeledFrame`s in the form
+`(frame_gt, frame_pr)</cite>. These can be obtained with <cite>find_frame_pairs()</cite>.</p></li>
+<li><p><strong>stddev</strong> – The expected spread of coordinates for OKS computation.</p></li>
+<li><p><strong>scale</strong> – The scale for normalizing the OKS. If not set, the bounding box area will
+be used.</p></li>
+<li><p><strong>threshold</strong> – The minimum OKS between a candidate pair of instances to be
+considered a match.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of (<cite>positive_pairs</cite>, <cite>false_negatives</cite>).</p>
+<p><cite>positive_pairs</cite> is a list of 3-tuples of the form
+<cite>(instance_gt, instance_pr, oks)</cite> containing the matched pair of instances and
+their OKS.</p>
+<p><cite>false_negatives</cite> is a list of ground truth <a href="#id1"><span class="problematic" id="id2">`</span></a>sleap.Instance`s that could not be
+matched.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.match_instances">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">match_instances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame_gt</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">frame_pr</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">stddev</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.025</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">, </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">sleap.instance.PredictedInstance</a><span class="p">, </span>float<span class="p">]</span><span class="p">]</span><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#match_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.match_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match pairs of instances between ground truth and predictions in a frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame_gt</strong> – A <cite>sleap.LabeledFrame</cite> with ground truth instances.</p></li>
+<li><p><strong>frame_pr</strong> – A <cite>sleap.LabeledFrame</cite> with predicted instances.</p></li>
+<li><p><strong>stddev</strong> – The expected spread of coordinates for OKS computation.</p></li>
+<li><p><strong>scale</strong> – The scale for normalizing the OKS. If not set, the bounding box area will
+be used.</p></li>
+<li><p><strong>threshold</strong> – The minimum OKS between a candidate pair of instances to be
+considered a match.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of (<cite>positive_pairs</cite>, <cite>false_negatives</cite>).</p>
+<p><cite>positive_pairs</cite> is a list of 3-tuples of the form
+<cite>(instance_gt, instance_pr, oks)</cite> containing the matched pair of instances and
+their OKS.</p>
+<p><cite>false_negatives</cite> is a list of ground truth <a href="#id3"><span class="problematic" id="id4">`</span></a>sleap.Instance`s that could not be
+matched.</p>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function uses the approach from the PASCAL VOC scoring procedure. Briefly,
+predictions are sorted descending by their instance-level prediction scores and
+greedily matched to ground truth instances which are then removed from the pool
+of available instances.</p>
+<p>Ground truth instances that remain unmatched are considered false negatives.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.evals.replace_path">
+<code class="sig-prename descclassname">sleap.nn.evals.</code><code class="sig-name descname">replace_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>dict<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">new_paths</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/evals.html#replace_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.evals.replace_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces video paths in <em>unstructured</em> video objects.</p>
 </dd></dl>
 
 </div>
@@ -177,6 +423,7 @@ Estimation.” ICCV (2017).</p>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.kalman_filter.html">sleap.nn.kalman_filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
@@ -216,6 +463,8 @@ Estimation.” ICCV (2017).</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
 </ul>
 </li>
 </ul>
@@ -257,7 +506,7 @@ Estimation.” ICCV (2017).</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

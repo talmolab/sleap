@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.nn.model &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -210,7 +211,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            input_shape: Tuple of (height, width, channels) specifying the shape of the</span>
 <span class="sd">                inputs before preprocessing.</span>
-<span class="sd">            </span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            An instantiated `tf.keras.Model`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -223,7 +224,7 @@
         <span class="c1"># Make sure main and intermediate feature outputs are lists.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_main</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
             <span class="n">x_main</span> <span class="o">=</span> <span class="p">[</span><span class="n">x_main</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_mid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">IntermediateFeature</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_mid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_mid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">IntermediateFeature</span><span class="p">):</span>
             <span class="n">x_mid</span> <span class="o">=</span> <span class="p">[</span><span class="n">x_mid</span><span class="p">]</span>
 
         <span class="c1"># Build output layers for each head.</span>
@@ -265,7 +266,7 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_head</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Could not find a feature activation for output at stride &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output</span><span class="o">.</span><span class="n">stride</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output</span><span class="o">.</span><span class="n">output_stride</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
             <span class="n">x_outs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_head</span><span class="p">)</span>
         <span class="c1"># TODO: Warn/error if x_main was not connected to any heads?</span>
@@ -334,7 +335,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

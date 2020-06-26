@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.io.format.sleap_analysis &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -91,18 +92,25 @@
 
         <span class="n">f</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">file</span>
         <span class="n">tracks_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">track_names_list</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;track_names&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">node_names_list</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;node_names&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
 
         <span class="c1"># shape: frames * nodes * 2 * tracks</span>
         <span class="n">frame_count</span><span class="p">,</span> <span class="n">node_count</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">track_count</span> <span class="o">=</span> <span class="n">tracks_matrix</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">Track</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">track_name</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span> <span class="k">for</span> <span class="n">track_name</span> <span class="ow">in</span> <span class="n">track_names_list</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;track_names&quot;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">track_names_list</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;track_names&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">Track</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">track_name</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span> <span class="k">for</span> <span class="n">track_name</span> <span class="ow">in</span> <span class="n">track_names_list</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">Track</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;track_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">track_count</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;node_names&quot;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">node_names_dset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;node_names&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">node_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">node_names_dset</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node_names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;node </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">node_count</span><span class="p">)]</span>
 
         <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
         <span class="n">last_node_name</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">node_names_list</span><span class="p">:</span>
-            <span class="n">node_name</span> <span class="o">=</span> <span class="n">node_name</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">:</span>
             <span class="n">skeleton</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">connect_adj_nodes</span> <span class="ow">and</span> <span class="n">last_node_name</span><span class="p">:</span>
                 <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">last_node_name</span><span class="p">,</span> <span class="n">node_name</span><span class="p">)</span>
@@ -199,7 +207,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

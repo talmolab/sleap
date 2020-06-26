@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.nn.data.confidence_maps &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -202,11 +203,14 @@
                     <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="s2">&quot;centroids&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
                     <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
                     <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
-                    <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+                    <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">example</span><span class="p">[</span><span class="s2">&quot;confidence_maps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">make_multi_confmaps</span><span class="p">(</span>
-                    <span class="n">example</span><span class="p">[</span><span class="s2">&quot;instances&quot;</span><span class="p">],</span> <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span> <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+                    <span class="n">example</span><span class="p">[</span><span class="s2">&quot;instances&quot;</span><span class="p">],</span>
+                    <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
+                    <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
+                    <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">return</span> <span class="n">example</span>
 
@@ -291,12 +295,18 @@
         <span class="k">def</span> <span class="nf">generate_confmaps</span><span class="p">(</span><span class="n">example</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;Local processing function for dataset mapping.&quot;&quot;&quot;</span>
             <span class="n">example</span><span class="p">[</span><span class="s2">&quot;instance_confidence_maps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">make_confmaps</span><span class="p">(</span>
-                <span class="n">example</span><span class="p">[</span><span class="s2">&quot;center_instance&quot;</span><span class="p">],</span> <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span> <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+                <span class="n">example</span><span class="p">[</span><span class="s2">&quot;center_instance&quot;</span><span class="p">],</span>
+                <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
+                <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
+                <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">:</span>
                 <span class="n">example</span><span class="p">[</span><span class="s2">&quot;all_instance_confidence_maps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">make_multi_confmaps</span><span class="p">(</span>
-                    <span class="n">example</span><span class="p">[</span><span class="s2">&quot;all_instances&quot;</span><span class="p">],</span> <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span> <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+                    <span class="n">example</span><span class="p">[</span><span class="s2">&quot;all_instances&quot;</span><span class="p">],</span>
+                    <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
+                    <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
+                    <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
                 <span class="p">)</span>
 
             <span class="k">return</span> <span class="n">example</span>
@@ -372,10 +382,7 @@
 
             <span class="c1"># Generate confidence maps.</span>
             <span class="n">example</span><span class="p">[</span><span class="s2">&quot;confidence_maps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">make_confmaps</span><span class="p">(</span>
-                <span class="n">example</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">],</span>
-                <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
-                <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
-                <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+                <span class="n">example</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">],</span> <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span> <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="k">return</span> <span class="n">example</span>
@@ -446,7 +453,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

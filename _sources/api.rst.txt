@@ -118,3 +118,5 @@ Developer API
    sleap.nn.data.resizing
    sleap.nn.data.training
    sleap.nn.data.utils
+   sleap.nn.tracker.components
+   sleap.nn.tracker.kalman

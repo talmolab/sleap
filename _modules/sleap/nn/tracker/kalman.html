@@ -1,0 +1,773 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sleap.nn.tracker.kalman &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.tracker.kalman</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module to use Kalman filters for tracking instance identities.</span>
+
+<span class="sd">The Kalman filters needs a small number of frames already tracked in order</span>
+<span class="sd">to initialize the filters. Then you can use the module for tracking on the</span>
+<span class="sd">remaining frames.</span>
+
+<span class="sd">It&#39;s a good idea to cull the instances (i.e., N best instances per frame) before</span>
+<span class="sd">trying to track with the Kalman filter, since the skeleton fragments can mess</span>
+<span class="sd">up the filters.</span>
+
+<span class="sd">Usage:</span>
+
+<span class="sd">&gt; filter_frames(frames, instance_count=2, node_indices=[0, 1, 2])</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">ma</span>
+
+<span class="kn">import</span> <span class="nn">pykalman</span>
+<span class="kn">from</span> <span class="nn">pykalman</span> <span class="kn">import</span> <span class="n">KalmanFilter</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">,</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Track</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.tracker.components</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">greedy_matching</span><span class="p">,</span>
+    <span class="n">InstanceType</span><span class="p">,</span>
+    <span class="n">Match</span><span class="p">,</span>
+    <span class="n">first_choice_matching</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BareKalmanTracker</span><span class="p">:</span>
+    <span class="n">node_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>  <span class="c1"># indices of rows for points to use</span>
+    <span class="n">instance_count</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="n">instance_score_thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">reset_gap_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="n">kalman_filters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="n">pykalman</span><span class="o">.</span><span class="n">KalmanFilter</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">last_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">tracks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">last_frame_for_track</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">],</span>
+        <span class="n">instance_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">node_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">instance_score_thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">reset_gap_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BareKalmanTracker&quot;</span><span class="p">:</span>
+
+        <span class="n">kf_obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">instance_count</span><span class="o">=</span><span class="n">instance_count</span><span class="p">,</span>
+            <span class="n">node_indices</span><span class="o">=</span><span class="n">node_indices</span><span class="p">,</span>
+            <span class="n">instance_score_thresh</span><span class="o">=</span><span class="n">instance_score_thresh</span><span class="p">,</span>
+            <span class="n">reset_gap_size</span><span class="o">=</span><span class="n">reset_gap_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">instances_lists</span> <span class="o">=</span> <span class="p">[</span><span class="n">lf</span><span class="o">.</span><span class="n">predicted_instances</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">]</span>
+
+        <span class="n">kf_obj</span><span class="o">.</span><span class="n">init_filters</span><span class="p">(</span><span class="n">instances_lists</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">kf_obj</span>
+
+    <span class="k">def</span> <span class="nf">init_filters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">]</span>
+    <span class="p">):</span>  <span class="c1"># tracked_instances_lists: Iterable[Iterable[PredictedInstance]]):</span>
+        <span class="n">frame_array_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="n">track_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">last_results</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Kalman filter must be initialized with instances.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO: make arg optional and use algorithm to find best nodes to track</span>
+
+        <span class="c1"># instances = [inst for inst_list in tracked_instances_lists for inst in inst_list]</span>
+
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="n">point_coords</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_indices</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="n">frame_array_dict</span><span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point_coords</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">track</span><span class="p">,</span> <span class="n">frame_array</span> <span class="ow">in</span> <span class="n">frame_array_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="n">frame_array</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">frame_array</span><span class="p">)</span>
+            <span class="n">frame_array</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">frame_array</span><span class="p">)</span>
+
+            <span class="n">initial_frame</span> <span class="o">=</span> <span class="n">frame_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">initial_frame_size</span> <span class="o">=</span> <span class="n">initial_frame</span><span class="o">.</span><span class="n">size</span>
+            <span class="n">initial_state_means</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">initial_frame_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">coord_idx</span><span class="p">,</span> <span class="n">coord_value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">initial_frame</span><span class="o">.</span><span class="n">flatten</span><span class="p">()):</span>
+                <span class="n">initial_state_means</span><span class="p">[(</span><span class="n">coord_idx</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coord_value</span>
+
+            <span class="n">transition_matrix</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">coord_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">initial_frame_size</span><span class="p">):</span>
+                <span class="n">transition_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">coord_idx</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">coord_idx</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">initial_frame_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+
+                <span class="n">transition_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="p">((</span><span class="n">coord_idx</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">initial_frame_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+
+            <span class="n">observation_matrix</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">coord_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">initial_frame_size</span><span class="p">):</span>
+                <span class="n">observation_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="p">(</span><span class="n">coord_idx</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">initial_frame_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)]</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Make the filter for this track</span>
+            <span class="n">kf</span> <span class="o">=</span> <span class="n">KalmanFilter</span><span class="p">(</span>
+                <span class="n">transition_matrices</span><span class="o">=</span><span class="n">transition_matrix</span><span class="p">,</span>
+                <span class="n">observation_matrices</span><span class="o">=</span><span class="n">observation_matrix</span><span class="p">,</span>
+                <span class="n">initial_state_mean</span><span class="o">=</span><span class="n">initial_state_means</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">kf</span> <span class="o">=</span> <span class="n">kf</span><span class="o">.</span><span class="n">em</span><span class="p">(</span><span class="n">frame_array</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+            <span class="n">state_means</span><span class="p">,</span> <span class="n">state_covariances</span> <span class="o">=</span> <span class="n">kf</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">frame_array</span><span class="p">)</span>
+
+            <span class="c1"># Store necessary objects/data for this track</span>
+            <span class="n">track_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
+            <span class="n">filters</span><span class="p">[</span><span class="n">track</span><span class="p">]</span> <span class="o">=</span> <span class="n">kf</span>
+            <span class="n">last_results</span><span class="p">[</span><span class="n">track</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;means&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">state_means</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;covariances&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">state_covariances</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kalman_filters</span> <span class="o">=</span> <span class="n">filters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span> <span class="o">=</span> <span class="n">track_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_results</span> <span class="o">=</span> <span class="n">last_results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_frame_for_track</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">replace_track</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_track</span><span class="p">:</span> <span class="n">Track</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replaces track identity tied to a Kalman filter.</span>
+
+<span class="sd">        This is used when there&#39;s a significant gap in the tracking so we&#39;re</span>
+<span class="sd">        no longer confident that the filter is tracking the same identity as</span>
+<span class="sd">        before.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_track</span> <span class="o">=</span> <span class="n">Track</span><span class="p">(</span><span class="n">spawned_on</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">old_track</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kalman_filters</span><span class="p">[</span><span class="n">new_track</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kalman_filters</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">old_track</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">old_track</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_track</span>
+        <span class="k">if</span> <span class="n">old_track</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_results</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_results</span><span class="p">[</span><span class="n">new_track</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_results</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">old_track</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">track_frame</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">untracked_instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">],</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tracks instances from single frame using Kalman filters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            untracked_instances: List of instances from frame.</span>
+<span class="sd">            frame_idx: Frame index, used for track spawn frame index and for</span>
+<span class="sd">                determining if we&#39;ve had a large gap in tracking.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None; updates tracks on instances in place.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get expected positions for each track.</span>
+        <span class="c1"># Doesn&#39;t update &quot;last results&quot; since we don&#39;t want this updated</span>
+        <span class="c1"># until after we process the frame (below).</span>
+        <span class="n">filter_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_filters</span><span class="p">(</span><span class="n">only_update_matches</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Measure similarity (inverse cost) between each instance</span>
+        <span class="c1"># and each track, based on expected position for track.</span>
+        <span class="n">cost_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_cost_matrix</span><span class="p">(</span>
+            <span class="n">untracked_instances</span><span class="o">=</span><span class="n">untracked_instances</span><span class="p">,</span> <span class="n">filter_results</span><span class="o">=</span><span class="n">filter_results</span>
+        <span class="p">)</span>
+
+        <span class="c1"># FIXME: why all nans? is this the right thing to do?</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">untracked_instances</span>
+
+        <span class="c1"># Only count best matches which are sufficiently better than next</span>
+        <span class="c1"># best match (by threshold determined from data).</span>
+        <span class="n">min_dist_from_expected_location</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">))</span>
+        <span class="n">cost_matrix</span> <span class="o">=</span> <span class="n">remove_second_bests_from_cost_matrix</span><span class="p">(</span>
+            <span class="n">cost_matrix</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">min_dist_from_expected_location</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Make function which determines whether instances are &quot;too close&quot;</span>
+        <span class="c1"># for one of the instances to use its second choice match.</span>
+        <span class="c1"># &quot;too close&quot; is determined by the same threshold used for</span>
+        <span class="c1"># making sure best match is sufficiently better than second best,</span>
+        <span class="c1"># i.e., the minimum (mean point) distance between any instance</span>
+        <span class="c1"># and any of the expected coordinates (which correspond to tracks).</span>
+        <span class="n">too_close_funct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_too_close_checking_function</span><span class="p">(</span>
+            <span class="n">untracked_instances</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="o">=</span><span class="n">min_dist_from_expected_location</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Match instances to tracks based on similarity matrix.</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">get_track_instance_matches</span><span class="p">(</span>
+            <span class="n">cost_matrix</span><span class="p">,</span>
+            <span class="n">instances</span><span class="o">=</span><span class="n">untracked_instances</span><span class="p">,</span>
+            <span class="n">tracks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">,</span>
+            <span class="n">are_too_close_function</span><span class="o">=</span><span class="n">too_close_funct</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">track_inst_matches</span> <span class="o">=</span> <span class="p">{</span><span class="n">match</span><span class="o">.</span><span class="n">track</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">instance</span> <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">}</span>
+
+        <span class="c1"># Update filters with points for each matched instance.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_results</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_filters</span><span class="p">(</span><span class="n">track_inst_matches</span><span class="p">,</span> <span class="n">only_update_matches</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Set tracks on matched instances</span>
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="c1"># print(f&quot;set track to {match.track.name} ({match.score})&quot;)</span>
+            <span class="n">match</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">track</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_frame_for_track</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">track</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame_idx</span>
+
+            <span class="c1"># When tracks are reset during a gap we don&#39;t know when the</span>
+            <span class="c1"># track will be used first so we set spawn to -1 so we can</span>
+            <span class="c1"># set it correctly when the reset track is first matched.</span>
+            <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">spawned_on</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">match</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">spawned_on</span> <span class="o">=</span> <span class="n">frame_idx</span>
+
+        <span class="c1"># Check how many tracks have a gap since they were last matched</span>
+        <span class="n">tracks_with_gap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks_with_gap</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
+        <span class="c1"># If multiple tracks, then we want to start new tracks for each.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tracks_with_gap</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">tracks_with_gap</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">replace_track</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_frame_for_track</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">untracked_instances</span>
+
+    <span class="k">def</span> <span class="nf">tracks_with_gap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">track</span>
+            <span class="k">for</span> <span class="n">track</span><span class="p">,</span> <span class="n">last_frame_idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_frame_for_track</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">frame_idx</span> <span class="o">-</span> <span class="n">last_frame_idx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_gap_size</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">last_frame_with_tracks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_frame_for_track</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_filters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">track_instance_matches</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="n">Instance</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">only_update_matches</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates state of Kalman filters.</span>
+
+<span class="sd">        For matching tracks to instances on a frame, we update the filters</span>
+<span class="sd">        to get the expected means and covariances for each tracked identity.</span>
+
+<span class="sd">        After matching tracks and instances on a frame, we update the filters</span>
+<span class="sd">        which matched with the points from the matched instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            track_instance_matches: Dictionary with instance that matched to</span>
+<span class="sd">                each track. Only used when updating after matches for frame.</span>
+<span class="sd">            only_update_matches: Whether to update all filters (using</span>
+<span class="sd">                ma.masked as points when we don&#39;t have match) or to skip</span>
+<span class="sd">                updating filters without a match. Should be False when updating</span>
+<span class="sd">                when getting data to use for frame matching and True when</span>
+<span class="sd">                updating after we&#39;ve determined matches.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None; modifies `last_results` attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="c1"># Update each Kalman filter, one per tracked identity</span>
+        <span class="k">for</span> <span class="n">track</span><span class="p">,</span> <span class="n">kf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kalman_filters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">track_instance_matches</span> <span class="ow">and</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">track_instance_matches</span><span class="p">:</span>
+
+                <span class="n">inst</span> <span class="o">=</span> <span class="n">track_instance_matches</span><span class="p">[</span><span class="n">track</span><span class="p">]</span>
+
+                <span class="c1"># x1, 0, y1, 0, x2, 0, y2, 0, ...</span>
+                <span class="c1"># points_array = np.zeros(len(self.node_indices) * 4)</span>
+                <span class="c1"># points_array[::2] = inst.points_array[self.node_indices, 0:2].flatten()</span>
+                <span class="n">points_array</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">points_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_indices</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+                <span class="c1"># convert to masked array</span>
+                <span class="n">points_array</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">points_array</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="n">only_update_matches</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">points_array</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+            <span class="n">exp_mean</span><span class="p">,</span> <span class="n">exp_covariance</span> <span class="o">=</span> <span class="n">kf</span><span class="o">.</span><span class="n">filter_update</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_results</span><span class="p">[</span><span class="n">track</span><span class="p">][</span><span class="s2">&quot;means&quot;</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_results</span><span class="p">[</span><span class="n">track</span><span class="p">][</span><span class="s2">&quot;covariances&quot;</span><span class="p">],</span>
+                <span class="n">points_array</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># The outputs from filter_update are lists which give 4 values for</span>
+            <span class="c1"># for each node: x, x_velocity, y, y_velocity.</span>
+
+            <span class="c1"># When matching instances to tracks we just use (x, y), so make</span>
+            <span class="c1"># list of (x0, y0, x1, y1, ...) with (x_n, y_n) for each node.</span>
+            <span class="n">exp_coord_means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">exp_mean</span><span class="p">[::</span><span class="mi">2</span><span class="p">])</span>
+
+            <span class="n">results</span><span class="p">[</span><span class="n">track</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;means&quot;</span><span class="p">:</span> <span class="n">exp_mean</span><span class="p">,</span>
+                <span class="s2">&quot;covariances&quot;</span><span class="p">:</span> <span class="n">exp_covariance</span><span class="p">,</span>
+                <span class="s2">&quot;coordinate_means&quot;</span><span class="p">:</span> <span class="n">exp_coord_means</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">def</span> <span class="nf">get_instance_points_weight</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">PredictedInstance</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_indices</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Kalman tracker must have node_indices set.&quot;</span><span class="p">)</span>
+
+        <span class="sd">&quot;&quot;&quot;Returns points (and weights, i.e., scores) for tracked nodes.&quot;&quot;&quot;</span>
+        <span class="c1"># For predicted instances, the *full* points array will be (N, 5)</span>
+        <span class="c1"># where N is the number of nodes.</span>
+        <span class="c1"># Each row has: x, y, visible, complete, score</span>
+        <span class="n">point_array</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_points_array</span><span class="p">(</span>
+            <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">invisible_as_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="c1"># inst_points: [x1, y1, x2, y2, ...]</span>
+        <span class="c1"># weights: [score1, score1, score2, score2, ...]</span>
+        <span class="c1"># distances: [abs(x1 - x1_hat), ...]</span>
+        <span class="n">inst_points</span> <span class="o">=</span> <span class="n">point_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_indices</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">point_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_indices</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">inst_points</span><span class="p">,</span> <span class="n">weights</span>
+
+    <span class="k">def</span> <span class="nf">get_too_close_checking_function</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InstanceType</span><span class="p">],</span> <span class="n">dist_thresh</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;&quot;</span>
+<span class="sd">        Returns a function which determines if two instances are too close.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instances: Function should take pairs of instances in this list.</span>
+<span class="sd">            dist_thresh: Pairs of instances with mean point distance less</span>
+<span class="sd">                than this threshold count as &quot;too close&quot;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Function with signature (Instance, Instance) -&gt; bool.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mean_distance_lookup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mean_instance_distances</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">too_close_funct</span><span class="p">(</span><span class="n">inst_a</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">inst_b</span><span class="p">:</span> <span class="n">Instance</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">inst_a</span><span class="p">,</span> <span class="n">inst_b</span><span class="p">)</span> <span class="ow">in</span> <span class="n">mean_distance_lookup</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mean_distance_lookup</span><span class="p">[(</span><span class="n">inst_a</span><span class="p">,</span> <span class="n">inst_b</span><span class="p">)]</span> <span class="o">&lt;</span> <span class="n">dist_thresh</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mean_distance_lookup</span><span class="p">[(</span><span class="n">inst_b</span><span class="p">,</span> <span class="n">inst_a</span><span class="p">)]</span> <span class="o">&lt;</span> <span class="n">dist_thresh</span>
+
+        <span class="k">return</span> <span class="n">too_close_funct</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">instance_points_match_cost</span><span class="p">(</span>
+        <span class="n">instance_points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">instance_weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">expected_points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns match cost between instance and expected (filter) points.&quot;&quot;&quot;</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">expected_points</span> <span class="o">-</span> <span class="n">instance_points</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">distances</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">distances</span><span class="p">))</span>
+
+        <span class="c1"># &quot;cost&quot; for matching mean point distance weighted by point score</span>
+        <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">instance_weights</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_mean_instance_distances</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">Instance</span><span class="p">],</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns minimum mean distance between instances compared pairwise.&quot;&quot;&quot;</span>
+        <span class="n">inst_points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="n">inst_points</span><span class="p">[</span><span class="n">inst</span><span class="p">],</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_instance_points_weight</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">pair_mean_dist</span><span class="p">(</span><span class="n">inst_a</span><span class="p">,</span> <span class="n">inst_b</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">inst_points</span><span class="p">[</span><span class="n">inst_a</span><span class="p">]</span> <span class="o">-</span> <span class="n">inst_points</span><span class="p">[</span><span class="n">inst_b</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="p">(</span><span class="n">inst_a</span><span class="p">,</span> <span class="n">inst_b</span><span class="p">):</span> <span class="n">pair_mean_dist</span><span class="p">(</span><span class="n">inst_a</span><span class="p">,</span> <span class="n">inst_b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">inst_a</span><span class="p">,</span> <span class="n">inst_b</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">instances</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">frame_cost_matrix</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">untracked_instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">],</span>
+        <span class="n">filter_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns full cost matrix for matches.</span>
+
+<span class="sd">        Instances are rows, tracks (filters) are columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Matrix of matching similarity: [inst, track]</span>
+        <span class="n">matching_similarity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+            <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">untracked_instances</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kalman_filters</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">inst_idx</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">untracked_instances</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inst</span><span class="o">.</span><span class="n">score</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_score_thresh</span><span class="p">:</span>
+                <span class="c1"># Don&#39;t try to match to instances with sufficiently low score.</span>
+                <span class="c1"># FIXME: Maybe we should still do match since otherwise we might</span>
+                <span class="c1">#  match a track that should have matched the low scoring instance</span>
+                <span class="c1">#  to another instance.</span>
+                <span class="k">continue</span>
+
+            <span class="n">inst_points</span><span class="p">,</span> <span class="n">inst_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_instance_points_weight</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">track_idx</span><span class="p">,</span> <span class="n">track</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">):</span>
+                <span class="n">inst_sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_points_match_cost</span><span class="p">(</span>
+                    <span class="n">inst_points</span><span class="p">,</span>
+                    <span class="n">inst_weights</span><span class="p">,</span>
+                    <span class="n">expected_points</span><span class="o">=</span><span class="n">filter_results</span><span class="p">[</span><span class="n">track</span><span class="p">][</span><span class="s2">&quot;coordinate_means&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+
+                <span class="n">matching_similarity</span><span class="p">[</span><span class="n">inst_idx</span><span class="p">,</span> <span class="n">track_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">inst_sim</span>
+
+        <span class="k">return</span> <span class="n">matching_similarity</span>
+
+
+<div class="viewcode-block" id="get_track_instance_matches"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.get_track_instance_matches">[docs]</a><span class="k">def</span> <span class="nf">get_track_instance_matches</span><span class="p">(</span>
+    <span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>  <span class="c1"># [instance, track] match cost</span>
+    <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InstanceType</span><span class="p">],</span>  <span class="c1"># rows in cost matrix</span>
+    <span class="n">tracks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Track</span><span class="p">],</span>  <span class="c1"># columns in cost matrix</span>
+    <span class="n">are_too_close_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Match</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Matches track identities (from filters) to instances in frame.</span>
+
+<span class="sd">    Algorithm is modified greedy matching.</span>
+
+<span class="sd">    Standard greedy matching:</span>
+<span class="sd">    0. Start with list of all possible matches, sorted by ascending cost.</span>
+<span class="sd">    1. Find the match with minimum cost.</span>
+<span class="sd">    2. Use this match.</span>
+<span class="sd">    3. Remove other matches from list with same row or same column.</span>
+<span class="sd">    4. Go back to (1).</span>
+
+<span class="sd">    The algorithm implemented here replaces step (2) with this:</span>
+
+<span class="sd">    2&#39;. If the instance for the match would have preferred a track which</span>
+<span class="sd">        was already matched by another instance, then only use the match</span>
+<span class="sd">        under consideration now if these instances aren&#39;t &quot;too close&quot;.</span>
+
+<span class="sd">    Whenever the greedy matching would assign an instance to a track that</span>
+<span class="sd">    wasn&#39;t its first choice (i.e., another instance was a better match for</span>
+<span class="sd">    the track that would have been our current instance&#39;s first choice),</span>
+<span class="sd">    then we make sure that the two instances aren&#39;t too close together.</span>
+
+<span class="sd">    The upshot is that if two nearby instances are competing for the same</span>
+<span class="sd">    track, then the looser won&#39;t be given its second choice (since it&#39;s more</span>
+<span class="sd">    likely to be a redundant instance), but if nearby instances both match</span>
+<span class="sd">    best to distinct tracks, both matches are used.</span>
+
+<span class="sd">    What counts as &quot;too close&quot; is determined by the `are_too_close_function`</span>
+<span class="sd">    argument, which should have this signature:</span>
+
+<span class="sd">        are_too_close_function(Instance, Instance) -&gt; bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># For each track, determine which instance was the best match in isolation.</span>
+    <span class="n">first_choice_matches_by_track</span> <span class="o">=</span> <span class="n">match_dict_from_match_function</span><span class="p">(</span>
+        <span class="n">cost_matrix</span><span class="o">=</span><span class="n">cost_matrix</span><span class="p">,</span>
+        <span class="n">row_items</span><span class="o">=</span><span class="n">instances</span><span class="p">,</span>
+        <span class="n">column_items</span><span class="o">=</span><span class="n">tracks</span><span class="p">,</span>
+        <span class="n">match_function</span><span class="o">=</span><span class="n">first_choice_matching</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Find the best (greedy) set of compatible matches.</span>
+    <span class="n">greedy_matches</span> <span class="o">=</span> <span class="n">matches_from_match_tuples</span><span class="p">(</span>
+        <span class="n">match_tuples_from_match_function</span><span class="p">(</span>
+            <span class="n">cost_matrix</span><span class="o">=</span><span class="n">cost_matrix</span><span class="p">,</span>
+            <span class="n">row_items</span><span class="o">=</span><span class="n">instances</span><span class="p">,</span>
+            <span class="n">column_items</span><span class="o">=</span><span class="n">tracks</span><span class="p">,</span>
+            <span class="n">match_function</span><span class="o">=</span><span class="n">greedy_matching</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">good_matches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">greedy_matches</span><span class="p">:</span>
+
+        <span class="c1"># Was the matched track the first-choice match for any instance?</span>
+        <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">track</span> <span class="ow">in</span> <span class="n">first_choice_matches_by_track</span><span class="p">:</span>
+
+            <span class="c1"># Which instance was the best match (in isolation) for this track?</span>
+            <span class="n">competing_instance</span> <span class="o">=</span> <span class="n">first_choice_matches_by_track</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">track</span><span class="p">]</span>
+
+            <span class="c1"># Was it a different instance that the instance we&#39;re considering</span>
+            <span class="c1"># a match now (presumably because this instance may have had its</span>
+            <span class="c1"># first choice taken by another instance).</span>
+            <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">instance</span> <span class="o">!=</span> <span class="n">competing_instance</span><span class="p">:</span>
+
+                <span class="c1"># The current match instance is distinct from the instance</span>
+                <span class="c1"># which was the *best* (isolated) match for this track.</span>
+                <span class="c1"># Check if instances are too close for this match to be valid.</span>
+                <span class="k">if</span> <span class="n">are_too_close_function</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="n">competing_instance</span><span class="p">):</span>
+                    <span class="k">continue</span>
+
+        <span class="n">good_matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">good_matches</span></div>
+
+
+<div class="viewcode-block" id="match_dict_from_match_function"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.match_dict_from_match_function">[docs]</a><span class="k">def</span> <span class="nf">match_dict_from_match_function</span><span class="p">(</span>
+    <span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">row_items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">column_items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">match_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">key_by_column</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dict keys are from column (tracks), values are from row (instances).</span>
+
+<span class="sd">    If multiple rows (instances) match on the same column (track), then</span>
+<span class="sd">    dict will just contain the best match.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">match_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">match_cost_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">match_function</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">):</span>
+        <span class="n">match_cost</span> <span class="o">=</span> <span class="n">cost_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">match_cost</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">key_by_column</span><span class="p">:</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">column_items</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">row_items</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">val</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">column_items</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">row_items</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match_dict</span> <span class="ow">or</span> <span class="n">match_cost</span> <span class="o">&lt;</span> <span class="n">match_cost_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">match_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">match_cost_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">match_cost</span>
+
+    <span class="k">return</span> <span class="n">match_dict</span></div>
+
+
+<span class="k">def</span> <span class="nf">match_tuples_from_match_function</span><span class="p">(</span>
+    <span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">row_items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">column_items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">match_function</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">row_items</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">column_items</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">cost_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">match_function</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">matches_from_match_tuples</span><span class="p">(</span>
+    <span class="n">match_tuples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Instance</span><span class="p">,</span> <span class="n">Track</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Match</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Match</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">inst</span><span class="p">,</span> <span class="n">track</span><span class="o">=</span><span class="n">track</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="n">score</span><span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">track</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span> <span class="ow">in</span> <span class="n">match_tuples</span>
+    <span class="p">]</span>
+
+
+<div class="viewcode-block" id="remove_second_bests_from_cost_matrix"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.remove_second_bests_from_cost_matrix">[docs]</a><span class="k">def</span> <span class="nf">remove_second_bests_from_cost_matrix</span><span class="p">(</span>
+    <span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">thresh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">invalid_val</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Removes unclear matches from cost matrix.</span>
+
+<span class="sd">    If the best match for a given track is too close to the second best match,</span>
+<span class="sd">    then this will clear all the matches for that track (and ensure that any</span>
+<span class="sd">    instance where that track was the best match won&#39;t be matched to another</span>
+<span class="sd">    track).</span>
+
+<span class="sd">    It removes the matches by setting the appropriate rows/columns to the</span>
+<span class="sd">    specified invalid_val (usually nan or inf).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cost_matrix: Cost matrix for matching, lower means better match.</span>
+<span class="sd">        thresh: Best match must be better than second best + threshold</span>
+<span class="sd">            to be valid.</span>
+<span class="sd">        invalid_val: Value to set invalid rows/columns to.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">         cost matrix with invalid matches set to specified invalid value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">valid_match_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+
+    <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">cost_matrix</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Invalidate columns with best match too close to second best match.</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">cost_matrix</span><span class="p">[:,</span> <span class="n">c</span><span class="p">]</span>
+
+        <span class="c1"># Skip columns with all nans</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">column</span><span class="p">)):</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Get best match value for this column.</span>
+        <span class="n">col_min_val</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="c1"># Count the number of column within threshold of best match.</span>
+        <span class="n">close_match_count</span> <span class="o">=</span> <span class="p">(</span><span class="n">column</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">col_min_val</span> <span class="o">+</span> <span class="n">thresh</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="c1"># Best match is already 1, so check if more than one close match</span>
+        <span class="k">if</span> <span class="n">close_match_count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">valid_match_mask</span><span class="p">[:,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Invalidate rows where best match is already invalidated or is too close</span>
+    <span class="c1"># to second best match.</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+        <span class="c1"># Similar logic to the loop over columns, except for the additional</span>
+        <span class="c1"># check whether the best match in row is still valid.</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">cost_matrix</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">row</span><span class="p">)):</span>
+            <span class="k">continue</span>
+
+        <span class="n">row_validity_mask</span> <span class="o">=</span> <span class="n">valid_match_mask</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+
+        <span class="n">row_min_idx</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+        <span class="n">row_min_val</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">row_min_idx</span><span class="p">]</span>
+        <span class="n">is_min_item_valid</span> <span class="o">=</span> <span class="n">row_validity_mask</span><span class="p">[</span><span class="n">row_min_idx</span><span class="p">]</span>
+
+        <span class="n">close_match_count</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">row_min_val</span> <span class="o">+</span> <span class="n">thresh</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="c1"># Make sure the best match for row isn&#39;t too close to second best match</span>
+        <span class="c1"># and hasn&#39;t already been ruled out (this would happen if the column was</span>
+        <span class="c1"># invalidated because the best and second best matches were too close).</span>
+        <span class="c1"># For instance there could be a track (column) which is ruled out</span>
+        <span class="c1"># and an instance (row) where the best match for that *instance* is</span>
+        <span class="c1"># the row that&#39;s already ruled out. In this case, we want to make sure</span>
+        <span class="c1"># that we don&#39;t match anything (i.e., the best valid match) for that</span>
+        <span class="c1"># instance.</span>
+        <span class="k">if</span> <span class="n">close_match_count</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_min_item_valid</span><span class="p">:</span>
+            <span class="n">valid_match_mask</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Copy the similarity matrix (so we don&#39;t modify in place) and set invalid</span>
+    <span class="c1"># matches to specified invalid value.</span>
+    <span class="n">valid_cost_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">)</span>
+    <span class="n">valid_cost_matrix</span><span class="p">[</span><span class="o">~</span><span class="n">valid_match_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">invalid_val</span>
+
+    <span class="k">return</span> <span class="n">valid_cost_matrix</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -4,6 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sleap.nn.architectures.upsampling &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -194,8 +195,10 @@
             <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_stride</span><span class="p">)</span>
         <span class="p">)</span>
 
+        <span class="c1"># Initialize intermediate features with the output of the encoder stack.</span>
+        <span class="n">intermediate_feats</span> <span class="o">=</span> <span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">current_stride</span><span class="p">)]</span>
+
         <span class="c1"># Create each upsampling block.</span>
-        <span class="n">intermediate_feats</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_blocks</span><span class="p">):</span>
 
             <span class="c1"># Update stride level.</span>
@@ -349,7 +352,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
