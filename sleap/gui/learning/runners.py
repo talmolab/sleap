@@ -164,6 +164,12 @@ class InferenceTask:
             if key in self.inference_params and self.inference_params[key] is None:
                 del self.inference_params[key]
 
+        # --tracking.kf_init_frame_count enables the kalman filter tracking
+        # so if not set, then remove other (unused) args
+        if "tracking.kf_init_frame_count" not in self.inference_params:
+            if "tracking.kf_node_indices" in self.inference_params:
+                del self.inference_params["tracking.kf_node_indices"]
+
         bool_items_as_ints = (
             "tracking.pre_cull_to_target",
             "tracking.post_connect_single_breaks",
