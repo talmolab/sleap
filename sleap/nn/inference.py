@@ -632,10 +632,12 @@ class TopdownPredictor(Predictor):
         make_labels: bool = False,
     ):
         t0_gen = time.time()
+
         if isinstance(data_provider, sleap.Labels):
             data_provider = LabelsReader(data_provider)
         elif isinstance(data_provider, sleap.Video):
             data_provider = VideoReader(data_provider)
+
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
