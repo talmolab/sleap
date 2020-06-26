@@ -186,7 +186,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._max_tracks_stacked = 120
         self._track_stack_skip_count = 10
         self._header_label_height = 20
-        self._header_graph_height = 30
+        self._header_graph_height = 40
         self._header_height = self._header_label_height  # room for frame labels
         self._min_height = 19 + self._header_height
 
