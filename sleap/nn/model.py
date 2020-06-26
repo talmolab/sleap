@@ -177,7 +177,7 @@ class Model:
         Args:
             input_shape: Tuple of (height, width, channels) specifying the shape of the
                 inputs before preprocessing.
-            
+
         Returns:
             An instantiated `tf.keras.Model`.
         """
@@ -190,7 +190,7 @@ class Model:
         # Make sure main and intermediate feature outputs are lists.
         if isinstance(x_main, tf.Tensor):
             x_main = [x_main]
-        if isinstance(x_mid[0], IntermediateFeature):
+        if len(x_mid) > 0 and isinstance(x_mid[0], IntermediateFeature):
             x_mid = [x_mid]
 
         # Build output layers for each head.
@@ -232,7 +232,7 @@ class Model:
             if len(x_head) == 0:
                 raise ValueError(
                     f"Could not find a feature activation for output at stride "
-                    f"{output.stride}."
+                    f"{output.output_stride}."
                 )
             x_outs.append(x_head)
         # TODO: Warn/error if x_main was not connected to any heads?

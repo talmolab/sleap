@@ -22,9 +22,10 @@ class UpsamplingTests(tf.test.TestCase):
         model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
 
         self.assertAllEqual(x.shape, (None, 32, 32, 64))
-        self.assertEqual(len(intermediate_feats), 2)
-        self.assertEqual(intermediate_feats[0].stride, 8)
-        self.assertEqual(intermediate_feats[1].stride, 4)
+        self.assertEqual(len(intermediate_feats), 3)
+        self.assertEqual(intermediate_feats[0].stride, 16)
+        self.assertEqual(intermediate_feats[1].stride, 8)
+        self.assertEqual(intermediate_feats[2].stride, 4)
         self.assertEqual(len(model.layers), 13)
         self.assertIsInstance(model.layers[1], tf.keras.layers.Conv2DTranspose)
 
@@ -97,7 +98,7 @@ class UpsamplingTests(tf.test.TestCase):
         )
 
         self.assertAllEqual(x.shape, (None, 32, 32, 64))
-        self.assertEqual(len(intermediate_feats), 1)
+        self.assertEqual(len(intermediate_feats), 2)
 
     def test_upsampling_stack_upsampling_interp(self):
         upsampling_stack = upsampling.UpsamplingStack(
@@ -134,7 +135,7 @@ class UpsamplingTests(tf.test.TestCase):
         model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
 
         self.assertAllEqual(x.shape, (None, 64, 64, 16))
-        self.assertEqual(len(intermediate_feats), 3)
+        self.assertEqual(len(intermediate_feats), 4)
         self.assertIsInstance(model.layers[1], tf.keras.layers.Conv2DTranspose)
         self.assertIsInstance(model.layers[2], tf.keras.layers.BatchNormalization)
         self.assertIsInstance(model.layers[4], tf.keras.layers.Activation)
@@ -167,7 +168,7 @@ class UpsamplingTests(tf.test.TestCase):
         model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
 
         self.assertAllEqual(x.shape, (None, 64, 64, 16))
-        self.assertEqual(len(intermediate_feats), 3)
+        self.assertEqual(len(intermediate_feats), 4)
         self.assertAllEqual(
             model.get_layer("upsample_s16_to_s8_skip_conv1x1").output.shape,
             (None, 16, 16, 16),
@@ -180,7 +181,7 @@ class UpsamplingTests(tf.test.TestCase):
             model.get_layer("upsample_s16_to_s8_skip_add"), tf.keras.layers.Add
         )
 
-    def test_upsampling_stack(self):
+    def test_upsampling_stack_upsampling_concat(self):
         upsampling_stack = upsampling.UpsamplingStack.from_config(UpsamplingConfig(
                 method="transposed_conv",
                 skip_connections="concatenate",
@@ -198,8 +199,9 @@ class UpsamplingTests(tf.test.TestCase):
         model = tf.keras.Model(tf.keras.utils.get_source_inputs(x), x)
 
         self.assertAllEqual(x.shape, (None, 32, 32, 64))
-        self.assertEqual(len(intermediate_feats), 2)
-        self.assertEqual(intermediate_feats[0].stride, 8)
-        self.assertEqual(intermediate_feats[1].stride, 4)
+        self.assertEqual(len(intermediate_feats), 3)
+        self.assertEqual(intermediate_feats[0].stride, 16)
+        self.assertEqual(intermediate_feats[1].stride, 8)
+        self.assertEqual(intermediate_feats[2].stride, 4)
         self.assertEqual(len(model.layers), 13)
         self.assertIsInstance(model.layers[1], tf.keras.layers.Conv2DTranspose)

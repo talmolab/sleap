@@ -10,7 +10,7 @@ well as to define training vs inference versions based on the same configuration
 import tensorflow as tf
 import numpy as np
 import attr
-from typing import Sequence, Text, Optional, List, Tuple, Union, TypeVar
+from typing import Sequence, Text, Optional, List, Tuple, Union, TypeVar, Dict
 
 import sleap
 from sleap.nn.data.providers import LabelsReader, VideoReader
@@ -268,6 +268,14 @@ class Pipeline:
             ds = transformer.transform_dataset(ds)
 
         return ds
+
+    def run(self) -> List[Dict[Text, tf.Tensor]]:
+        """Build and evaluate the pipeline.
+
+        Returns:
+            List of example dictionaries after processing the pipeline.
+        """
+        return list(self.make_dataset())
 
 
 @attr.s(auto_attribs=True)

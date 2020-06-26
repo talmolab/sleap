@@ -57,7 +57,11 @@ class VideoItemForInference(ItemForInference):
         ):
             arg_list.extend(("--video.input_format", self.video.backend.input_format))
 
-        arg_list.extend(("--frames", ",".join(map(str, self.frames))))
+        # -Y represents endpoint of [X, Y) range but inference cli expects
+        # [X, Y-1] range (so add 1 since negative).
+        frame_int_list = [i + 1 if i < 0 else i for i in self.frames]
+
+        arg_list.extend(("--frames", ",".join(map(str, frame_int_list))))
 
         return arg_list
 
@@ -87,17 +91,20 @@ class DatasetItemForInference(ItemForInference):
 @attr.s(auto_attribs=True)
 class ItemsForInference:
     items: List[ItemForInference]
+    total_frame_count: int
 
     def __len__(self):
         return len(self.items)
 
     @classmethod
-    def from_video_frames_dict(cls, video_frames_dict):
+    def from_video_frames_dict(
+        cls, video_frames_dict: Dict[Video, List[int]], total_frame_count: int
+    ):
         items = []
         for video, frames in video_frames_dict.items():
             if frames:
                 items.append(VideoItemForInference(video=video, frames=frames))
-        return cls(items=items)
+        return cls(items=items, total_frame_count=total_frame_count)
 
 
 @attr.s(auto_attribs=True)
@@ -147,6 +154,30 @@ class InferenceTask:
 
         for job_path in self.trained_job_paths:
             cli_args.extend(("-m", job_path))
+
+        optional_items_as_nones = (
+            "tracking.target_instance_count",
+            "tracking.kf_init_frame_count",
+        )
+
+        for key in optional_items_as_nones:
+            if key in self.inference_params and self.inference_params[key] is None:
+                del self.inference_params[key]
+
+        # --tracking.kf_init_frame_count enables the kalman filter tracking
+        # so if not set, then remove other (unused) args
+        if "tracking.kf_init_frame_count" not in self.inference_params:
+            if "tracking.kf_node_indices" in self.inference_params:
+                del self.inference_params["tracking.kf_node_indices"]
+
+        bool_items_as_ints = (
+            "tracking.pre_cull_to_target",
+            "tracking.post_connect_single_breaks",
+        )
+
+        for key in bool_items_as_ints:
+            if key in self.inference_params:
+                self.inference_params[key] = int(self.inference_params[key])
 
         for key, val in self.inference_params.items():
             if not key.startswith(("_", "outputs.", "model.")):

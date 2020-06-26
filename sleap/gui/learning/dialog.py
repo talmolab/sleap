@@ -121,6 +121,23 @@ class LearningDialog(QtWidgets.QDialog):
         for tab in self.tabs.values():
             tab.update_file_list()
 
+    @staticmethod
+    def count_total_frames_for_selection_option(
+        videos_frames: Dict[Video, List[int]]
+    ) -> int:
+        if not videos_frames:
+            return 0
+
+        count = 0
+        for frame_list in videos_frames.values():
+            # Check for [X, Y) range given as (X, -Y) tuple
+            if len(frame_list) == 2 and frame_list[1] < 0:
+                count += -frame_list[1] - frame_list[0]
+            elif frame_list != (0, 0):
+                count += len(frame_list)
+
+        return count
+
     @property
     def frame_selection(self) -> Dict[str, Dict[Video, List[int]]]:
         """
@@ -136,19 +153,6 @@ class LearningDialog(QtWidgets.QDialog):
         if "_predict_frames" in self.pipeline_form_widget.fields.keys():
             prediction_options = []
 
-            def count_total_frames(videos_frames):
-                if not videos_frames:
-                    return 0
-                count = 0
-                for frame_list in videos_frames.values():
-                    # Check for [x, Y] range given as X, -Y
-                    # (we're not using typical [X, Y)-style range here)
-                    if len(frame_list) == 2 and frame_list[1] < 0:
-                        count += -frame_list[1] - frame_list[0]
-                    elif frame_list != (0, 0):
-                        count += len(frame_list)
-                return count
-
             total_random = 0
             total_suggestions = 0
             total_user = 0
@@ -158,19 +162,29 @@ class LearningDialog(QtWidgets.QDialog):
 
             # Determine which options are available given _frame_selection
             if "random" in self._frame_selection:
-                total_random = count_total_frames(self._frame_selection["random"])
+                total_random = self.count_total_frames_for_selection_option(
+                    self._frame_selection["random"]
+                )
             if "random_video" in self._frame_selection:
-                random_video = count_total_frames(self._frame_selection["random_video"])
+                random_video = self.count_total_frames_for_selection_option(
+                    self._frame_selection["random_video"]
+                )
             if "suggestions" in self._frame_selection:
-                total_suggestions = count_total_frames(
+                total_suggestions = self.count_total_frames_for_selection_option(
                     self._frame_selection["suggestions"]
                 )
             if "user" in self._frame_selection:
-                total_user = count_total_frames(self._frame_selection["user"])
+                total_user = self.count_total_frames_for_selection_option(
+                    self._frame_selection["user"]
+                )
             if "clip" in self._frame_selection:
-                clip_length = count_total_frames(self._frame_selection["clip"])
+                clip_length = self.count_total_frames_for_selection_option(
+                    self._frame_selection["clip"]
+                )
             if "video" in self._frame_selection:
-                video_length = count_total_frames(self._frame_selection["video"])
+                video_length = self.count_total_frames_for_selection_option(
+                    self._frame_selection["video"]
+                )
 
             # Build list of options
 
@@ -370,7 +384,9 @@ class LearningDialog(QtWidgets.QDialog):
 
         return cfg_info_list
 
-    def get_selected_frames_to_predict(self, pipeline_form_data):
+    def get_selected_frames_to_predict(
+        self, pipeline_form_data
+    ) -> Dict[Video, List[int]]:
         frames_to_predict = dict()
 
         if self._frame_selection is not None:
@@ -390,17 +406,13 @@ class LearningDialog(QtWidgets.QDialog):
             elif predict_frames_choice.startswith("user"):
                 frames_to_predict = self._frame_selection["user"]
 
-            # Convert [X, Y+1) ranges to [X, Y] ranges for learning cli
-            for video, frame_list in frames_to_predict.items():
-                # Check for [A, -B] list representing [A, B) range
-                if len(frame_list) == 2 and frame_list[1] < 0:
-                    frame_list = (frame_list[0], frame_list[1] + 1)
-                    frames_to_predict[video] = frame_list
-
         return frames_to_predict
 
-    def get_items_for_inference(self, pipeline_form_data):
+    def get_items_for_inference(self, pipeline_form_data) -> runners.ItemsForInference:
         predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
+
+        frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
+        frame_count = self.count_total_frames_for_selection_option(frame_selection)
 
         if predict_frames_choice.startswith("user"):
             # For inference on user labeled frames, we'll have a single
@@ -410,7 +422,8 @@ class LearningDialog(QtWidgets.QDialog):
                     runners.DatasetItemForInference(
                         labels_path=self.labels_filename, frame_filter="user"
                     )
-                ]
+                ],
+                total_frame_count=frame_count,
             )
         elif predict_frames_choice.startswith("suggested"):
             # For inference on all suggested frames, we'll have a single
@@ -420,12 +433,13 @@ class LearningDialog(QtWidgets.QDialog):
                     runners.DatasetItemForInference(
                         labels_path=self.labels_filename, frame_filter="suggested"
                     )
-                ]
+                ],
+                total_frame_count=frame_count,
             )
         else:
             # Otherwise, make an inference item for each video with list of frames.
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
-                self.get_selected_frames_to_predict(pipeline_form_data)
+                frame_selection, total_frame_count=frame_count
             )
         return items_for_inference
 
@@ -474,10 +488,18 @@ class LearningDialog(QtWidgets.QDialog):
 
         self.learningFinished.emit(new_counts)
 
+        # count < 0 means there was an error and we didn't get any results.
         if new_counts >= 0:
-            QtWidgets.QMessageBox(
-                text=f"Inference has finished. Instances were predicted on {new_counts} frames."
-            ).exec_()
+            total_count = items_for_inference.total_frame_count
+            no_result_count = total_count - new_counts
+
+            message = f"Inference ran on {total_count} frames."
+            message += f"\n\nInstances were predicted on {new_counts} frames "
+            message += f"({no_result_count} frame{'s' if no_result_count != 1 else ''} with no instances found)."
+
+            win = QtWidgets.QMessageBox(text=message)
+            win.setWindowTitle("Inference Results")
+            win.exec_()
 
     def save(self):
         models_dir = os.path.join(os.path.dirname(self.labels_filename), "/models")
@@ -819,7 +841,7 @@ def demo_training_dialog():
 
     filename = "tests/data/json_format_v1/centered_pair.json"
     labels = Labels.load_file(filename)
-    win = LearningDialog("training", labels_filename=filename, labels=labels)
+    win = LearningDialog("inference", labels_filename=filename, labels=labels)
 
     win.frame_selection = {"clip": {labels.videos[0]: (1, 2, 3, 4)}}
     # win.training_editor_widget.set_fields_from_key_val_dict({

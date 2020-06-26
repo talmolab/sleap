@@ -7,7 +7,7 @@ import re
 import os
 import random
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 
 from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
@@ -104,7 +104,8 @@ class MainWindow(QMainWindow):
         """Sets window title (if value is not None)."""
         if value is not None:
             super(MainWindow, self).setWindowTitle(
-                f"{value} - SLEAP Label v{sleap.version.__version__}")
+                f"{value} - SLEAP Label v{sleap.version.__version__}"
+            )
 
     def event(self, e: QEvent) -> bool:
         """Custom event handler.
@@ -433,6 +434,7 @@ class MainWindow(QMainWindow):
             "Point Score (sum)",
             "Point Score (min)",
             "Number of predicted points",
+            "Min Centroid Proximity",
         )
 
         add_submenu_choices(
@@ -1186,6 +1188,7 @@ class MainWindow(QMainWindow):
             "Point Score (sum)": data_obj.get_point_score_series,
             "Point Score (min)": data_obj.get_point_score_series,
             "Number of predicted points": data_obj.get_point_count_series,
+            "Min Centroid Proximity": data_obj.get_min_centroid_proximity_series,
         }
 
         if graph_name == "None":
@@ -1228,11 +1231,13 @@ class MainWindow(QMainWindow):
 
         # Use negative number in list for range (i.e., "0,-123" means "0-123")
         # The ranges should be [X, Y) like standard Python ranges
+        def encode_range(a: int, b: int) -> Tuple[int, int]:
+            return a, -b
+
         clip_range = self.state.get("frame_range", default=(0, 0))
-        if clip_range[1] > 0:
-            clip_range = (clip_range[0], -clip_range[1])
-        selection["clip"] = {current_video: clip_range}
-        selection["video"] = {current_video: (0, -current_video.num_frames)}
+
+        selection["clip"] = {current_video: encode_range(*clip_range)}
+        selection["video"] = {current_video: encode_range(0, current_video.num_frames)}
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))

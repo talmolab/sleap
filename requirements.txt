@@ -13,6 +13,7 @@ PySide2>=5.12.0,<=5.14.1
 pyzmq
 pyyaml
 imgaug==0.3.0
+scipy<=1.4.1
 scikit-image
 scikit-learn
 scikit-video
@@ -20,3 +21,4 @@ imgstore==0.2.9
 qimage2ndarray==1.8
 jsmin
 seaborn
+pykalman==0.9.5

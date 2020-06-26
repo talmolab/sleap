@@ -14,6 +14,10 @@ from enum import Enum
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 
+# for debug, we can filter out short tracks from slider
+SEEKBAR_MIN_TRACK_LEN_TO_SHOW = 0
+
+
 @attr.s(auto_attribs=True, eq=False)
 class SliderMark:
     """
@@ -182,7 +186,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._max_tracks_stacked = 120
         self._track_stack_skip_count = 10
         self._header_label_height = 20
-        self._header_graph_height = 30
+        self._header_graph_height = 40
         self._header_height = self._header_label_height  # room for frame labels
         self._min_height = 19 + self._header_height
 
@@ -1280,17 +1284,22 @@ def set_slider_marks_from_labels(
                 slider_marks.append(
                     SliderMark("tick_column", val=track_occupancy[track].start)
                 )
-            for occupancy_range in track_occupancy[track].list:
-                slider_marks.append(
-                    SliderMark(
-                        "track",
-                        val=occupancy_range[0],
-                        end_val=occupancy_range[1],
-                        row=track_row,
-                        color=color_manager.get_track_color(track),
+
+            track_len = track_occupancy[track].end - track_occupancy[track].start
+
+            # for debugging we can only show tracks above certain length
+            if track_len > SEEKBAR_MIN_TRACK_LEN_TO_SHOW:
+                for occupancy_range in track_occupancy[track].list:
+                    slider_marks.append(
+                        SliderMark(
+                            "track",
+                            val=occupancy_range[0],
+                            end_val=occupancy_range[1],
+                            row=track_row,
+                            color=color_manager.get_track_color(track),
+                        )
                     )
-                )
-            track_row += 1
+                track_row += 1
 
     # Frames with instance without track
     untracked_frames = set()

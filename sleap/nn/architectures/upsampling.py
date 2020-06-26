@@ -161,8 +161,10 @@ class UpsamplingStack:
             / np.log(self.upsampling_stride)
         )
 
+        # Initialize intermediate features with the output of the encoder stack.
+        intermediate_feats = [IntermediateFeature(tensor=x, stride=current_stride)]
+
         # Create each upsampling block.
-        intermediate_feats = []
         for block in range(num_blocks):
 
             # Update stride level.

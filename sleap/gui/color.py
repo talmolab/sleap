@@ -5,6 +5,7 @@ import yaml
 from sleap.util import get_config_file
 from sleap.instance import Instance, Track, Node
 from sleap.io.dataset import Labels
+from sleap.prefs import prefs
 
 
 class ColorManager(object):
@@ -36,9 +37,14 @@ class ColorManager(object):
         self.set_palette(palette)
 
         self.uncolored_prediction_color = (250, 250, 10)
-        self.default_pen_width = 1
-        self.medium_pen_width = 1.5
-        self.thick_pen_width = 3
+
+        if prefs["bold lines"]:
+            self.thick_pen_width = 6
+        else:
+            self.thick_pen_width = 3
+
+        self.medium_pen_width = self.thick_pen_width // 2
+        self.default_pen_width = max(1, self.thick_pen_width // 4)
 
     @property
     def labels(self):

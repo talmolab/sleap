@@ -326,7 +326,7 @@ class TopdownPredictor(Predictor):
     batch_size: int = 1
     peak_threshold: float = 0.2
     integral_refinement: bool = True
-    integral_patch_size: int = 7
+    integral_patch_size: int = 5
 
     @classmethod
     def from_trained_models(
@@ -336,7 +336,7 @@ class TopdownPredictor(Predictor):
         batch_size: int = 1,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
-        integral_patch_size: int = 7,
+        integral_patch_size: int = 5,
     ) -> "TopdownPredictor":
         """Create predictor from saved models.
 
@@ -632,6 +632,12 @@ class TopdownPredictor(Predictor):
         make_labels: bool = False,
     ):
         t0_gen = time.time()
+
+        if isinstance(data_provider, sleap.Labels):
+            data_provider = LabelsReader(data_provider)
+        elif isinstance(data_provider, sleap.Video):
+            data_provider = VideoReader(data_provider)
+
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
@@ -803,6 +809,10 @@ class BottomupPredictor(Predictor):
         make_instances: bool = True,
         make_labels: bool = False,
     ):
+        if isinstance(data_provider, sleap.Labels):
+            data_provider = LabelsReader(data_provider)
+        elif isinstance(data_provider, sleap.Video):
+            data_provider = VideoReader(data_provider)
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
@@ -822,7 +832,7 @@ class SingleInstancePredictor(Predictor):
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     peak_threshold: float = 0.2
     integral_refinement: bool = True
-    integral_patch_size: int = 7
+    integral_patch_size: int = 5
 
     @classmethod
     def from_trained_models(
@@ -830,7 +840,7 @@ class SingleInstancePredictor(Predictor):
         confmap_model_path: Text,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
-        integral_patch_size: int = 7,
+        integral_patch_size: int = 5,
     ) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
         # Load confmap model.
@@ -942,6 +952,10 @@ class SingleInstancePredictor(Predictor):
         make_instances: bool = True,
         make_labels: bool = False,
     ):
+        if isinstance(data_provider, sleap.Labels):
+            data_provider = LabelsReader(data_provider)
+        elif isinstance(data_provider, sleap.Video):
+            data_provider = VideoReader(data_provider)
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
