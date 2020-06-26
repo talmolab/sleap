@@ -10,6 +10,7 @@ class Preferences(object):
         "large step size": 100,
         "color predicted": False,
         "palette": "standard",
+        "bold lines": False,
         "trail length": 0,
         "trail width": 4.0,
         "trail node count": 1,
