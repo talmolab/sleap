@@ -195,6 +195,29 @@ class StatisticSeries:
 
         return result
 
+    def get_min_centroid_proximity_series(self, video):
+        series = dict()
+
+        def min_centroid_dist(instances):
+            if len(instances) < 2:
+                return np.nan
+            # centroids for all instances in frame
+            centroids = np.array([inst.centroid for inst in instances])
+            # calculate distance between each pair of instance centroids
+            distances = np.linalg.norm(
+                centroids[np.newaxis, :, :] - centroids[:, np.newaxis, :], axis=-1
+            )
+            # clear distance from each instance to itself
+            np.fill_diagonal(distances, np.nan)
+            # return the min
+            return np.nanmin(distances)
+
+        for lf in self.labels.find(video):
+            val = min_centroid_dist(lf.instances)
+            if not np.isnan(val):
+                series[lf.frame_idx] = val
+        return series
+
     @staticmethod
     def _calculate_frame_velocity(
         lf: "LabeledFrame", last_lf: "LabeledFrame", reduce_function: Callable

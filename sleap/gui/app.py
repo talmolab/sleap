@@ -434,6 +434,7 @@ class MainWindow(QMainWindow):
             "Point Score (sum)",
             "Point Score (min)",
             "Number of predicted points",
+            "Min Centroid Proximity",
         )
 
         add_submenu_choices(
@@ -1187,6 +1188,7 @@ class MainWindow(QMainWindow):
             "Point Score (sum)": data_obj.get_point_score_series,
             "Point Score (min)": data_obj.get_point_score_series,
             "Number of predicted points": data_obj.get_point_count_series,
+            "Min Centroid Proximity": data_obj.get_min_centroid_proximity_series,
         }
 
         if graph_name == "None":
