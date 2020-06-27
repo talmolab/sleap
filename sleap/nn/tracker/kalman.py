@@ -8,11 +8,8 @@ remaining frames.
 It's a good idea to cull the instances (i.e., N best instances per frame) before
 trying to track with the Kalman filter, since the skeleton fragments can mess
 up the filters.
-
-Usage:
-
-> filter_frames(frames, instance_count=2, node_indices=[0, 1, 2])
 """
+
 import attr
 import itertools
 
