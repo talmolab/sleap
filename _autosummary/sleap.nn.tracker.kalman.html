@@ -41,8 +41,6 @@ remaining frames.</p>
 <p>It’s a good idea to cull the instances (i.e., N best instances per frame) before
 trying to track with the Kalman filter, since the skeleton fragments can mess
 up the filters.</p>
-<p>Usage:</p>
-<p>&gt; filter_frames(frames, instance_count=2, node_indices=[0, 1, 2])</p>
 <dl class="py function">
 <dt id="sleap.nn.tracker.kalman.get_track_instance_matches">
 <code class="sig-prename descclassname">sleap.nn.tracker.kalman.</code><code class="sig-name descname">get_track_instance_matches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instances</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">tracks</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">are_too_close_function</span><span class="p">:</span> <span class="n">Callable</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>sleap.nn.tracker.components.Match<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/tracker/kalman.html#get_track_instance_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.kalman.get_track_instance_matches" title="Permalink to this definition">¶</a></dt>
@@ -202,7 +200,6 @@ to be valid.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.kalman_filter.html">sleap.nn.kalman_filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
