@@ -535,7 +535,7 @@
             <span class="c1"># Generate ground truth centroids and crops.</span>
             <span class="n">anchor_part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">confmap_config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">instance_cropping</span><span class="o">.</span><span class="n">center_on_part</span>
             <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCentroidFinder</span><span class="p">(</span>
-                <span class="n">center_on_anchor_part</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">center_on_anchor_part</span><span class="o">=</span><span class="n">anchor_part</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">anchor_part_names</span><span class="o">=</span><span class="n">anchor_part</span><span class="p">,</span>
                 <span class="n">skeletons</span><span class="o">=</span><span class="n">data_provider</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">,</span>
             <span class="p">)</span>

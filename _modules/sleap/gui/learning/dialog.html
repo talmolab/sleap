@@ -294,9 +294,13 @@
             <span class="n">anchor_part</span> <span class="o">=</span> <span class="n">source_data</span><span class="p">[</span><span class="s2">&quot;model.heads.centered_instance.anchor_part&quot;</span><span class="p">]</span>
             <span class="n">set_anchor</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="c1"># Use None instead of empty string/list</span>
+        <span class="n">anchor_part</span> <span class="o">=</span> <span class="n">anchor_part</span> <span class="ow">or</span> <span class="kc">None</span>
+
         <span class="k">if</span> <span class="n">set_anchor</span><span class="p">:</span>
             <span class="n">updated_data</span><span class="p">[</span><span class="s2">&quot;model.heads.centroid.anchor_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">anchor_part</span>
             <span class="n">updated_data</span><span class="p">[</span><span class="s2">&quot;model.heads.centered_instance.anchor_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">anchor_part</span>
+            <span class="n">updated_data</span><span class="p">[</span><span class="s2">&quot;data.instance_cropping.center_on_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">anchor_part</span>
 
     <span class="k">def</span> <span class="nf">update_tabs_from_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_data</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adjust_data_to_update_other_tabs</span><span class="p">(</span><span class="n">source_data</span><span class="p">)</span>
@@ -394,6 +398,9 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_form_data</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
         <span class="n">cfg_info_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Copy relevant data into linked fields (i.e., anchor part).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjust_data_to_update_other_tabs</span><span class="p">(</span><span class="n">pipeline_form_data</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">tab_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span><span class="p">:</span>
             <span class="n">trained_cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">]</span><span class="o">.</span><span class="n">trained_config_info_to_use</span>
