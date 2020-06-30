@@ -263,6 +263,7 @@ class LearningDialog(QtWidgets.QDialog):
         if set_anchor:
             updated_data["model.heads.centroid.anchor_part"] = anchor_part
             updated_data["model.heads.centered_instance.anchor_part"] = anchor_part
+            updated_data["data.instance_cropping.center_on_part"] = anchor_part
 
     def update_tabs_from_pipeline(self, source_data):
         self.adjust_data_to_update_other_tabs(source_data)
@@ -360,6 +361,9 @@ class LearningDialog(QtWidgets.QDialog):
         self, pipeline_form_data
     ) -> List[configs.ConfigFileInfo]:
         cfg_info_list = []
+
+        # Copy relevant data into linked fields (i.e., anchor part).
+        self.adjust_data_to_update_other_tabs(pipeline_form_data)
 
         for tab_name in self.shown_tab_names:
             trained_cfg_info = self.tabs[tab_name].trained_config_info_to_use
