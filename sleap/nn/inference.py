@@ -501,7 +501,7 @@ class TopdownPredictor(Predictor):
             # Generate ground truth centroids and crops.
             anchor_part = self.confmap_config.data.instance_cropping.center_on_part
             pipeline += InstanceCentroidFinder(
-                center_on_anchor_part=True,
+                center_on_anchor_part=anchor_part is not None,
                 anchor_part_names=anchor_part,
                 skeletons=data_provider.labels.skeletons,
             )
