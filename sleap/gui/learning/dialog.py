@@ -260,6 +260,9 @@ class LearningDialog(QtWidgets.QDialog):
             anchor_part = source_data["model.heads.centered_instance.anchor_part"]
             set_anchor = True
 
+        # Use None instead of empty string/list
+        anchor_part = anchor_part or None
+
         if set_anchor:
             updated_data["model.heads.centroid.anchor_part"] = anchor_part
             updated_data["model.heads.centered_instance.anchor_part"] = anchor_part
