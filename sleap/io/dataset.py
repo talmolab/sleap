@@ -611,6 +611,9 @@ class Labels(MutableSequence):
 
             return _hit
 
+        elif isinstance(key, (list, range)):
+            return [self.__getitem__(i) for i in key]
+
         else:
             raise KeyError("Invalid label indexing arguments.")
 
