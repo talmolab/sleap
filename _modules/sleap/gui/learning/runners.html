@@ -214,7 +214,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;outputs.&quot;</span><span class="p">,</span> <span class="s2">&quot;model.&quot;</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;outputs.&quot;</span><span class="p">,</span> <span class="s2">&quot;model.&quot;</span><span class="p">,</span> <span class="s2">&quot;data.&quot;</span><span class="p">)):</span>
                 <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
 
         <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">))</span>
@@ -701,7 +701,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
