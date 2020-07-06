@@ -1,4 +1,4 @@
-numpy>=1.16
+numpy>=1.18.1
 attrs==19.3
 cattrs==1.0.0rc
 jsonpickle==1.2
