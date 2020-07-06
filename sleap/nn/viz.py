@@ -211,8 +211,6 @@ def plot_instance(
             x *= scale
             y *= scale
 
-            print((x, y))
-
             h_lines_k = plt.plot(x, y, ".", ms=ms, c=cmap[k % len(cmap)], **kwargs)
             h_lines.append(h_lines_k)
 

@@ -180,7 +180,7 @@ class InferenceTask:
                 self.inference_params[key] = int(self.inference_params[key])
 
         for key, val in self.inference_params.items():
-            if not key.startswith(("_", "outputs.", "model.")):
+            if not key.startswith(("_", "outputs.", "model.", "data.")):
                 cli_args.extend((f"--{key}", str(val)))
 
         cli_args.extend(("-o", output_path))
