@@ -782,6 +782,8 @@ class ExportLabeledClip(AppCommand):
             video=context.state["video"],
             frames=list(params["frames"]),
             fps=params["fps"],
+            color_manager=params["color_manager"],
+            show_edges=params["show edges"],
             gui_progress=True,
         )
 
@@ -837,6 +839,13 @@ class ExportLabeledClip(AppCommand):
         params["filename"] = filename
         params["fps"] = export_options["fps"]
         params["open_when_done"] = export_options["open_when_done"]
+
+        if export_options["use_gui_visuals"]:
+            params["color_manager"] = context.app.color_manager
+        else:
+            params["color_manager"] = None
+
+        params["show edges"] = context.state.get("show edges", default=True)
 
         # If user selected a clip, use that; otherwise include all frames.
         if context.state["has_frame_range"]:

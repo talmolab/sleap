@@ -173,6 +173,18 @@ class ColorManager(object):
 
         return self.default_pen_width
 
+    def get_item_type_pen_width(self, item_type: str):
+        if item_type == "node":
+            if self.distinctly_color == "nodes":
+                return self.thick_pen_width
+            return self.medium_pen_width
+
+        if item_type == "edge":
+            if self.distinctly_color == "edges":
+                return self.thick_pen_width
+
+        return self.default_pen_width
+
     def get_item_color(
         self,
         item: Any,
