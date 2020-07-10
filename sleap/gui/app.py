@@ -615,7 +615,7 @@ class MainWindow(QMainWindow):
         add_menu_item(
             predictionMenu,
             "export clip",
-            "Export Labeled Clip...",
+            "Export Video with Visual Annotations...",
             self.commands.exportLabeledClip,
         )
 
@@ -912,7 +912,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
         self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
-        self._menu_actions["export clip"].setEnabled(has_frame_range)
+        # self._menu_actions["export clip"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
 

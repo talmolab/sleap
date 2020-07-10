@@ -780,7 +780,7 @@ class ExportLabeledClip(AppCommand):
             filename=params["filename"],
             labels=context.state["labels"],
             video=context.state["video"],
-            frames=list(range(*context.state["frame_range"])),
+            frames=list(params["frames"]),
             fps=params["fps"],
             gui_progress=True,
         )
@@ -793,60 +793,58 @@ class ExportLabeledClip(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        if context.state["has_frame_range"]:
 
-            from sleap.gui.dialogs.export_clip import ExportClipDialog
+        from sleap.gui.dialogs.export_clip import ExportClipDialog
 
-            dialog = ExportClipDialog()
+        dialog = ExportClipDialog()
 
-            # Set default fps from video (if video has fps attribute)
-            dialog.form_widget.set_form_data(
-                dict(fps=getattr(context.state["video"], "fps", 30))
-            )
+        # Set default fps from video (if video has fps attribute)
+        dialog.form_widget.set_form_data(
+            dict(fps=getattr(context.state["video"], "fps", 30))
+        )
 
-            # Show modal dialog and get form results
-            export_options = dialog.get_results()
+        # Show modal dialog and get form results
+        export_options = dialog.get_results()
 
-            # Check if user hit cancel
-            if export_options is None:
-                return False
-
-            # Use VideoWriter to determine default video type to use
-            from sleap.io.videowriter import VideoWriter
-
-            # For OpenCV we default to avi since the bundled ffmpeg
-            # makes mp4's that most programs can't open (VLC can).
-            default_out_filename = context.state["filename"] + ".avi"
-
-            # But if we can write mpegs using sci-kit video, use .mp4
-            # since it has trouble writing .avi files.
-            if VideoWriter.can_use_skvideo():
-                default_out_filename = context.state["filename"] + ".mp4"
-
-            # Ask where use wants to save video file
-            filename, _ = FileDialog.save(
-                context.app,
-                caption="Save Video As...",
-                dir=default_out_filename,
-                filter="Video (*.avi *mp4)",
-            )
-
-            # Check if user hit cancel
-            if len(filename) == 0:
-                return False
-
-            params["filename"] = filename
-            params["fps"] = export_options["fps"]
-            params["open_when_done"] = export_options["open_when_done"]
-            return True
-        else:
-            message = (
-                "There is no selected clip. You can select a clip by "
-                "shift-dragging over the range of frames in the video "
-                "seekbar."
-            )
-            QMessageBox(text=message).exec_()
+        # Check if user hit cancel
+        if export_options is None:
             return False
+
+        # Use VideoWriter to determine default video type to use
+        from sleap.io.videowriter import VideoWriter
+
+        # For OpenCV we default to avi since the bundled ffmpeg
+        # makes mp4's that most programs can't open (VLC can).
+        default_out_filename = context.state["filename"] + ".avi"
+
+        # But if we can write mpegs using sci-kit video, use .mp4
+        # since it has trouble writing .avi files.
+        if VideoWriter.can_use_skvideo():
+            default_out_filename = context.state["filename"] + ".mp4"
+
+        # Ask where use wants to save video file
+        filename, _ = FileDialog.save(
+            context.app,
+            caption="Save Video As...",
+            dir=default_out_filename,
+            filter="Video (*.avi *mp4)",
+        )
+
+        # Check if user hit cancel
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
+        params["fps"] = export_options["fps"]
+        params["open_when_done"] = export_options["open_when_done"]
+
+        # If user selected a clip, use that; otherwise include all frames.
+        if context.state["has_frame_range"]:
+            params["frames"] = range(*context.state["frame_range"])
+        else:
+            params["frames"] = range(context.state["video"].frames)
+
+        return True
 
 
 class ExportDatasetWithImages(AppCommand):
