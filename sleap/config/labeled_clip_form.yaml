@@ -10,7 +10,11 @@ main:
     type: double
     default: 1.0
     range: 0.1,1.0
+  - name: use_gui_visuals
+    label: Use GUI Visual Settings (colors, line widths)
+    type: bool
+    default: false
   - name: open_when_done
     label: Open When Done Saving
     type: bool
-    default: false
+    default: true
