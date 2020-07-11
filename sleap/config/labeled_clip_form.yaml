@@ -5,6 +5,10 @@ main:
     type: int
     range: 1,200
     default: 30
+  - name: crop
+    label: Crop Size
+    type: list
+    options: None,Half,Quarter
   - name: scale
     label: Output Scale
     type: double
@@ -13,7 +17,7 @@ main:
   - name: use_gui_visuals
     label: Use GUI Visual Settings (colors, line widths)
     type: bool
-    default: false
+    default: true
   - name: open_when_done
     label: Open When Done Saving
     type: bool

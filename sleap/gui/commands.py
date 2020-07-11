@@ -784,6 +784,8 @@ class ExportLabeledClip(AppCommand):
             fps=params["fps"],
             color_manager=params["color_manager"],
             show_edges=params["show edges"],
+            scale=params["scale"],
+            crop_size_xy=params["crop"],
             gui_progress=True,
         )
 
@@ -838,7 +840,19 @@ class ExportLabeledClip(AppCommand):
 
         params["filename"] = filename
         params["fps"] = export_options["fps"]
+        params["scale"] = export_options["scale"]
         params["open_when_done"] = export_options["open_when_done"]
+
+        params["crop"] = None
+
+        # Determine crop size relative to original size and scale
+        # (crop size should be *final* output size, thus already scaled).
+        w = int(context.state["video"].width * params["scale"])
+        h = int(context.state["video"].height * params["scale"])
+        if export_options["crop"] == "Half":
+            params["crop"] = (w // 2, h // 2)
+        elif export_options["crop"] == "Quarter":
+            params["crop"] = (w // 4, h // 4)
 
         if export_options["use_gui_visuals"]:
             params["color_manager"] = context.app.color_manager
