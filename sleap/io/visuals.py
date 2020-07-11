@@ -12,8 +12,9 @@ import cv2
 import os
 import numpy as np
 import math
+from collections import deque
 from time import time, clock
-from typing import Iterable, List, Optional
+from typing import List, Optional, Tuple
 
 from queue import Queue
 from threading import Thread
@@ -82,6 +83,8 @@ def writer(
 ):
     """Write annotated images to video.
 
+    Image size is determined by the first image received in queue.
+
     Args:
         in_q: Queue with annotated images as (images, h, w, channels) ndarray
         progress_queue: Queue to send progress as
@@ -89,7 +92,6 @@ def writer(
             Send (-1, elapsed time) when done.
         filename: full path to output video
         fps: frames per second for output video
-        img_w_h: (w, h) for output video (note width first for opencv)
 
     Returns:
         None.
@@ -157,6 +159,7 @@ class VideoMarkerThread(Thread):
         video_idx: int,
         scale: float,
         show_edges: bool = True,
+        crop_size_xy: Optional[Tuple[int, int]] = None,
         color_manager: Optional[ColorManager] = None,
     ):
         super(VideoMarkerThread, self).__init__()
@@ -180,6 +183,19 @@ class VideoMarkerThread(Thread):
         #  them since we want *video* pixels.
         self.node_line_width = max(1, self.node_line_width // 2)
         self.edge_line_width = max(1, self.node_line_width // 2)
+
+        unscaled_marker_radius = 3
+        self.marker_radius = max(1, int(unscaled_marker_radius // (1 / scale)))
+
+        self.crop = False
+        if crop_size_xy:
+            self.crop = True
+            self.crop_w, self.crop_h = crop_size_xy
+            self._crop_centers = deque(maxlen=5)  # use running avg for smoother crops
+        else:
+            self.crop_h = 0
+            self.crop_w = 0
+            self._crop_centers = []
 
     def run(self):
         # when thread starts, start loop to receive images (from reader),
@@ -218,14 +234,14 @@ class VideoMarkerThread(Thread):
     def _mark_images(self, frame_indices, frame_images):
         imgs = []
         for i, frame_idx in enumerate(frame_indices):
-            img = self._get_frame_image(
+            img = self._mark_single_frame(
                 video_frame=frame_images[i], frame_idx=frame_idx
             )
 
             imgs.append(img)
         return imgs
 
-    def _get_frame_image(self, video_frame: np.ndarray, frame_idx: int,) -> np.ndarray:
+    def _mark_single_frame(self, video_frame: np.ndarray, frame_idx: int) -> np.ndarray:
         """Returns single annotated frame image.
 
         Args:
@@ -237,26 +253,13 @@ class VideoMarkerThread(Thread):
         """
 
         # Use OpenCV to convert to BGR color image
-        video_frame = self._img_to_cv(video_frame)
+        video_frame = img_to_cv(video_frame)
 
         # Add the instances to the image
-        self._plot_instances_cv(video_frame, frame_idx)
-
-        return video_frame
-
-    @staticmethod
-    def _img_to_cv(img: np.ndarray) -> np.ndarray:
-        """Prepares frame image as needed for opencv."""
-        # Convert RGB to BGR for OpenCV
-        if img.shape[-1] == 3:
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        # Convert grayscale to BGR
-        elif img.shape[-1] == 1:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        return img
+        return self._plot_instances_cv(video_frame, frame_idx)
 
     def _plot_instances_cv(
-        self, img: np.ndarray, frame_idx: int
+        self, img: np.ndarray, frame_idx: int,
     ) -> Optional[np.ndarray]:
         """Adds visuals annotations to single frame image.
 
@@ -273,13 +276,78 @@ class VideoMarkerThread(Thread):
         lfs = labels.find(labels.videos[video_idx], frame_idx)
 
         if len(lfs) == 0:
-            return
+            return self._crop_frame(img) if self.crop else img
 
-        for instance in lfs[0].instances_to_show:
-            self._plot_instance_cv(img, instance)
+        instances = lfs[0].instances_to_show
+
+        offset = None
+        if self.crop:
+            img, offset = self._crop_frame(img, instances)
+
+        for instance in instances:
+            self._plot_instance_cv(img, instance, offset)
+
+        return img
+
+    def _get_crop_center(
+        self, img: np.ndarray, instances: Optional[List["Instance"]] = None
+    ) -> Tuple[int, int]:
+        if instances:
+            centroids = np.array([inst.centroid for inst in instances])
+            center_xy = np.median(centroids, axis=0)
+
+            self._crop_centers.append(center_xy)
+        elif not self._crop_centers:
+            # no crops so far and no instances yet so just use image center
+            img_w, img_h = img.shape[:2]
+            center_xy = img_w // 2, img_h // 2
+
+            self._crop_centers.append(center_xy)
+
+        # use a running average of the last N centers to smooth movement
+        center_xy = tuple(np.mean(np.stack(self._crop_centers), axis=0))
+
+        return center_xy
+
+    def _crop_frame(
+        self, img: np.ndarray, instances: Optional[List["Instance"]] = None
+    ) -> Tuple[np.ndarray, Tuple[int, int]]:
+        center_xy = self._get_crop_center(img, instances)
+        return self._crop_img(img, center_xy)
+
+    def _crop_img(
+        self, img: np.ndarray, center_xy: Tuple[int, int]
+    ) -> Tuple[np.ndarray, Tuple[int, int]]:
+        img_w, img_h = img.shape[:2]  # fixme?
+        center_x, center_y = center_xy
+
+        # Adjust center (on original coordinates) to scaled image coordinages
+        center_x = center_x // (1 / self.scale)
+        center_y = center_y // (1 / self.scale)
+
+        # Find center, ensuring we're within top/left bounds for image
+        crop_x0 = max(0, int(center_x - self.crop_w // 2))
+        crop_y0 = max(0, int(center_y - self.crop_h // 2))
+
+        # And ensure that we're within bottom/right bounds for image
+        if crop_x0 + self.crop_w > img_w:
+            crop_x0 = img_w - self.crop_w
+        if crop_y0 + self.crop_h > img_h:
+            crop_y0 = img_h - self.crop_h
+
+        offset = crop_x0, crop_y0
+        crop_x1 = crop_x0 + self.crop_w
+        crop_y1 = crop_y0 + self.crop_h
+
+        img = img[crop_y0:crop_y1, crop_x0:crop_x1, ...]
+
+        return img, offset
 
     def _plot_instance_cv(
-        self, img: np.ndarray, instance: "Instance", unscaled_marker_radius: float = 3,
+        self,
+        img: np.ndarray,
+        instance: "Instance",
+        offset: Optional[Tuple[int, int]] = None,
     ):
         """
         Add visual annotations for single instance.
@@ -287,7 +355,6 @@ class VideoMarkerThread(Thread):
         Args:
             img: The ndarray of the frame image.
             instance: The :class:`Instance` to add to frame image.
-            unscaled_marker_radius: Radius of marker for instance points (nodes).
 
         Returns:
             None; modifies img in place.
@@ -302,7 +369,9 @@ class VideoMarkerThread(Thread):
         # Rescale point locations
         points_array *= scale
 
-        marker_radius = max(1, int(unscaled_marker_radius // (1 / scale)))
+        # Shift point locations (offset is for *scaled* coordinates)
+        if offset:
+            points_array -= offset
 
         for node_idx, (x, y) in enumerate(points_array):
 
@@ -318,7 +387,7 @@ class VideoMarkerThread(Thread):
                 cv2.circle(
                     img=img,
                     center=(x, y),
-                    radius=marker_radius,
+                    radius=self.marker_radius,
                     color=node_color_bgr,
                     thickness=self.node_line_width,
                     lineType=cv2.LINE_AA,
@@ -358,8 +427,9 @@ def save_labeled_video(
     frames: List[int],
     fps: int = 15,
     scale: float = 1.0,
-    color_manager: Optional[ColorManager] = None,
+    crop_size_xy: Optional[Tuple[int, int]] = None,
     show_edges: bool = True,
+    color_manager: Optional[ColorManager] = None,
     gui_progress: bool = False,
 ):
     """Function to generate and save video with annotations.
@@ -371,6 +441,7 @@ def save_labeled_video(
         frames: List of frames to include in output video.
         fps: Frames per second for output video.
         scale: scale of image (so we can scale point locations to match)
+        crop_size_xy: size of crop around instances, or None for full images
         show_edges: whether to draw lines between nodes
         color_manager: ColorManager object which determine what colors to use
             for what instance/node/edge
@@ -395,6 +466,7 @@ def save_labeled_video(
         video_idx=labels.videos.index(video),
         scale=scale,
         show_edges=show_edges,
+        crop_size_xy=crop_size_xy,
         color_manager=color_manager,
     )
     thread_write = Thread(target=writer, args=(q2, progress_queue, filename, fps),)
@@ -439,6 +511,17 @@ def has_nans(*vals):
     return any((np.isnan(val) for val in vals))
 
 
+def img_to_cv(img: np.ndarray) -> np.ndarray:
+    """Prepares frame image as needed for opencv."""
+    # Convert RGB to BGR for OpenCV
+    if img.shape[-1] == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    # Convert grayscale to BGR
+    elif img.shape[-1] == 1:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    return img
+
+
 def resize_image(img: np.ndarray, scale: float) -> np.ndarray:
     """Resizes single image with shape (height, width, channels)."""
     height, width, channels = img.shape
@@ -475,6 +558,9 @@ def main_cli():
     parser.add_argument("-f", "--fps", type=int, default=15, help="Frames per second")
     parser.add_argument("--scale", type=float, default=1.0, help="Output image scale")
     parser.add_argument(
+        "--crop", type=str, default="", help="Crop size as <width>,<height>"
+    )
+    parser.add_argument(
         "--frames",
         type=frame_list,
         default="",
@@ -502,6 +588,11 @@ def main_cli():
 
     filename = args.output or args.data_path + ".avi"
 
+    try:
+        crop_size_xy = list(map(int, args.crop.split(",")))
+    except:
+        crop_size_xy = None
+
     save_labeled_video(
         filename=filename,
         labels=labels,
@@ -509,6 +600,7 @@ def main_cli():
         frames=frames,
         fps=args.fps,
         scale=args.scale,
+        crop_size_xy=crop_size_xy,
     )
 
     print(f"Video saved as: {filename}")
