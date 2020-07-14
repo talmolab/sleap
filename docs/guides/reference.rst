@@ -137,6 +137,12 @@ Predict
 
 "**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed, and you also have the option to select models saved elsewhere.
 
+"**Evaluate Metrics for Trained Models...**" provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).
+
+"**Visualize Model Outputs...**" allows you to select a trained model and see the intermediate inference data plotted on the frame image. In particular, looking at the confidence maps used to predict each node can be helpful for understanding why and where your model isn't preforming well.
+
+"**Add Instances from All Predictions on Current Frame**" converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).
+
 "**Delete All Predictions...**" deletes *all* predicted instances across *all* frames in the current video. (You'll be asked to confirm before the instances are deleted.)
 
 "**Delete All Predictions from Clip...**" deletes all instances from within a selected range of frames. You can select a clip by shift-dragging in the seekbar (or shift + other movement key).

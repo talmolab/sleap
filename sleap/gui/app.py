@@ -18,6 +18,7 @@ from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
 from PySide2.QtWidgets import QMessageBox
 
 import sleap
+from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance
 from sleap.io.dataset import Labels
@@ -550,6 +551,14 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
+
+        add_menu_item(
+            predictionMenu,
+            "show metrics",
+            "Evaluation Metrics for Trained Models...",
+            self.showMetricsDialog,
+        )
+
         add_menu_item(
             predictionMenu,
             "visualize models",
@@ -1313,6 +1322,10 @@ class MainWindow(QMainWindow):
         self.on_data_update([UpdateTopic.all])
         if new_count > 0:
             self.commands.changestack_push("new predictions")
+
+    def showMetricsDialog(self):
+        self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
+        self._child_windows["metrics"].show()
 
     def visualizeOutputs(self):
         """Gui for adding overlay with live visualization of predictions."""
