@@ -753,8 +753,18 @@
 
                 <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_use_trained_model</span><span class="p">)</span>
 
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_trained</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_use_trained</span><span class="p">()</span>
+
         <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_widget</span><span class="p">(</span><span class="n">col_layout</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_trained_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">):</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">require_trained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">acceptSelectedConfigInfo</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">path_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">widget</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_layout_widget</span><span class="p">(</span><span class="n">layout</span><span class="p">):</span>
@@ -824,7 +834,7 @@
             <span class="n">form</span><span class="o">.</span><span class="n">set_enabled</span><span class="p">(</span><span class="ow">not</span> <span class="n">use_trained</span><span class="p">)</span>
 
         <span class="c1"># If user wants to use trained model, then reset form to match config</span>
-        <span class="k">if</span> <span class="n">use_trained</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">use_trained</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="p">:</span>
             <span class="n">cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list_widget</span><span class="o">.</span><span class="n">getSelectedConfigInfo</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
 

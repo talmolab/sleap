@@ -814,8 +814,12 @@
             <span class="n">filename</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">],</span>
             <span class="n">labels</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span>
             <span class="n">video</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span>
-            <span class="n">frames</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">])),</span>
+            <span class="n">frames</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;frames&quot;</span><span class="p">]),</span>
             <span class="n">fps</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">],</span>
+            <span class="n">color_manager</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;color_manager&quot;</span><span class="p">],</span>
+            <span class="n">show_edges</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;show edges&quot;</span><span class="p">],</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">],</span>
+            <span class="n">crop_size_xy</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">],</span>
             <span class="n">gui_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -827,60 +831,77 @@
 
 <div class="viewcode-block" id="ExportLabeledClip.ask"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportLabeledClip.ask">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;has_frame_range&quot;</span><span class="p">]:</span>
 
-            <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.export_clip</span> <span class="kn">import</span> <span class="n">ExportClipDialog</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.export_clip</span> <span class="kn">import</span> <span class="n">ExportClipDialog</span>
 
-            <span class="n">dialog</span> <span class="o">=</span> <span class="n">ExportClipDialog</span><span class="p">()</span>
+        <span class="n">dialog</span> <span class="o">=</span> <span class="n">ExportClipDialog</span><span class="p">()</span>
 
-            <span class="c1"># Set default fps from video (if video has fps attribute)</span>
-            <span class="n">dialog</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span>
-                <span class="nb">dict</span><span class="p">(</span><span class="n">fps</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="s2">&quot;fps&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
-            <span class="p">)</span>
+        <span class="c1"># Set default fps from video (if video has fps attribute)</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">fps</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="s2">&quot;fps&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
+        <span class="p">)</span>
 
-            <span class="c1"># Show modal dialog and get form results</span>
-            <span class="n">export_options</span> <span class="o">=</span> <span class="n">dialog</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+        <span class="c1"># Show modal dialog and get form results</span>
+        <span class="n">export_options</span> <span class="o">=</span> <span class="n">dialog</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
 
-            <span class="c1"># Check if user hit cancel</span>
-            <span class="k">if</span> <span class="n">export_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Check if user hit cancel</span>
+        <span class="k">if</span> <span class="n">export_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
-            <span class="c1"># Use VideoWriter to determine default video type to use</span>
-            <span class="kn">from</span> <span class="nn">sleap.io.videowriter</span> <span class="kn">import</span> <span class="n">VideoWriter</span>
+        <span class="c1"># Use VideoWriter to determine default video type to use</span>
+        <span class="kn">from</span> <span class="nn">sleap.io.videowriter</span> <span class="kn">import</span> <span class="n">VideoWriter</span>
 
-            <span class="c1"># For OpenCV we default to avi since the bundled ffmpeg</span>
-            <span class="c1"># makes mp4&#39;s that most programs can&#39;t open (VLC can).</span>
-            <span class="n">default_out_filename</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.avi&quot;</span>
+        <span class="c1"># For OpenCV we default to avi since the bundled ffmpeg</span>
+        <span class="c1"># makes mp4&#39;s that most programs can&#39;t open (VLC can).</span>
+        <span class="n">default_out_filename</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.avi&quot;</span>
 
-            <span class="c1"># But if we can write mpegs using sci-kit video, use .mp4</span>
-            <span class="c1"># since it has trouble writing .avi files.</span>
-            <span class="k">if</span> <span class="n">VideoWriter</span><span class="o">.</span><span class="n">can_use_skvideo</span><span class="p">():</span>
-                <span class="n">default_out_filename</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.mp4&quot;</span>
+        <span class="c1"># But if we can write mpegs using sci-kit video, use .mp4</span>
+        <span class="c1"># since it has trouble writing .avi files.</span>
+        <span class="k">if</span> <span class="n">VideoWriter</span><span class="o">.</span><span class="n">can_use_skvideo</span><span class="p">():</span>
+            <span class="n">default_out_filename</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.mp4&quot;</span>
 
-            <span class="c1"># Ask where use wants to save video file</span>
-            <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
-                <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="p">,</span>
-                <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save Video As...&quot;</span><span class="p">,</span>
-                <span class="nb">dir</span><span class="o">=</span><span class="n">default_out_filename</span><span class="p">,</span>
-                <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;Video (*.avi *mp4)&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="c1"># Ask where use wants to save video file</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="p">,</span>
+            <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save Video As...&quot;</span><span class="p">,</span>
+            <span class="nb">dir</span><span class="o">=</span><span class="n">default_out_filename</span><span class="p">,</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;Video (*.avi *mp4)&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
-            <span class="c1"># Check if user hit cancel</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Check if user hit cancel</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">]</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;open_when_done&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;open_when_done&quot;</span><span class="p">]</span>
-            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;fps&quot;</span><span class="p">]</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;open_when_done&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;open_when_done&quot;</span><span class="p">]</span>
+
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Determine crop size relative to original size and scale</span>
+        <span class="c1"># (crop size should be *final* output size, thus already scaled).</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">])</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Half&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Quarter&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span> <span class="o">//</span> <span class="mi">4</span><span class="p">,</span> <span class="n">h</span> <span class="o">//</span> <span class="mi">4</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">export_options</span><span class="p">[</span><span class="s2">&quot;use_gui_visuals&quot;</span><span class="p">]:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;color_manager&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">color_manager</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;There is no selected clip. You can select a clip by &quot;</span>
-                <span class="s2">&quot;shift-dragging over the range of frames in the video &quot;</span>
-                <span class="s2">&quot;seekbar.&quot;</span>
-            <span class="p">)</span>
-            <span class="n">QMessageBox</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">message</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
-            <span class="k">return</span> <span class="kc">False</span></div></div>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;color_manager&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;show edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;show edges&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># If user selected a clip, use that; otherwise include all frames.</span>
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;has_frame_range&quot;</span><span class="p">]:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_range&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">frames</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div></div>
 
 
 <div class="viewcode-block" id="ExportDatasetWithImages"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportDatasetWithImages">[docs]</a><span class="k">class</span> <span class="nc">ExportDatasetWithImages</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>

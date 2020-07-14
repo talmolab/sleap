@@ -137,6 +137,12 @@ Predict
 
 "**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed, and you also have the option to select models saved elsewhere.
 
+"**Evaluate Metrics for Trained Models...**" provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).
+
+"**Visualize Model Outputs...**" allows you to select a trained model and see the intermediate inference data plotted on the frame image. In particular, looking at the confidence maps used to predict each node can be helpful for understanding why and where your model isn't preforming well.
+
+"**Add Instances from All Predictions on Current Frame**" converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).
+
 "**Delete All Predictions...**" deletes *all* predicted instances across *all* frames in the current video. (You'll be asked to confirm before the instances are deleted.)
 
 "**Delete All Predictions from Clip...**" deletes all instances from within a selected range of frames. You can select a clip by shift-dragging in the seekbar (or shift + other movement key).
@@ -147,9 +153,9 @@ Predict
 
 "**Delete All Predictions beyond Frame Limit...**" deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You'll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.
 
-"**Export Training Package...**" allows you to export a training package. This is a single HDF5 file which contains both labeled data as well as the images which will be used for training. This makes it easy to transport your training data, especially if you need to run training on another machine (e.g., an HPC cluster). Training packages can be opened just like regular SLEAP dataset files, although you'll only be able to view the frames which have labeled data (since only these are included in the file).
+"**Export Training Package...**" allows you to export a training package. This is a single `.slp` (HDF5) file which contains both labeled data as well as the images which will be used for training. This makes it easy to transport your training data, especially if you need to run training on another machine (e.g., an HPC cluster). Training packages can be opened just like regular SLEAP dataset files, although you'll only be able to view the frames which have labeled data (since only these are included in the file).
 
-"**Export Labeled Clip...**" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). To use this command, first select a clip in the seekbar.
+"**Export Video with Visual Annotations...**" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.
 
 Help
 ~~~~

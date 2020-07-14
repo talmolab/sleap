@@ -36,34 +36,9 @@
   <div class="section" id="module-sleap.io.visuals">
 <span id="sleap-io-visuals"></span><h1>sleap.io.visuals<a class="headerlink" href="#module-sleap.io.visuals" title="Permalink to this headline">¶</a></h1>
 <p>Module for generating videos with visual annotation overlays.</p>
-<dl class="py function">
-<dt id="sleap.io.visuals.get_frame_image">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">get_frame_image</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video_frame</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#get_frame_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.get_frame_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns single annotated frame image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>video_frame</strong> – The ndarray of the frame image.</p></li>
-<li><p><strong>video_idx</strong> – Index of video in <a href="#id1"><span class="problematic" id="id2">:attribute:`Labels.videos`</span></a> list.</p></li>
-<li><p><strong>frame_idx</strong> – Index of frame in video.</p></li>
-<li><p><strong>labels</strong> – The dataset from which to get data.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ndarray of frame image with visual annotations added.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="sleap.io.visuals.img_to_cv">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">img_to_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#img_to_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.img_to_cv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prepares frame image as needed for opencv.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="sleap.io.visuals.marker">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">marker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#marker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.marker" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="sleap.io.visuals.VideoMarkerThread">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">VideoMarkerThread</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">out_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">show_edges</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">crop_size_xy</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color_manager</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.gui.color.html#sleap.gui.color.ColorManager" title="sleap.gui.color.ColorManager">sleap.gui.color.ColorManager</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#VideoMarkerThread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.VideoMarkerThread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Annotate frame images (draw instances).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -73,51 +48,29 @@
 (images, h, w, channels) ndarray.</p></li>
 <li><p><strong>labels</strong> – the <cite>Labels</cite> object from which to get data for annotating.</p></li>
 <li><p><strong>video_idx</strong> – index of <cite>Video</cite> in <cite>labels.videos</cite> list.</p></li>
+<li><p><strong>scale</strong> – scale of image (so we can scale point locations to match)</p></li>
+<li><p><strong>show_edges</strong> – whether to draw lines between nodes</p></li>
+<li><p><strong>color_manager</strong> – ColorManager object which determine what colors to use
+for what instance/node/edge</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
 </dl>
+<dl class="py method">
+<dt id="sleap.io.visuals.VideoMarkerThread.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#VideoMarkerThread.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.VideoMarkerThread.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
-<dt id="sleap.io.visuals.plot_instance_cv">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instance_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span></em>, <em class="sig-param"><span class="n">color</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">unscaled_marker_radius</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instance_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instance_cv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add visual annotations for single instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>img</strong> – The ndarray of the frame image.</p></li>
-<li><p><strong>instance</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> to add to frame image.</p></li>
-<li><p><strong>color</strong> – (r, g, b) color for this instance.</p></li>
-<li><p><strong>unscaled_marker_radius</strong> – Radius of marker for instance points (nodes).</p></li>
-<li><p><strong>scale</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ndarray of frame image with visual annotations for instance added.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="sleap.io.visuals.plot_instances_cv">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">plot_instances_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">video_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#plot_instances_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.plot_instances_cv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds visuals annotations to single frame image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>img</strong> – The ndarray of the frame image.</p></li>
-<li><p><strong>video_idx</strong> – Index of video in <a href="#id3"><span class="problematic" id="id4">:attribute:`Labels.videos`</span></a> list.</p></li>
-<li><p><strong>frame_idx</strong> – Index of frame in video.</p></li>
-<li><p><strong>labels</strong> – The dataset from which to get data.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ndarray of frame image with visual annotations added.</p>
-</dd>
-</dl>
+<dt id="sleap.io.visuals.img_to_cv">
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">img_to_cv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../_modules/sleap/io/visuals.html#img_to_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.img_to_cv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares frame image as needed for opencv.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -148,7 +101,7 @@ for chunks of video.</p></li>
 
 <dl class="py function">
 <dt id="sleap.io.visuals.save_labeled_video">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">save_labeled_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">15</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gui_progress</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#save_labeled_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.save_labeled_video" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">save_labeled_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">15</span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">crop_size_xy</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">show_edges</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">color_manager</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.gui.color.html#sleap.gui.color.ColorManager" title="sleap.gui.color.ColorManager">sleap.gui.color.ColorManager</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gui_progress</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#save_labeled_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.save_labeled_video" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to generate and save video with annotations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -158,6 +111,11 @@ for chunks of video.</p></li>
 <li><p><strong>video</strong> – The source <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> we want to annotate.</p></li>
 <li><p><strong>frames</strong> – List of frames to include in output video.</p></li>
 <li><p><strong>fps</strong> – Frames per second for output video.</p></li>
+<li><p><strong>scale</strong> – scale of image (so we can scale point locations to match)</p></li>
+<li><p><strong>crop_size_xy</strong> – size of crop around instances, or None for full images</p></li>
+<li><p><strong>show_edges</strong> – whether to draw lines between nodes</p></li>
+<li><p><strong>color_manager</strong> – ColorManager object which determine what colors to use
+for what instance/node/edge</p></li>
 <li><p><strong>gui_progress</strong> – Whether to show Qt GUI progress dialog.</p></li>
 </ul>
 </dd>
@@ -169,8 +127,9 @@ for chunks of video.</p></li>
 
 <dl class="py function">
 <dt id="sleap.io.visuals.writer">
-<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">writer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">progress_queue</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">img_w_h</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#writer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.writer" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.io.visuals.</code><code class="sig-name descname">writer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_q</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">progress_queue</span><span class="p">:</span> <span class="n">queue.Queue</span></em>, <em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">fps</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/visuals.html#writer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.visuals.writer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write annotated images to video.</p>
+<p>Image size is determined by the first image received in queue.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -180,7 +139,6 @@ for chunks of video.</p></li>
 Send (-1, elapsed time) when done.</p></li>
 <li><p><strong>filename</strong> – full path to output video</p></li>
 <li><p><strong>fps</strong> – frames per second for output video</p></li>
-<li><p><strong>img_w_h</strong> – (w, h) for output video (note width first for opencv)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -235,6 +193,7 @@ Send (-1, elapsed time) when done.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.metrics.html">sleap.gui.dialogs.metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
@@ -250,6 +209,7 @@ Send (-1, elapsed time) when done.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.mpl.html">sleap.gui.widgets.mpl</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>

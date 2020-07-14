@@ -30,6 +30,7 @@ Developer API
    sleap.gui.dialogs.importvideos
    sleap.gui.dialogs.merge
    sleap.gui.dialogs.message
+   sleap.gui.dialogs.metrics
    sleap.gui.dialogs.missingfiles
    sleap.gui.dialogs.shortcuts
    sleap.gui.learning.configs
@@ -45,6 +46,7 @@ Developer API
    sleap.gui.overlays.pafs
    sleap.gui.overlays.tracks
    sleap.gui.widgets.imagedir
+   sleap.gui.widgets.mpl
    sleap.gui.widgets.multicheck
    sleap.gui.widgets.slider
    sleap.gui.widgets.video
