@@ -719,8 +719,18 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
                 layout.addWidget(self._use_trained_model)
 
+        elif self._require_trained:
+            self._update_use_trained()
+
         layout.addWidget(self._layout_widget(col_layout))
         self.setLayout(layout)
+
+    @classmethod
+    def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
+        widget = cls(require_trained=True)
+        widget.acceptSelectedConfigInfo(cfg_info)
+        widget.setWindowTitle(cfg_info.path_dir)
+        return widget
 
     @staticmethod
     def _layout_widget(layout):
@@ -790,7 +800,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             form.set_enabled(not use_trained)
 
         # If user wants to use trained model, then reset form to match config
-        if use_trained:
+        if use_trained and self._cfg_list_widget:
             cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
             self._load_config(cfg_info)
 

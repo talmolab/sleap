@@ -1,5 +1,9 @@
 import attr
+import datetime
+import h5py
 import os
+import re
+import numpy as np
 
 from sleap import util as sleap_utils
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -18,34 +22,98 @@ class ConfigFileInfo:
     filename: Optional[Text] = None
     head_name: Optional[Text] = None
     dont_retrain: bool = False
+    _dset_len_cache: dict = attr.ib(factory=dict)
 
     @property
-    def has_trained_model(self):
-        if self.config.outputs.run_name:
-            # Check the run path saved in the file
-            if self._check_path_for_model(self.config.outputs.run_path):
-                return True
-
-            # Check the directory where the file is currently
-            if self._check_path_for_model(os.path.dirname(self.path)):
-                return True
-
-        return False
-
-    def _check_path_for_model(self, dir):
-        # Check if the model file exists.
-
+    def has_trained_model(self) -> bool:
         # TODO: inference only checks for the best model, so that's also
         #  what we'll do here, but both should check for other models
         #  depending on the training config settings.
 
-        model_shortname = "best_model.h5"
-        model_path = os.path.join(dir, model_shortname)
+        return self._get_file_path("best_model.h5") is not None
 
-        if os.path.exists(model_path):
-            return True
+    @property
+    def path_dir(self):
+        if self.path.endswith("json"):
+            return os.path.dirname(self.path)
+        return self.path
 
-        return False
+    def _get_file_path(self, shortname) -> Optional[Text]:
+        """
+        Check for specified file in various directories related config.
+
+        Args:
+            shortname: Filename without path.
+        Returns:
+            Full path + filename if found, otherwise None.
+        """
+        if not self.config.outputs.run_name:
+            return None
+
+        dirs_to_try = [self.config.outputs.run_path, self.path_dir]
+
+        for dir in dirs_to_try:
+            full_path = os.path.join(dir, shortname)
+            if os.path.exists(full_path):
+                return full_path
+
+        return None
+
+    @property
+    def metrics(self):
+        return self._get_metrics("val")
+
+    @property
+    def training_instance_count(self):
+        return self._get_dataset_len("instances", "train")
+
+    @property
+    def validation_instance_count(self):
+        return self._get_dataset_len("instances", "val")
+
+    @property
+    def training_frame_count(self):
+        return self._get_dataset_len("frames", "train")
+
+    @property
+    def validation_frame_count(self):
+        return self._get_dataset_len("frames", "val")
+
+    @property
+    def timestamp(self):
+        match = re.match(
+            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b", self.config.outputs.run_name
+        )
+        if match:
+            year, month, day = int(match[1]), int(match[2]), int(match[3])
+            hour, minute, sec = int(match[4]), int(match[5]), int(match[6])
+            return datetime.datetime(2000 + year, month, day, hour, minute, sec)
+
+        return None
+
+    def _get_dataset_len(self, dset_name: Text, split_name: Text):
+        cache_key = (dset_name, split_name)
+        if cache_key not in self._dset_len_cache:
+            n = None
+            filename = self._get_file_path(f"labels_gt.{split_name}.slp")
+            if filename is not None:
+                with h5py.File(filename, "r") as f:
+                    n = f[dset_name].shape[0]
+
+            self._dset_len_cache[cache_key] = n
+
+        return self._dset_len_cache[cache_key]
+
+    def _get_metrics(self, split_name: Text):
+        metrics_path = self._get_file_path(f"metrics.{split_name}.npz")
+
+        if metrics_path is None:
+            return None
+
+        with np.load(metrics_path, allow_pickle=True) as data:
+            metrics = data["metrics"].item()
+
+        return metrics
 
     @classmethod
     def from_config_file(cls, path):
@@ -195,6 +263,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 class TrainingConfigsGetter:
     dir_paths: List[Text]
     head_filter: Optional[Text] = None
+    search_depth: int = 1
     _configs: List[ConfigFileInfo] = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
@@ -214,20 +283,20 @@ class TrainingConfigsGetter:
         configs = []
         for dir in self.dir_paths:
             if os.path.exists(dir):
-                configs_in_dir = self.find_configs_in_dir(dir)
+                configs_in_dir = self.find_configs_in_dir(dir, self.search_depth)
                 configs.extend(configs_in_dir)
 
         return configs
 
     def get_filtered_configs(
-        self, head_filter: Text, only_trained: bool = False
+        self, head_filter: Text = "", only_trained: bool = False
     ) -> List[ConfigFileInfo]:
 
         cfgs_to_return = []
         paths_included = []
 
         for cfg_info in self._configs:
-            if cfg_info.head_name == head_filter:
+            if cfg_info.head_name == head_filter or not head_filter:
                 if not only_trained or cfg_info.has_trained_model:
                     # At this point we know that config is appropriate
                     # for this head type and is trained if that is required.
@@ -236,6 +305,9 @@ class TrainingConfigsGetter:
                     # Taking the first config we see in the directory means
                     # we'll get the *trained* config if there is one, since
                     # it will be newer and we've sorted by desc date modified.
+
+                    # TODO: check filenames since timestamp sort could be off
+                    #  if files were copied
 
                     cfg_dir = os.path.dirname(cfg_info.path)
                     if cfg_dir not in paths_included:
@@ -251,6 +323,9 @@ class TrainingConfigsGetter:
 
     def insert_first(self, cfg_info: ConfigFileInfo):
         self._configs.insert(0, cfg_info)
+
+    def insert_last(self, cfg_info: ConfigFileInfo):
+        self._configs.append(cfg_info)
 
     def try_loading_path(self, path: Text):
         try:
