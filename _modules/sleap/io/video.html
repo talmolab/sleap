@@ -1022,6 +1022,7 @@
 <span class="sd">        Returns: A tuple of (frame indices, frames), where</span>
 <span class="sd">            * frame indices is a subset of the specified idxs, and</span>
 <span class="sd">            * frames has shape (len(frame indices), height, width, channels).</span>
+<span class="sd">            If zero frames were loaded successfully, then frames is None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">idxs_found</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1029,15 +1030,20 @@
         <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="c1"># quietly ignore frames which we couldn&#39;t load</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="c1"># ignore frames which we couldn&#39;t load</span>
                 <span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
                 <span class="n">idxs_found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
 
-        <span class="n">frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">frames</span><span class="p">:</span>
+            <span class="n">frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frames</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="k">return</span> <span class="n">idxs_found</span><span class="p">,</span> <span class="n">frames</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>

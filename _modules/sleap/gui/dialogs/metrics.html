@@ -38,7 +38,6 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
 
-<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Skeleton</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dataviews</span> <span class="kn">import</span> <span class="n">GenericTableModel</span><span class="p">,</span> <span class="n">GenericTableView</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.learning.configs</span> <span class="kn">import</span> <span class="n">TrainingConfigsGetter</span><span class="p">,</span> <span class="n">ConfigFileInfo</span>
@@ -53,13 +52,12 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MetricsTableDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span> <span class="o">=</span> <span class="n">TrainingConfigsGetter</span><span class="o">.</span><span class="n">make_from_labels_filename</span><span class="p">(</span>
             <span class="n">labels_filename</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">search_depth</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">search_depth</span> <span class="o">=</span> <span class="mi">4</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span> <span class="o">=</span> <span class="n">MetricsTableModel</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">table_view</span> <span class="o">=</span> <span class="n">GenericTableView</span><span class="p">(</span>
@@ -144,7 +142,7 @@
 
         <span class="n">key</span> <span class="o">=</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">path</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metric_detail_widgets</span><span class="p">:</span>
-            <span class="n">metric_detail_widgets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">DetailedMetricsDialog</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="p">)</span>
+            <span class="n">metric_detail_widgets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">DetailedMetricsDialog</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
 
         <span class="n">metric_detail_widgets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
         <span class="n">metric_detail_widgets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">raise_</span><span class="p">()</span>
@@ -227,15 +225,37 @@
         <span class="k">return</span> <span class="n">item_data</span></div>
 
 
+<span class="n">METRICS_KEY_LABELS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;vis.tp&quot;</span><span class="p">:</span> <span class="s2">&quot;Visibility - True Positives&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vis.fp&quot;</span><span class="p">:</span> <span class="s2">&quot;Visibility - False Positives&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vis.tn&quot;</span><span class="p">:</span> <span class="s2">&quot;Visibility - True Negatives&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vis.fn&quot;</span><span class="p">:</span> <span class="s2">&quot;Visibility - False Negatives&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vis.precision&quot;</span><span class="p">:</span> <span class="s2">&quot;Visibility - Precision&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vis.recall&quot;</span><span class="p">:</span> <span class="s2">&quot;Visibility - Recall&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dist.avg&quot;</span><span class="p">:</span> <span class="s2">&quot;Average Distance (ground truth vs prediction)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dist.p50&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance for 50th percentile&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dist.p75&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance for 75th percentile&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dist.p90&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance for 90th percentile&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dist.p95&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance for 95th percentile&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dist.p99&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance for 99th percentile&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pck.mPCK&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean Percentage of Correct Keypoints (PCK)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;oks.mOKS&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean Object Keypoint Similarity (OKS)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;oks_voc.mAP&quot;</span><span class="p">:</span> <span class="s2">&quot;VOC with OKS scores - mean Average Precision (mAP)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;oks_voc.mAR&quot;</span><span class="p">:</span> <span class="s2">&quot;VOC with OKS scores - mean Average Recall (mAR)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pck_voc.mAP&quot;</span><span class="p">:</span> <span class="s2">&quot;VOC with PCK scores - mean Average Precision (mAP)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pck_voc.mAR&quot;</span><span class="p">:</span> <span class="s2">&quot;VOC with PCK scores - mean Average Recall (mAR)&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
 <div class="viewcode-block" id="DetailedMetricsDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.metrics.html#sleap.gui.dialogs.metrics.DetailedMetricsDialog">[docs]</a><span class="k">class</span> <span class="nc">DetailedMetricsDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">DetailedMetricsDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">path_dir</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setMinimumWidth</span><span class="p">(</span><span class="mi">800</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">cfg_info</span> <span class="o">=</span> <span class="n">cfg_info</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">skeleton</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="o">=</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">skeleton</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">metrics</span>
 
@@ -251,9 +271,13 @@
                 <span class="p">):</span>
                     <span class="n">val_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 
+                    <span class="n">key_str</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">METRICS_KEY_LABELS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">METRICS_KEY_LABELS</span> <span class="k">else</span> <span class="n">key</span>
+                    <span class="p">)</span>
+
                     <span class="n">text_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="n">val_str</span><span class="p">)</span>
                     <span class="n">text_widget</span><span class="o">.</span><span class="n">setTextInteractionFlags</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">TextSelectableByMouse</span><span class="p">)</span>
-                    <span class="n">metrics_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&lt;/b&gt;:&quot;</span><span class="p">,</span> <span class="n">text_widget</span><span class="p">)</span>
+                    <span class="n">metrics_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{</span><span class="n">key_str</span><span class="si">}</span><span class="s2">&lt;/b&gt;:&quot;</span><span class="p">,</span> <span class="n">text_widget</span><span class="p">)</span>
 
         <span class="n">metrics_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
         <span class="n">metrics_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">metrics_layout</span><span class="p">)</span>
@@ -270,8 +294,7 @@
     <span class="k">def</span> <span class="nf">plot_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">axes</span>
 
-        <span class="c1"># node_names = self.cfg_info.config.data.labels.skeletons[0].node_names</span>
-        <span class="n">node_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span>
+        <span class="n">node_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="k">else</span> <span class="kc">None</span>
 
         <span class="n">dists</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.dists&quot;</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="n">node_names</span><span class="p">)</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span>
             <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;Part&quot;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;Error&quot;</span>

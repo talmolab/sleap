@@ -721,11 +721,12 @@ or “channels_last”</p></li>
 <code class="sig-name descname">get_frames_safely</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idxs</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>List<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>numpy.ndarray<span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/video.html#Video.get_frames_safely"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.Video.get_frames_safely" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns list of frame indices and frames which were successfully loaded.</p>
 <p>idxs: An iterable object that contains the indices of frames.</p>
-<dl class="simple">
+<dl>
 <dt>Returns: A tuple of (frame indices, frames), where</dt><dd><ul class="simple">
 <li><p>frame indices is a subset of the specified idxs, and</p></li>
 <li><p>frames has shape (len(frame indices), height, width, channels).</p></li>
 </ul>
+<p>If zero frames were loaded successfully, then frames is None.</p>
 </dd>
 </dl>
 </dd></dl>

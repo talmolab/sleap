@@ -39,6 +39,7 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Skeleton</span>
 <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">util</span> <span class="k">as</span> <span class="n">sleap_utils</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">TrainingJobConfig</span>
@@ -56,6 +57,8 @@
     <span class="n">filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">head_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dont_retrain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_skeleton</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Skeleton</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_tried_finding_skeleton</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_dset_len_cache</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -96,6 +99,28 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_metrics</span><span class="p">(</span><span class="s2">&quot;val&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># cache skeleton so we only search once</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tried_finding_skeleton</span><span class="p">:</span>
+
+            <span class="c1"># if skeleton was saved in config, great!</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># otherwise try loading it from validation labels (much slower!)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;labels_gt.val.slp&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">val_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">val_labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span> <span class="o">=</span> <span class="n">val_labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># don&#39;t try loading again (needed in case it&#39;s still None)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tried_finding_skeleton</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">training_instance_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -344,6 +369,7 @@
                     <span class="c1">#  if files were copied</span>
 
                     <span class="n">cfg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
                     <span class="k">if</span> <span class="n">cfg_dir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths_included</span><span class="p">:</span>
                         <span class="n">paths_included</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_dir</span><span class="p">)</span>
                         <span class="n">cfgs_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>

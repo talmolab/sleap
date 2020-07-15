@@ -98,6 +98,11 @@
             <span class="n">frames_idx_chunk</span>
         <span class="p">)</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">loaded_chunk_idxs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No frames could be loaded from chunk </span><span class="si">{</span><span class="n">chunk_i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+
         <span class="k">if</span> <span class="n">scale</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">video_frame_images</span> <span class="o">=</span> <span class="n">resize_images</span><span class="p">(</span><span class="n">video_frame_images</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
 
