@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from sleap import Labels, Skeleton
 from sleap.gui.dataviews import GenericTableModel, GenericTableView
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import TrainingConfigsGetter, ConfigFileInfo
@@ -19,13 +18,12 @@ class MetricsTableDialog(QtWidgets.QWidget):
     def __init__(self, labels_filename: Text):
         super(MetricsTableDialog, self).__init__()
 
-        labels = Labels.load_file(labels_filename)
-        self.skeleton = labels.skeletons[0]
+        labels_filename = labels_filename or ""
 
         self._cfg_getter = TrainingConfigsGetter.make_from_labels_filename(
             labels_filename,
         )
-        self._cfg_getter.search_depth = 2
+        self._cfg_getter.search_depth = 4
 
         self.table_model = MetricsTableModel(items=[])
         self.table_view = GenericTableView(
@@ -110,7 +108,7 @@ class MetricsTableDialog(QtWidgets.QWidget):
 
         key = cfg_info.path
         if key not in metric_detail_widgets:
-            metric_detail_widgets[key] = DetailedMetricsDialog(cfg_info, self.skeleton)
+            metric_detail_widgets[key] = DetailedMetricsDialog(cfg_info)
 
         metric_detail_widgets[key].show()
         metric_detail_widgets[key].raise_()
@@ -193,15 +191,37 @@ class MetricsTableModel(GenericTableModel):
         return item_data
 
 
+METRICS_KEY_LABELS = {
+    "vis.tp": "Visibility - True Positives",
+    "vis.fp": "Visibility - False Positives",
+    "vis.tn": "Visibility - True Negatives",
+    "vis.fn": "Visibility - False Negatives",
+    "vis.precision": "Visibility - Precision",
+    "vis.recall": "Visibility - Recall",
+    "dist.avg": "Average Distance (ground truth vs prediction)",
+    "dist.p50": "Distance for 50th percentile",
+    "dist.p75": "Distance for 75th percentile",
+    "dist.p90": "Distance for 90th percentile",
+    "dist.p95": "Distance for 95th percentile",
+    "dist.p99": "Distance for 99th percentile",
+    "pck.mPCK": "Mean Percentage of Correct Keypoints (PCK)",
+    "oks.mOKS": "Mean Object Keypoint Similarity (OKS)",
+    "oks_voc.mAP": "VOC with OKS scores - mean Average Precision (mAP)",
+    "oks_voc.mAR": "VOC with OKS scores - mean Average Recall (mAR)",
+    "pck_voc.mAP": "VOC with PCK scores - mean Average Precision (mAP)",
+    "pck_voc.mAR": "VOC with PCK scores - mean Average Recall (mAR)",
+}
+
+
 class DetailedMetricsDialog(QtWidgets.QWidget):
-    def __init__(self, cfg_info: ConfigFileInfo, skeleton: Skeleton):
+    def __init__(self, cfg_info: ConfigFileInfo):
         super(DetailedMetricsDialog, self).__init__()
 
         self.setWindowTitle(cfg_info.path_dir)
         self.setMinimumWidth(800)
 
         self.cfg_info = cfg_info
-        self.skeleton = skeleton
+        self.skeleton = cfg_info.skeleton
 
         self.metrics = self.cfg_info.metrics
 
@@ -217,9 +237,13 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
                 ):
                     val_str = str(val)
 
+                    key_str = (
+                        METRICS_KEY_LABELS[key] if key in METRICS_KEY_LABELS else key
+                    )
+
                     text_widget = QtWidgets.QLabel(val_str)
                     text_widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-                    metrics_layout.addRow(f"<b>{key}</b>:", text_widget)
+                    metrics_layout.addRow(f"<b>{key_str}</b>:", text_widget)
 
         metrics_widget = QtWidgets.QWidget()
         metrics_widget.setLayout(metrics_layout)
@@ -236,8 +260,7 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
     def plot_distances(self):
         ax = self.canvas.axes
 
-        # node_names = self.cfg_info.config.data.labels.skeletons[0].node_names
-        node_names = self.skeleton.node_names
+        node_names = self.skeleton.node_names if self.skeleton else None
 
         dists = pd.DataFrame(self.metrics["dist.dists"], columns=node_names).melt(
             var_name="Part", value_name="Error"

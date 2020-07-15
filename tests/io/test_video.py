@@ -364,3 +364,12 @@ def test_safe_frame_loading(small_robot_mp4_vid):
 
     assert idxs == [1, 2]
     assert len(frames) == 2
+
+
+def test_safe_frame_loading_all_invalid():
+    vid = Video.from_filename("video_that_does_not_exist.mp4")
+
+    idxs, frames = vid.get_frames_safely(list(range(10)))
+
+    assert idxs == []
+    assert frames is None

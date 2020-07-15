@@ -64,6 +64,11 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
             frames_idx_chunk
         )
 
+        if not loaded_chunk_idxs:
+            print(f"No frames could be loaded from chunk {chunk_i}")
+            i += 1
+            continue
+
         if scale != 1.0:
             video_frame_images = resize_images(video_frame_images, scale)
 
