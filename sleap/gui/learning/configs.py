@@ -5,6 +5,7 @@ import os
 import re
 import numpy as np
 
+from sleap import Labels, Skeleton
 from sleap import util as sleap_utils
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.nn.config import TrainingJobConfig
@@ -22,6 +23,8 @@ class ConfigFileInfo:
     filename: Optional[Text] = None
     head_name: Optional[Text] = None
     dont_retrain: bool = False
+    _skeleton: Optional[Skeleton] = None
+    _tried_finding_skeleton: bool = False
     _dset_len_cache: dict = attr.ib(factory=dict)
 
     @property
@@ -62,6 +65,28 @@ class ConfigFileInfo:
     @property
     def metrics(self):
         return self._get_metrics("val")
+
+    @property
+    def skeleton(self):
+        # cache skeleton so we only search once
+        if self._skeleton is None and not self._tried_finding_skeleton:
+
+            # if skeleton was saved in config, great!
+            if self.config.data.labels.skeletons:
+                self._skeleton = self.config.data.labels.skeletons[0]
+
+            # otherwise try loading it from validation labels (much slower!)
+            else:
+                filename = self._get_file_path(f"labels_gt.val.slp")
+                if filename is not None:
+                    val_labels = Labels.load_file(filename)
+                    if val_labels.skeletons:
+                        self._skeleton = val_labels.skeletons[0]
+
+            # don't try loading again (needed in case it's still None)
+            self._tried_finding_skeleton = True
+
+        return self._skeleton
 
     @property
     def training_instance_count(self):
@@ -310,6 +335,7 @@ class TrainingConfigsGetter:
                     #  if files were copied
 
                     cfg_dir = os.path.dirname(cfg_info.path)
+
                     if cfg_dir not in paths_included:
                         paths_included.append(cfg_dir)
                         cfgs_to_return.append(cfg_info)
