@@ -988,6 +988,7 @@ class Video:
         Returns: A tuple of (frame indices, frames), where
             * frame indices is a subset of the specified idxs, and
             * frames has shape (len(frame indices), height, width, channels).
+            If zero frames were loaded successfully, then frames is None.
         """
         frames = []
         idxs_found = []
@@ -995,15 +996,20 @@ class Video:
         for idx in idxs:
             try:
                 frame = self.get_frame(idx)
-            except:
-                # quietly ignore frames which we couldn't load
+            except Exception as e:
+                print(e)
+                # ignore frames which we couldn't load
                 frame = None
 
             if frame is not None:
                 frames.append(frame)
                 idxs_found.append(idx)
 
-        frames = np.stack(frames, axis=0)
+        if frames:
+            frames = np.stack(frames, axis=0)
+        else:
+            frames = None
+
         return idxs_found, frames
 
     def __getitem__(self, idxs):
