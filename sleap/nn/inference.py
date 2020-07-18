@@ -77,7 +77,7 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
                         f"Finished {i} examples in {elapsed_time:.2f} seconds (inference + postprocessing)"
                     )
                     if elapsed_time:
-                        logger.info(f"FPS={i/elapsed_time}")
+                        logger.info(f"examples/s = {i/elapsed_time}")
 
 
 def make_grouped_labeled_frame(
@@ -100,7 +100,7 @@ def make_grouped_labeled_frame(
     img = None
     for example in frame_examples:
         if instance_score_key is None:
-            instance_scores = np.nansum(example[point_confidences_key].numpy())
+            instance_scores = np.nansum(example[point_confidences_key].numpy(), axis=-1)
         else:
             instance_scores = example[instance_score_key]
 
@@ -108,6 +108,21 @@ def make_grouped_labeled_frame(
             for points, confidences, instance_score in zip(
                 example[points_key], example[point_confidences_key], instance_scores
             ):
+                if not np.isnan(points).all():
+                    predicted_instances.append(
+                        sleap.PredictedInstance.from_arrays(
+                            points=points,
+                            point_confidences=confidences,
+                            instance_score=instance_score,
+                            skeleton=skeleton,
+                        )
+                    )
+        else:
+            points = example[points_key]
+            confidences = example[point_confidences_key]
+            instance_score = instance_scores
+
+            if not np.isnan(points).all():
                 predicted_instances.append(
                     sleap.PredictedInstance.from_arrays(
                         points=points,
@@ -116,19 +131,6 @@ def make_grouped_labeled_frame(
                         skeleton=skeleton,
                     )
                 )
-        else:
-            points = example[points_key]
-            confidences = example[point_confidences_key]
-            instance_score = instance_scores
-
-            predicted_instances.append(
-                sleap.PredictedInstance.from_arrays(
-                    points=points,
-                    point_confidences=confidences,
-                    instance_score=instance_score,
-                    skeleton=skeleton,
-                )
-            )
 
         if image_key is not None and image_key in example:
             img = example[image_key]
@@ -321,18 +323,20 @@ class TopdownPredictor(Predictor):
     confmap_model: Optional[Model] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    batch_size: int = 1
     peak_threshold: float = 0.2
     integral_refinement: bool = True
-    integral_patch_size: int = 7
+    integral_patch_size: int = 5
 
     @classmethod
     def from_trained_models(
         cls,
         centroid_model_path: Optional[Text] = None,
         confmap_model_path: Optional[Text] = None,
+        batch_size: int = 1,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
-        integral_patch_size: int = 7,
+        integral_patch_size: int = 5,
     ) -> "TopdownPredictor":
         """Create predictor from saved models.
 
@@ -380,6 +384,7 @@ class TopdownPredictor(Predictor):
             centroid_model=centroid_model,
             confmap_config=confmap_config,
             confmap_model=confmap_model,
+            batch_size=batch_size,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
@@ -447,7 +452,7 @@ class TopdownPredictor(Predictor):
                 self.centroid_config.data.preprocessing, image_key="image"
             )
             pipeline += Resizer.from_config(
-                self.centroid_config.data.preprocessing, points_key=None,
+                self.centroid_config.data.preprocessing, points_key=None
             )
 
             # Predict centroids using model.
@@ -459,7 +464,7 @@ class TopdownPredictor(Predictor):
 
             pipeline += LocalPeakFinder(
                 confmaps_stride=self.centroid_model.heads[0].output_stride,
-                peak_threshold=0.2,
+                peak_threshold=self.peak_threshold,
                 confmaps_key="predicted_centroid_confidence_maps",
                 peaks_key="predicted_centroids",
                 peak_vals_key="predicted_centroid_confidences",
@@ -496,7 +501,7 @@ class TopdownPredictor(Predictor):
             # Generate ground truth centroids and crops.
             anchor_part = self.confmap_config.data.instance_cropping.center_on_part
             pipeline += InstanceCentroidFinder(
-                center_on_anchor_part=True,
+                center_on_anchor_part=anchor_part is not None,
                 anchor_part_names=anchor_part,
                 skeletons=data_provider.labels.skeletons,
             )
@@ -513,11 +518,17 @@ class TopdownPredictor(Predictor):
 
         if self.confmap_model is not None:
             # Predict confidence maps using model.
+            if self.batch_size > 1:
+                pipeline += sleap.nn.data.pipelines.Batcher(
+                    batch_size=self.batch_size, drop_remainder=False
+                )
             pipeline += KerasModelPredictor(
                 keras_model=self.confmap_model.keras_model,
                 model_input_keys="instance_image",
                 model_output_keys="predicted_instance_confidence_maps",
             )
+            if self.batch_size > 1:
+                pipeline += sleap.nn.data.pipelines.Unbatcher()
             pipeline += GlobalPeakFinder(
                 confmaps_key="predicted_instance_confidence_maps",
                 peaks_key="predicted_center_instance_points",
@@ -525,6 +536,7 @@ class TopdownPredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 integral=self.integral_refinement,
                 integral_patch_size=self.integral_patch_size,
+                keep_confmaps=False,
             )
 
         else:
@@ -619,16 +631,35 @@ class TopdownPredictor(Predictor):
         make_instances: bool = True,
         make_labels: bool = False,
     ):
+        t0_gen = time.time()
+
+        if isinstance(data_provider, sleap.Labels):
+            data_provider = LabelsReader(data_provider)
+        elif isinstance(data_provider, sleap.Video):
+            data_provider = VideoReader(data_provider)
+
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
             lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+            elapsed = time.time() - t0_gen
+            logger.info(
+                f"Predicted {len(lfs)} labeled frames in {elapsed:.3f} secs [{len(lfs)/elapsed:.1f} FPS]"
+            )
+
             if make_labels:
                 return sleap.Labels(lfs)
             else:
                 return lfs
 
-        return list(generator)
+        else:
+            examples = list(generator)
+            elapsed = time.time() - t0_gen
+            logger.info(
+                f"Predicted {len(examples)} examples in {elapsed:.3f} secs [{len(examples)/elapsed:.1f} FPS]"
+            )
+
+            return examples
 
 
 @attr.s(auto_attribs=True)
@@ -637,6 +668,7 @@ class BottomupPredictor(Predictor):
     bottomup_model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
 
     @classmethod
     def from_trained_models(cls, bottomup_model_path: Text) -> "BottomupPredictor":
@@ -685,7 +717,7 @@ class BottomupPredictor(Predictor):
         )
         pipeline += LocalPeakFinder(
             confmaps_stride=self.bottomup_model.heads[0].output_stride,
-            peak_threshold=0.2,
+            peak_threshold=self.peak_threshold,
             confmaps_key="predicted_confidence_maps",
             peaks_key="predicted_peaks",
             peak_vals_key="predicted_peak_confidences",
@@ -777,6 +809,10 @@ class BottomupPredictor(Predictor):
         make_instances: bool = True,
         make_labels: bool = False,
     ):
+        if isinstance(data_provider, sleap.Labels):
+            data_provider = LabelsReader(data_provider)
+        elif isinstance(data_provider, sleap.Video):
+            data_provider = VideoReader(data_provider)
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
@@ -796,7 +832,7 @@ class SingleInstancePredictor(Predictor):
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     peak_threshold: float = 0.2
     integral_refinement: bool = True
-    integral_patch_size: int = 7
+    integral_patch_size: int = 5
 
     @classmethod
     def from_trained_models(
@@ -804,7 +840,7 @@ class SingleInstancePredictor(Predictor):
         confmap_model_path: Text,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
-        integral_patch_size: int = 7,
+        integral_patch_size: int = 5,
     ) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
         # Load confmap model.
@@ -916,6 +952,10 @@ class SingleInstancePredictor(Predictor):
         make_instances: bool = True,
         make_labels: bool = False,
     ):
+        if isinstance(data_provider, sleap.Labels):
+            data_provider = LabelsReader(data_provider)
+        elif isinstance(data_provider, sleap.Video):
+            data_provider = VideoReader(data_provider)
         generator = self.predict_generator(data_provider)
 
         if make_instances or make_labels:
@@ -1033,6 +1073,15 @@ def make_cli_parser():
                 type=float,
                 default=None,
                 help=f"Threshold to use when finding peaks in {predictor_class.__name__} (default: {default_val}).",
+            )
+
+        if "batch_size" in attr.fields_dict(predictor_class):
+            default_val = attr.fields_dict(predictor_class)["batch_size"].default
+            parser.add_argument(
+                f"--{predictor_name}.batch_size",
+                type=int,
+                default=None,
+                help=f"Batch size to use for model inference in {predictor_class.__name__} (default: {default_val}).",
             )
 
     # Add args for tracking

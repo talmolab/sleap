@@ -42,6 +42,13 @@ class RangeList:
             return None
         return self.list[0][0]
 
+    @property
+    def end(self):
+        """Returns the end value of range (or None if empty)."""
+        if self.is_empty:
+            return None
+        return self.list[-1][1]
+
     def add(self, val, tolerance=0):
         """Add a single value, merges to last range if contiguous."""
         if self.list and self.list[-1][1] + tolerance >= val:

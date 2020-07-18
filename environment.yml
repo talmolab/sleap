@@ -2,7 +2,7 @@ name: sleap
 
 dependencies:
 - python=3.6
-- numpy>=1.16
+- numpy>=1.18.1
 - attrs=19.3
 - jsonpickle=1.2
 - networkx
@@ -19,6 +19,7 @@ dependencies:
 - python-rapidjson
 - pip
 - pip:
+    - scipy==1.4.1
     - opencv-python-headless==4.2.0.34
     - PySide2>=5.12.0,<=5.14.1
     - imgaug==0.3.0
@@ -28,5 +29,6 @@ dependencies:
     - jsmin
     - seaborn
     - scikit-video
+    - pykalman==0.9.5
     - "--editable=./"
     - "--requirement=./dev_requirements.txt"

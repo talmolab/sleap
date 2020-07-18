@@ -1,10 +1,12 @@
-from sleap.gui.overlays.tracks import TrackTrailOverlay, MAX_NODES_IN_TRAIL
+from sleap.gui.overlays.tracks import TrackTrailOverlay
 
 
 def test_track_trails(centered_pair_predictions):
 
     labels = centered_pair_predictions
-    trail_manager = TrackTrailOverlay(labels, player=None, trail_length=6)
+    trail_manager = TrackTrailOverlay(
+        labels, player=None, trail_length=6, max_node_count=24
+    )
 
     frames = trail_manager.get_frame_selection(labels.videos[0], 27)
     assert len(frames) == 6
@@ -23,7 +25,7 @@ def test_track_trails(centered_pair_predictions):
     all_trails = trail_manager.get_track_trails(frames)
     trails = all_trails[tracks[0]]
 
-    assert len(trails) == min(24, MAX_NODES_IN_TRAIL)
+    assert len(trails) == 24
 
     # points for first (HEAD) node
     test_trail = [

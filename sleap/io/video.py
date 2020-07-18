@@ -93,6 +93,9 @@ class HDF5Video:
             self.__height_idx = 1
 
     def _load(self):
+        if self.__tried_to_load:
+            return
+
         self.__tried_to_load = True
 
         # Handle cases where the user feeds in h5.File objects instead of filename
@@ -134,6 +137,7 @@ class HDF5Video:
                 d = json_loads(
                     self.__file_h5.require_group(source_video_group).attrs["json"]
                 )
+
                 self._source_video_ = Video.cattr().structure(d, Video)
 
     @property
@@ -200,9 +204,10 @@ class HDF5Video:
             raise ValueError(f"Frame index {idx} not in original index.")
 
     @property
-    def _source_video(self) -> "HDF5Video":
-        if self.enable_source_video and hasattr(self, "_source_video_"):
-            return self._source_video_
+    def _source_video(self) -> "Video":
+        if self.enable_source_video:
+            if hasattr(self, "_source_video_") and self._source_video_:
+                return self._source_video_
         return None
 
     # The properties and methods below complete our contract with the
@@ -990,6 +995,7 @@ class Video:
         Returns: A tuple of (frame indices, frames), where
             * frame indices is a subset of the specified idxs, and
             * frames has shape (len(frame indices), height, width, channels).
+            If zero frames were loaded successfully, then frames is None.
         """
         frames = []
         idxs_found = []
@@ -997,15 +1003,20 @@ class Video:
         for idx in idxs:
             try:
                 frame = self.get_frame(idx)
-            except:
-                # quietly ignore frames which we couldn't load
+            except Exception as e:
+                print(e)
+                # ignore frames which we couldn't load
                 frame = None
 
             if frame is not None:
                 frames.append(frame)
                 idxs_found.append(idx)
 
-        frames = np.stack(frames, axis=0)
+        if frames:
+            frames = np.stack(frames, axis=0)
+        else:
+            frames = None
+
         return idxs_found, frames
 
     def __getitem__(self, idxs):
@@ -1384,7 +1395,9 @@ class Video:
         return vid_cattr
 
     @staticmethod
-    def fixup_path(path: str, raise_error: bool = False) -> str:
+    def fixup_path(
+        path: str, raise_error: bool = False, raise_warning: bool = False
+    ) -> str:
         """
         Tries to locate video if the given path doesn't work.
 
@@ -1403,6 +1416,7 @@ class Video:
         Args:
             path: The path the video asset.
             raise_error: Whether to raise error if we cannot find video.
+            raise_warning: Whether to raise warning if we cannot find video.
 
         Raises:
             FileNotFoundError: If file still cannot be found and raise_error
@@ -1438,5 +1452,6 @@ class Video:
         if raise_error:
             raise FileNotFoundError(f"Cannot find a video file: {path}")
         else:
-            logger.warning(f"Cannot find a video file: {path}")
+            if raise_warning:
+                logger.warning(f"Cannot find a video file: {path}")
             return path

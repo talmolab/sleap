@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from sleap.io.visuals import save_labeled_video, resize_images, mark_images, VideoWriter
+from sleap.io.visuals import save_labeled_video, resize_images, VideoMarkerThread
 
 
 def test_resize(small_robot_mp4_vid):
@@ -32,13 +32,18 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
     assert height == video.height // (1 / scale)
     assert width == video.width // (1 / scale)
 
-    # Make sure we can mark images
-    marked_image_list = mark_images(
-        frame_indices=frames,
-        frame_images=small_images,
-        video_idx=video_idx,
+    marker_thread = VideoMarkerThread(
+        in_q=None,
+        out_q=None,
         labels=centered_pair_predictions,
+        video_idx=video_idx,
         scale=scale,
+        color_manager=None,
+    )
+
+    # Make sure we can mark images
+    marked_image_list = marker_thread._mark_images(
+        frame_indices=frames, frame_images=small_images,
     )
 
     marked_point = (

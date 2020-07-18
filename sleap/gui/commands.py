@@ -402,6 +402,9 @@ class CommandContext(object):
             SetInstancePointVisibility, instance=instance, node=node, visible=visible
         )
 
+    def addUserInstancesFromPredictions(self):
+        self.execute(AddUserInstancesFromPredictions)
+
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
         self.execute(DeleteSelectedInstance)
@@ -777,8 +780,12 @@ class ExportLabeledClip(AppCommand):
             filename=params["filename"],
             labels=context.state["labels"],
             video=context.state["video"],
-            frames=list(range(*context.state["frame_range"])),
+            frames=list(params["frames"]),
             fps=params["fps"],
+            color_manager=params["color_manager"],
+            show_edges=params["show edges"],
+            scale=params["scale"],
+            crop_size_xy=params["crop"],
             gui_progress=True,
         )
 
@@ -790,60 +797,77 @@ class ExportLabeledClip(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        if context.state["has_frame_range"]:
 
-            from sleap.gui.dialogs.export_clip import ExportClipDialog
+        from sleap.gui.dialogs.export_clip import ExportClipDialog
 
-            dialog = ExportClipDialog()
+        dialog = ExportClipDialog()
 
-            # Set default fps from video (if video has fps attribute)
-            dialog.form_widget.set_form_data(
-                dict(fps=getattr(context.state["video"], "fps", 30))
-            )
+        # Set default fps from video (if video has fps attribute)
+        dialog.form_widget.set_form_data(
+            dict(fps=getattr(context.state["video"], "fps", 30))
+        )
 
-            # Show modal dialog and get form results
-            export_options = dialog.get_results()
+        # Show modal dialog and get form results
+        export_options = dialog.get_results()
 
-            # Check if user hit cancel
-            if export_options is None:
-                return False
-
-            # Use VideoWriter to determine default video type to use
-            from sleap.io.videowriter import VideoWriter
-
-            # For OpenCV we default to avi since the bundled ffmpeg
-            # makes mp4's that most programs can't open (VLC can).
-            default_out_filename = context.state["filename"] + ".avi"
-
-            # But if we can write mpegs using sci-kit video, use .mp4
-            # since it has trouble writing .avi files.
-            if VideoWriter.can_use_skvideo():
-                default_out_filename = context.state["filename"] + ".mp4"
-
-            # Ask where use wants to save video file
-            filename, _ = FileDialog.save(
-                context.app,
-                caption="Save Video As...",
-                dir=default_out_filename,
-                filter="Video (*.avi *mp4)",
-            )
-
-            # Check if user hit cancel
-            if len(filename) == 0:
-                return False
-
-            params["filename"] = filename
-            params["fps"] = export_options["fps"]
-            params["open_when_done"] = export_options["open_when_done"]
-            return True
-        else:
-            message = (
-                "There is no selected clip. You can select a clip by "
-                "shift-dragging over the range of frames in the video "
-                "seekbar."
-            )
-            QMessageBox(text=message).exec_()
+        # Check if user hit cancel
+        if export_options is None:
             return False
+
+        # Use VideoWriter to determine default video type to use
+        from sleap.io.videowriter import VideoWriter
+
+        # For OpenCV we default to avi since the bundled ffmpeg
+        # makes mp4's that most programs can't open (VLC can).
+        default_out_filename = context.state["filename"] + ".avi"
+
+        # But if we can write mpegs using sci-kit video, use .mp4
+        # since it has trouble writing .avi files.
+        if VideoWriter.can_use_skvideo():
+            default_out_filename = context.state["filename"] + ".mp4"
+
+        # Ask where use wants to save video file
+        filename, _ = FileDialog.save(
+            context.app,
+            caption="Save Video As...",
+            dir=default_out_filename,
+            filter="Video (*.avi *mp4)",
+        )
+
+        # Check if user hit cancel
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
+        params["fps"] = export_options["fps"]
+        params["scale"] = export_options["scale"]
+        params["open_when_done"] = export_options["open_when_done"]
+
+        params["crop"] = None
+
+        # Determine crop size relative to original size and scale
+        # (crop size should be *final* output size, thus already scaled).
+        w = int(context.state["video"].width * params["scale"])
+        h = int(context.state["video"].height * params["scale"])
+        if export_options["crop"] == "Half":
+            params["crop"] = (w // 2, h // 2)
+        elif export_options["crop"] == "Quarter":
+            params["crop"] = (w // 4, h // 4)
+
+        if export_options["use_gui_visuals"]:
+            params["color_manager"] = context.app.color_manager
+        else:
+            params["color_manager"] = None
+
+        params["show edges"] = context.state.get("show edges", default=True)
+
+        # If user selected a clip, use that; otherwise include all frames.
+        if context.state["has_frame_range"]:
+            params["frames"] = range(*context.state["frame_range"])
+        else:
+            params["frames"] = range(context.state["video"].frames)
+
+        return True
 
 
 class ExportDatasetWithImages(AppCommand):
@@ -1334,6 +1358,8 @@ class InstanceDeleteCommand(EditCommand):
         # Delete the instances
         for lf, inst in lf_inst_list:
             context.labels.remove_instance(lf, inst, in_transaction=True)
+            if not lf.instances:
+                context.labels.remove(lf)
 
         # Update caches since we skipped doing this after each deletion
         context.labels.update_cache()
@@ -2018,3 +2044,52 @@ class AddMissingInstanceNodes(EditCommand):
 
         for node, pos in node_positions.items():
             instance[node] = Point(x=pos[0], y=pos[1], visible=visible)
+
+
+class AddUserInstancesFromPredictions(EditCommand):
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @staticmethod
+    def make_instance_from_predicted_instance(
+        copy_instance: PredictedInstance,
+    ) -> Instance:
+        # create the new instance
+        new_instance = Instance(
+            skeleton=copy_instance.skeleton,
+            from_predicted=copy_instance,
+            frame=copy_instance.frame,
+        )
+
+        # go through each node in skeleton
+        for node in new_instance.skeleton.node_names:
+            # if we're copying from a skeleton that has this node
+            if node in copy_instance and not copy_instance[node].isnan():
+                # just copy x, y, and visible
+                # we don't want to copy a PredictedPoint or score attribute
+                new_instance[node] = Point(
+                    x=copy_instance[node].x,
+                    y=copy_instance[node].y,
+                    visible=copy_instance[node].visible,
+                    complete=False,
+                )
+
+        # copy the track
+        new_instance.track = copy_instance.track
+
+        return new_instance
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        if context.state["labeled_frame"] is None:
+            return
+
+        new_instances = []
+        unused_predictions = context.state["labeled_frame"].unused_predictions
+        for predicted_instance in unused_predictions:
+            new_instances.append(
+                cls.make_instance_from_predicted_instance(predicted_instance)
+            )
+
+        # Add the instances
+        for new_instance in new_instances:
+            context.labels.add_instance(context.state["labeled_frame"], new_instance)

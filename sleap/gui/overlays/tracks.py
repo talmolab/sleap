@@ -8,11 +8,9 @@ from sleap.prefs import prefs
 
 import attr
 
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 from PySide2 import QtCore, QtGui
-
-MAX_NODES_IN_TRAIL = 1
 
 
 @attr.s(auto_attribs=True)
@@ -37,6 +35,7 @@ class TrackTrailOverlay:
     player: "QtVideoPlayer" = None
     trail_length: int = 0
     show: bool = True
+    max_node_count: Optional[int] = None
 
     def get_track_trails(self, frame_selection: Iterable["LabeledFrame"]):
         """Get data needed to draw track trail.
@@ -56,8 +55,9 @@ class TrackTrailOverlay:
             return
 
         nodes = self.labels.skeletons[0].nodes
-        if len(nodes) > MAX_NODES_IN_TRAIL:
-            nodes = nodes[:MAX_NODES_IN_TRAIL]
+        max_node_count = self.max_node_count or prefs["trail node count"]
+        if len(nodes) > max_node_count:
+            nodes = nodes[:max_node_count]
 
         for frame in frame_selection:
 

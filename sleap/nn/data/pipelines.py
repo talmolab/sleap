@@ -13,7 +13,7 @@ import numpy as np
 import attr
 import logging
 import time
-from typing import Sequence, Text, Optional, List, Tuple, Union, TypeVar
+from typing import Sequence, Text, Optional, List, Tuple, Union, TypeVar, Dict
 
 import sleap
 from sleap.nn.data.providers import LabelsReader, VideoReader
@@ -276,6 +276,14 @@ class Pipeline:
             logger.debug(f"{transformer.__class__.__name__}:\t\t{time.time() - t0}")
 
         return ds
+
+    def run(self) -> List[Dict[Text, tf.Tensor]]:
+        """Build and evaluate the pipeline.
+
+        Returns:
+            List of example dictionaries after processing the pipeline.
+        """
+        return list(self.make_dataset())
 
 
 @attr.s(auto_attribs=True)

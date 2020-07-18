@@ -409,7 +409,11 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             elif item["default"] is not None and item["default"] > 100:
                 min, max = 0, item["default"] * 10
                 field.setRange(min, max)
+
             field.setValue(item["default"])
+            if item.get("default_disabled", False):
+                field.setToNone()
+
             field.valueChanged.connect(lambda: self.valueChanged.emit())
 
         # bool: show checkbox
@@ -684,15 +688,19 @@ class OptionalSpinWidget(QtWidgets.QWidget):
                     return True
         return False
 
+    @property
     def noneVal(self):
         if self.none_string.lower() in ("", "none"):
             return None
         else:
             return self.none_string
 
+    def setToNone(self):
+        self.setValue(self.noneVal)
+
     def value(self):
         if self.check_widget.isChecked():
-            return self.noneVal()
+            return self.noneVal
         return self.spin_widget.value()
 
     def setValue(self, val):

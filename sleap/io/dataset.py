@@ -67,6 +67,9 @@ The version number to put in the Labels JSON format.
 """
 LABELS_JSON_FILE_VERSION = "2.0.0"
 
+# For debugging, we can replace missing video files with a "dummy" video
+USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default="")
+
 
 @attr.s(auto_attribs=True)
 class LabelsDataCache:
@@ -188,7 +191,11 @@ class LabelsDataCache:
     def remove_frame(self, frame: LabeledFrame):
         """Updates cache as needed."""
         self._lf_by_video[frame.video].remove(frame)
-        del self._frame_idx_map[frame.video][frame.frame_idx]
+        # we'll assume that there's only a single LabeledFrame for this video
+        # and frame_idx, and remove the frame_idx from the cache
+        if frame.video in self._frame_idx_map:
+            if frame.frame_idx in self._frame_idx_map[frame.video]:
+                del self._frame_idx_map[frame.video][frame.frame_idx]
 
     def remove_video(self, video: Video):
         """Updates cache as needed."""
@@ -603,6 +610,9 @@ class Labels(MutableSequence):
                 raise KeyError(f"No label found for specified video at frame {key[1]}.")
 
             return _hit
+
+        elif isinstance(key, (list, range)):
+            return [self.__getitem__(i) for i in key]
 
         else:
             raise KeyError("Invalid label indexing arguments.")
@@ -1576,15 +1586,20 @@ class Labels(MutableSequence):
             if use_gui:
                 # If there are still missing paths, prompt user
                 if sum(missing):
-                    okay = MissingFilesDialog(filenames, missing).exec_()
+                    # If we are using dummy for any video not found by user
+                    # then don't require user to find everything.
+                    allow_incomplete = USE_DUMMY_FOR_MISSING_VIDEOS
+
+                    okay = MissingFilesDialog(
+                        filenames, missing, allow_incomplete=allow_incomplete
+                    ).exec_()
+
                     if not okay:
                         return True  # True for stop
 
             if not use_gui and sum(missing):
                 # If we got the same number of paths as there are videos
-                print("HERE a")
                 if len(filenames) == len(new_paths):
-                    print("HERE b")
                     # and the file extensions match
                     exts_match = all(
                         (
@@ -1594,7 +1609,6 @@ class Labels(MutableSequence):
                     )
 
                     if exts_match:
-                        print("HERE c")
                         # then the search paths should be a list of all the
                         # video paths, so we can get the new path for the missing
                         # old path.
@@ -1605,6 +1619,14 @@ class Labels(MutableSequence):
             # Replace the video filenames with changes by user
             for i, item in enumerate(video_list):
                 item["backend"]["filename"] = filenames[i]
+
+            if USE_DUMMY_FOR_MISSING_VIDEOS and sum(missing):
+                # Replace any video still missing with "dummy" video
+                for is_missing, item in zip(missing, video_list):
+                    from sleap.io.video import DummyVideo
+
+                    vid = DummyVideo(filename=item["backend"]["filename"])
+                    item["backend"] = cattr.unstructure(vid)
 
         return video_callback
 

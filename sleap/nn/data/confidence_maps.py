@@ -169,11 +169,14 @@ class MultiConfidenceMapGenerator:
                     tf.expand_dims(example["centroids"], axis=1),
                     xv=xv,
                     yv=yv,
-                    sigma=self.sigma,
+                    sigma=self.sigma * self.output_stride,
                 )
             else:
                 example["confidence_maps"] = make_multi_confmaps(
-                    example["instances"], xv=xv, yv=yv, sigma=self.sigma
+                    example["instances"],
+                    xv=xv,
+                    yv=yv,
+                    sigma=self.sigma * self.output_stride,
                 )
             return example
 
@@ -258,12 +261,18 @@ class InstanceConfidenceMapGenerator:
         def generate_confmaps(example):
             """Local processing function for dataset mapping."""
             example["instance_confidence_maps"] = make_confmaps(
-                example["center_instance"], xv=xv, yv=yv, sigma=self.sigma
+                example["center_instance"],
+                xv=xv,
+                yv=yv,
+                sigma=self.sigma * self.output_stride,
             )
 
             if self.all_instances:
                 example["all_instance_confidence_maps"] = make_multi_confmaps(
-                    example["all_instances"], xv=xv, yv=yv, sigma=self.sigma
+                    example["all_instances"],
+                    xv=xv,
+                    yv=yv,
+                    sigma=self.sigma * self.output_stride,
                 )
 
             return example
@@ -339,10 +348,7 @@ class SingleInstanceConfidenceMapGenerator:
 
             # Generate confidence maps.
             example["confidence_maps"] = make_confmaps(
-                example["points"],
-                xv=xv,
-                yv=yv,
-                sigma=self.sigma,
+                example["points"], xv=xv, yv=yv, sigma=self.sigma * self.output_stride,
             )
 
             return example

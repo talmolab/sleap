@@ -24,7 +24,8 @@ requirements:
 
   run:
     - python=3.6
-    - numpy>=1.16
+    - numpy>=1.18.1
+    - scipy<=1.4.1
     - attrs=19.3
     - jsonpickle=1.2
     - networkx

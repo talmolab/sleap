@@ -235,44 +235,124 @@ inference:
   none:
 
   flow:
+    - type: text
+      text: '<b>Pre-tracker data cleaning</b>:'
+    - name: tracking.target_instance_count
+      label: Target Number of Instances Per Frame
+      type: optional_int
+      none_label: No target
+      default_disabled: true
+      range: 1,10
+      default: 1
+    - name: tracking.pre_cull_to_target
+      label: Cull to Target Instance Count
+      type: bool
+      default: false
+    - name: tracking.pre_cull_iou_threshold
+      label: Cull using IoU Threshold
+      type: double
+      default: 0.8
+    - type: text
+      text: '<b>Tracking with optical flow</b>:<br />
+      This tracker "shifts" instances from previous frames using optical flow
+      before matching instances in each frame to the <i>shifted</i> instances from
+      prior frames.'
     - name: tracking.similarity
       label: Similarity Method
       type: list
       default: instance
       options: instance,centroid,iou
-    - name: tracking.matching
+    - name: tracking.match
       label: Matching Method
       type: list
       default: greedy
       options: greedy,hungarian
-    - name: tracking.window
+    - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
-    - name: tracking.clean_instance_count
-      label: Target Number of Tracks (0 for all)
-      type: int
-      default: 0
+    - type: text
+      text: '<b>Kalman filter-based tracking</b>:<br />
+      Uses the above tracking options to track instances for an initial
+      number of frames, then initializes Kalman filters which are used to track
+      instances on subsequent frames.'
+    - name: tracking.kf_init_frame_count
+      label: Enable Filters after Initial Frames
+      type: optional_int
+      none_label: Don't use filters
+      default_disabled: true
+      default: 10
+    - name: tracking.kf_node_indices
+      label: Nodes to use for Tracking
+      type: string
+      default: 0,1,2
+    - type: text
+      text: '<b>Post-tracker data cleaning</b>:'
+    - name: tracking.post_connect_single_breaks
+      label: Connect Single Track Breaks
+      type: bool
+      default: false
 
   simple:
+    - type: text
+      text: '<b>Pre-tracker data cleaning</b>:'
+    - name: tracking.target_instance_count
+      label: Target Number of Instances Per Frame
+      type: optional_int
+      none_label: No target
+      default_disabled: true
+      range: 1,10
+      default: 1
+    - name: tracking.pre_cull_to_target
+      label: Cull to Target Instance Count
+      type: bool
+      default: false
+    - name: tracking.pre_cull_iou_threshold
+      label: Cull using IoU Threshold
+      type: double
+      default: 0.8
+    - type: text
+      text: '<b>Tracking</b>:<br />
+        This tracker assigns track identities by matching instances from prior
+        frames to instances on subsequent frames.'
     - name: tracking.similarity
       label: Similarity Method
       type: list
       default: iou
       options: instance,centroid,iou
-    - name: tracking.matching
+    - name: tracking.match
       label: Matching Method
       type: list
       default: hungarian
       options: greedy,hungarian
-    - name: tracking.window
+    - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
-    - name: tracking.clean_instance_count
-      label: Target Number of Tracks (0 for all)
-      type: int
-      default: 0
+    - type: text
+      text: '<b>Kalman filter-based tracking</b>:<br />
+        Uses the above tracking options to track instances for an initial
+        number of frames, then initializes Kalman filters which are used to track
+        instances on subsequent frames.'
+    - name: tracking.kf_init_frame_count
+      label: Enable Filters after Initial Frames
+      type: optional_int
+      none_label: Don't use filters
+      default_disabled: true
+      default: 10
+    - name: tracking.kf_node_indices
+      label: Nodes to use for Tracking
+      type: string
+      default: 0,1,2
+    - type: text
+      text: '<b>Post-tracker data cleaning</b>:'
+    - name: tracking.post_connect_single_breaks
+      label: Connect Single Track Breaks
+      type: bool
+      default: false
+
+
+
 
 - name: _predict_frames
   label: Predict On

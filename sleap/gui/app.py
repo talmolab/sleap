@@ -7,7 +7,7 @@ import re
 import os
 import random
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 
 from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
@@ -17,6 +17,8 @@ from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
 from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
 from PySide2.QtWidgets import QMessageBox
 
+import sleap
+from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance
 from sleap.io.dataset import Labels
@@ -102,7 +104,9 @@ class MainWindow(QMainWindow):
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
         if value is not None:
-            super(MainWindow, self).setWindowTitle(value)
+            super(MainWindow, self).setWindowTitle(
+                f"{value} - SLEAP Label v{sleap.version.__version__}"
+            )
 
     def event(self, e: QEvent) -> bool:
         """Custom event handler.
@@ -431,6 +435,7 @@ class MainWindow(QMainWindow):
             "Point Score (sum)",
             "Point Score (min)",
             "Number of predicted points",
+            "Min Centroid Proximity",
         )
 
         add_submenu_choices(
@@ -546,11 +551,28 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
+
+        add_menu_item(
+            predictionMenu,
+            "show metrics",
+            "Evaluation Metrics for Trained Models...",
+            self.showMetricsDialog,
+        )
+
         add_menu_item(
             predictionMenu,
             "visualize models",
             "Visualize Model Outputs...",
             self.visualizeOutputs,
+        )
+
+        predictionMenu.addSeparator()
+
+        add_menu_item(
+            predictionMenu,
+            "add instances from all frame predictions",
+            "Add Instances from All Predictions on Current Frame",
+            self.commands.addUserInstancesFromPredictions,
         )
 
         predictionMenu.addSeparator()
@@ -602,7 +624,7 @@ class MainWindow(QMainWindow):
         add_menu_item(
             predictionMenu,
             "export clip",
-            "Export Labeled Clip...",
+            "Export Video with Visual Annotations...",
             self.commands.exportLabeledClip,
         )
 
@@ -899,7 +921,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
         self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
-        self._menu_actions["export clip"].setEnabled(has_frame_range)
+        # self._menu_actions["export clip"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
 
@@ -1175,6 +1197,7 @@ class MainWindow(QMainWindow):
             "Point Score (sum)": data_obj.get_point_score_series,
             "Point Score (min)": data_obj.get_point_score_series,
             "Number of predicted points": data_obj.get_point_count_series,
+            "Min Centroid Proximity": data_obj.get_min_centroid_proximity_series,
         }
 
         if graph_name == "None":
@@ -1217,11 +1240,13 @@ class MainWindow(QMainWindow):
 
         # Use negative number in list for range (i.e., "0,-123" means "0-123")
         # The ranges should be [X, Y) like standard Python ranges
+        def encode_range(a: int, b: int) -> Tuple[int, int]:
+            return a, -b
+
         clip_range = self.state.get("frame_range", default=(0, 0))
-        if clip_range[1] > 0:
-            clip_range = (clip_range[0], -clip_range[1])
-        selection["clip"] = {current_video: clip_range}
-        selection["video"] = {current_video: (0, -current_video.num_frames)}
+
+        selection["clip"] = {current_video: encode_range(*clip_range)}
+        selection["video"] = {current_video: encode_range(0, current_video.num_frames)}
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
@@ -1297,6 +1322,10 @@ class MainWindow(QMainWindow):
         self.on_data_update([UpdateTopic.all])
         if new_count > 0:
             self.commands.changestack_push("new predictions")
+
+    def showMetricsDialog(self):
+        self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
+        self._child_windows["metrics"].show()
 
     def visualizeOutputs(self):
         """Gui for adding overlay with live visualization of predictions."""
@@ -1387,7 +1416,7 @@ def main():
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
     app = QApplication([])
-    app.setApplicationName("SLEAP Label")
+    app.setApplicationName(f"SLEAP Label v{sleap.version.__version__}")
 
     window = MainWindow(labels_path=args.labels_path)
     window.showMaximized()

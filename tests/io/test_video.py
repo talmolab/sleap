@@ -372,3 +372,13 @@ def test_numpy_video_backend():
 
     vid.backend.set_video_ndarray(np.ones((2, 3, 4, 1)))
     assert vid.get_frame(1).shape == (3, 4, 1)
+
+
+def test_safe_frame_loading_all_invalid():
+    vid = Video.from_filename("video_that_does_not_exist.mp4")
+
+    idxs, frames = vid.get_frames_safely(list(range(10)))
+
+    assert idxs == []
+    assert frames is None
+

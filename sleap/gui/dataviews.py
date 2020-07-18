@@ -29,6 +29,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
     """
 
     properties = None
+    show_row_numbers: bool = True
 
     def __init__(
         self,
@@ -135,10 +136,17 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         """Overrides Qt method, returns column (attribute) names."""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return self.properties[idx]
+                col_str = str(self.properties[idx])
+                # use title case if key is lowercase
+                if col_str == col_str.lower():
+                    return col_str.title()
+                # otherwise leave case as is
+                return col_str
             elif orientation == QtCore.Qt.Vertical:
                 # Add 1 to the row index so that we index from 1 instead of 0
-                return str(idx + 1)
+                if self.show_row_numbers:
+                    return str(idx + 1)
+                return None
 
         return None
 

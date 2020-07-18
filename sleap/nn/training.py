@@ -188,10 +188,16 @@ class DataReaders:
 
 def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer:
     """Set up model optimizer from config."""
-    if config.optimizer == "adam":
+    if config.optimizer.lower() == "adam":
         optimizer = tf.keras.optimizers.Adam(
             learning_rate=config.initial_learning_rate, amsgrad=True
         )
+    elif config.optimizer.lower() == "rmsprop":
+        optimizer = tf.keras.optimizers.RMSprop(
+            learning_rate=config.initial_learning_rate
+        )
+    elif config.optimizer.lower() == "sgd":
+        optimizer = tf.keras.optimizers.SGD(learning_rate=config.initial_learning_rate)
     else:
         # TODO: explicit lookup
         optimizer = config.optimizer
@@ -204,7 +210,7 @@ def setup_losses(config: OptimizationConfig) -> Callable[[tf.Tensor], tf.Tensor]
 
     if config.hard_keypoint_mining.online_mining:
         losses.append(OHKMLoss.from_config(config.hard_keypoint_mining))
-        logging.info(f"  OHKM enabled: {config.hard_keypoint_mining}")
+        logger.info(f"  OHKM enabled: {config.hard_keypoint_mining}")
 
     def loss_fn(y_gt, y_pr):
         loss = 0
@@ -249,7 +255,7 @@ def setup_optimization_callbacks(
                 verbose=1,
             )
         )
-    logging.info(f"  Learning rate schedule: {config.learning_rate_schedule}")
+    logger.info(f"  Learning rate schedule: {config.learning_rate_schedule}")
 
     if config.early_stopping.stop_training_on_plateau:
         callbacks.append(
@@ -261,7 +267,7 @@ def setup_optimization_callbacks(
                 verbose=1,
             )
         )
-    logging.info(f"  Early stopping: {config.early_stopping}")
+    logger.info(f"  Early stopping: {config.early_stopping}")
 
     return callbacks
 
@@ -806,6 +812,31 @@ class Trainer(ABC):
             verbose=2,
         )
         logger.info(f"Finished training loop. [{(time() - t0) / 60:.1f} min]")
+
+        # Save predictions and evaluations.
+        if self.config.outputs.save_outputs:
+            sleap.nn.evals.evaluate_model(
+                cfg=self.config,
+                labels_reader=self.data_readers.training_labels_reader,
+                model=self.model,
+                save=True,
+                split_name="train",
+            )
+            sleap.nn.evals.evaluate_model(
+                cfg=self.config,
+                labels_reader=self.data_readers.validation_labels_reader,
+                model=self.model,
+                save=True,
+                split_name="val",
+            )
+            if self.data_readers.test_labels_reader is not None:
+                sleap.nn.evals.evaluate_model(
+                    cfg=self.config,
+                    labels_reader=self.data_readers.test_labels_reader,
+                    model=self.model,
+                    save=True,
+                    split_name="test",
+                )
 
 
 @attr.s(auto_attribs=True)

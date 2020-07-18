@@ -1,196 +1,34 @@
 """Tracking tools for linking grouped instances over time."""
 
 from collections import deque, defaultdict
+import abc
 import attr
 import numpy as np
-import operator
 import cv2
-from scipy.optimize import linear_sum_assignment
-from typing import Callable, Deque, Dict, List, Optional, Tuple, TypeVar
+from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
-from sleap.nn import utils
-from sleap.instance import Instance, PredictedInstance, Track
-from sleap.io.dataset import LabeledFrame
-from sleap.skeleton import Skeleton
+from sleap import Track, LabeledFrame, Skeleton
+
+from sleap.nn.tracker.components import (
+    instance_similarity,
+    centroid_distance,
+    instance_iou,
+    hungarian_matching,
+    greedy_matching,
+    cull_instances,
+    cull_frame_instances,
+    connect_single_track_breaks,
+    InstanceType,
+    FrameMatches,
+    Match,
+)
+from sleap.nn.tracker.kalman import BareKalmanTracker
+
 from sleap.nn.data.normalization import ensure_int
-
-InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
-
-
-def instance_similarity(
-    ref_instance: InstanceType, query_instance: InstanceType
-) -> float:
-    """Computes similarity between instances."""
-
-    ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
-    dists = np.sum(
-        (query_instance.points_array - ref_instance.points_array) ** 2, axis=1
-    )
-    similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
-
-    return similarity
-
-
-def centroid_distance(
-    ref_instance: InstanceType, query_instance: InstanceType, cache: dict = dict()
-) -> float:
-    """Returns the negative distance between the centroids of two instances.
-
-    Uses `cache` dictionary (created with function so it persists between calls)
-    since without cache this method is significantly slower than others.
-    """
-
-    if ref_instance not in cache:
-        cache[ref_instance] = ref_instance.centroid
-
-    if query_instance not in cache:
-        cache[query_instance] = query_instance.centroid
-
-    a = cache[ref_instance]
-    b = cache[query_instance]
-
-    return -np.linalg.norm(a - b)
-
-
-def instance_iou(
-    ref_instance: InstanceType, query_instance: InstanceType, cache: dict = dict()
-) -> float:
-    """Computes IOU between bounding boxes of instances."""
-
-    if ref_instance not in cache:
-        cache[ref_instance] = ref_instance.bounding_box
-
-    if query_instance not in cache:
-        cache[query_instance] = query_instance.bounding_box
-
-    a = cache[ref_instance]
-    b = cache[query_instance]
-
-    return utils.compute_iou(a, b)
-
-
-def hungarian_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
-    """Wrapper for Hungarian matching algorithm in scipy."""
-
-    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-    return list(zip(row_ind, col_ind))
-
-
-def greedy_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
-    """Performs greedy bipartite matching."""
-
-    # Sort edges by ascending cost.
-    rows, cols = np.unravel_index(np.argsort(cost_matrix, axis=None), cost_matrix.shape)
-    unassigned_edges = list(zip(rows, cols))
-
-    # Greedily assign edges.
-    assignments = []
-    while len(unassigned_edges) > 0:
-        # Assign the lowest cost edge.
-        row_ind, col_ind = unassigned_edges.pop(0)
-        assignments.append((row_ind, col_ind))
-
-        # Remove all other edges that contain either node (in reverse order).
-        for i in range(len(unassigned_edges) - 1, -1, -1):
-            if unassigned_edges[i][0] == row_ind or unassigned_edges[i][1] == col_ind:
-                del unassigned_edges[i]
-
-    return assignments
-
-
-def nms_instances(
-    instances, iou_threshold, target_count=None
-) -> Tuple[List[PredictedInstance], List[PredictedInstance]]:
-    boxes = np.array([inst.bounding_box for inst in instances])
-    scores = np.array([inst.score for inst in instances])
-    picks = nms_fast(boxes, scores, iou_threshold, target_count)
-
-    to_keep = [inst for i, inst in enumerate(instances) if i in picks]
-    to_remove = [inst for i, inst in enumerate(instances) if i not in picks]
-
-    return to_keep, to_remove
-
-
-def nms_fast(boxes, scores, iou_threshold, target_count=None) -> List[int]:
-    """https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/"""
-
-    # if there are no boxes, return an empty list
-    if len(boxes) == 0:
-        return []
-
-    # if we already have fewer boxes than the target count, return all boxes
-    if target_count and len(boxes) < target_count:
-        return list(range(len(boxes)))
-
-    # if the bounding boxes coordinates are integers, convert them to floats --
-    # this is important since we'll be doing a bunch of divisions
-    if boxes.dtype.kind == "i":
-        boxes = boxes.astype("float")
-
-    # initialize the list of picked indexes
-    picked_idxs = []
-
-    # init list of boxes removed by nms
-    nms_idxs = []
-
-    # grab the coordinates of the bounding boxes
-    x1 = boxes[:, 0]
-    y1 = boxes[:, 1]
-    x2 = boxes[:, 2]
-    y2 = boxes[:, 3]
-
-    # compute the area of the bounding boxes and sort the bounding
-    # boxes by their scores
-    area = (x2 - x1 + 1) * (y2 - y1 + 1)
-    idxs = np.argsort(scores)
-
-    # keep looping while some indexes still remain in the indexes list
-    while len(idxs) > 0:
-
-        # we want to add the best box which is the last box in sorted list
-        picked_box_idx = idxs[-1]
-
-        # last = len(idxs) - 1
-        # i = idxs[last]
-        picked_idxs.append(picked_box_idx)
-
-        # find the largest (x, y) coordinates for the start of
-        # the bounding box and the smallest (x, y) coordinates
-        # for the end of the bounding box
-        xx1 = np.maximum(x1[picked_box_idx], x1[idxs[:-1]])
-        yy1 = np.maximum(y1[picked_box_idx], y1[idxs[:-1]])
-        xx2 = np.minimum(x2[picked_box_idx], x2[idxs[:-1]])
-        yy2 = np.minimum(y2[picked_box_idx], y2[idxs[:-1]])
-
-        # compute the width and height of the bounding box
-        w = np.maximum(0, xx2 - xx1 + 1)
-        h = np.maximum(0, yy2 - yy1 + 1)
-
-        # compute the ratio of overlap
-        overlap = (w * h) / area[idxs[:-1]]
-
-        # find boxes with iou over threshold
-        nms_for_new_box = np.where(overlap > iou_threshold)[0]
-        nms_idxs.extend(list(idxs[nms_for_new_box]))
-
-        # delete new box (last in list) plus nms boxes
-        idxs = np.delete(idxs, nms_for_new_box)[:-1]
-
-    # if we're below the target number of boxes, add some back
-    if target_count and nms_idxs and len(picked_idxs) < target_count:
-        # sort by descending score
-        nms_idxs.sort(key=lambda idx: -scores[idx])
-
-        add_back_count = min(len(nms_idxs), len(picked_idxs) - target_count)
-        picked_idxs.extend(nms_idxs[:add_back_count])
-
-    # return the list of picked boxes
-    return picked_idxs
 
 
 @attr.s(eq=False, slots=True, auto_attribs=True)
 class ShiftedInstance:
-
     points_array: np.ndarray = attr.ib()
     skeleton: Skeleton = attr.ib()
     frame: LabeledFrame = attr.ib()
@@ -244,8 +82,7 @@ class ShiftedInstance:
 
 
 @attr.s(auto_attribs=True, slots=True)
-class MatchedInstance:
-
+class MatchedFrameInstances:
     t: int
     instances_t: List[InstanceType]
     img_t: Optional[np.ndarray] = None
@@ -270,7 +107,10 @@ class FlowCandidateMaker:
         return True
 
     def get_candidates(
-        self, track_matching_queue: Deque[MatchedInstance], t: int, img: np.ndarray
+        self,
+        track_matching_queue: Deque[MatchedFrameInstances],
+        t: int,
+        img: np.ndarray,
     ) -> List[ShiftedInstance]:
         candidate_instances = []
         for matched_item in track_matching_queue:
@@ -412,7 +252,7 @@ class SimpleCandidateMaker:
         return False
 
     def get_candidates(
-        self, track_matching_queue: Deque[MatchedInstance], *args, **kwargs
+        self, track_matching_queue: Deque[MatchedFrameInstances], *args, **kwargs
     ) -> List[InstanceType]:
         # Build a pool of matchable candidate instances.
         candidate_instances = []
@@ -434,7 +274,36 @@ match_policies = dict(hungarian=hungarian_matching, greedy=greedy_matching,)
 
 
 @attr.s(auto_attribs=True)
-class Tracker:
+class BaseTracker(abc.ABC):
+    @property
+    def is_valid(self):
+        return False
+
+    @abc.abstractmethod
+    def track(
+        self,
+        untracked_instances: List[InstanceType],
+        img: Optional[np.ndarray] = None,
+        t: int = None,
+    ):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def uses_image(self):
+        pass
+
+    @abc.abstractmethod
+    def final_pass(self, frames: List[LabeledFrame]):
+        pass
+
+    @abc.abstractmethod
+    def get_name(self):
+        pass
+
+
+@attr.s(auto_attribs=True)
+class Tracker(BaseTracker):
     """
     Instance pose tracker.
 
@@ -461,10 +330,15 @@ class Tracker:
     similarity_function: Optional[Callable] = instance_similarity
     matching_function: Callable = greedy_matching
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
-    cleaner: Optional[Callable] = None
+
+    cleaner: Optional[Callable] = None  # todo: deprecate
+    target_instance_count: int = 0
+    pre_cull_function: Optional[Callable] = None
+    post_connect_single_breaks: bool = False
+
     min_new_track_points: int = 0
 
-    track_matching_queue: Deque[MatchedInstance] = attr.ib()
+    track_matching_queue: Deque[MatchedFrameInstances] = attr.ib()
 
     spawned_tracks: List[Track] = attr.ib(factory=list)
 
@@ -473,10 +347,19 @@ class Tracker:
         factory=dict
     )  # keyed by t
 
+    last_matches: Optional[FrameMatches] = None
+
+    @property
+    def is_valid(self):
+        return self.similarity_function is not None
+
     @track_matching_queue.default
     def _init_matching_queue(self):
         """Factory for instantiating default matching queue with specified size."""
         return deque(maxlen=self.track_window)
+
+    def reset_candidates(self):
+        self.track_matching_queue = deque(maxlen=self.track_window)
 
     @property
     def unique_tracks_in_queue(self) -> List[Track]:
@@ -525,91 +408,70 @@ class Tracker:
 
         # Initialize containers for tracked instances at the current timestep.
         tracked_instances = []
-        tracked_inds = []
 
         # Make cache so similarity function doesn't have to recompute everything.
         # similarity_cache = dict()
 
         # Process untracked instances.
-        if len(untracked_instances) > 0:
+        if untracked_instances:
+
+            if self.pre_cull_function:
+                self.pre_cull_function(untracked_instances)
 
             # Build a pool of matchable candidate instances.
             candidate_instances = self.candidate_maker.get_candidates(
                 track_matching_queue=self.track_matching_queue, t=t, img=img,
             )
 
-            if len(candidate_instances) > 0:
+            # Determine matches for untracked instances in current frame.
+            frame_matches = FrameMatches.from_candidate_instances(
+                untracked_instances=untracked_instances,
+                candidate_instances=candidate_instances,
+                similarity_function=self.similarity_function,
+                matching_function=self.matching_function,
+            )
 
-                # Group candidate instances by track.
-                candidate_instances_by_track = defaultdict(list)
-                for instance in candidate_instances:
-                    candidate_instances_by_track[instance.track].append(instance)
+            # Store the most recent match data (for outside inspection).
+            self.last_matches = frame_matches
 
-                # Compute similarity matrix between untracked instances and best
-                # candidate for each track.
-                candidate_tracks = list(candidate_instances_by_track.keys())
-                matching_similarities = np.full(
-                    (len(untracked_instances), len(candidate_tracks)), np.nan
+            # Set track for each of the matched instances.
+            tracked_instances.extend(
+                self.update_matched_instance_tracks(frame_matches.matches)
+            )
+
+            # Spawn a new track for each remaining untracked instance.
+            tracked_instances.extend(
+                self.spawn_for_untracked_instances(frame_matches.unmatched_instances, t)
+            )
+
+        # Add the tracked instances to the matching buffer.
+        self.track_matching_queue.append(
+            MatchedFrameInstances(t, tracked_instances, img)
+        )
+
+        # Save tracked instances internally.
+        if self.save_tracked_instances:
+            self.tracked_instances[t] = tracked_instances
+
+        return tracked_instances
+
+    @staticmethod
+    def update_matched_instance_tracks(matches: List[Match]) -> List[InstanceType]:
+        inst_list = []
+        for match in matches:
+            # Assign to track and save.
+            inst_list.append(
+                attr.evolve(
+                    match.instance, track=match.track, tracking_score=match.score,
                 )
-                matching_candidates = []
+            )
+        return inst_list
 
-                for i, untracked_instance in enumerate(untracked_instances):
-                    matching_candidates.append([])
-
-                    for j, candidate_track in enumerate(candidate_tracks):
-
-                        # Compute similarity between untracked instance and all track
-                        # candidates.
-                        track_instances = candidate_instances_by_track[candidate_track]
-                        track_matching_similarities = [
-                            self.similarity_function(
-                                untracked_instance,
-                                candidate_instance,
-                                # cache=similarity_cache
-                            )
-                            for candidate_instance in track_instances
-                        ]
-
-                        # Keep the best scoring instance for this track.
-                        best_ind = np.argmax(track_matching_similarities)
-                        matching_candidates[i].append(track_instances[best_ind])
-
-                        # Use the best similarity score for matching.
-                        best_similarity = track_matching_similarities[best_ind]
-                        matching_similarities[i, j] = best_similarity
-
-                # Perform matching between untracked instances and candidates.
-                cost = -matching_similarities
-                cost[np.isnan(cost)] = np.inf
-                matches = self.matching_function(cost)
-
-                # Assign each matched instance.
-                for i, j in matches:
-                    # Pull out matched pair.
-                    matched_instance = untracked_instances[i]
-                    ref_instance = matching_candidates[i][j]
-
-                    # Save matching score.
-                    match_similarity = matching_similarities[i, j]
-
-                    # Assign to track and save.
-                    tracked_instances.append(
-                        attr.evolve(
-                            matched_instance,
-                            track=ref_instance.track,
-                            tracking_score=match_similarity,
-                        )
-                    )
-
-                    # Keep track of the assigned instances.
-                    tracked_inds.append(i)
-
-        # Spawn a new track for each remaining untracked instance.
-        for i, inst in enumerate(untracked_instances):
-
-            # Skip if this instance was tracked.
-            if i in tracked_inds:
-                continue
+    def spawn_for_untracked_instances(
+        self, unmatched_instances: List[InstanceType], t: int
+    ) -> List[InstanceType]:
+        results = []
+        for inst in unmatched_instances:
 
             # Skip if this instance is too small to spawn a new track with.
             if inst.n_visible_points < self.min_new_track_points:
@@ -620,21 +482,23 @@ class Tracker:
             self.spawned_tracks.append(new_track)
 
             # Assign instance to the new track and save.
-            tracked_instances.append(attr.evolve(inst, track=new_track))
+            results.append(attr.evolve(inst, track=new_track))
 
-        # Add the tracked instances to the matching buffer.
-        self.track_matching_queue.append(MatchedInstance(t, tracked_instances, img))
-
-        # Save tracked instances internally.
-        if self.save_tracked_instances:
-            self.tracked_instances[t] = tracked_instances
-
-        return tracked_instances
+        return results
 
     def final_pass(self, frames: List[LabeledFrame]):
-        """Called after tracking has run on all chunks."""
+        """Called after tracking has run on all frames to do any post-processing."""
         if self.cleaner:
+            print(
+                "DEPRECATION WARNING: "
+                "--clean_instance_count is deprecated (but still applied to "
+                "clean results *after* tracking). Use --target_instance_count "
+                "and --pre_cull_to_target instead to cull instances *before* "
+                "tracking."
+            )
             self.cleaner.run(frames)
+        elif self.target_instance_count and self.post_connect_single_breaks:
+            connect_single_track_breaks(frames, self.target_instance_count)
 
     def get_name(self):
         tracker_name = self.candidate_maker.__class__.__name__
@@ -651,13 +515,24 @@ class Tracker:
         track_window: int = 5,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
+        # Optical flow options
         img_scale: float = 1.0,
         of_window_size: int = 21,
         of_max_levels: int = 3,
+        # Pre-tracking options to cull instances
+        target_instance_count: int = 0,
+        pre_cull_to_target: bool = False,
+        pre_cull_iou_threshold: Optional[float] = None,
+        # Post-tracking options to connect broken tracks
+        post_connect_single_breaks: bool = False,
+        # TODO: deprecate these post-tracking cleaning options
         clean_instance_count: int = 0,
         clean_iou_threshold: Optional[float] = None,
+        # Kalman filter options
+        kf_init_frame_count: int = 0,
+        kf_node_indices: Optional[list] = None,
         **kwargs,
-    ) -> "Tracker":
+    ) -> BaseTracker:
 
         if tracker.lower() == "none":
             candidate_maker = None
@@ -690,14 +565,42 @@ class Tracker:
                 instance_count=clean_instance_count, iou_threshold=clean_iou_threshold
             )
 
-        return cls(
+        pre_cull_function = None
+        if target_instance_count and pre_cull_to_target:
+
+            def pre_cull_function(inst_list):
+                cull_frame_instances(
+                    inst_list,
+                    instance_count=target_instance_count,
+                    iou_threshold=pre_cull_iou_threshold,
+                )
+
+        tracker_obj = cls(
             track_window=track_window,
             min_new_track_points=min_new_track_points,
             similarity_function=similarity_function,
             matching_function=matching_function,
             candidate_maker=candidate_maker,
             cleaner=cleaner,
+            pre_cull_function=pre_cull_function,
+            target_instance_count=target_instance_count,
+            post_connect_single_breaks=post_connect_single_breaks,
         )
+
+        if target_instance_count and kf_init_frame_count:
+            kalman_obj = KalmanTracker.make_tracker(
+                init_tracker=tracker_obj,
+                init_frame_count=kf_init_frame_count,
+                node_indices=kf_node_indices,
+                instance_count=target_instance_count,
+                instance_iou_threshold=pre_cull_iou_threshold,
+            )
+
+            return kalman_obj
+        elif kf_init_frame_count and not target_instance_count:
+            raise ValueError("Kalman filter requires target instance count.")
+        else:
+            return tracker_obj
 
     @classmethod
     def get_by_name_factory_options(cls):
@@ -711,21 +614,49 @@ class Tracker:
         ]
         options.append(option)
 
-        option = dict(name="clean_instance_count", default=0)
+        option = dict(name="target_instance_count", default=0)
+        option["type"] = int
+        option["help"] = "Target number of instances to track per frame."
+        options.append(option)
+
+        option = dict(name="pre_cull_to_target", default=0)
         option["type"] = int
         option["help"] = (
-            "If non-zero, then attempt to clean tracking results "
-            "assuming there are this many instances per frame."
+            "If non-zero and target_instance_count is also non-zero, then "
+            "cull instances over target count per frame *before* tracking."
         )
+        options.append(option)
+
+        option = dict(name="pre_cull_iou_threshold", default=0)
+        option["type"] = float
+        option["help"] = (
+            "If non-zero and pre_cull_to_target also set, "
+            "then use IOU threshold to remove overlapping "
+            "instances over count *before* tracking."
+        )
+        options.append(option)
+
+        option = dict(name="post_connect_single_breaks", default=0)
+        option["type"] = int
+        option["help"] = (
+            "If non-zero and target_instance_count is also non-zero, then "
+            "connect track breaks when exactly one track is lost and exactly "
+            "one track is spawned in frame."
+        )
+        options.append(option)
+
+        option = dict(name="clean_instance_count", default=0)
+        option["type"] = int
+        option[
+            "help"
+        ] = "DEPRECATED: Target number of instances to clean *after* tracking."
         options.append(option)
 
         option = dict(name="clean_iou_threshold", default=0)
         option["type"] = float
-        option["help"] = (
-            "If non-zero and clean_instance_count also set, "
-            "then use IOU threshold to remove overlapping "
-            "instances over count."
-        )
+        option[
+            "help"
+        ] = "DEPRECATED: IOU to use when culling instances *after* tracking."
         options.append(option)
 
         option = dict(name="similarity", default="instance")
@@ -771,6 +702,23 @@ class Tracker:
         option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
         options.append(option)
 
+        def int_list_func(s):
+            return [int(x.strip()) for x in s.split(",")] if s else None
+
+        option = dict(name="kf_node_indices", default="")
+        option["type"] = int_list_func
+        option[
+            "help"
+        ] = "For Kalman filter: Indices of nodes to track."
+        options.append(option)
+
+        option = dict(name="kf_init_frame_count", default="0")
+        option["type"] = int
+        option[
+            "help"
+        ] = "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
+        options.append(option)
+
         return options
 
     @classmethod
@@ -810,6 +758,279 @@ class SimpleTracker(Tracker):
 
 
 @attr.s(auto_attribs=True)
+class KalmanInitSet:
+    init_frame_count: int
+    instance_count: int
+    node_indices: List[int]
+    init_frames: list = attr.ib(factory=list)
+
+    def add_frame_instances(
+        self,
+        instances: Iterable[InstanceType],
+        frame_match: Optional[FrameMatches] = None,
+    ):
+        """Receives tracked results to be used for initializing Kalman filters."""
+        is_good_frame = False
+
+        # If we don't have a FrameMatch object, then just assume the tracking
+        # is good (we're probably using pre-tracked data).
+        if frame_match is None:
+            is_good_frame = True
+
+        # Since we're running the tracker to get data for initializing the
+        # Kalman filters, we want to make sure the tracker is giving us good
+        # results (otherwise we'll init the filters with bad results and they
+        # won't work well).
+
+        # Which frames are "good"? First, we'll see if the best track match
+        # for each of the instances was distinct—i.e., no competition for
+        # matching any track. Second, we'll make sure that there are enough
+        # "usuable" instances—i.e., instances with the nodes that we'll track
+        # using Kalman filters.
+        elif frame_match.has_only_first_choice_matches:
+
+            good_instances = [
+                inst for inst in instances if self.is_usable_instance(inst)
+            ]
+            if len(good_instances) >= self.instance_count:
+                is_good_frame = True
+
+        if is_good_frame:
+            self.init_frames.append(instances)
+        else:
+            # We got a bad frame so clear the list of init frames;
+            # we want to get a certain number of *contiguous* good frames
+            # that can be used to init the Kalman filters.
+            self.reset()
+
+    def reset(self):
+        """Clears the data so we can start fresh."""
+        self.init_frames = []
+
+    def is_usable_instance(self, instance: InstanceType):
+        """Is this instance usable for initializing Kalman filters?"""
+        if not instance.track:
+            return False
+        if np.any(np.isnan(instance.points_array[self.node_indices, 0:2])):
+            return False
+        return True
+
+    @property
+    def is_set_ready(self) -> bool:
+        """Do we have enough good data to initialize Kalman filters?"""
+        return len(self.init_frames) >= self.init_frame_count
+
+    @property
+    def instances(self) -> List[InstanceType]:
+        """The instances which will be used to initialize Kalman filters."""
+        instances = [
+            inst
+            for frame in self.init_frames
+            for inst in frame
+            if self.is_usable_instance(inst)
+        ]
+
+        return instances
+
+
+@attr.s(auto_attribs=True)
+class KalmanTracker(BaseTracker):
+    """
+    Class for Kalman filter-based tracking pipeline.
+
+    Kalman filters need to be initialized with a certain number of already
+    tracked instances.
+
+    Args:
+        init_tracker: The regular Tracker we can use to track data needed
+            for initializing Kalman filters. If not specified, then you can
+            use pre-tracked data (i.e., track assignments already set on
+            instances) if `pre_tracked` is True.
+        init_set: Object to keep track of tracked "init" data and determine
+            when we have enough good data to initialize filters.
+        kalman_tracker: The object which handles the actual Kalman filter-based
+            tracking.
+        cull_function: If given, this is called to cull instances before tracking.
+        init_frame_count: The target number of instances/identities per frame.
+        re_init_cooldown: Number of frames to wait after initializing filters
+            before checking if we need to re-init (because they aren't
+            successfully matching tracks).
+        re_init_after: If there's a gap of this many frames since filters
+            have matched tracks (and we've also waited for cooldown frames),
+            start using the regular tracker so that we can re-initialize
+            Kalman filters.
+        init_done: Keeps track of whether we're initialized the filters yet.
+        pre_tracked: Whether to use `init_tracker` or tracks already set
+            on instances.
+        last_t: The last frame index we've tracked.
+        last_init_t: The last frame index on which Kalman filters were
+            initialized; used to checking cooldown period.
+    """
+
+    init_tracker: Optional[Tracker]
+    init_set: KalmanInitSet
+    kalman_tracker: BareKalmanTracker
+    cull_function: Optional[Callable] = None
+    init_frame_count: int = 10
+    re_init_cooldown: int = 100
+    re_init_after: int = 20
+    init_done: bool = False
+    pre_tracked: bool = False
+    last_t: int = 0
+    last_init_t: int = 0
+
+    @property
+    def is_valid(self):
+        """Do we have everything we need to run tracking?"""
+        return self.pre_tracked or (
+            self.init_tracker is not None and self.init_tracker.is_valid
+        )
+
+    @classmethod
+    def make_tracker(
+        cls,
+        init_tracker: Optional[Tracker],
+        node_indices: List[int],
+        instance_count: int,
+        instance_iou_threshold: float = 0.8,
+        init_frame_count: int = 10,
+    ):
+        """
+        Creates KalmanTracker object.
+
+        Args:
+            init_tracker: The Kalman filters need to be initialized with data
+                that's already been tracked. This is a regular Tracker which
+                can be used to generate this tracked data (when needed).
+            node_indices: Which nodes to track using Kalman filters; these
+                should be nodes that are reliably present in the predictions.
+            instance_count: The target number of instances to track per frame.
+                A distinct Kalman filter is created/initialized to track each
+                distinct identity. We'll also use this to cull the number of
+                predicted instances before trying to track.
+            instance_iou_threshold: This is the IOU threshold so that we first
+                cull instances which have high overlap.
+            init_frame_count: How many frames of tracked data to use when
+                initializing Kalman filters.
+        """
+        kalman_tracker = BareKalmanTracker(
+            node_indices=node_indices, instance_count=instance_count
+        )
+
+        def cull_function(inst_list):
+            cull_frame_instances(
+                inst_list,
+                instance_count=instance_count,
+                iou_threshold=instance_iou_threshold,
+            )
+
+        if init_tracker.pre_cull_function is None:
+            init_tracker.pre_cull_function = cull_function
+
+        return cls(
+            init_tracker=init_tracker,
+            kalman_tracker=kalman_tracker,
+            cull_function=cull_function,
+            init_frame_count=init_frame_count,
+            init_set=KalmanInitSet(
+                init_frame_count=init_frame_count,
+                instance_count=instance_count,
+                node_indices=node_indices,
+            ),
+        )
+
+    def track(
+        self,
+        untracked_instances: List[InstanceType],
+        img: Optional[np.ndarray] = None,
+        t: int = None,
+    ) -> List[InstanceType]:
+        """Tracks individual frame, using Kalman filters if possible."""
+
+        # Infer timestep if not provided.
+        if t is None:
+            t = self.last_t + 1
+
+        self.last_t = t
+
+        # Usually tracking works better if we cull instances over the target
+        # number per frame before we try to match identities.
+        if self.cull_function:
+            self.cull_function(untracked_instances)
+
+        # If the Kalman filter-based tracker hasn't yet been initialized,
+        # use the "init" tracker until we've tracked enough frames, then
+        # initialize the Kalman filters.
+        if not self.init_done:
+            # Run "init" tracker on this frame
+            if self.pre_tracked:
+                tracked_instances = untracked_instances
+                frame_match_data = None
+            else:
+                tracked_instances = self.init_tracker.track(untracked_instances, img, t)
+                frame_match_data = self.init_tracker.last_matches
+
+            # Store this as tracked data that could be used to init filters.
+            self.init_set.add_frame_instances(tracked_instances, frame_match_data)
+
+            # Check if we have enough tracked frames, and if so, init filters.
+            if self.init_set.is_set_ready:
+                # Initialize the Kalman filters
+                self.kalman_tracker.init_filters(self.init_set.instances)
+
+                # print(f"Kalman filters initialized (frame {t})")
+
+                # Clear the data used to init filters, so that if the filters
+                # stop tracking and we need to re-init, we won't re-use the
+                # tracked data from earlier frames.
+                self.init_done = True
+                self.last_init_t = t
+                self.init_instances = []
+
+        # Once the Kalman filter-based tracker has been initialized, use it
+        # to track subsequent frames.
+        else:
+            # Clear any tracks that were set for pre-tracked instances.
+            if self.pre_tracked:
+                for inst in untracked_instances:
+                    inst.track = None
+
+            tracked_instances = self.kalman_tracker.track_frame(
+                untracked_instances, frame_idx=t
+            )
+
+        # Check whether we've been getting good results from the Kalman filters.
+        # First, has it been a while since the filters were initialized?
+        if self.init_done and (t - self.last_init_t) > self.re_init_cooldown:
+
+            # If it's been a while, then see if it's also been a while since
+            # the filters successfully matched tracks to the instances.
+            if self.kalman_tracker.last_frame_with_tracks < t - self.re_init_after:
+                # Clear filters so we start tracking frames with the regular
+                # "init" tracker and use this to re-initialize the Kalman
+                # filters.
+                self.init_done = False
+                self.init_set.reset()
+
+                # When we start using the regular tracker, we want it to start
+                # with fresh tracks/match candidates.
+                if self.init_tracker:
+                    self.init_tracker.reset_candidates()
+
+        return tracked_instances
+
+    def get_name(self):
+        return f"kalman.{self.init_tracker.get_name()}"
+
+    @property
+    def uses_image(self):
+        return self.init_tracker.uses_image
+
+    def final_pass(self, frames: List[LabeledFrame]):
+        self.init_tracker.final_pass(frames)
+
+
+@attr.s(auto_attribs=True)
 class TrackCleaner:
     """
     Class for merging breaks in the predicted tracks.
@@ -834,90 +1055,15 @@ class TrackCleaner:
     iou_threshold: Optional[float] = None
 
     def run(self, frames: List["LabeledFrame"]):
-        """
-        Attempts to merge tracks for given frames.
-
-        Args:
-            frames: The list of `LabeldFrame` objects with predictions.
-
-        Returns:
-            None; modifies frames in place.
-        """
-        if not frames:
-            return
-
-        frames.sort(key=lambda lf: lf.frame_idx)
-
-        lf_inst_list = []
-        # Find all frames with more instances than the desired threshold
-        for lf in frames:
-            if len(lf.predicted_instances) > self.instance_count:
-                # List of instances which we'll pare down
-                keep_instances = lf.predicted_instances
-
-                # Use NMS to remove overlapping instances over target count
-                if self.iou_threshold:
-                    keep_instances, extra_instances = nms_instances(
-                        keep_instances,
-                        iou_threshold=self.iou_threshold,
-                        target_count=self.instance_count,
-                    )
-                    # Mark for removal
-                    lf_inst_list.extend([(lf, inst) for inst in extra_instances])
-
-                # Use lower score to remove instances over target count
-                if len(keep_instances) > self.instance_count:
-                    # Sort by ascending score, get target number of instances
-                    # from the end of list (i.e., with highest score)
-                    extra_instances = sorted(
-                        keep_instances, key=operator.attrgetter("score")
-                    )[: -self.instance_count]
-
-                    # Mark for removal
-                    lf_inst_list.extend([(lf, inst) for inst in extra_instances])
-
-        # Remove instances over per frame threshold
-        for lf, inst in lf_inst_list:
-            lf.instances.remove(inst)
-
-        # Move instances in new tracks into tracks that disappeared on previous frame
-        fix_track_map = dict()
-        last_good_frame_tracks = {inst.track for inst in frames[0].instances}
-        for lf in frames:
-            frame_tracks = {inst.track for inst in lf.instances}
-
-            tracks_fixed_before = frame_tracks.intersection(set(fix_track_map.keys()))
-            if tracks_fixed_before:
-                for inst in lf.instances:
-                    if (
-                        inst.track in fix_track_map
-                        and fix_track_map[inst.track] not in frame_tracks
-                    ):
-                        inst.track = fix_track_map[inst.track]
-                        frame_tracks = {inst.track for inst in lf.instances}
-
-            extra_tracks = frame_tracks - last_good_frame_tracks
-            missing_tracks = last_good_frame_tracks - frame_tracks
-
-            if len(extra_tracks) == 1 and len(missing_tracks) == 1:
-                for inst in lf.instances:
-                    if inst.track in extra_tracks:
-                        old_track = inst.track
-                        new_track = missing_tracks.pop()
-                        fix_track_map[old_track] = new_track
-                        inst.track = new_track
-
-                        break
-            else:
-                if len(frame_tracks) == self.instance_count:
-                    last_good_frame_tracks = frame_tracks
+        cull_instances(frames, self.instance_count, self.iou_threshold)
+        connect_single_track_breaks(frames, self.instance_count)
 
 
 def run_tracker(frames, tracker):
     import time
 
     # Return original frames if we aren't retracking
-    if tracker.similarity_function is None:
+    if not tracker.is_valid:
         return frames
 
     t0 = time.time()
@@ -985,6 +1131,7 @@ def retrack():
     t0 = time.time()
     labels = Labels.load_file(args.data_path, args.data_path)
     frames = sorted(labels.labeled_frames, key=operator.attrgetter("frame_idx"))
+    frames = frames  # [:1000]
     print(f"Done loading predictions in {time.time() - t0} seconds.")
 
     print("Starting tracker...")

@@ -18,6 +18,7 @@ class MissingFilesDialog(QtWidgets.QDialog):
         filenames: List[str],
         missing: List[bool] = None,
         replace: bool = False,
+        allow_incomplete: bool = False,
         *args,
         **kwargs,
     ):
@@ -30,6 +31,10 @@ class MissingFilesDialog(QtWidgets.QDialog):
             filenames: List of filenames to find, needn't all be missing.
             missing: Corresponding list, whether each file is missing. If
                 not given, then we'll check whether each file exists.
+            replace: Whether we are replacing files (already found) or
+                locating files (not already found). Affects text in dialog.
+            allow_incomplete: Whether to enable "accept" button when there
+                are still missing files.
 
         Returns:
             None.
@@ -69,7 +74,8 @@ class MissingFilesDialog(QtWidgets.QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
-        self.accept_button.setEnabled(False)
+        if not allow_incomplete:
+            self.accept_button.setEnabled(False)
 
         layout.addWidget(buttons)
 

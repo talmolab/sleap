@@ -797,13 +797,24 @@ class Instance:
         """
         Nx2 array of x and y for visible points.
 
-        Row in arrow corresponds to order of points in skeleton.
+        Row in array corresponds to order of points in skeleton.
         Invisible points will have nans.
 
         Returns:
             ndarray of visible point coordinates.
         """
         return self.get_points_array(invisible_as_nan=True)
+
+    def numpy(self) -> np.ndarray:
+        """Return the instance node coordinates as a numpy array.
+
+        Alias for `points_array`.
+
+        Returns:
+            Array of shape (n_nodes, 2) of dtype float32 containing the coordinates of
+            the instance's nodes. Missing/not visible nodes will be replaced with NaNs.
+        """
+        return self.points_array
 
     @property
     def centroid(self) -> np.ndarray:
