@@ -271,9 +271,9 @@ class Pipeline:
 
         # Apply transformers.
         for transformer in self.transformers:
-            t0 = time.time()
+            # t0 = time.time()
             ds = transformer.transform_dataset(ds)
-            logger.debug(f"{transformer.__class__.__name__}:\t\t{time.time() - t0}")
+            # logger.debug(f"{transformer.__class__.__name__}:\t\t{time.time() - t0}")
 
         return ds
 
