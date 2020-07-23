@@ -15,10 +15,10 @@ not work. We automatically check for the videos in the same directory as the
 labels file, but if the videos aren't there, you can tell `load_file` where
 to seach for the videos. There are various ways to do this:
 
-> Labels.load_filename(filename, single_path_to_search)
-> Labels.load_filename(filename, [path_a, path_b])
-> Labels.load_filename(filename, callback_function)
-> Labels.load_filename(filename, video_search=...)
+> Labels.load_file(filename, single_path_to_search)
+> Labels.load_file(filename, [path_a, path_b])
+> Labels.load_file(filename, callback_function)
+> Labels.load_file(filename, video_search=...)
 
 The callback_function can be created via `make_video_callback()` and has the
 option to make a callback with a GUI window so the user can locate the videos.
