@@ -5,7 +5,13 @@ This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
 (videos, skeletons, etc.).
 
-To load a labels dataset file from disk:
+The most convenient way to load SLEAP labels files is to use the high level loader:
+
+> import sleap
+> labels = sleap.load_file(filename)
+
+The Labels class provides additional functionality for loading SLEAP labels files. To
+load a labels dataset file from disk:
 
 > labels = Labels.load_file(filename)
 
@@ -13,7 +19,7 @@ If you're opening a dataset file created on a different computer (or if you've
 moved the video files), it's likely that the paths to the original videos will
 not work. We automatically check for the videos in the same directory as the
 labels file, but if the videos aren't there, you can tell `load_file` where
-to seach for the videos. There are various ways to do this:
+to search for the videos. There are various ways to do this:
 
 > Labels.load_file(filename, single_path_to_search)
 > Labels.load_file(filename, [path_a, path_b])
@@ -825,7 +831,7 @@ class Labels(MutableSequence):
                 )
                 template_points = align.get_template_points_array(first_n_instances)
                 self._template_instance_points[skeleton] = dict(
-                    points=template_points, nodes=skeleton.nodes,
+                    points=template_points, nodes=skeleton.nodes
                 )
             else:
                 # No labeled frames so use force-directed graph layout
@@ -842,7 +848,7 @@ class Labels(MutableSequence):
                     ]
                 )
                 self._template_instance_points[skeleton] = dict(
-                    points=template_points, nodes=skeleton.nodes,
+                    points=template_points, nodes=skeleton.nodes
                 )
 
         return self._template_instance_points[skeleton]["points"]
@@ -1442,7 +1448,7 @@ class Labels(MutableSequence):
 
     @classmethod
     def load_coco(
-        cls, filename: str, img_dir: str, use_missing_gui: bool = False,
+        cls, filename: str, img_dir: str, use_missing_gui: bool = False
     ) -> "Labels":
         from sleap.io.format.coco import LabelsCocoAdaptor
         from sleap.io.format.filehandle import FileHandle
@@ -1803,8 +1809,16 @@ class Labels(MutableSequence):
         return imgs, points
 
 
-def find_path_using_paths(missing_path, search_paths):
+def find_path_using_paths(missing_path: Text, search_paths: List[Text]) -> Text:
+    """Find a path to a missing file given a set of paths to search in.
 
+    Args:
+        missing_path: Path to the missing filename.
+        search_paths: List of paths to search in.
+
+    Returns:
+        The corrected path if it was found, or the original missing path if it was not.
+    """
     # Get basename (filename with directories) using current os path format
     current_basename = os.path.basename(missing_path)
 
@@ -1827,3 +1841,38 @@ def find_path_using_paths(missing_path, search_paths):
             return check_path
 
     return missing_path
+
+
+def load_file(
+    filename: Text,
+    detect_videos: bool = True,
+    search_paths: Optional[Union[List[Text], Text]] = None,
+) -> Labels:
+    """Load a SLEAP labels file.
+
+    Args:
+        filename: Path to a SLEAP labels (.slp) file.
+        detect_videos: If True, will attempt to detect missing videos by searching for
+            their filenames in the search paths. This is useful when loading SLEAP
+            labels files that were generated on another computer with different paths.
+        search_paths: A path or list of paths to search for the missing videos. This can
+            be the direct path to the video file or its containing folder. If not
+            specified, defaults to searching for the videos in the same folder as the
+            labels.
+
+    Returns:
+        The loaded `Labels` instance.
+
+    Notes:
+        This is a convenience method to call `sleap.Labels.load_file`. See that class
+        method for more functionality in the loading process.
+
+        The video files do not need to be accessible in order to load the labels, for
+        example, when only the predicted instances or user labels are required.
+    """
+    if detect_videos:
+        if search_paths is None:
+            search_paths = os.path.dirname(filename)
+        return Labels.load_file(filename, search_paths)
+    else:
+        return Labels.load_file(filename)
