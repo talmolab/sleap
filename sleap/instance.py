@@ -1512,6 +1512,10 @@ class LabeledFrame:
         Args:
             image: If False, only the instances will be plotted without loading the
                 original image.
+
+        Notes:
+            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
+            options.
         """
         if image:
             sleap.nn.viz.plot_img(self.image)
@@ -1523,7 +1527,11 @@ class LabeledFrame:
         Args:
             image: If False, only the instances will be plotted without loading the
                 original image.
+
+        Notes:
+            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
+            options.
         """
         if image:
             sleap.nn.viz.plot_img(self.image)
-        sleap.nn.viz.plot_instances(self.instances)
+        sleap.nn.viz.plot_instances(self.predicted_instances)
