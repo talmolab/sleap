@@ -321,7 +321,7 @@ def match_instances(
         positive_pairs.append((instance_gt, instance_pr, best_match_oks))
 
         # Stop matching lower scoring instances if we run out of candidates in the
-        ground truth.
+        # ground truth.
         if not available_instances_gt_idxs:
             break
 
