@@ -273,6 +273,16 @@ def test_scalar_properties():
         labels.skeleton
 
 
+def test_has_missing_videos():
+    labels = Labels()
+    labels.add_video(Video.from_filename("small_robot.mp4"))
+    assert labels.has_missing_videos
+
+    labels = Labels()
+    labels.add_video(Video.from_filename("tests/data/videos/small_robot.mp4"))
+    assert not labels.has_missing_videos
+
+
 def test_label_mutability():
     dummy_video = Video(backend=MediaVideo)
     dummy_skeleton = Skeleton()
