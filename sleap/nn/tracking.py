@@ -1054,19 +1054,25 @@ class TrackCleaner:
     instance_count: int
     iou_threshold: Optional[float] = None
 
-    def run(self, frames: List["LabeledFrame"]):
+    def run(self, frames: List[LabeledFrame]):
         cull_instances(frames, self.instance_count, self.iou_threshold)
         connect_single_track_breaks(frames, self.instance_count)
 
 
-def run_tracker(frames, tracker):
-    import time
+def run_tracker(frames: List[LabeledFrame], tracker: Tracker) -> List[LabeledFrame]:
+    """Run a tracker on a set of labeled frames.
 
+    Args:
+        frames: A list of labeled frames with instances.
+        tracker: An initialized Tracker.
+
+    Returns:
+        The input frames with the new tracks assigned. If the frames already had tracks,
+        they will be cleared if the tracker has been re-initialized.
+    """
     # Return original frames if we aren't retracking
     if not tracker.is_valid:
         return frames
-
-    t0 = time.time()
 
     new_lfs = []
 
@@ -1089,11 +1095,6 @@ def run_tracker(frames, tracker):
             instances=tracker.track(**track_args),
         )
         new_lfs.append(new_lf)
-
-        if lf.frame_idx % 100 == 0:
-            print(lf.frame_idx, time.time() - t0)
-
-    print(time.time() - t0)
 
     return new_lfs
 
