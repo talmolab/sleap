@@ -208,6 +208,10 @@ def test_label_accessors(centered_pair_labels):
     assert labels[61].video == video
     assert labels[61].frame_idx == 954
 
+    assert labels[np.int64(0)] == labels[0]
+    assert labels[np.int64(61)] == labels[61]
+    assert labels[np.array([0, 61])] == labels[[0, 61]]
+
     assert len(labels.find(video, frame_idx=954)) == 1
     assert len(labels.find(video, 954)) == 1
     assert labels.find(video, 954)[0] == labels[61]
