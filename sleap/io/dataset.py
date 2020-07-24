@@ -606,9 +606,12 @@ class Labels(MutableSequence):
             isinstance(item, tuple)
             and len(item) == 2
             and isinstance(item[0], Video)
-            and isinstance(item[1], int)
         ):
-            return self.find_first(*item) is not None
+            if isinstance(item[1], np.integer):
+                return self.find_first(*item) is not None
+            elif isinstance(item[1], int):
+                return self.find_first(item[0], item[1].tolist()) is not None
+        raise ValueError("Item is not an object type contained in labels.")
 
     def __getitem__(self, key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key.
