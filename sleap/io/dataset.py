@@ -544,6 +544,30 @@ class Labels(MutableSequence):
         """Alias for labeled_frames."""
         return self.labeled_frames
 
+    @property
+    def skeleton(self) -> Skeleton:
+        """Return the skeleton if there is only a single skeleton in the labels."""
+        if len(self.skeletons) == 1:
+            return self.skeletons[0]
+        else:
+            raise ValueError(
+                "Labels.skeleton can only be used when there is only a single skeleton "
+                "saved in the labels. Use Labels.skeletons instead."
+                )
+
+    @property
+    def video(self) -> Video:
+        """Return the video if there is only a single video in the labels."""
+        if len(self.videos) == 0:
+            raise ValueError("There are no videos in the labels.")
+        elif len(self.videos) == 1:
+            return self.videos[0]
+        else:
+            raise ValueError(
+                "Labels.video can only be used when there is only a single video saved "
+                "in the labels. Use Labels.videos instead."
+                )
+
     def __len__(self) -> int:
         """Returns number of labeled frames."""
         return len(self.labeled_frames)
