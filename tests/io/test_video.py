@@ -110,6 +110,17 @@ def test_numpy_frames(small_robot_mp4_vid):
     assert np.all(np.equal(np_vid.get_frame(1), small_robot_mp4_vid.get_frame(7)))
 
 
+def test_is_missing():
+    vid = Video.from_media(TEST_SMALL_ROBOT_MP4_FILE)
+    assert not vid.is_missing
+    vid = Video.from_media("non-existent-filename.mp4")
+    assert vid.is_missing
+    vid = Video.from_numpy(
+        Video.from_media(TEST_SMALL_ROBOT_MP4_FILE).get_frames((3, 7, 9))
+        )
+    assert not vid.is_missing
+
+
 @pytest.mark.parametrize("format", ["png", "jpg", "mjpeg/avi"])
 def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
 
