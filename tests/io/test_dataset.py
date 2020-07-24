@@ -233,6 +233,45 @@ def test_label_accessors(centered_pair_labels):
         labels[dummy_video]
 
 
+def test_scalar_properties():
+    # Scalar
+    dummy_video = Video(backend=MediaVideo)
+    dummy_skeleton = Skeleton()
+    dummy_instance = Instance(dummy_skeleton)
+    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance])
+
+    labels = Labels()
+    labels.append(dummy_frame)
+
+    assert labels.video == dummy_video
+    assert labels.skeleton == dummy_skeleton
+
+    # Empty
+    labels = Labels()
+    with pytest.raises(ValueError):
+        labels.video
+    with pytest.raises(ValueError):
+        labels.skeleton
+
+    # More than one video
+    dummy_skeleton = Skeleton()
+    labels = Labels()
+    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
+    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
+    assert labels.skeleton == dummy_skeleton
+    with pytest.raises(ValueError):
+        labels.video
+
+    # More than one skeleton
+    dummy_video = Video(backend=MediaVideo)
+    labels = Labels()
+    labels.append(LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())]))
+    labels.append(LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())]))
+    assert labels.video == dummy_video
+    with pytest.raises(ValueError):
+        labels.skeleton
+
+
 def test_label_mutability():
     dummy_video = Video(backend=MediaVideo)
     dummy_skeleton = Skeleton()
