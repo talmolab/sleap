@@ -1417,6 +1417,23 @@ class Labels(MutableSequence):
 
         write(filename, labels, *args, **kwargs)
 
+    def save(self, filename: Text, with_images: bool = False):
+        """Save the labels to a file.
+
+        Args:
+            filename: Path to save the labels to ending in `.slp`. If the filename does
+                not end in `.slp`, the extension will be automatically appended.
+            with_images: If True, the image data for frames with labels will be embedded
+                in the saved labels. This is useful for generating a single file to be
+                used when training remotely.
+
+        Notes:
+            This is an instance-level wrapper for the `Labels.save_file` class method.
+        """
+        if os.path.splitext(filename)[1].lower() != ".slp":
+            filename = filename + ".slp"
+        Labels.save_file(self, filename, save_frame_data=with_images)
+
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
         from .format import read
