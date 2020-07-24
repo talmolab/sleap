@@ -1,11 +1,12 @@
 import os
 import pytest
 import numpy as np
+from pathlib import Path
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
-from sleap.io.dataset import Labels
+from sleap.io.dataset import Labels, load_file
 from sleap.io.legacy import load_labels_json_old
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 
@@ -869,6 +870,28 @@ def test_path_fix_with_new_full_path(tmpdir):
     # Make sure we got the actual video path by searching that directory
     assert len(labels.videos) == 1
     assert labels.videos[0].filename == "tests/data/videos/small_robot.mp4"
+
+
+def test_load_file(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+    labels.add_video(Video.from_filename("small_robot.mp4"))
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    # Fix video path from full path
+    labels = load_file(filename, search_paths="tests/data/videos/small_robot.mp4")
+    assert Path(labels.video.filename).samefile("tests/data/videos/small_robot.mp4")
+
+    # No auto-detect
+    labels = load_file(filename, detect_videos=False)
+    assert labels.video.filename == "small_robot.mp4"
+
+    # Fix video path by searching in the labels folder
+    tmpvid = tmpdir.join("small_robot.mp4")
+    tmpvid.write("")  # dummy file
+    assert load_file(filename).video.filename == tmpvid
+    assert load_file(filename, search_paths=str(tmpdir)).video.filename == tmpvid
+    assert load_file(filename, search_paths=str(tmpvid)).video.filename == tmpvid
 
 
 def test_local_path_save(tmpdir, monkeypatch):
