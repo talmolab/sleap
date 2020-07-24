@@ -12,7 +12,7 @@ import cattr
 import logging
 import multiprocessing
 
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union, Text
 
 from sleap.util import json_loads, json_dumps
 
@@ -186,7 +186,7 @@ class HDF5Video:
         )
 
     def close(self):
-        """Closes the HDF5 file object (if it's open)."""
+        """Close the HDF5 file object (if it's open)."""
         try:
             self.__file_h5.close()
         except:
@@ -533,13 +533,20 @@ class NumpyVideo:
         return self.__data.dtype
 
     def reset(self):
-        """Reloads the video."""
+        """Reload the video."""
         # TODO
         pass
 
     def get_frame(self, idx):
         """See :class:`Video`."""
         return self.__data[idx]
+
+    @property
+    def is_missing(self) -> bool:
+        """Return True if the video comes from a file and is missing."""
+        if self.filename == "Raw Video Data":
+            return False
+        return not os.path.exists(self.filename)
 
 
 @attr.s(auto_attribs=True, cmp=False)
@@ -920,37 +927,38 @@ class Video:
 
     @property
     def num_frames(self) -> int:
-        """
-        The number of frames in the video. Just an alias for frames property.
-        """
+        """Return the number of frames in the video."""
         return self.frames
 
     @property
     def last_frame_idx(self) -> int:
-        """
-        The idx number of the last frame. Usually `numframes - 1`.
-        """
+        """Return the index number of the last frame. Usually `num_frames - 1`."""
         if hasattr(self.backend, "last_frame_idx"):
             return self.backend.last_frame_idx
         return self.frames - 1
 
     @property
     def shape(self) -> Tuple[int, int, int, int]:
-        """ Returns (frame count, height, width, channels)."""
+        """Return tuple of (frame count, height, width, channels)."""
         return (self.frames, self.height, self.width, self.channels)
 
-    def __str__(self):
-        """ Informal string representation (for print or format) """
+    def __str__(self) -> str:
+        """Informal string representation (for print or format)."""
         return type(self).__name__ + " ([%d x %d x %d x %d])" % self.shape
 
-    def __len__(self):
-        """
-        The length of the video should be the number of frames.
-
-        Returns:
-            The number of frames in the video.
-        """
+    def __len__(self) -> int:
+        """Return the length of the video as the number of frames."""
         return self.frames
+
+    @property
+    def is_missing(self) -> bool:
+        """Return True if the video is a file and is not present."""
+        if not hasattr(self.backend, "filename"):
+            return True
+        elif hasattr(self.backend, "is_missing"):
+            return self.backend.is_missing
+        else:
+            return not os.path.exists(self.backend.filename)
 
     def get_frame(self, idx: int) -> np.ndarray:
         """
@@ -965,23 +973,20 @@ class Video:
         return self.backend.get_frame(idx)
 
     def get_frames(self, idxs: Union[int, Iterable[int]]) -> np.ndarray:
-        """
-        Return a collection of video frames from the underlying video data.
+        """Return a collection of video frames from the underlying video data.
 
         Args:
             idxs: An iterable object that contains the indices of frames.
 
         Returns:
-            The requested video frames with shape
-            (len(idxs), height, width, channels)
+            The requested video frames with shape (len(idxs), height, width, channels).
         """
         if np.isscalar(idxs):
             idxs = [idxs]
         return np.stack([self.get_frame(idx) for idx in idxs], axis=0)
 
     def get_frames_safely(self, idxs: Iterable[int]) -> Tuple[List[int], np.ndarray]:
-        """
-        Returns list of frame indices and frames which were successfully loaded.
+        """Return list of frame indices and frames which were successfully loaded.
 
         idxs: An iterable object that contains the indices of frames.
 
@@ -1070,8 +1075,7 @@ class Video:
 
     @classmethod
     def from_media(cls, filename: str, *args, **kwargs) -> "Video":
-        """
-        Create an instance of a video object from a typical media file.
+        """Create an instance of a video object from a typical media file.
 
         For example, mp4, avi, or other types readable by FFMPEG.
 
@@ -1096,9 +1100,7 @@ class Video:
         *args,
         **kwargs,
     ) -> "Video":
-        """
-        Create an instance of a SingleImageVideo from individual image file(s).
-        """
+        """Create an instance of a SingleImageVideo from individual image file(s)."""
         backend = SingleImageVideo(filenames=filenames)
         if height:
             backend.height = height
@@ -1108,8 +1110,7 @@ class Video:
 
     @classmethod
     def from_filename(cls, filename: str, *args, **kwargs) -> "Video":
-        """
-        Create an instance of a video object, auto-detecting the backend.
+        """Create an instance of a video object, auto-detecting the backend.
 
         Args:
             filename: The path to the video filename.
@@ -1127,7 +1128,6 @@ class Video:
         Returns:
             A Video object with the detected backend.
         """
-
         filename = Video.fixup_path(filename)
 
         if filename.lower().endswith(("h5", "hdf5", "slp")):
@@ -1158,7 +1158,6 @@ class Video:
         Returns:
             A `Video` object for the new imgstore.
         """
-
         # get the image size from the first file
         first_img = cv2.imread(filenames[0], flags=cv2.IMREAD_COLOR)
         img_shape = first_img.shape
@@ -1186,8 +1185,7 @@ class Video:
         format: str = "png",
         index_by_original: bool = True,
     ) -> "Video":
-        """
-        Converts frames from arbitrary video backend to ImgStoreVideo.
+        """Convert frames from arbitrary video backend to ImgStoreVideo.
 
         This should facilitate conversion of any video to a loopbio imgstore.
 
@@ -1210,7 +1208,6 @@ class Video:
         Returns:
             A new Video object that references the imgstore.
         """
-
         # If the user has not provided a list of frames to store, store them all.
         if frame_numbers is None:
             frame_numbers = range(self.num_frames)
@@ -1270,8 +1267,7 @@ class Video:
         format: str = "",
         index_by_original: bool = True,
     ):
-        """
-        Converts frames from arbitrary video backend to HDF5Video.
+        """Convert frames from arbitrary video backend to HDF5Video.
 
         Used for building an HDF5 that holds all data needed for training.
 
@@ -1293,7 +1289,6 @@ class Video:
         Returns:
             A new Video object that references the HDF5 dataset.
         """
-
         # If the user has not provided a list of frames to store, store them all.
         if frame_numbers is None:
             frame_numbers = range(self.num_frames)
@@ -1361,8 +1356,7 @@ class Video:
 
     @staticmethod
     def cattr():
-        """
-        Returns a cattr converter for serialiazing/deserializing Video objects.
+        """Return a cattr converter for serialiazing/deserializing Video objects.
 
         Returns:
             A cattr converter.
@@ -1391,8 +1385,7 @@ class Video:
     def fixup_path(
         path: str, raise_error: bool = False, raise_warning: bool = False
     ) -> str:
-        """
-        Tries to locate video if the given path doesn't work.
+        """Try to locate video if the given path doesn't work.
 
         Given a path to a video try to find it. This is attempt to make the
         paths serialized for different video objects portable across multiple
@@ -1418,7 +1411,6 @@ class Video:
         Returns:
             The fixed up path
         """
-
         # If path is not a string then just return it and assume the backend
         # knows what to do with it.
         if type(path) is not str:
