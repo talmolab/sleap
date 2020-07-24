@@ -581,17 +581,21 @@ class Labels(MutableSequence):
         ):
             return self.find_first(*item) is not None
 
-    def __getitem__(self, key) -> List[LabeledFrame]:
-        """Returns labeled frames matching key.
+    def __getitem__(self, key) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Return labeled frames matching key.
 
         Args:
-            key: `Video` or (`Video`, frame index) to match against.
+            key: Indexing argument to match against. If `key` is a `Video` or tuple of
+                `(Video, frame_index)`, frames that match the criteria will be searched
+                for. If a scalar, list, range or array of integers are provided, the
+                labels with those linear indices will be returned.
 
         Raises:
-            KeyError: If labeled frame for `Video` or frame index
-            cannot be found.
+            KeyError: If the specified key could not be found.
 
-        Returns: A list with the matching labeled frame(s).
+        Returns:
+            A list with the matching `LabeledFrame`s, or a single `LabeledFrame` if a
+            scalar key was provided.
         """
         if isinstance(key, int):
             return self.labels.__getitem__(key)
@@ -619,6 +623,9 @@ class Labels(MutableSequence):
 
         elif isinstance(key, (list, range)):
             return [self.__getitem__(i) for i in key]
+
+        elif isinstance(key, (np.integer, np.ndarray)):
+            return self.__getitem__(key.tolist())
 
         else:
             raise KeyError("Invalid label indexing arguments.")
