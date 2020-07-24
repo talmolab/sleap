@@ -40,7 +40,7 @@ default extension to use if none is provided in the filename.
 import itertools
 import os
 from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional, Tuple, Text, Iterable
+from typing import Callable, List, Union, Dict, Optional, Tuple, Text, Iterable, Any, Set
 
 import attr
 import cattr
@@ -62,7 +62,7 @@ from sleap.instance import (
 )
 
 from sleap.io import pathutils
-from sleap.io.video import Video
+from sleap.io.video import Video, ImgStoreVideo, HDF5Video
 from sleap.gui.suggestions import SuggestionFrame
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
@@ -87,9 +87,8 @@ class LabelsDataCache:
         self.update()
 
     def update(self, new_frame: Optional[LabeledFrame] = None):
-        """Builds (or rebuilds) various caches."""
+        """Build (or rebuilds) various caches."""
         # Data structures for caching
-
         if new_frame is None:
             self._lf_by_video = dict()
             self._frame_idx_map = dict()
@@ -117,7 +116,7 @@ class LabelsDataCache:
     def find_frames(
         self, video: Video, frame_idx: Optional[Union[int, Iterable[int]]] = None
     ) -> Optional[List[LabeledFrame]]:
-        """Returns list of LabeledFrames matching video/frame_idx, or None."""
+        """Return list of LabeledFrames matching video/frame_idx, or None."""
         if frame_idx is not None:
             if video not in self._frame_idx_map:
                 return None
@@ -139,7 +138,7 @@ class LabelsDataCache:
             return self._lf_by_video[video]
 
     def find_fancy_frame_idxs(self, video, from_frame_idx, reverse):
-        """Returns a list of frame idxs, with optional start position/order."""
+        """Return a list of frame idxs, with optional start position/order."""
         if video not in self._frame_idx_map:
             return None
 
@@ -177,9 +176,7 @@ class LabelsDataCache:
         return tracks
 
     def get_track_occupancy(self, video: Video, track: Track) -> RangeList:
-        """
-        Accessor for track occupancy cache that adds video/track as needed.
-        """
+        """Access track occupancy cache that adds video/track as needed."""
         if video not in self._track_occupancy:
             self._track_occupancy[video] = dict()
 
@@ -188,24 +185,23 @@ class LabelsDataCache:
         return self._track_occupancy[video][track]
 
     def get_video_track_occupancy(self, video: Video) -> Dict[Track, RangeList]:
-        """Returns track occupancy information for specified video."""
+        """Return track occupancy information for specified video."""
         if video not in self._track_occupancy:
             self._track_occupancy[video] = dict()
 
         return self._track_occupancy[video]
 
     def remove_frame(self, frame: LabeledFrame):
-        """Updates cache as needed."""
+        """Remvoe frame and update cache as needed."""
         self._lf_by_video[frame.video].remove(frame)
-        # we'll assume that there's only a single LabeledFrame for this video
-        # and frame_idx, and remove the frame_idx from the cache
+        # We'll assume that there's only a single LabeledFrame for this video and
+        # frame_idx, and remove the frame_idx from the cache.
         if frame.video in self._frame_idx_map:
             if frame.frame_idx in self._frame_idx_map[frame.video]:
                 del self._frame_idx_map[frame.video][frame.frame_idx]
 
     def remove_video(self, video: Video):
-        """Updates cache as needed."""
-        # Remove from caches
+        """Remove video and update cache as needed."""
         if video in self._lf_by_video:
             del self._lf_by_video[video]
         if video in self._frame_idx_map:
@@ -218,8 +214,7 @@ class LabelsDataCache:
         old_track: Optional[Track],
         frame_range: tuple,
     ):
-        """Updates cache as needed."""
-
+        """Swap tracks and update cache as needed."""
         # Get ranges in track occupancy cache
         _, within_old, _ = self.get_track_occupancy(video, old_track).cut_range(
             frame_range
@@ -238,11 +233,11 @@ class LabelsDataCache:
         self._track_occupancy[video][new_track].insert_list(within_old)
 
     def add_track(self, video: Video, track: Track):
-        """Updates cache as needed."""
+        """Add track a track to the labels."""
         self._track_occupancy[video][track] = RangeList()
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
-        """Updates cache as needed."""
+        """Add an instance to the labels."""
         if frame.video not in self._track_occupancy:
             self._track_occupancy[frame.video] = dict()
 
@@ -257,7 +252,7 @@ class LabelsDataCache:
         self.update_counts_for_frame(frame)
 
     def remove_instance(self, frame: LabeledFrame, instance: Instance):
-        """Updates cache as needed."""
+        """Remove an instance and update the cache as needed."""
         if instance.track not in self._track_occupancy[frame.video]:
             return
 
@@ -269,10 +264,8 @@ class LabelsDataCache:
 
         self.update_counts_for_frame(frame)
 
-    def get_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
-        """
-        Returns (possibly cached) count of frames matching video/filter.
-        """
+    def get_frame_count(self, video: Optional[Video] = None, filter: Text = "") -> int:
+        """Return (possibly cached) count of frames matching video/filter."""
         if filter not in ("", "user", "predicted"):
             raise ValueError(
                 f"Labels.get_labeled_frame_count() invalid filter: {filter}"
@@ -287,10 +280,8 @@ class LabelsDataCache:
 
         return len(self._frame_count_cache[video][filter])
 
-    def get_filtered_frame_idxs(self, video: Optional[Video] = None, filter: Text = ""):
-        """
-        Returns list of (video_idx, frame_idx) tuples matching video/filter.
-        """
+    def get_filtered_frame_idxs(self, video: Optional[Video] = None, filter: Text = "") -> Set[Tuple[int, int]]:
+        """Return list of (video_idx, frame_idx) tuples matching video/filter."""
         if filter == "":
             filter_func = lambda lf: video is None or lf.video == video
         elif filter == "user":
@@ -574,16 +565,15 @@ class Labels(MutableSequence):
         return any(video.is_missing for video in self.videos)
 
     def __len__(self) -> int:
-        """Returns number of labeled frames."""
+        """Return number of labeled frames."""
         return len(self.labeled_frames)
 
     def index(self, value) -> int:
-        """Returns index of labeled frame in list of labeled frames."""
+        """Return index of labeled frame in list of labeled frames."""
         return self.labeled_frames.index(value)
 
     def __contains__(self, item) -> bool:
-        """
-        Checks if object contains the given item.
+        """Check if object contains the given item.
 
         Args:
             item: The item to look for within `Labels`.
@@ -607,9 +597,9 @@ class Labels(MutableSequence):
             and len(item) == 2
             and isinstance(item[0], Video)
         ):
-            if isinstance(item[1], np.integer):
+            if isinstance(item[1], int):
                 return self.find_first(*item) is not None
-            elif isinstance(item[1], int):
+            elif isinstance(item[1], np.integer):
                 return self.find_first(item[0], item[1].tolist()) is not None
         raise ValueError("Item is not an object type contained in labels.")
 
@@ -670,13 +660,13 @@ class Labels(MutableSequence):
             raise KeyError("Invalid label indexing arguments.")
 
     def __setitem__(self, index, value: LabeledFrame):
-        """Sets labeled frame at given index."""
+        """Set labeled frame at given index."""
         # TODO: Maybe we should remove this method altogether?
         self.labeled_frames.__setitem__(index, value)
         self._update_containers(value)
 
     def insert(self, index, value: LabeledFrame):
-        """Inserts labeled frame at given index."""
+        """Insert labeled frame at given index."""
         if value in self or (value.video, value.frame_idx) in self:
             return
 
@@ -684,15 +674,15 @@ class Labels(MutableSequence):
         self._update_containers(value)
 
     def append(self, value: LabeledFrame):
-        """Adds labeled frame to list of labeled frames."""
+        """Add labeled frame to list of labeled frames."""
         self.insert(len(self) + 1, value)
 
     def __delitem__(self, key):
-        """Removes labeled frame with given index."""
+        """Remove labeled frame with given index."""
         self.labeled_frames.remove(self.labeled_frames[key])
 
     def remove(self, value: LabeledFrame):
-        """Removes given labeled frame."""
+        """Remove given labeled frame."""
         self.labeled_frames.remove(value)
         self._cache.remove_frame(value)
 
@@ -702,7 +692,7 @@ class Labels(MutableSequence):
         frame_idx: Optional[Union[int, Iterable[int]]] = None,
         return_new: bool = False,
     ) -> List[LabeledFrame]:
-        """ Search for labeled frames given video and/or frame index.
+        """Search for labeled frames given video and/or frame index.
 
         Args:
             video: A :class:`Video` that is associated with the project.
@@ -727,8 +717,7 @@ class Labels(MutableSequence):
         return null_result if result is None else result
 
     def frames(self, video: Video, from_frame_idx: int = -1, reverse=False):
-        """
-        Iterator over all labeled frames in a video.
+        """Return an iterator over all labeled frames in a video.
 
         Args:
             video: A :class:`Video` that is associated with the project.
@@ -739,7 +728,6 @@ class Labels(MutableSequence):
         Yields:
             :class:`LabeledFrame`
         """
-
         frame_idxs = self._cache.find_fancy_frame_idxs(video, from_frame_idx, reverse)
 
         # Yield the frames
@@ -749,8 +737,7 @@ class Labels(MutableSequence):
     def find_first(
         self, video: Video, frame_idx: Optional[int] = None
     ) -> Optional[LabeledFrame]:
-        """
-        Finds the first occurrence of a matching labeled frame.
+        """Find the first occurrence of a matching labeled frame.
 
         Matches on frames for the given video and/or frame index.
 
@@ -764,7 +751,6 @@ class Labels(MutableSequence):
             First `LabeledFrame` that match the criteria
             or None if none were found.
         """
-
         if video in self.videos:
             for label in self.labels:
                 if label.video == video and (
@@ -775,8 +761,7 @@ class Labels(MutableSequence):
     def find_last(
         self, video: Video, frame_idx: Optional[int] = None
     ) -> Optional[LabeledFrame]:
-        """
-        Finds the last occurrence of a matching labeled frame.
+        """Find the last occurrence of a matching labeled frame.
 
         Matches on frames for the given video and/or frame index.
 
@@ -790,7 +775,6 @@ class Labels(MutableSequence):
             Last `LabeledFrame` that match the criteria
             or None if none were found.
         """
-
         if video in self.videos:
             for label in reversed(self.labels):
                 if label.video == video and (
@@ -800,44 +784,39 @@ class Labels(MutableSequence):
 
     @property
     def user_labeled_frames(self):
-        """
-        Returns all labeled frames with user (non-predicted) instances.
-        """
+        """Return all labeled frames with user (non-predicted) instances."""
         return [lf for lf in self.labeled_frames if lf.has_user_instances]
 
     def get_labeled_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
         return self._cache.get_frame_count(video, filter)
 
-    # Methods for instances
-
     def instance_count(self, video: Video, frame_idx: int) -> int:
-        """Returns number of instances matching video/frame index."""
+        """Return number of instances matching video/frame index."""
         count = 0
         labeled_frame = self.find_first(video, frame_idx)
         if labeled_frame is not None:
             count = len(
-                [inst for inst in labeled_frame.instances if type(inst) == Instance]
+                [inst for inst in labeled_frame.instances if isinstance(inst, Instance)]
             )
         return count
 
     @property
-    def all_instances(self):
-        """Returns list of all instances."""
+    def all_instances(self) -> List[Instance]:
+        """Return list of all instances."""
         return list(self.instances())
 
     @property
-    def user_instances(self):
-        """Returns list of all user (non-predicted) instances."""
-        return [inst for inst in self.all_instances if type(inst) == Instance]
+    def user_instances(self) -> List[Instance]:
+        """Return list of all user (non-predicted) instances."""
+        return [inst for inst in self.all_instances if isinstance(inst, Instance)]
 
     @property
-    def predicted_instances(self):
-        """Returns list of all user (non-predicted) instances."""
-        return [inst for inst in self.all_instances if type(inst) == PredictedInstance]
+    def predicted_instances(self) -> List[PredictedInstance]:
+        """Return list of all predicted instances."""
+        return [inst for inst in self.all_instances if isinstance(inst, PredictedInstance)]
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):
-        """
-        Iterate over instances in the labels, optionally with filters.
+        """Iterate over instances in the labels, optionally with filters.
 
         Args:
             video: Only iterate through instances in this video
@@ -899,25 +878,23 @@ class Labels(MutableSequence):
 
         return self._template_instance_points[skeleton]["points"]
 
-    # Methods for tracks
-
     def get_track_count(self, video: Video) -> int:
-        """Returns the number of occupied tracks for a given video."""
+        """Return the number of occupied tracks for a given video."""
         return len(self.get_track_occupancy(video))
 
     def get_track_occupancy(self, video: Video) -> List:
-        """Returns track occupancy list for given video"""
+        """Return track occupancy list for given video."""
         return self._cache.get_video_track_occupancy(video=video)
 
     def add_track(self, video: Video, track: Track):
-        """Adds track to labels, updating occupancy."""
+        """Add track to labels, updating occupancy."""
         self.tracks.append(track)
         self._cache.add_track(video, track)
 
     def track_set_instance(
         self, frame: LabeledFrame, instance: Instance, new_track: Track
     ):
-        """Sets track on given instance, updating occupancy."""
+        """Set track on given instance, updating occupancy."""
         self.track_swap(
             frame.video,
             new_track,
@@ -935,8 +912,7 @@ class Labels(MutableSequence):
         old_track: Optional[Track],
         frame_range: tuple,
     ):
-        """
-        Swaps track assignment for instances in two tracks.
+        """Swap track assignment for instances in two tracks.
 
         If you need to change the track to or from None, you'll need
         to use :meth:`track_set_instance` for each specific
@@ -950,11 +926,7 @@ class Labels(MutableSequence):
             frame_range: Tuple of (start, end) frame indexes.
                 If you want to swap tracks on a single frame, use
                 (frame index, frame index + 1).
-
-        Returns:
-            None.
         """
-
         self._cache.track_swap(video, new_track, old_track, frame_range)
 
         # Update tracks set on instances
@@ -977,13 +949,13 @@ class Labels(MutableSequence):
     def remove_instance(
         self, frame: LabeledFrame, instance: Instance, in_transaction: bool = False
     ):
-        """Removes instance from frame, updating track occupancy."""
+        """Remove instance from frame, updating track occupancy."""
         frame.instances.remove(instance)
         if not in_transaction:
             self._cache.remove_instance(frame, instance)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
-        """Adds instance to frame, updating track occupancy."""
+        """Add instance to frame, updating track occupancy."""
         # Ensure that there isn't already an Instance with this track
         tracks_in_frame = [
             inst.track
@@ -1008,10 +980,10 @@ class Labels(MutableSequence):
             frame_range (optional):
                 If specified, only return instances on frames in range.
                 If None, return all instances for given track.
+
         Returns:
             List of :class:`Instance` objects.
         """
-
         frame_range = range(*frame_range) if type(frame_range) == tuple else frame_range
 
         def does_track_match(inst, tr, labeled_frame):
@@ -1035,16 +1007,18 @@ class Labels(MutableSequence):
         ]
         return track_frame_inst
 
-    # Methods for suggestions
-
     def get_video_suggestions(self, video: Video) -> List[int]:
-        """
-        Returns the list of suggested frames for the specified video
-        or suggestions for all videos (if no video specified).
+        """Return a list of suggested frame indices.
+
+        Args:
+            video: Video to get suggestions for.
+
+        Returns:
+            Indices of the labeled frames for for the specified video.
         """
         return [item.frame_idx for item in self.suggestions if item.video == video]
 
-    def get_suggestions(self) -> list:
+    def get_suggestions(self) -> List[SuggestionFrame]:
         """Return all suggestions as a list of SuggestionFrame items."""
         return self.suggestions
 
@@ -1061,8 +1035,8 @@ class Labels(MutableSequence):
 
         return None
 
-    def get_next_suggestion(self, video, frame_idx, seek_direction=1) -> list:
-        """Returns a (video, frame_idx) tuple seeking from given frame."""
+    def get_next_suggestion(self, video, frame_idx, seek_direction=1):
+        """Return a (video, frame_idx) tuple seeking from given frame."""
         # make sure we have valid seek_direction
         if seek_direction not in (-1, 1):
             raise ValueError("seek_direction should be -1 or 1.")
@@ -1109,18 +1083,16 @@ class Labels(MutableSequence):
             )
         return self.find_suggestion(video, frame_suggestion)
 
-    def set_suggestions(self, suggestions: List["SuggestionFrame"]):
-        """Sets the suggested frames."""
+    def set_suggestions(self, suggestions: List[SuggestionFrame]):
+        """Set the suggested frames."""
         self.suggestions = suggestions
 
     def delete_suggestions(self, video):
-        """Deletes suggestions for specified video."""
+        """Delete suggestions for specified video."""
         self.suggestions = [item for item in self.suggestions if item.video != video]
 
-    # Methods for videos
-
     def add_video(self, video: Video):
-        """ Add a video to the labels if it is not already in it.
+        """Add a video to the labels if it is not already in it.
 
         Video instances are added automatically when adding labeled frames,
         but this function allows for adding videos to the labels before any
@@ -1134,10 +1106,10 @@ class Labels(MutableSequence):
             self.videos.append(video)
 
     def remove_video(self, video: Video):
-        """ Removes a video from the labels and ALL associated labeled frames.
+        """Remove a video from the labels and all associated labeled frames.
 
         Args:
-            video: `Video` instance to be removed
+            video: `Video` instance to be removed.
         """
         if video not in self.videos:
             raise KeyError("Video is not in labels.")
@@ -1156,8 +1128,6 @@ class Labels(MutableSequence):
         self.videos.remove(video)
         self._cache.remove_video(video)
 
-    # Methods for saving/loading
-
     @classmethod
     def from_json(cls, *args, **kwargs):
         from sleap.io.format.labels_json import LabelsJsonAdaptor
@@ -1167,8 +1137,7 @@ class Labels(MutableSequence):
     def extend_from(
         self, new_frames: Union["Labels", List[LabeledFrame]], unify: bool = False
     ):
-        """
-        Merge data from another `Labels` object or `LabeledFrame` list.
+        """Merge data from another `Labels` object or `LabeledFrame` list.
 
         Arg:
             new_frames: the object from which to copy data
@@ -1212,8 +1181,7 @@ class Labels(MutableSequence):
     def complex_merge_between(
         cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
     ) -> tuple:
-        """
-        Merge frames and other data from one dataset into another.
+        """Merge frames and other data from one dataset into another.
 
         Anything that can be merged cleanly is merged into base_labels.
 
@@ -1276,14 +1244,11 @@ class Labels(MutableSequence):
     def finish_complex_merge(
         base_labels: "Labels", resolved_frames: List[LabeledFrame]
     ):
-        """
-        Finish conflicted merge from complex_merge_between.
+        """Finish conflicted merge from complex_merge_between.
 
         Args:
             base_labels: the `Labels` that we're merging into
             resolved_frames: the list of frames to add into base_labels
-        Returns:
-            None.
         """
         # Add all the resolved frames to base
         base_labels.labeled_frames.extend(resolved_frames)
@@ -1308,13 +1273,10 @@ class Labels(MutableSequence):
                 dict_a[key] = dict_b[key]
 
     def merge_matching_frames(self, video: Optional[Video] = None):
-        """
-        Merge `LabeledFrame` objects that are for the same video frame.
+        """Merge `LabeledFrame` objects that are for the same video frame.
 
         Args:
             video: combine for this video; if None, do all videos
-        Returns:
-            None
         """
         if video is None:
             for vid in {lf.video for lf in self.labeled_frames}:
@@ -1324,16 +1286,15 @@ class Labels(MutableSequence):
                 self.labeled_frames, video=video
             )
 
-    def to_dict(self, skip_labels: bool = False):
-        """
-        Serialize all labels in the underling list of LabeledFrames to a
-        dict structure. This function returns a nested dict structure
-        composed entirely of primitive python types. It is used to create
-        JSON and HDF5 serialized datasets.
+    def to_dict(self, skip_labels: bool = False) -> Dict[str, Any]:
+        """Serialize all labels to dicts.
+
+        Serializes the labels in the underling list of LabeledFrames to a dict
+        structure. This function returns a nested dict structure composed entirely of
+        primitive python types. It is used to create JSON and HDF5 serialized datasets.
 
         Args:
-            skip_labels: If True, skip labels serialization and just do the
-            metadata.
+            skip_labels: If True, skip labels serialization and just do the metadata.
 
         Returns:
             A dict containing the followings top level keys:
@@ -1347,7 +1308,6 @@ class Labels(MutableSequence):
             * suggestions - The suggested frames.
             * negative_anchors - The negative training sample anchors.
         """
-
         # FIXME: Update list of nodes
         # We shouldn't have to do this here, but for some reason we're missing nodes
         # which are in the skeleton but don't have points (in the first instance?).
@@ -1400,14 +1360,11 @@ class Labels(MutableSequence):
         return dicts
 
     def to_json(self):
-        """
-        Serialize all labels in the underling list of LabeledFrame(s) to a
-        JSON structured string.
+        """Serialize all labels in the underling list of LabeledFrame(s) to JSON.
 
         Returns:
             The JSON representation of the string.
         """
-
         # Unstructure the data into dicts and dump to JSON.
         return json_dumps(self.to_dict())
 
@@ -1442,9 +1399,6 @@ class Labels(MutableSequence):
 
         Raises:
             ValueError: If cannot detect valid filetype.
-
-        Returns:
-            None.
         """
         # Convert to full (absolute) path
         filename = os.path.abspath(filename)
@@ -1531,9 +1485,8 @@ class Labels(MutableSequence):
 
     def save_frame_data_imgstore(
         self, output_dir: str = "./", format: str = "png", all_labels: bool = False
-    ):
-        """
-        Write images for labeled frames from all videos to imgstore datasets.
+    ) -> List[ImgStoreVideo]:
+        """Write images for labeled frames from all videos to imgstore datasets.
 
         This only writes frames that have been labeled. Videos without
         any labeled frames will be included as empty imgstores.
@@ -1576,9 +1529,8 @@ class Labels(MutableSequence):
 
     def save_frame_data_hdf5(
         self, output_path: str, format: str = "png", all_labels: bool = False
-    ):
-        """
-        Write images for labeled frames from all videos to hdf5 file.
+    ) -> List[HDF5Video]:
+        """Write images for labeled frames from all videos to hdf5 file.
 
         Note that this will make an HDF5 video, not an HDF5 labels dataset.
 
@@ -1618,8 +1570,7 @@ class Labels(MutableSequence):
     def make_video_callback(
         cls, search_paths: Optional[List] = None, use_gui: bool = False
     ) -> Callable:
-        """
-        Create a callback for finding missing videos.
+        """Create a callback for finding missing videos.
 
         The callback can be used while loading a saved project and
         allows the user to find videos which have been moved (or have
