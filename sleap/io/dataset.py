@@ -568,6 +568,11 @@ class Labels(MutableSequence):
                 "in the labels. Use Labels.videos instead."
                 )
 
+    @property
+    def has_missing_videos(self) -> bool:
+        """Return True if any of the video files in the labels are missing."""
+        return any(video.is_missing for video in self.videos)
+
     def __len__(self) -> int:
         """Returns number of labeled frames."""
         return len(self.labeled_frames)
