@@ -1,3 +1,16 @@
+"""
+Logic for determining what color/width to draw instance nodes/edges.
+
+The color can be determined by the current color palette as well as settings
+on the `ColorManager` object:
+
+* distinctly_color: "instances", "nodes", or "edges"
+* color_predicted: whether to use colors for predicted instances, or just plot
+  them in yellow/grey
+
+Initial color palette (and other settings, like default line width) is read
+from user preferences but can be changed after object is created.
+"""
 from typing import Any, Optional, Union, Tuple
 
 import yaml
@@ -174,6 +187,7 @@ class ColorManager(object):
         return self.default_pen_width
 
     def get_item_type_pen_width(self, item_type: str):
+        """Gets pen width to use for given item type (as string)."""
         if item_type == "node":
             if self.distinctly_color == "nodes":
                 return self.thick_pen_width
