@@ -1,3 +1,9 @@
+"""
+Handles SLEAP preferences.
+
+Importing this module creates `prefs`, instance of `Preferences` class.
+"""
+
 from sleap import util
 
 
@@ -25,10 +31,12 @@ class Preferences(object):
         self.load()
 
     def load(self):
+        """Load preferences from file, if not already loaded."""
         if self._prefs is None:
             self.load_()
 
     def load_(self):
+        """Load preferences from file (regardless of whether loaded already)."""
         try:
             self._prefs = util.get_config_yaml(self._filename)
             if not hasattr(self._prefs, "get"):
@@ -37,6 +45,7 @@ class Preferences(object):
             self._prefs = self._defaults
 
     def save(self):
+        """Save preferences to file."""
         util.save_config_yaml(self._filename, self._prefs)
 
     def _validate_key(self, key):
@@ -58,4 +67,6 @@ class Preferences(object):
 
 
 prefs = Preferences()
+
+# save preference so that user editable file is created if it doesn't exist
 prefs.save()
