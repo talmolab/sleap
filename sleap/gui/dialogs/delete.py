@@ -1,12 +1,32 @@
+"""
+Dialog for deleting various subsets of instances in dataset.
+"""
+
+from sleap import LabeledFrame, Instance
 from sleap.gui.dialogs import formbuilder
 
 from PySide2 import QtCore, QtWidgets
 
+from typing import List, Text, Tuple
+
 
 class DeleteDialog(QtWidgets.QDialog):
+    """
+    Dialog for deleting various subsets of instances in dataset.
+
+    Args:
+        context: The `CommandContext` from which this dialog is being
+            shown. The context provides both a `labels` (`Labels`) and a
+            `state` (`GuiState`).
+
+    """
+
+    # NOTE: use type by name (rather than importing CommandContext) to avoid
+    # circular includes.
     def __init__(
         self, context: "CommandContext", *args, **kwargs,
     ):
+
         super(DeleteDialog, self).__init__(*args, **kwargs)
 
         self.context = context
@@ -95,7 +115,7 @@ class DeleteDialog(QtWidgets.QDialog):
 
         return buttons_layout_widget
 
-    def getSelectedTrack(self):
+    def get_selected_track(self):
         track_menu_idx = self.tracks_menu.currentIndex()
         track_idx = track_menu_idx - self._track_idx_offset
 
@@ -104,7 +124,11 @@ class DeleteDialog(QtWidgets.QDialog):
 
         return None
 
-    def get_frames_instances(self, instance_type_value, frames_value, tracks_value):
+    def get_frames_instances(
+        self, instance_type_value: Text, frames_value: Text, tracks_value: Text
+    ) -> List[Tuple[LabeledFrame, Instance]]:
+        """Get list of instances based on drop-down menu options selected."""
+
         def inst_condition(inst):
             if instance_type_value.startswith("predicted"):
                 if not hasattr(inst, "score"):
@@ -121,7 +145,7 @@ class DeleteDialog(QtWidgets.QDialog):
                 if inst.track is not None:
                     return False
             else:
-                track_to_match = self.getSelectedTrack()
+                track_to_match = self.get_selected_track()
                 if track_to_match:
                     if inst.track != track_to_match:
                         return False
@@ -182,7 +206,7 @@ class DeleteDialog(QtWidgets.QDialog):
         # print(tracks_value)
         self._delete(lf_inst_list)
 
-    def _delete(self, lf_inst_list):
+    def _delete(self, lf_inst_list: List[Tuple[LabeledFrame, Instance]]):
         # Delete the instances
         for lf, inst in lf_inst_list:
             self.context.labels.remove_instance(lf, inst, in_transaction=True)
