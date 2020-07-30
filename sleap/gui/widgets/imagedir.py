@@ -30,7 +30,9 @@ class QtImageDirectoryWidget(QtVideoPlayer):
         super(QtImageDirectoryWidget, self).__init__()
         self.seekbar.tick_index_offset = 0  # show frame numbers indexed by 0
         self.changedPlot.connect(
-            lambda vp, idx, select_idx: self.setWindowTitle(self.getFrameTitle(idx))
+            lambda vp, idx, select_idx: self.setWindowTitle(
+                self._get_win_title_for_frame(idx)
+            )
         )
 
         self.resize(360, 400)
@@ -45,24 +47,28 @@ class QtImageDirectoryWidget(QtVideoPlayer):
         else:
             self.poll()
 
-    def getFrameTitle(self, frame_idx):
+    def _get_win_title_for_frame(self, frame_idx: int) -> Text:
+        """Get window title to use based on specified frame."""
         return (
             os.path.basename(self.files[frame_idx])
             if frame_idx < len(self.files)
             else ""
         )
 
-    def setFilter(self, filter_idx):
+    def setFilter(self, filter_idx: int):
+        """Set filter (by number) for which files in directory to show."""
         self.filter_idx = filter_idx
         self.poll()
 
-    def getFilterMask(self):
+    @property
+    def _current_filter_mask(self) -> Text:
         if not self.filters:
             return "*"
         return self.filters[self.filter_idx][1]
 
     def poll(self):
-        path = os.path.join(self.directory, self.getFilterMask())
+        """Re-scans directory (using current filter) and updates widget."""
+        path = os.path.join(self.directory, self._current_filter_mask)
         print(f"Polling: {path}")
 
         files = glob.glob(path)
@@ -91,7 +97,17 @@ class QtImageDirectoryWidget(QtVideoPlayer):
                 )
 
     @classmethod
-    def make_training_vizualizer(cls, run_path: Text):
+    def make_training_vizualizer(cls, run_path: Text) -> "QtImageDirectoryWidget":
+        """
+        Factory method for only currently use-case of this widget.
+
+        Args:
+            run_path: The run path directory for model, should contain viz
+                subdirectory.
+
+        Returns:
+            Instance of `QtImageDirectoryWidget` widget.
+        """
         dir = os.path.join(run_path, "viz")
         filters = [("Validation", "validation.*.png"), ("Training", "train.*.png")]
         win = QtImageDirectoryWidget(dir, filters=filters)
@@ -103,8 +119,12 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
-    run_path = "tests/data/json_format_v1/models/200130_155013.UNet.centroids/"
-    window = QtImageDirectoryWidget.make_training_viz(run_path)
+    # run_path = "tests/data/json_format_v1/models/200420_100503.centroid.70"
+    # window = QtImageDirectoryWidget.make_training_vizualizer(run_path)
+    window = QtImageDirectoryWidget(
+        directory="tests/data/videos/",
+        filters=[("JPEG", "*.jpg"), ("Robot 1", "*1.jpg")],
+    )
 
     window.show()
     window.plot()
