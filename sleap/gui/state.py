@@ -1,10 +1,14 @@
 """
 Module with object for storing and accessing gui state variables.
 
-Each project open in the GUI will have its own instance of GuiState. The state
-object makes it easier to separate code which updates state (e.g., sets current
-frame or current video) and code which updates the GUI in response to state-
-change.
+Each project open in the GUI will have its own instance of GuiState, as will any
+video player (`QtVideoPlayer` widget) which shows different images than in the
+main app GUI (e.g., `QtImageDirectoryWidget` used for visualizing results
+during training).
+
+The state object makes it easier to separate code which updates state (e.g.,
+sets current frame or current video) and code which updates the GUI in response
+to state-change.
 
 The state object is effectively a dictionary which allows you to bind functions
 to keys so that the functions each get called when the value for that key
