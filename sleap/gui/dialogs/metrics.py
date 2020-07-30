@@ -1,3 +1,7 @@
+"""
+Dialog/widgets for showing metrics on trained models.
+"""
+
 from PySide2 import QtWidgets, QtCore
 
 import numpy as np
@@ -15,7 +19,20 @@ from typing import Optional, Text
 
 
 class MetricsTableDialog(QtWidgets.QWidget):
-    def __init__(self, labels_filename: Text):
+    """Dialog for showing table with multiple models.
+
+    The dialog is can show multiple models, including those which don't
+    already have metrics (ideally you'd be able to generate evals but this isn't
+    currently supported).
+
+    You can then view details on the models (hyperparameters or more detailed
+    metrics).
+
+    The typical use-case is to init dialog with path to labels file, and it
+    will then show all trained models found within subdirectories.
+    """
+
+    def __init__(self, labels_filename: Text = ""):
         super(MetricsTableDialog, self).__init__()
 
         labels_filename = labels_filename or ""
@@ -63,17 +80,20 @@ class MetricsTableDialog(QtWidgets.QWidget):
         self.setMinimumWidth(1200)
 
     def _update_gui(self, *args):
+        """Enables/disables buttons as appropriate for table row selection."""
         is_selected = self.table_view.state["selected_trained_model"] is not None
         self._view_model_btn.setEnabled(is_selected)
         self._view_metrics_btn.setEnabled(is_selected)
 
     def _update_cfgs(self):
+        """Searches for models and updates table."""
         self._cfg_getter.update()
         cfgs = self._cfg_getter.get_filtered_configs(only_trained=True)
         self.table_model.items = cfgs
         self.table_view.resizeColumnsToContents()
 
     def _add_model_action(self):
+        """Method called when user clicks 'add models' button."""
         dir = FileDialog.openDir(None, dir=None, caption="")
 
         if dir:
@@ -81,12 +101,22 @@ class MetricsTableDialog(QtWidgets.QWidget):
             self._update_cfgs()
 
     def _show_model(self, cfg_info: Optional[ConfigFileInfo] = None):
+        """Method to show both hyperparam and metrics windows."""
         self._show_model_params(cfg_info)
         self._show_metric_details(cfg_info)
 
     def _show_model_params(
         self, cfg_info: Optional[ConfigFileInfo] = None, model_detail_widgets=dict()
     ):
+        """
+        Method to show dialog with hyperparameters for model.
+
+        Args:
+            cfg_info: The `ConfigFileInfo` for the model to show; if None,
+                then show for model currently selected in table.
+            model_detail_widgets: Not user param; cache for widgets so that we
+                don't create new window if user views same model twice.
+        """
         if cfg_info is None:
             cfg_info = self.table_view.getSelectedRowItem()
 
@@ -103,6 +133,15 @@ class MetricsTableDialog(QtWidgets.QWidget):
     def _show_metric_details(
         self, cfg_info: Optional[ConfigFileInfo] = None, metric_detail_widgets=dict()
     ):
+        """
+        Method to show dialog with metrics for model.
+
+        Args:
+            cfg_info: The `ConfigFileInfo` for the model to show; if None,
+                then show for model currently selected in table.
+            metric_detail_widgets: Not user param; cache for widgets so that we
+                don't create new window if user views same model twice.
+        """
         if cfg_info is None:
             cfg_info = self.table_view.getSelectedRowItem()
 
@@ -116,6 +155,10 @@ class MetricsTableDialog(QtWidgets.QWidget):
 
 
 class MetricsTableModel(GenericTableModel):
+    """
+    Model (i.e. Qt model/view) for table in MetricsTableDialog.
+    """
+
     properties = (
         "Path",
         "Timestamp",
@@ -214,6 +257,14 @@ METRICS_KEY_LABELS = {
 
 
 class DetailedMetricsDialog(QtWidgets.QWidget):
+    """
+    Dialog to show detailed metrics for a trained model.
+
+    Args:
+        cfg_info: The `ConfigFileInfo` object (from `TrainingConfigsGetter`)
+            for the model we want to show.
+    """
+
     def __init__(self, cfg_info: ConfigFileInfo):
         super(DetailedMetricsDialog, self).__init__()
 
@@ -245,19 +296,25 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
                     text_widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
                     metrics_layout.addRow(f"<b>{key_str}</b>:", text_widget)
 
-        metrics_widget = QtWidgets.QWidget()
-        metrics_widget.setLayout(metrics_layout)
+            metrics_widget = QtWidgets.QWidget()
+            metrics_widget.setLayout(metrics_layout)
 
-        self.canvas = MplCanvas(dpi=50)
+            self.canvas = MplCanvas(dpi=50)
 
-        layout.addWidget(metrics_widget)
-        layout.addWidget(self.canvas)
+            layout.addWidget(metrics_widget)
+            layout.addWidget(self.canvas)
+
+            self._plot_distances()
+        else:
+            text_widget = QtWidgets.QLabel(
+                "Metrics have not been generated for this model."
+            )
+            layout.addWidget(text_widget)
 
         self.setLayout(layout)
 
-        self.plot_distances()
-
-    def plot_distances(self):
+    def _plot_distances(self):
+        """Plots node distances (using matplotlib widget)."""
         ax = self.canvas.axes
 
         node_names = self.skeleton.node_names if self.skeleton else None
@@ -279,7 +336,8 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
         ax.set_xlim([0, xmax])
         ax.set_xlabel("Error (px)")
 
-    def plot_oks(self):
+    def _plot_oks(self):
+        """Plots OKS -- not currently used."""
         ax = self.canvas.axes
         metrics = self.metrics
 
@@ -294,3 +352,13 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
             )
         ax.set_xlabel("Recall")
         ax.set_ylabel("Precision")
+
+
+# if __name__ == "__main__":
+#     from PySide2.QtWidgets import QApplication
+#
+#     app = QApplication([])
+#     window = MetricsTableDialog("")
+#     window.show()
+#
+#     app.exec_()
