@@ -46,8 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 def replace_path(video_list: List[dict], new_paths: List[Text]):
-    """Replaces video paths in *unstructured* video objects."""
-
+    """Replace video paths in unstructured video objects."""
     if isinstance(new_paths, str):
         new_paths = [new_paths] * len(video_list)
 
@@ -56,13 +55,15 @@ def replace_path(video_list: List[dict], new_paths: List[Text]):
 
 
 def find_frame_pairs(
-    labels_gt: Labels, labels_pr: Labels
+    labels_gt: Labels, labels_pr: Labels, user_labels_only: bool = True
 ) -> List[Tuple[LabeledFrame, LabeledFrame]]:
     """Find corresponding frames across two sets of labels.
 
     Args:
         labels_gt: A `sleap.Labels` instance with ground truth instances.
         labels_pr: A `sleap.Labels` instance with predicted instances.
+        user_labels_only: If False, frames with predicted instances in `labels_gt` will
+            also be considered for matching.
 
     Returns:
         A list of pairs of `sleap.LabeledFrame`s in the form `(frame_gt, frame_pr)`.
@@ -82,10 +83,12 @@ def find_frame_pairs(
         if video_pr is None:
             continue
 
-        # Find user labeled frames in this video.
-        labeled_frames_gt = [
-            lf for lf in labels_gt.find(video_gt) if lf.has_user_instances
-        ]
+        # Find labeled frames in this video.
+        labeled_frames_gt = labels_gt.find(video_gt)
+        if user_labels_only:
+            labeled_frames_gt = [
+                lf for lf in labeled_frames_gt if lf.has_user_instances
+            ]
 
         # Attempt to match each labeled frame in the ground truth.
         for labeled_frame_gt in labeled_frames_gt:
@@ -107,7 +110,7 @@ def find_frame_pairs(
 
 
 def compute_instance_area(points: np.ndarray) -> np.ndarray:
-    """Computes the area of the bounding box of a set of keypoints.
+    """Compute the area of the bounding box of a set of keypoints.
 
     Args:
         points: A numpy array of coordinates.
@@ -130,7 +133,7 @@ def compute_oks(
     scale: Optional[float] = None,
     stddev: float = 0.025,
 ) -> np.ndarray:
-    """Computes the object keypoints similarity between sets of points.
+    """Compute the object keypoints similarity between sets of points.
 
     Args:
         points_gt: Ground truth instances of shape (n_gt, n_nodes, n_ed),
@@ -166,7 +169,6 @@ def compute_oks(
         Ronch & Perona. "Benchmarking and Error Diagnosis in Multi-Instance Pose
         Estimation." ICCV (2017).
     """
-
     if points_gt.ndim != 3 or points_pr.ndim != 3:
         raise ValueError(
             "Points must be rank-3 with shape (n_instances, n_nodes, n_ed)."
@@ -237,6 +239,7 @@ def match_instances(
     stddev: float = 0.025,
     scale: Optional[float] = None,
     threshold: float = 0,
+    user_labels_only: bool = True,
 ) -> Tuple[List[Tuple[Instance, PredictedInstance, float]], List[Instance]]:
     """Match pairs of instances between ground truth and predictions in a frame.
 
@@ -248,6 +251,8 @@ def match_instances(
             be used.
         threshold: The minimum OKS between a candidate pair of instances to be
             considered a match.
+        user_labels_only: If False, predicted instances in the ground truth frame may be
+            considered for matching.
 
     Returns:
         A tuple of (`positive_pairs`, `false_negatives`).
@@ -278,16 +283,25 @@ def match_instances(
     idxs_pr = np.argsort(-scores_pr, kind="mergesort")  # descending
     scores_pr = scores_pr[idxs_pr]
 
-    available_instances_gt = frame_gt.user_instances
+    if user_labels_only:
+        available_instances_gt = frame_gt.user_instances
+    else:
+        available_instances_gt = frame_gt.instances
+    available_instances_gt_idxs = list(range(len(available_instances_gt)))
+
     positive_pairs = []
     for idx_pr in idxs_pr:
         # Pull out predicted instance.
         instance_pr = frame_pr.instances[idx_pr]
 
         # Convert instances to point arrays.
-        points_pr = np.expand_dims(instance_pr.points_array, axis=0)
+        points_pr = np.expand_dims(instance_pr.numpy(), axis=0)
         points_gt = np.stack(
-            [instance.points_array for instance in available_instances_gt], axis=0
+            [
+                available_instances_gt[idx].numpy()
+                for idx in available_instances_gt_idxs
+            ],
+            axis=0,
         )
 
         # Find the best match by computing OKS.
@@ -302,16 +316,19 @@ def match_instances(
             continue
 
         # Remove matched ground truth instance and add as a positive pair.
-        instance_gt = available_instances_gt.pop(best_match_gt_idx)
+        instance_gt_idx = available_instances_gt_idxs.pop(best_match_gt_idx)
+        instance_gt = available_instances_gt[instance_gt_idx]
         positive_pairs.append((instance_gt, instance_pr, best_match_oks))
 
-        # Stop matching lower scoring instances if we run out of
-        # candidates in the ground truth.
-        if not available_instances_gt:
+        # Stop matching lower scoring instances if we run out of candidates in the
+        # ground truth.
+        if not available_instances_gt_idxs:
             break
 
     # Any remaining ground truth instances are considered false negatives.
-    false_negatives = available_instances_gt
+    false_negatives = [
+        available_instances_gt[idx] for idx in available_instances_gt_idxs
+    ]
 
     return positive_pairs, false_negatives
 
@@ -321,6 +338,7 @@ def match_frame_pairs(
     stddev: float = 0.025,
     scale: Optional[float] = None,
     threshold: float = 0,
+    user_labels_only: bool = True,
 ) -> Tuple[List[Tuple[Instance, PredictedInstance, float]], List[Instance]]:
     """Match all ground truth and predicted instances within each pair of frames.
 
@@ -334,6 +352,8 @@ def match_frame_pairs(
             be used.
         threshold: The minimum OKS between a candidate pair of instances to be
             considered a match.
+        user_labels_only: If False, predicted instances in the ground truth frame may be
+            considered for matching.
 
     Returns:
         A tuple of (`positive_pairs`, `false_negatives`).
@@ -349,7 +369,12 @@ def match_frame_pairs(
     false_negatives = []
     for frame_gt, frame_pr in frame_pairs:
         positive_pairs_frame, false_negatives_frame = match_instances(
-            frame_gt, frame_pr, stddev=stddev, scale=scale, threshold=threshold
+            frame_gt,
+            frame_pr,
+            stddev=stddev,
+            scale=scale,
+            threshold=threshold,
+            user_labels_only=user_labels_only,
         )
         positive_pairs.extend(positive_pairs_frame)
         false_negatives.extend(false_negatives_frame)
@@ -559,6 +584,7 @@ def evaluate(
     oks_stddev: float = 0.025,
     oks_scale: Optional[float] = None,
     match_threshold: float = 0,
+    user_labels_only: bool = True,
 ) -> Dict[Text, Union[float, np.ndarray]]:
     """Calculate all metrics from ground truth and predicted labels.
 
@@ -571,19 +597,27 @@ def evaluate(
             keypoint similarity; see `compute_oks` function for details.
         match_threshold: The threshold to use on oks scores when determining
             which instances match between ground truth and predicted frames.
+        user_labels_only: If False, predicted instances in the ground truth frame may be
+            considered for matching.
 
     Returns:
         Dict, keys are strings, values are metrics (floats or ndarrays).
     """
     metrics = dict()
 
-    frame_pairs = find_frame_pairs(labels_gt, labels_pr)
+    frame_pairs = find_frame_pairs(
+        labels_gt, labels_pr, user_labels_only=user_labels_only
+    )
 
     if not frame_pairs:
         return metrics
 
     positive_pairs, false_negatives = match_frame_pairs(
-        frame_pairs, stddev=oks_stddev, scale=oks_scale, threshold=match_threshold
+        frame_pairs,
+        stddev=oks_stddev,
+        scale=oks_scale,
+        threshold=match_threshold,
+        user_labels_only=user_labels_only,
     )
     dists = compute_dists(positive_pairs)
 

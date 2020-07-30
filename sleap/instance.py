@@ -27,6 +27,7 @@ from typing import Dict, List, Optional, Union, Tuple
 
 from numpy.lib.recfunctions import structured_to_unstructured
 
+import sleap
 from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
 
@@ -1502,5 +1503,35 @@ class LabeledFrame:
 
     @property
     def image(self) -> np.ndarray:
-        """Returns the image for this frame of shape (height, width, channels)."""
+        """Return the image for this frame of shape (height, width, channels)."""
         return self.video.get_frame(self.frame_idx)
+
+    def plot(self, image: bool = True):
+        """Plot the frame with all instances.
+
+        Args:
+            image: If False, only the instances will be plotted without loading the
+                original image.
+
+        Notes:
+            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
+            options.
+        """
+        if image:
+            sleap.nn.viz.plot_img(self.image)
+        sleap.nn.viz.plot_instances(self.instances)
+
+    def plot_predicted(self, image: bool = True):
+        """Plot the frame with all predicted instances.
+
+        Args:
+            image: If False, only the instances will be plotted without loading the
+                original image.
+
+        Notes:
+            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
+            options.
+        """
+        if image:
+            sleap.nn.viz.plot_img(self.image)
+        sleap.nn.viz.plot_instances(self.predicted_instances)

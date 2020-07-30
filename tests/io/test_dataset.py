@@ -1,11 +1,12 @@
 import os
 import pytest
 import numpy as np
+from pathlib import Path
 
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
-from sleap.io.dataset import Labels
+from sleap.io.dataset import Labels, load_file
 from sleap.io.legacy import load_labels_json_old
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 
@@ -208,6 +209,10 @@ def test_label_accessors(centered_pair_labels):
     assert labels[61].video == video
     assert labels[61].frame_idx == 954
 
+    assert labels[np.int64(0)] == labels[0]
+    assert labels[np.int64(61)] == labels[61]
+    assert labels[np.array([0, 61])] == labels[[0, 61]]
+
     assert len(labels.find(video, frame_idx=954)) == 1
     assert len(labels.find(video, 954)) == 1
     assert labels.find(video, 954)[0] == labels[61]
@@ -227,6 +232,55 @@ def test_label_accessors(centered_pair_labels):
     assert len(labels.find(dummy_video)) == 0
     with pytest.raises(KeyError):
         labels[dummy_video]
+
+
+def test_scalar_properties():
+    # Scalar
+    dummy_video = Video(backend=MediaVideo)
+    dummy_skeleton = Skeleton()
+    dummy_instance = Instance(dummy_skeleton)
+    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance])
+
+    labels = Labels()
+    labels.append(dummy_frame)
+
+    assert labels.video == dummy_video
+    assert labels.skeleton == dummy_skeleton
+
+    # Empty
+    labels = Labels()
+    with pytest.raises(ValueError):
+        labels.video
+    with pytest.raises(ValueError):
+        labels.skeleton
+
+    # More than one video
+    dummy_skeleton = Skeleton()
+    labels = Labels()
+    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
+    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
+    assert labels.skeleton == dummy_skeleton
+    with pytest.raises(ValueError):
+        labels.video
+
+    # More than one skeleton
+    dummy_video = Video(backend=MediaVideo)
+    labels = Labels()
+    labels.append(LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())]))
+    labels.append(LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())]))
+    assert labels.video == dummy_video
+    with pytest.raises(ValueError):
+        labels.skeleton
+
+
+def test_has_missing_videos():
+    labels = Labels()
+    labels.add_video(Video.from_filename("small_robot.mp4"))
+    assert labels.has_missing_videos
+
+    labels = Labels()
+    labels.add_video(Video.from_filename("tests/data/videos/small_robot.mp4"))
+    assert not labels.has_missing_videos
 
 
 def test_label_mutability():
@@ -826,6 +880,28 @@ def test_path_fix_with_new_full_path(tmpdir):
     # Make sure we got the actual video path by searching that directory
     assert len(labels.videos) == 1
     assert labels.videos[0].filename == "tests/data/videos/small_robot.mp4"
+
+
+def test_load_file(tmpdir):
+    labels = Labels()
+    filename = os.path.join(tmpdir, "test.h5")
+    labels.add_video(Video.from_filename("small_robot.mp4"))
+    Labels.save_hdf5(filename=filename, labels=labels)
+
+    # Fix video path from full path
+    labels = load_file(filename, search_paths="tests/data/videos/small_robot.mp4")
+    assert Path(labels.video.filename).samefile("tests/data/videos/small_robot.mp4")
+
+    # No auto-detect
+    labels = load_file(filename, detect_videos=False)
+    assert labels.video.filename == "small_robot.mp4"
+
+    # Fix video path by searching in the labels folder
+    tmpvid = tmpdir.join("small_robot.mp4")
+    tmpvid.write("")  # dummy file
+    assert load_file(filename).video.filename == tmpvid
+    assert load_file(filename, search_paths=str(tmpdir)).video.filename == tmpvid
+    assert load_file(filename, search_paths=str(tmpvid)).video.filename == tmpvid
 
 
 def test_local_path_save(tmpdir, monkeypatch):
