@@ -1,3 +1,13 @@
+"""
+Qt widget for showing images from a directory.
+
+There's a seekbar to move between images, and an optional drop-down menu
+to select different filename filters (e.g., "validation.*.png").
+
+The typical use-case is to show predictions for each training epoch on the
+training/validation images. For this use-case, there's a factory method which
+creates widgets with relevant filters from a given training run path.
+"""
 from sleap import Video
 from sleap.gui.widgets.video import QtVideoPlayer
 
