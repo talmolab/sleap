@@ -1,3 +1,6 @@
+"""
+Widget for previewing receptive field on sample image using model hyperparams.
+"""
 from sleap import Video
 from sleap.gui.learning import utils
 from sleap.nn.config import ModelConfig
@@ -9,7 +12,18 @@ from PySide2 import QtWidgets, QtGui, QtCore
 
 
 class ReceptiveFieldWidget(QtWidgets.QWidget):
-    def __init__(self, head_name: Text, *args, **kwargs):
+    """
+    Widget for previewing receptive field on sample image, with caption.
+
+    Args:
+        head_name: If given, then used in caption to show which model the
+            preview is for.
+
+    Usage:
+        Create, then call `setImage` and `setModelConfig` methods.
+    """
+
+    def __init__(self, head_name: Text = "", *args, **kwargs):
         super(ReceptiveFieldWidget, self).__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -30,9 +44,10 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
-    def getInfoText(
+    def _get_info_text(
         self, size, scale, max_stride, down_blocks, convs_per_block, kernel_size
     ) -> Text:
+        """Returns text explaining how receptive field size is determined."""
         result = self._info_text_header
         if size:
             result += f"<p><i>{size} pixels</i></p>"
@@ -60,10 +75,11 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         return result
 
     def setModelConfig(self, model_cfg: ModelConfig, scale: float):
+        """Updates receptive field preview from model config."""
         rf_info = utils.receptive_field_info_from_model_cfg(model_cfg)
 
         self._info_widget.setText(
-            self.getInfoText(
+            self._get_info_text(
                 size=rf_info["size"],
                 scale=scale,
                 max_stride=rf_info["max_stride"],
@@ -73,13 +89,16 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
             )
         )
 
-        self._field_image_widget.setFieldSize(rf_info["size"] or 0, scale)
+        self._field_image_widget._set_field_size(rf_info["size"] or 0, scale)
 
     def setImage(self, *args, **kwargs):
+        """Sets image on which receptive field box will be drawn."""
         self._field_image_widget.setImage(*args, **kwargs)
 
 
 class ReceptiveFieldImageWidget(GraphicsView):
+    """Widget for showing image with receptive field."""
+
     def __init__(self, *args, **kwargs):
         self._widget_size = 200
         self._pen_width = 4
@@ -101,14 +120,18 @@ class ReceptiveFieldImageWidget(GraphicsView):
         # self.zoomToRect(QtCore.QRectF(0, 0, 1, 1))
 
     def viewportEvent(self, event):
+        """
+        Re-draw receptive field when needed by overriding QGraphicsView method.
+        """
         # Update the position and visible size of field
         if isinstance(event, QtGui.QPaintEvent):
-            self.setFieldSize()
+            self._set_field_size()
 
         # Now draw the viewport
         return super(ReceptiveFieldImageWidget, self).viewportEvent(event)
 
-    def setFieldSize(self, size: Optional[int] = None, scale: float = 1.0):
+    def _set_field_size(self, size: Optional[int] = None, scale: float = 1.0):
+        """Draws receptive field preview rect, updating size if needed."""
         if size is not None:
             self._box_size = size
             self._scale = scale
@@ -143,7 +166,7 @@ def demo_receptive_field():
 
     win = ReceptiveFieldImageWidget()
     win.setImage(video.get_frame(0))
-    win.setFieldSize(50)
+    win._set_field_size(50)
 
     win.show()
     app.exec_()
