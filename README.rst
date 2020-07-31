@@ -1,14 +1,14 @@
 .. inclusion-marker-do-not-remove
 
-|Appveyor Build Status| |GitHub release|
+|Appveyor Build Status| |Coverage| |GitHub release|
 
 .. |Appveyor Build Status| image:: 
    https://ci.appveyor.com/api/projects/status/tf5qlylwqse8ack5/branch/master?svg=true 
    :target: https://ci.appveyor.com/project/talmo/sleap
    :alt: Appveyor build status
 
-
-.. |Coverage| image:: https://coveralls.io/repos/github/murthylab/sleap/badge.svg?branch=master
+.. |Coverage| image::
+   https://coveralls.io/repos/github/murthylab/sleap/badge.svg?branch=master
    :target: https://coveralls.io/github/murthylab/sleap?branch=master
 
 
