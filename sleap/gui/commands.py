@@ -1,5 +1,29 @@
 """
 Module for gui command context and commands objects.
+
+Each open project (i.e., `MainWindow`) will have its own `CommandContext`.
+The context enables commands to access and modify the `GuiState` and `Labels`,
+as well as potentially maintaining a command history (so we can add support for
+undo!). See `sleap.gui.app` for how the context is created and used.
+
+Every command will have both a method in `CommandContext` (this is what should
+be used to trigger the command, e.g., connected to the menu action) and a
+class which inherits from `AppCommand` (or a more specialized class such as
+`NavCommand`, `GoIteratorCommand`, or `EditCommand`). Note that this code relies
+on inheritance, so some care and attention is required.
+
+A typical command will override the `ask` and `do_action` methods. If the
+command updates something which affects the GUI, it should override the `topic`
+attribute (this then gets passed back to the `update_callback` from the context.
+If a command doesn't require any input from the user, then it doesn't need to
+override the `ask` method.
+
+If it's not possible to separate the GUI "ask" and the non-GUI "do" code, then
+instead of `ask` and `do_action` you should add an `ask_and_do` method
+(for instance, `DeleteDialogCommand` and `MergeProject` show dialogues which
+handle both the GUI and the action). Ideally we'd endorse separation of "ask"
+and "do" for all commands (this is important if we're going to implement undo)--
+for now it's at least easy to see where this separation is violated.
 """
 
 import attr
@@ -31,10 +55,13 @@ from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
 
+# whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
 
 
 class UpdateTopic(Enum):
+    """Topics so context can tell callback what was updated by the command."""
+
     all = 1
     video = 2
     skeleton = 3
@@ -47,8 +74,17 @@ class UpdateTopic(Enum):
     project_instances = 10
 
 
-class AppCommand(ABC):
-    """Abstract Base Class for Commands.
+class AppCommand:
+    """Base class for specific commands.
+
+    Note that this is not an abstract base class. For specific commands, you
+    should override `ask` and/or `do_action` methods, or add an `ask_and_do`
+    method. In many cases you'll want to override the `topics` and `does_edits`
+    attributes. That said, these are not virtual methods/attributes and have
+    are implemented in the base class with default behaviors (i.e., doing
+    nothing).
+
+    You should not override `execute` or `do_with_signal`.
 
     Attributes:
         topics: List of `UpdateTopic` items. Override this to indicate what
@@ -56,10 +92,10 @@ class AppCommand(ABC):
         does_edits: Whether command will modify data that could be saved.
     """
 
-    topics = []
-    does_edits = False
+    topics: List[UpdateTopic] = []
+    does_edits: bool = False
 
-    def execute(self, context: "CommandContext", params=None):
+    def execute(self, context: "CommandContext", params: dict = None):
         """Entry point for running command.
 
         This calls internal methods to gather information required for
@@ -85,7 +121,7 @@ class AppCommand(ABC):
         """
         params = params or dict()
 
-        if hasattr(self, "ask_and_do"):
+        if hasattr(self, "ask_and_do") and callable(self.ask_and_do):
             self.ask_and_do(context, params)
         else:
             okay = self.ask(context, params)
@@ -122,14 +158,21 @@ class AppCommand(ABC):
 
 
 @attr.s(auto_attribs=True)
-class FakeApp(object):
+class FakeApp:
+    """Use if you want to execute commands independently of the GUI app."""
+
     labels: Labels
 
 
 @attr.s(auto_attribs=True, eq=False)
-class CommandContext(object):
+class CommandContext:
     """
     Context within in which commands are executed.
+
+    When you create a new command, you should both create a class for the
+    command (which inherits from `CommandClass`) and add a distinct method
+    for the command in the `CommandContext` class. This method is what should
+    be connected/called from other code to invoke the command.
 
     Attributes:
         state: The `GuiState` object used to store state and pass messages.
@@ -145,13 +188,14 @@ class CommandContext(object):
     _change_stack: List = attr.ib(default=attr.Factory(list))
 
     @classmethod
-    def from_labels(cls, labels: Labels):
+    def from_labels(cls, labels: Labels) -> "CommandContext":
+        """Creates a command context for use independently of GUI app."""
         state = GuiState()
         app = FakeApp(labels)
         return cls(state=state, app=app)
 
     @property
-    def labels(self):
+    def labels(self) -> Labels:
         """Alias to app.labels."""
         return self.app.labels
 
