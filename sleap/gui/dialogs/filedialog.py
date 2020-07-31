@@ -1,5 +1,9 @@
 """
 Wrappers for Qt File Dialogs.
+
+The main improvement is logic which determines whether to use native or non-
+native file dialogs. Native dialogs are usually better but don't work correctly
+on (some?) Ubuntu systems.
 """
 
 import os, re, sys
@@ -7,7 +11,9 @@ import os, re, sys
 from PySide2 import QtWidgets
 
 
-class FileDialog(object):
+class FileDialog:
+    """Substitute for QFileDialog; see class methods for details."""
+
     @classmethod
     def open(cls, *args, **kwargs):
         """
