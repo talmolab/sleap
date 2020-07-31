@@ -1,3 +1,15 @@
+"""
+CLI for TrackCleaner (mostly deprecated).
+
+This runs the track cleaner to (i) cull instances and (ii) connect track breaks
+in predictions which have already been tracked.
+
+The `sleap-track` CLI lets you run (or re-run) tracking on predictions, and
+includes options to cull instances *before* tracking (with more control over
+how instances are selected for culling) and connect track breaks. In most cases
+it will be better to use the `sleap-track` CLI.
+"""
+
 import operator
 from typing import Text
 
