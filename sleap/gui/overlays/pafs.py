@@ -1,3 +1,11 @@
+"""
+Overlay for part affinity fields.
+
+Currently a `DataOverlay` gets data from a model (i.e., it runs inference on the
+current frame) and then uses a `MultiQuiverPlot` object to show the resulting
+part affinity fields.
+"""
+
 from PySide2 import QtWidgets, QtGui, QtCore
 
 import numpy as np
@@ -10,6 +18,8 @@ from sleap.gui.overlays.base import DataOverlay, h5_colors
 
 
 class PafOverlay(DataOverlay):
+    """Class show pafs saved in HDF5 (not currently used)."""
+
     @classmethod
     def from_h5(cls, filename, input_format="channels_last", **kwargs):
         return DataOverlay.from_h5(
@@ -39,7 +49,7 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
         self,
         frame: np.array = None,
         show: list = None,
-        decimation: int = 2,
+        decimation: int = 1,
         scale: float = 1.0,
         *args,
         **kwargs,
@@ -120,7 +130,7 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
             self.field_x, self.field_y = field_x, field_y
 
             h, w = self.field_x.shape
-            h, w = int(h / self.scale), int(w / self.scale)
+            h, w = int(h * self.scale), int(w * self.scale)
 
             self.rect = QtCore.QRectF(0, 0, w, h)
 
@@ -139,7 +149,7 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
             loc_yx = np.moveaxis(grid, 0, -1)
 
             # Adjust by scaling factor
-            loc_yx = loc_yx * (1 / self.scale)
+            loc_yx = loc_yx * self.scale
 
             if self.decimation > 1:
                 delta_yx = self._decimate(raw_delta_yx, self.decimation)
@@ -148,6 +158,8 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
                 loc_yx += self.decimation // 2
             else:
                 delta_yx = raw_delta_yx
+
+            delta_yx = delta_yx * self.scale
 
             # Split into x,y matrices
             loc_y, loc_x = loc_yx[..., 0], loc_yx[..., 1]

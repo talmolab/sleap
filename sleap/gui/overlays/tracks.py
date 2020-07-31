@@ -1,10 +1,12 @@
 """
-Module that handles track-related overlays (including track color).
+Track trail and track list overlays.
 """
+from sleap.gui.overlays.base import BaseOverlay
 from sleap.instance import Track
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.prefs import prefs
+from sleap.gui.widgets.video import QtTextWithBackground
 
 import attr
 
@@ -14,7 +16,7 @@ from PySide2 import QtCore, QtGui
 
 
 @attr.s(auto_attribs=True)
-class TrackTrailOverlay:
+class TrackTrailOverlay(BaseOverlay):
     """Class to show track trails as overlay on video frame.
 
     Initialize this object with both its data source and its visual output
@@ -31,8 +33,6 @@ class TrackTrailOverlay:
         to plot the trails in scene.
     """
 
-    labels: Labels = None
-    player: "QtVideoPlayer" = None
     trail_length: int = 0
     show: bool = True
     max_node_count: Optional[int] = None
@@ -182,18 +182,15 @@ class TrackTrailOverlay:
 
 
 @attr.s(auto_attribs=True)
-class TrackListOverlay:
+class TrackListOverlay(BaseOverlay):
     """
     Class to show track number and names in overlay.
     """
 
-    labels: Labels = None
-    player: "QtVideoPlayer" = None
-    text_box = None
+    text_box: Optional[QtTextWithBackground] = None
 
     def add_to_scene(self, video: Video, frame_idx: int):
         """Adds track list as overlay on video."""
-        from sleap.gui.widgets.video import QtTextWithBackground
 
         html = ""
         num_to_show = min(9, len(self.labels.tracks))
