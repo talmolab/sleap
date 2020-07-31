@@ -7,6 +7,11 @@
    :target: https://ci.appveyor.com/project/talmo/sleap
    :alt: Appveyor build status
 
+
+.. |Coverage| image:: https://coveralls.io/repos/github/murthylab/sleap/badge.svg?branch=master
+   :target: https://coveralls.io/github/murthylab/sleap?branch=master
+
+
 .. |GitHub release| image:: https://img.shields.io/github/release/murthylab/sleap.svg
    :target: https://GitHub.com/murthylab/sleap/releases/
 
