@@ -37,7 +37,7 @@ from sleap.gui.dataviews import (
 )
 
 from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.formbuilder import YamlFormWidget
+from sleap.gui.dialogs.formbuilder import YamlFormWidget, FormBuilderModalDialog
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
@@ -857,6 +857,9 @@ class MainWindow(QMainWindow):
             self.labels, self.player, self.state
         )
 
+        # When gui state changes, we also want to set corresponding attribute
+        # on overlay (or color manager shared by overlays) so that they can
+        # update/redraw as needed.
         def overlay_state_connect(overlay, state_key, overlay_attribute=None):
             overlay_attribute = overlay_attribute or state_key
             self.state.connect(
@@ -1354,8 +1357,23 @@ class MainWindow(QMainWindow):
 
         from sleap.gui.overlays.base import DataOverlay
 
-        overlay = DataOverlay.from_model(
-            filename, self.state["video"], player=self.player
+        predictor = DataOverlay.make_predictor(filename)
+        show_pafs = False
+
+        # If multi-head model with both confmaps and pafs,
+        # ask user which to show.
+        if (
+            predictor.confidence_maps_key_name
+            and predictor.part_affinity_fields_key_name
+        ):
+            results = FormBuilderModalDialog(form_name="head_type_form").get_results()
+            show_pafs = "Part Affinity" in results["head_type"]
+
+        overlay = DataOverlay.from_predictor(
+            predictor=predictor,
+            video=self.state["video"],
+            player=self.player,
+            show_pafs=show_pafs,
         )
 
         self.overlays["inference"] = overlay
