@@ -1,0 +1,6 @@
+main:
+
+  - name: head_type
+    label: Model Head
+    type: list
+    options: Confidence Maps,Part Affinity Fields
