@@ -1,3 +1,33 @@
+"""
+Functions to align instances.
+
+Usually you'll want to
+
+1. find out the skeleton edge to use for aligning instances,
+2. align all instances using this edge in the skeleton,
+3. calculate mean/std for node locations of aligned instances.
+
+For step (1), we use the most "stable" edge (smallest std in length) for the set
+of instances which has a (mean) length above some threshold. Usually this will
+be something like [head -> thorax], i.e., an edge between two body parts which
+are relatively fixed relative to each other, and thus work well as an axis for
+aligning all the instances.
+
+Steps (2) and (3) are fairly straightforward: we calculate angle of the edge
+found in step (1) for each instance, then rotate each instance accordingly,
+then calculate mean/standard deviation for each node in the resulting matrix.
+
+Note that all these functions are vectorized and work on matrices with shape
+(instances, nodes, 2), where 2 corresponds to (x, y) for each node.
+
+After we have a "mean" instance (i.e., an instance with all points at mean
+of other, aligned instances), the "mean" instance can then itself be aligned
+with another instance using the `align_instance_points` function. This is
+useful so we can use "mean" instance to add "default" points to an instance
+which doesn't yet have all points).
+
+
+"""
 from sleap import Labels, Instance
 from typing import List, Tuple
 import numpy as np
