@@ -1,3 +1,7 @@
+"""
+GUI for viewing/modifying keyboard shortcuts.
+"""
+
 from typing import List
 
 from PySide2 import QtWidgets
