@@ -13,7 +13,7 @@ my_function will get called with form data when user clicks the main button
 
 import yaml
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Text
 
 from PySide2 import QtWidgets, QtCore
 
@@ -36,8 +36,8 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     def __init__(
         self,
         yaml_file,
-        which_form: str = "main",
-        field_options_lists: Optional[Dict[str, list]] = None,
+        which_form: Text = "main",
+        field_options_lists: Optional[Dict[Text, list]] = None,
         *args,
         **kwargs,
     ):
@@ -72,7 +72,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         FormBuilderLayout.set_widget_value(self.fields[key], val)
 
     @classmethod
-    def from_name(cls, form_name: str, *args, **kwargs) -> "YamlFormWidget":
+    def from_name(cls, form_name: Text, *args, **kwargs) -> "YamlFormWidget":
         """
         Instantiate class from the short name of form (e.g., "suggestions").
 
@@ -108,11 +108,11 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """Returns dict of form data."""
         return self.form_layout.get_form_data()
 
-    def set_field_options(self, field_name: str, options_list: List[str], **kwargs):
+    def set_field_options(self, field_name: Text, options_list: List[Text], **kwargs):
         """Sets option list for specified field."""
         self.form_layout.set_field_options(field_name, options_list, **kwargs)
 
-    def set_field_enabled(self, field_name: str, is_enabled):
+    def set_field_enabled(self, field_name: Text, is_enabled: bool):
         self.form_layout.set_field_enabled(field_name, is_enabled)
 
     def set_enabled(self, enabled: bool):
@@ -127,9 +127,21 @@ class FormBuilderModalDialog(QtWidgets.QDialog):
     """Blocking modal dialog wrapper for YamlFormWidget widget."""
 
     def __init__(
-        self, form_widget: YamlFormWidget, *args, **kwargs,
+        self,
+        form_widget: Optional[YamlFormWidget] = None,
+        form_name: Optional[Text] = None,
+        *args,
+        **kwargs,
     ):
         super(FormBuilderModalDialog, self).__init__()
+
+        if not form_widget and form_name:
+            form_widget = YamlFormWidget.from_name(form_name)
+
+        if not form_widget:
+            raise ValueError(
+                "FormBuilderModalDialog must have either form widget or name."
+            )
 
         self._results = None
         self.form_widget = form_widget
@@ -244,7 +256,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         for stacked_widget in self.stacked:
             stacked_widget.set_form_data(data)
 
-    def set_field_options(self, field_name: str, options_list: List[str]):
+    def set_field_options(self, field_name: Text, options_list: List[Text]):
         """Sets custom list of options for specified field."""
         self.field_options_lists[field_name] = options_list
 
@@ -259,14 +271,14 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             if field_name in self.field_options_lists:
                 field.set_options(self.field_options_lists[field_name])
 
-    def set_field_enabled(self, field_name: str, is_enabled: bool):
+    def set_field_enabled(self, field_name: Text, is_enabled: bool):
         """Sets whether the field is enabled/disabled."""
         fields = self.find_field(field_name)
 
         for field in fields:
             field.setEnabled(is_enabled)
 
-    def find_field(self, field_name: str):
+    def find_field(self, field_name: Text):
         """
         Finds form fields by name.
 
@@ -336,7 +348,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = None if val == "None" else val
         return val
 
-    def build_form(self, items_to_create: List[Dict[str, Any]]):
+    def build_form(self, items_to_create: List[Dict[Text, Any]]):
         """Adds widgets to form layout for each item in items_to_create.
 
         Args:
@@ -360,7 +372,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         for item in items_to_create:
             self.add_item(item)
 
-    def add_item(self, item: Dict[str, Any]):
+    def add_item(self, item: Dict[Text, Any]):
         if item["type"] == "text":
             field = QtWidgets.QLabel(item["text"])
             field.setWordWrap(True)
@@ -646,7 +658,7 @@ class OptionalSpinWidget(QtWidgets.QWidget):
         self,
         type="int",
         none_string="none",
-        none_label: Optional[str] = None,
+        none_label: Optional[Text] = None,
         *args,
         **kwargs,
     ):
@@ -740,7 +752,7 @@ class FieldComboWidget(QtWidgets.QComboBox):
         self.add_blank_option = add_blank_option
         self.options_list = []
 
-    def set_options(self, options_list: List[str], select_item: Optional[str] = None):
+    def set_options(self, options_list: List[Text], select_item: Optional[Text] = None):
         """
         Sets list of menu options.
 
