@@ -1,16 +1,17 @@
 """
-Module with overlay for showing negative training sample anchors.
+Overlay for showing negative training sample anchors (currently unused).
 """
 import attr
 
 from PySide2 import QtGui
 
+from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.io.dataset import Labels
 
 
 @attr.s(auto_attribs=True)
-class NegativeAnchorOverlay:
+class NegativeAnchorOverlay(BaseOverlay):
     """Class to overlay of negative training sample anchors to video frame.
 
     Attributes:
@@ -19,7 +20,6 @@ class NegativeAnchorOverlay:
     """
 
     labels: Labels = None
-    player: QtVideoPlayer = None
     _pen = QtGui.QPen(QtGui.QColor("red"))
     _line_len: int = 3
 

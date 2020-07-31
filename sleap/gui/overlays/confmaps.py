@@ -1,5 +1,9 @@
 """
-Module for showing confidence maps as an overlay within a QtVideoPlayer.
+Overlay for confidence maps.
+
+Currently a `DataOverlay` gets data from a model (i.e., it runs inference on the
+current frame) and then uses a `ConfMapsPlot` object to show the resulting
+confidence maps.
 
 Example:
     >>> cm = ConfMapsPlot(conf_data.get_frame(0))
@@ -12,17 +16,6 @@ import numpy as np
 import qimage2ndarray
 
 from sleap.gui.overlays.base import DataOverlay, h5_colors
-
-
-class ConfmapOverlay(DataOverlay):
-    """Overlay to show confidence maps."""
-
-    @classmethod
-    def from_model(cls, filename, video, **kwargs):
-        """Create object with live predictions from model as datasource."""
-        return DataOverlay.from_model(
-            filename, video, overlay_class=ConfMapsPlot, **kwargs
-        )
 
 
 class ConfMapsPlot(QtWidgets.QGraphicsObject):

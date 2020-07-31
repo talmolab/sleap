@@ -1,33 +1,61 @@
-"""Base class for overlays."""
+"""
+Base classes for overlays.
+
+Overlays are used for showing additional visuals on top of a video frame (i.e.,
+a `QtVideoPlayer` object). Overlay objects are created in the main GUI app,
+which then automatically calls the `add_to_scene` for each loaded overlay after
+drawing a frame (i.e., when user navigates to a new frame or something changes
+so that current frame must be redrawn).
+"""
 
 from PySide2 import QtWidgets
 
 import attr
+import abc
 import numpy as np
 from typing import Sequence, Union
 
-from sleap.io.video import Video
+from sleap import Labels, Video
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.nn.data.providers import VideoReader
 from sleap.nn.inference import VisualPredictor
 
 
 @attr.s(auto_attribs=True)
-class ModelData:
+class BaseOverlay(abc.ABC):
+    """
+    Abstract base class for overlays.
+
+    Most overlays need rely on the `Labels` from which to get data and need the
+    `QtVideoPlayer` to which a `QGraphicsObject` item will be added, so these
+    attributes are included in the base class.
+    """
+
+    labels: Labels = None
+    player: QtVideoPlayer = None
+
+    @abc.abstractmethod
+    def add_to_scene(self, video: Video, frame_idx: int):
+        pass
+
+
+@attr.s(auto_attribs=True)
+class ModelData(Sequence):
+    """Sequence-type object which generates predictions for specified frames."""
+
     predictor: VisualPredictor
+    result_key: str
     video: Video
-    do_rescale: bool = False
     output_scale: float = 1.0
     adjust_vals: bool = True
 
-    def __getitem__(self, i: int):
+    def __getitem__(self, i: int) -> np.ndarray:
         """Data data for frame i from predictor."""
         # Get predictions for frame i
         frame_result = self.predictor.predict(VideoReader(self.video, [i]))
 
         # We just want the single image results
-        # todo: support for pafs
-        frame_result = frame_result[0][self.predictor.confidence_maps_key_name()]
+        frame_result = frame_result[0][self.result_key]
 
         if self.adjust_vals:
             frame_result = np.clip(frame_result, 0, 1)
@@ -37,15 +65,31 @@ class ModelData:
 
         return frame_result
 
+    def __len__(self):
+        return self.video.num_frames
+
 
 @attr.s(auto_attribs=True)
-class DataOverlay:
+class DataOverlay(BaseOverlay):
+    """
+    Base class for confidence maps/part affinity fields overlays.
+
+    These overlays use a `ModelData` class which provides the confidence maps/
+    part affinity fields for the frame (by running inference with a model).
+    They could easily be modified to use another "data" class, e.g., one
+    which load saved confidence maps/part affinity fields from a file.
+
+    Attributes:
+        data: instance of a class such that you can use `data[frame_idx]`
+            to get the data (e.g., confmaps) for a given frame.
+        overlay_class: determines how the data will be shown, i.e., as
+            confidence maps or as a quiver plot (for part affinity fields).
+    """
 
     data: Sequence = None
-    player: QtVideoPlayer = None
     overlay_class: Union["ConfMapsPlot", "MultiQuiverPlot", None] = None
 
-    def add_to_scene(self, video, frame_idx):
+    def add_to_scene(self, video: Video, frame_idx: int):
         if self.data is None:
             return
 
@@ -53,10 +97,11 @@ class DataOverlay:
             return
 
         img_data = self.data[frame_idx]
+        img_scale = self.data.output_scale
 
         self._add(
             to=self.player.view.scene,
-            what=self.overlay_class(img_data, scale=self.data.output_scale),
+            what=self.overlay_class(img_data, scale=img_scale),
         )
 
     def _add(
@@ -69,22 +114,33 @@ class DataOverlay:
         what.setPos(*where)
 
     @classmethod
-    def from_model(cls, filename, video, **kwargs):
-        # Construct the ModelData object that runs inference
-        data_object = ModelData(
-            predictor=VisualPredictor.from_trained_models(filename), video=video
-        )
+    def make_predictor(cls, filename: str) -> VisualPredictor:
+        return VisualPredictor.from_trained_models(filename)
 
-        # Determine whether to use confmap or paf overlay
-        # todo: make this selectable by user for bottom up model w/ both outputs
+    @classmethod
+    def from_model(cls, filename: str, *args, **kwargs):
+        return cls.from_predictor(cls.make_predictor(filename), *args, **kwargs)
+
+    @classmethod
+    def from_predictor(
+        cls, predictor: VisualPredictor, video: Video, show_pafs: bool = False, **kwargs
+    ):
+        # imports here so we don't get circular dependencies
         from sleap.gui.overlays.confmaps import ConfMapsPlot
         from sleap.gui.overlays.pafs import MultiQuiverPlot
 
-        # todo: support for pafs
-        # if model_output_type == ModelOutputType.PART_AFFINITY_FIELD:
-        #     overlay_class = MultiQuiverPlot
-        # else:
-        overlay_class = ConfMapsPlot
+        if show_pafs:
+            result_key = predictor.part_affinity_fields_key_name
+        else:
+            result_key = predictor.confidence_maps_key_name
+
+        data_object = ModelData(predictor=predictor, result_key=result_key, video=video)
+
+        # Determine whether to use confmap or paf overlay
+        if show_pafs:
+            overlay_class = MultiQuiverPlot
+        else:
+            overlay_class = ConfMapsPlot
 
         return cls(data=data_object, overlay_class=overlay_class, **kwargs)
 

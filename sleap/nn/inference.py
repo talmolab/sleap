@@ -251,16 +251,17 @@ class VisualPredictor(Predictor):
     def head_specific_output_keys(self) -> List[Text]:
         keys = []
 
-        key = self.confidence_maps_key_name()
+        key = self.confidence_maps_key_name
         if key:
             keys.append(key)
 
-        key = self.part_affinity_fields_key_name()
+        key = self.part_affinity_fields_key_name
         if key:
             keys.append(key)
 
         return keys
 
+    @property
     def confidence_maps_key_name(self) -> Optional[Text]:
         head_key = self.config.model.heads.which_oneof_attrib_name()
 
@@ -274,6 +275,7 @@ class VisualPredictor(Predictor):
 
         return None
 
+    @property
     def part_affinity_fields_key_name(self) -> Optional[Text]:
         head_key = self.config.model.heads.which_oneof_attrib_name()
 
