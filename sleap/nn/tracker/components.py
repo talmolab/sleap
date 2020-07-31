@@ -1,3 +1,17 @@
+"""
+Functions/classes used by multiple trackers.
+
+Main types of functions:
+
+1. Calculate pair-wise instance similarity; used for populating similarity/cost
+   matrix.
+
+2. Pick matches based on cost matrix.
+
+3. Other clean-up (e.g., cull instances, connect track breaks).
+
+
+"""
 import operator
 from collections import defaultdict
 from typing import List, Tuple, Optional, TypeVar, Callable
@@ -345,6 +359,8 @@ def connect_single_track_breaks(
 
 @attr.s(auto_attribs=True, slots=True)
 class Match:
+    """Stores a match between a specific instance and specific track."""
+
     track: Track
     instance: Instance
     score: Optional[float] = None
@@ -353,7 +369,26 @@ class Match:
 
 @attr.s(auto_attribs=True)
 class FrameMatches:
-    """Calculates (and stores) matches for a frame."""
+    """
+    Calculates (and stores) matches for a frame.
+
+    This class encapsulates the logic to generate matches (using a custom
+    matching function) from a cost matrix. One key feature is that it retains
+    additional information, such as whether all the matches were first-choice
+    (i.e., if each instance got the instance it would have matched to if there
+    weren't other instances).
+
+    Typically this will be created using the `from_candidate_instances` method
+    which creates the cost matrix and then uses the matching function to find
+    matches.
+
+    Attributes:
+        matches: the list of `Match` objects.
+        cost_matrix: the cost matrix, shape is
+            (number of untracked instances, number of candidate tracks).
+        unmatched_instances: the instances for which we are finding matches.
+
+    """
 
     matches: List[Match]
     cost_matrix: np.ndarray
@@ -361,6 +396,11 @@ class FrameMatches:
 
     @property
     def has_only_first_choice_matches(self) -> bool:
+        """Whether all the matches were first-choice.
+
+        A match is a 'first-choice' for an instance if that instance would have
+        matched to the same track even if there were no other instances.
+        """
         return all(match.is_first_choice for match in self.matches)
 
     @classmethod
