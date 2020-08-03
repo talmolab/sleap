@@ -223,7 +223,7 @@ class EncoderDecoderTests(tf.test.TestCase):
         self.assertEqual(model.count_params(), 0)
         self.assertAllEqual(model.output.shape, (None, 16, 16, 1))
         self.assertIsInstance(model.layers[1], tf.keras.layers.UpSampling2D)
-        self.assertTrue("add" in model.layers[2].name)
+        self.assertTrue("add" in model.layers[2].name.lower())  # tf_op_layer_AddV2
         self.assertAllClose(model(tf.ones((1, 8, 8, 1))), tf.ones((1, 16, 16, 1)) * 2)
 
     def test_simple_upsampling_block_skip_add_adjust_channels(self):
