@@ -49,12 +49,17 @@ def pad_to_stride(image: tf.Tensor, max_stride: int) -> tf.Tensor:
         new shape's height and width are both divisible by `max_stride`.
     """
     pad_bottom, pad_right = find_padding_for_stride(
-        image_height=tf.shape(image)[0],
-        image_width=tf.shape(image)[1],
+        image_height=tf.shape(image)[-3],
+        image_width=tf.shape(image)[-2],
         max_stride=max_stride,
     )
     if pad_bottom > 0 or pad_right > 0:
-        paddings = tf.cast([[0, pad_bottom], [0, pad_right], [0, 0]], tf.int32)
+        if tf.rank(image) == 3:
+            paddings = tf.cast([[0, pad_bottom], [0, pad_right], [0, 0]], tf.int32)
+        else:
+            # tf.rank(image) == 4:
+            paddings = tf.cast([[0, 0], [0, pad_bottom], [0, pad_right], [0, 0]], tf.int32)
+
         image = tf.pad(image, paddings, mode="CONSTANT", constant_values=0)
     return image
 
@@ -76,8 +81,8 @@ def resize_image(image: tf.Tensor, scale: tf.Tensor) -> tf.Tensor:
 
     See also: tf.image.resize
     """
-    height = tf.shape(image)[0]
-    width = tf.shape(image)[1]
+    height = tf.shape(image)[-3]
+    width = tf.shape(image)[-2]
     new_size = tf.reverse(
         tf.cast(
             tf.cast([width, height], tf.float32) * tf.cast(scale, tf.float32), tf.int32
