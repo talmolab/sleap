@@ -317,15 +317,188 @@ class VisualPredictor(Predictor):
         return examples
 
 
+class CentroidCrop(tf.keras.layers.Layer):
+    def __init__(
+        self,
+        centroids_input_scale,
+        centroids_max_stride,
+        centroids_model,
+        centroids_confmaps_stride,
+        peak_threshold,
+        crop_size,
+    ):
+        super().__init__()
+
+        self.centroids_input_scale = centroids_input_scale
+        self.centroids_max_stride = centroids_max_stride
+        self.centroids_model = centroids_model
+        self.centroids_confmaps_stride = centroids_confmaps_stride
+
+        self.peak_threshold = peak_threshold
+        self.crop_size = crop_size
+
+    def call(self, full_imgs):
+
+        imgs = full_imgs
+        if self.centroids_input_scale != 1.0:
+            imgs = sleap.nn.data.resizing.resize_image(imgs, self.centroids_input_scale)
+        imgs = sleap.nn.data.resizing.pad_to_stride(imgs, self.centroids_max_stride)
+
+        cms = self.centroids_model(imgs)
+
+        # Find centroids.
+        (
+            centroid_points,
+            centroid_vals,
+            crop_sample_inds,
+            _,
+        ) = sleap.nn.peak_finding.find_local_peaks_integral(
+            cms, threshold=self.peak_threshold
+        )
+
+        # Adjust coordinates for confmaps stride.
+        centroid_points = (
+            centroid_points * self.centroids_confmaps_stride
+        ) / self.centroids_input_scale
+
+        # Store crop offsets.
+        crop_offsets = centroid_points - (self.crop_size / 2)
+
+        # Crop instances around centroids.
+        bboxes = sleap.nn.data.instance_cropping.make_centered_bboxes(
+            centroid_points, self.crop_size, self.crop_size
+        )
+        crops = sleap.nn.peak_finding.crop_bboxes(full_imgs, bboxes, crop_sample_inds)
+
+        # Reshape to (n_peaks, crop_height, crop_width, channels)
+        n_peaks = tf.shape(centroid_points)[0]
+        img_channels = tf.shape(full_imgs)[3]
+        crops = tf.reshape(
+            crops, [n_peaks, self.crop_size, self.crop_size, img_channels]
+        )
+
+        # Group crops by sample.
+        samples = tf.shape(imgs)[0]
+        crops = tf.RaggedTensor.from_value_rowids(
+            crops, crop_sample_inds, nrows=samples
+        )
+        crop_offsets = tf.RaggedTensor.from_value_rowids(
+            crop_offsets, crop_sample_inds, nrows=samples
+        )
+        centroid_vals = tf.RaggedTensor.from_value_rowids(
+            centroid_vals, crop_sample_inds, nrows=samples
+        )
+
+        return crops, crop_offsets, centroid_vals
+
+
+class FindInstancePeaks(tf.keras.layers.Layer):
+    def __init__(
+        self,
+        peak_threshold,
+        inst_input_scale,
+        inst_confmaps_model,
+        inst_confmaps_stride,
+    ):
+        super().__init__()
+
+        self.peak_threshold = peak_threshold
+
+        self.inst_input_scale = inst_input_scale
+        self.inst_confmaps_model = inst_confmaps_model
+        self.inst_confmaps_stride = inst_confmaps_stride
+
+    def call(self, inputs):
+
+        # Unpack inputs.
+        crops, crop_offsets, centroid_vals = inputs
+
+        # Flatten crops into (n_peaks, height, width, channels)
+        crop_sample_inds = crops.value_rowids()
+        samples = crops.nrows()
+        crops = crops.merge_dims(0, 1)
+
+        # Preprocess.
+        imgs = crops
+        if self.inst_input_scale != 1.0:
+            imgs = sleap.nn.data.resizing.resize_image(imgs, self.inst_input_scale)
+
+        # Confidence maps estimation.
+        cms = self.inst_confmaps_model(imgs)
+
+        # Peak finding
+        peak_points, peak_vals = sleap.nn.peak_finding.find_global_peaks_integral(
+            cms, threshold=self.peak_threshold
+        )
+
+        # Adjust for scale and  offsets.
+        peak_points = (peak_points * self.inst_confmaps_stride) / self.inst_input_scale
+        peak_points = peak_points + tf.expand_dims(
+            crop_offsets.merge_dims(0, 1), axis=1
+        )
+
+        # Pad peaks to full shape (samples, max_instances, nodes, 2).
+        padded_peaks = tf.RaggedTensor.from_value_rowids(
+            peak_points, crop_sample_inds, nrows=samples
+        )
+        n_valid_instances = padded_peaks.row_lengths()  # (samples,)
+        padded_peaks = padded_peaks.to_tensor(
+            default_value=np.NaN
+        )  # (samples, max_instances, nodes, 2)
+        peak_vals = tf.RaggedTensor.from_value_rowids(
+            peak_vals, crop_sample_inds, nrows=samples
+        ).to_tensor(default_value=np.NaN)
+        centroid_vals = centroid_vals.to_tensor(default_value=np.NaN)
+
+        return padded_peaks, n_valid_instances, peak_vals, centroid_vals
+
+
+class TopDownModel(tf.keras.Model):
+    def __init__(
+        self,
+        centroids_input_scale,
+        centroids_max_stride,
+        centroids_model,
+        centroids_confmaps_stride,
+        peak_threshold,
+        crop_size,
+        inst_input_scale,
+        inst_confmaps_model,
+        inst_confmaps_stride,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+        self.centroid_crop = CentroidCrop(
+            centroids_input_scale=centroids_input_scale,
+            centroids_max_stride=centroids_max_stride,
+            centroids_model=centroids_model,
+            centroids_confmaps_stride=centroids_confmaps_stride,
+            peak_threshold=peak_threshold,
+            crop_size=crop_size,
+        )
+        self.find_instance_peaks = FindInstancePeaks(
+            peak_threshold=peak_threshold,
+            inst_input_scale=inst_input_scale,
+            inst_confmaps_model=inst_confmaps_model,
+            inst_confmaps_stride=inst_confmaps_stride,
+        )
+
+    def call(self, full_imgs):
+        return self.find_instance_peaks(self.centroid_crop(full_imgs))
+
+
 @attr.s(auto_attribs=True)
 class TopdownPredictor(Predictor):
     centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     centroid_model: Optional[Model] = attr.ib(default=None)
     confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     confmap_model: Optional[Model] = attr.ib(default=None)
+    topdown_model: Optional[TopDownModel] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
-    batch_size: int = 1
+    batch_size: int = 16
     peak_threshold: float = 0.2
     integral_refinement: bool = True
     integral_patch_size: int = 5
@@ -345,7 +518,7 @@ class TopdownPredictor(Predictor):
         Args:
             centroid_model_path: Path to centroid model folder.
             confmap_model_path: Path to topdown confidence map model folder.
-        
+
         Returns:
             An instance of TopdownPredictor with the loaded models.
 
@@ -381,11 +554,24 @@ class TopdownPredictor(Predictor):
             confmap_config = None
             confmap_model = None
 
+        topdown_model = TopDownModel(
+            centroids_input_scale=centroid_config.data.preprocessing.input_scaling,
+            centroids_max_stride=centroid_config.data.preprocessing.pad_to_stride,
+            centroids_model=centroid_model.keras_model,
+            centroids_confmaps_stride=centroid_config.model.heads.centroid.output_stride,
+            peak_threshold=peak_threshold,
+            crop_size=confmap_config.data.instance_cropping.crop_size,
+            inst_input_scale=confmap_config.data.preprocessing.input_scaling,
+            inst_confmaps_model=confmap_model.keras_model,
+            inst_confmaps_stride=confmap_config.model.heads.centered_instance.output_stride,
+        )
+
         return cls(
             centroid_config=centroid_config,
             centroid_model=centroid_model,
             confmap_config=confmap_config,
             confmap_model=confmap_model,
+            topdown_model=topdown_model,
             batch_size=batch_size,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
@@ -400,184 +586,25 @@ class TopdownPredictor(Predictor):
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
-        pipeline += Prefetcher()
-
-        pipeline += KeyRenamer(
-            old_key_names=["image", "scale"],
-            new_key_names=["full_image", "full_image_scale"],
-            drop_old=False,
+        pipeline += sleap.nn.data.pipelines.Batcher(
+            batch_size=self.batch_size, drop_remainder=False
         )
 
-        if keep_original_image:
-            pipeline += KeyRenamer(
-                old_key_names=["image", "scale"],
-                new_key_names=["original_image", "original_image_scale"],
-                drop_old=False,
-            )
-            pipeline += KeyDeviceMover(["original_image"])
-
-        if self.confmap_config is not None:
-            # Infer colorspace preprocessing if not explicit.
-            if not (
-                self.confmap_config.data.preprocessing.ensure_rgb
-                or self.confmap_config.data.preprocessing.ensure_grayscale
-            ):
-                if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
-                    self.confmap_config.data.preprocessing.ensure_grayscale = True
-                else:
-                    self.confmap_config.data.preprocessing.ensure_rgb = True
-
-            pipeline += Normalizer.from_config(
-                self.confmap_config.data.preprocessing, image_key="full_image"
-            )
-
-            points_key = "instances" if self.centroid_model is None else None
-            pipeline += Resizer.from_config(
-                self.confmap_config.data.preprocessing,
-                points_key=points_key,
-                image_key="full_image",
-                scale_key="full_image_scale",
-            )
-
-        if self.centroid_model is not None:
-            # Infer colorspace preprocessing if not explicit.
-            if not (
-                self.centroid_config.data.preprocessing.ensure_rgb
-                or self.centroid_config.data.preprocessing.ensure_grayscale
-            ):
-                if self.centroid_model.keras_model.inputs[0].shape[-1] == 1:
-                    self.centroid_config.data.preprocessing.ensure_grayscale = True
-                else:
-                    self.centroid_config.data.preprocessing.ensure_rgb = True
-
-            pipeline += Normalizer.from_config(
-                self.centroid_config.data.preprocessing, image_key="image"
-            )
-            pipeline += Resizer.from_config(
-                self.centroid_config.data.preprocessing, points_key=None
-            )
-
-            # Predict centroids using model.
-            pipeline += KerasModelPredictor(
-                keras_model=self.centroid_model.keras_model,
-                model_input_keys="image",
-                model_output_keys="predicted_centroid_confidence_maps",
-            )
-
-            pipeline += LocalPeakFinder(
-                confmaps_stride=self.centroid_model.heads[0].output_stride,
-                peak_threshold=self.peak_threshold,
-                confmaps_key="predicted_centroid_confidence_maps",
-                peaks_key="predicted_centroids",
-                peak_vals_key="predicted_centroid_confidences",
-                peak_sample_inds_key="predicted_centroid_sample_inds",
-                peak_channel_inds_key="predicted_centroid_channel_inds",
-                keep_confmaps=False,
-            )
-
-            pipeline += LambdaFilter(
-                filter_fn=lambda ex: len(ex["predicted_centroids"]) > 0
-            )
-
-            if self.confmap_config is not None:
-                crop_size = self.confmap_config.data.instance_cropping.crop_size
+        # Infer colorspace preprocessing if not explicit.
+        if not (
+            self.confmap_config.data.preprocessing.ensure_rgb
+            or self.confmap_config.data.preprocessing.ensure_grayscale
+        ):
+            if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
+                self.confmap_config.data.preprocessing.ensure_grayscale = True
             else:
-                crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
-                    data_provider.labels
-                )
+                self.confmap_config.data.preprocessing.ensure_rgb = True
 
-            pipeline += PredictedInstanceCropper(
-                crop_width=crop_size,
-                crop_height=crop_size,
-                centroids_key="predicted_centroids",
-                centroid_confidences_key="predicted_centroid_confidences",
-                full_image_key="full_image",
-                full_image_scale_key="full_image_scale",
-                keep_instances_gt=self.confmap_model is None,
-                other_keys_to_keep=["original_image"] if keep_original_image else None,
-            )
-            if keep_original_image:
-                pipeline += KeyDeviceMover(["original_image"])
-
-        else:
-            # Generate ground truth centroids and crops.
-            anchor_part = self.confmap_config.data.instance_cropping.center_on_part
-            pipeline += InstanceCentroidFinder(
-                center_on_anchor_part=anchor_part is not None,
-                anchor_part_names=anchor_part,
-                skeletons=data_provider.labels.skeletons,
-            )
-            pipeline += KeyRenamer(
-                old_key_names=["full_image", "full_image_scale"],
-                new_key_names=["image", "scale"],
-                drop_old=True,
-            )
-            pipeline += InstanceCropper(
-                crop_width=self.confmap_config.data.instance_cropping.crop_size,
-                crop_height=self.confmap_config.data.instance_cropping.crop_size,
-                mock_centroid_confidence=True,
-            )
-
-        if self.confmap_model is not None:
-            # Predict confidence maps using model.
-            if self.batch_size > 1:
-                pipeline += sleap.nn.data.pipelines.Batcher(
-                    batch_size=self.batch_size, drop_remainder=False
-                )
-            pipeline += KerasModelPredictor(
-                keras_model=self.confmap_model.keras_model,
-                model_input_keys="instance_image",
-                model_output_keys="predicted_instance_confidence_maps",
-            )
-            if self.batch_size > 1:
-                pipeline += sleap.nn.data.pipelines.Unbatcher()
-            pipeline += GlobalPeakFinder(
-                confmaps_key="predicted_instance_confidence_maps",
-                peaks_key="predicted_center_instance_points",
-                confmaps_stride=self.confmap_model.heads[0].output_stride,
-                peak_threshold=self.peak_threshold,
-                integral=self.integral_refinement,
-                integral_patch_size=self.integral_patch_size,
-                keep_confmaps=False,
-            )
-
-        else:
-            # Generate ground truth instance points.
-            pipeline += MockGlobalPeakFinder(
-                all_peaks_in_key="instances",
-                peaks_out_key="predicted_center_instance_points",
-                peak_vals_key="predicted_center_instance_confidences",
-                keep_confmaps=False,
-            )
-
-        keep_keys = [
-            "bbox",
-            "center_instance_ind",
-            "centroid",
-            "centroid_confidence",
-            "scale",
-            "video_ind",
-            "frame_ind",
-            "center_instance_ind",
-            "predicted_center_instance_points",
-            "predicted_center_instance_confidences",
-        ]
-
-        if keep_original_image:
-            keep_keys.append("original_image")
-
-        pipeline += KeyFilter(keep_keys=keep_keys)
-
-        pipeline += PredictedCenterInstanceNormalizer(
-            centroid_key="centroid",
-            centroid_confidence_key="centroid_confidence",
-            peaks_key="predicted_center_instance_points",
-            peak_confidences_key="predicted_center_instance_confidences",
-            new_centroid_key="predicted_centroid",
-            new_centroid_confidence_key="predicted_centroid_confidence",
-            new_peaks_key="predicted_instance",
-            new_peak_confidences_key="predicted_instance_confidences",
+        pipeline += Normalizer.from_config(
+            self.confmap_config.data.preprocessing, image_key="image"
         )
+
+        pipeline += Prefetcher()
 
         self.pipeline = pipeline
 
@@ -593,34 +620,73 @@ class TopdownPredictor(Predictor):
 
         self.pipeline.providers = [data_provider]
 
-        # Yield each example from dataset, catching and logging exceptions
-        return safely_generate(self.pipeline.make_dataset())
+        for ex in self.pipeline.make_dataset():
+            (
+                padded_peaks,
+                n_valid_instances,
+                peak_vals,
+                centroid_vals,
+            ) = self.topdown_model.predict(ex["image"])
+
+            ex["padded_peaks"] = [
+                x[:n] for x, n in zip(padded_peaks, n_valid_instances)
+            ]
+            ex["peak_vals"] = [x[:n] for x, n in zip(peak_vals, n_valid_instances)]
+            ex["centroid_vals"] = [
+                x[:n] for x, n in zip(centroid_vals, n_valid_instances)
+            ]
+
+            yield ex
 
     def make_labeled_frames_from_generator(self, generator, data_provider):
-        grouped_generator = group_examples_iter(generator)
 
         if self.confmap_config is not None:
             skeleton = self.confmap_config.data.labels.skeletons[0]
         else:
             skeleton = self.centroid_config.data.labels.skeletons[0]
 
-        def make_lfs(video_ind, frame_ind, frame_examples):
-            return make_grouped_labeled_frame(
-                video_ind=video_ind,
-                frame_ind=frame_ind,
-                frame_examples=frame_examples,
-                videos=data_provider.videos,
-                skeleton=skeleton,
-                image_key="original_image",
-                points_key="predicted_instance",
-                point_confidences_key="predicted_instance_confidences",
-                instance_score_key="predicted_centroid_confidence",
-                tracker=self.tracker,
-            )
-
+        # Loop over batches.
         predicted_frames = []
-        for (video_ind, frame_ind), grouped_examples in grouped_generator:
-            predicted_frames.extend(make_lfs(video_ind, frame_ind, grouped_examples))
+        for ex in generator:
+
+            # Loop over frames.
+            for image, video_ind, frame_ind, points, confidences, scores in zip(
+                ex["image"],
+                ex["video_ind"],
+                ex["frame_ind"],
+                ex["padded_peaks"],
+                ex["peak_vals"],
+                ex["centroid_vals"],
+            ):
+
+                frame_ind = frame_ind.numpy().squeeze()
+                video_ind = video_ind.numpy().squeeze()
+
+                # Loop over instances.
+                predicted_instances = []
+                for pts, confs, score in zip(points, confidences, scores):
+                    predicted_instances.append(
+                        sleap.instance.PredictedInstance.from_arrays(
+                            points=pts,
+                            point_confidences=confs,
+                            instance_score=score,
+                            skeleton=skeleton,
+                        )
+                    )
+
+                if self.tracker:
+                    # Set tracks for predicted instances in this frame.
+                    predicted_instances = self.tracker.track(
+                        untracked_instances=predicted_instances, img=image, t=frame_ind
+                    )
+
+                predicted_frames.append(
+                    sleap.LabeledFrame(
+                        video=data_provider.videos[video_ind],
+                        frame_idx=frame_ind,
+                        instances=predicted_instances,
+                    )
+                )
 
         if self.tracker:
             self.tracker.final_pass(predicted_frames)
@@ -658,7 +724,7 @@ class TopdownPredictor(Predictor):
             examples = list(generator)
             elapsed = time.time() - t0_gen
             logger.info(
-                f"Predicted {len(examples)} examples in {elapsed:.3f} secs [{len(examples)/elapsed:.1f} FPS]"
+                f"Predicted {len(examples)} examples in {elapsed:.3f} secs [{len(examples)/elapsed:.1f} examples/s]"
             )
 
             return examples
