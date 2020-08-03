@@ -79,9 +79,10 @@ class KeyFilter:
 
 @attr.s(auto_attribs=True)
 class KeyDeviceMover:
-    """Transformer for moving example keys to cpu."""
+    """Transformer for moving example keys to a device."""
 
     keys: List[Text] = attr.ib(factory=list)
+    device_name: Text = "/cpu:0"
 
     @property
     def input_keys(self) -> List[Text]:
@@ -98,12 +99,10 @@ class KeyDeviceMover:
 
         def move_keys(example):
             """Local processing function for dataset mapping."""
-            with tf.device("/cpu:0"):
+            with tf.device(self.device_name):
                 for key in self.keys:
                     if key in example:
                         example[key] = tf.identity(example[key])
-            for key in self.keys:
-                print(f"{key} on {example[key].device}")
             return example
 
         # Map the main processing function to each example.
