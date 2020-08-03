@@ -3,7 +3,7 @@ attrs==19.3
 cattrs==1.0.0rc
 jsonpickle==1.2
 networkx
-tensorflow==2.1
+tensorflow==2.3
 h5py
 python-rapidjson
 opencv-python-headless==4.2.0.34

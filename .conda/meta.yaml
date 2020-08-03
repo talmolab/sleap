@@ -29,8 +29,8 @@ requirements:
     - attrs=19.3
     - jsonpickle=1.2
     - networkx
-    - tensorflow-gpu=2.1
-    - tensorboard=2.1
+    - cudatoolkit=10.1
+    - cudnn=7.6
     - scikit-learn
     - h5py
     - pandas
