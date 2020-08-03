@@ -1534,4 +1534,8 @@ class LabeledFrame:
         """
         if image:
             sleap.nn.viz.plot_img(self.image)
-        sleap.nn.viz.plot_instances(self.predicted_instances)
+        sleap.nn.viz.plot_instances(
+            self.predicted_instances,
+            color_by_track=(len(self.predicted_instances) > 0)
+            and (self.predicted_instances[0].track is not None),
+        )
