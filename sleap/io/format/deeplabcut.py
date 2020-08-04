@@ -1,3 +1,17 @@
+"""
+Adaptor for reading DeepLabCut datasets.
+
+This can either read a CSV file with labeled frames for a single video,
+or a YAML file which potentially contains multiple videos.
+
+The adaptor was created by manually inspecting DeepLabCut files and there's no
+guarantee that it will perfectly import all data (especially metadata).
+
+If the adaptor can find full video files for the annotated frames, then the
+full videos will be used in the resulting SLEAP dataset. Otherwise, we'll
+create a video object which wraps the individual frame images.
+"""
+
 import os
 import re
 import yaml

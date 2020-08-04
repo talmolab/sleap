@@ -1,3 +1,9 @@
+"""
+Adaptor for reading and writing any generic text file.
+
+This is a good example of a very simple adaptor class.
+"""
+
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
@@ -20,7 +26,7 @@ class TextAdaptor(Adaptor):
         return "Text file"
 
     def can_read_file(self, file: FileHandle):
-        return True  # FIXME
+        return True
 
     def can_write_filename(self, filename: str) -> bool:
         return True

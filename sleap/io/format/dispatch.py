@@ -1,3 +1,9 @@
+"""
+Dispatcher for dynamically supporting multiple dataset file formats.
+
+See `read()` and `write()` in `sleap.io.format` for usage.
+"""
+
 import attr
 from typing import List, Optional, Tuple, Union
 
@@ -25,6 +31,7 @@ class Dispatch(object):
             self._adaptors.append(adaptor)
 
     def register_list(self, adaptor_list: List[Union[Adaptor, type]]):
+        """Convenience function for registering multiple adaptors."""
         for adaptor in adaptor_list:
             self.register(adaptor)
 
@@ -82,6 +89,7 @@ class Dispatch(object):
 
     @classmethod
     def make_dispatcher(cls, object_type: SleapObjectType) -> "Dispatch":
+        """Factory method which automatically registers some adaptors."""
         dispatcher = cls()
         if object_type == SleapObjectType.labels:
             from .hdf5 import LabelsV1Adaptor

@@ -1,3 +1,9 @@
+"""
+Adaptor to read (not write) LEAP MATLAB data files.
+
+This attempts to find videos. If they cannot automatically be found and the
+`gui` param is True, then the user will be prompted to find the videos.
+"""
 import os
 
 import scipy.io as sio

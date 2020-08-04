@@ -1,3 +1,15 @@
+"""
+Adaptor to read and write analysis HDF5 files.
+
+These contain location and track data, but lack other metadata included in a
+full SLEAP dataset file.
+
+Note that this adaptor will use default track names and skeleton node names
+if these cannot be read from the HDF5 (some files have these, some don't).
+
+To determine whether this adaptor can read a file, we check it's an HDF5 file
+with a `track_occupancy` dataset.
+"""
 import numpy as np
 
 from typing import Union

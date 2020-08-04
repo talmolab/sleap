@@ -1,3 +1,7 @@
+"""
+Adaptor for reading DeepPoseKit datasets (HDF5).
+"""
+
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 

@@ -1,3 +1,9 @@
+"""
+Adaptor for reading COCO keypoint detection datasets.
+
+See http://cocodataset.org/#format-data for details about this format.
+"""
+
 import os
 
 import numpy as np

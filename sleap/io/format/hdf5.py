@@ -1,3 +1,10 @@
+"""
+Adaptor for reading/writing SLEAP datasets as HDF5 (including `.slp`).
+
+Note that this is not the adaptor for reading/writing the "analysis" HDF5
+format.
+"""
+
 from sleap.io import format
 from . import labels_json
 
