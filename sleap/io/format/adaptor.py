@@ -1,4 +1,7 @@
-import os
+"""
+File format adaptor base class.
+"""
+
 from enum import Enum
 from typing import List
 
@@ -8,31 +11,45 @@ from sleap.io.format.filehandle import FileHandle
 
 
 class SleapObjectType(Enum):
+    """Types of files that an adaptor could read/write."""
+
     misc = 0
     labels = 1
 
 
 @attr.s(auto_attribs=True)
-class Adaptor(object):
+class Adaptor:
     """
-    Abstract base class which defines interface for file format adaptors.
+    File format adaptor base class.
+
+    An adaptor handles reading and/or writing a specific file format. To add
+    support for a new file format, you'll create a new class which inherits from
+    the Adaptor base class and implements the relevant functions.
     """
 
     @property
     def handles(self) -> SleapObjectType:
-        """Returns the type of object that can be read/written."""
+        """
+        Returns the type of object that can be read/written.
+
+        The Dispatch class calls this method on all registered adaptors to
+        determine which to use for reading/writing.
+        """
         raise NotImplementedError
 
     @property
     def default_ext(self) -> str:
+        """The default file extension, e.g., 'json' (without '.')."""
         raise NotImplementedError
 
     @property
     def all_exts(self) -> List[str]:
+        """List of all file extensions supported by adaptor."""
         raise NotImplementedError
 
     @property
     def name(self) -> str:
+        """Human-reading name of the file format"""
         raise NotImplementedError
 
     def can_read_file(self, file: FileHandle) -> bool:

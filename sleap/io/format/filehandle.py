@@ -1,3 +1,10 @@
+"""
+File object which can be passed to adaptors.
+
+We use this since multiple file adaptors may need to open/read the file while
+dispatch is determining which adaptor to use, and the `FileHandle` allows us
+to keep any results from previous reads.
+"""
 import os
 from typing import Optional
 
@@ -27,6 +34,7 @@ class FileHandle(object):
         self.close()
 
     def open(self):
+        """Opens the file (if it's not already open)."""
         if not os.path.exists(self.filename):
             raise FileNotFoundError(f"Could not find {self.filename}")
 
@@ -43,28 +51,33 @@ class FileHandle(object):
             self._is_hdf5 = False
 
     def close(self):
+        """Closes the file."""
         if self._file is not None:
             self._file.close()
 
     @property
     def file(self):
+        """The raw file object."""
         self.open()
         return self._file
 
     @property
     def text(self):
+        """The text from a text file."""
         if self._text is None:
             self._text = self.file.read()
         return self._text
 
     @property
     def json(self):
+        """The loaded JSON dictionary (for a JSON file)."""
         if self._json is None:
             self._json = json_loads(self.text)
         return self._json
 
     @property
     def is_json(self):
+        """Whether file is JSON."""
         if self._is_json is None:
             try:
                 self.json
@@ -75,11 +88,20 @@ class FileHandle(object):
 
     @property
     def is_hdf5(self):
+        """Whether file is HDF5."""
         self.open()
         return self._is_hdf5
 
     @property
     def format_id(self):
+        """
+        Returns an ID from the metadata we store in some HDF5 or JSON formats.
+
+        This can be used if we need to distinguish multiple formats with a
+        common underlying file type, e.g., HDF5-based file formats. See
+        `LabelsV1Adaptor` for an example (the format id is here used to
+        determine whether to convert from "gridline" to "midpixel" coordinates).
+        """
         if self.is_hdf5:
             if "metadata" in self.file:
                 meta_group = self.file.require_group("metadata")
