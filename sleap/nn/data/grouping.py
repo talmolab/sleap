@@ -1,9 +1,8 @@
-import attr
-from collections import defaultdict
-from typing import List, Text
+"""
+Group inference results ("examples") by frame.
+"""
 
-import tensorflow as tf
-import numpy as np
+from collections import defaultdict
 
 
 def group_examples(examples):
