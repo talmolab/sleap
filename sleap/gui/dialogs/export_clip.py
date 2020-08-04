@@ -1,13 +1,15 @@
+"""
+Dialog for exporting clip; shows message depending on available encoder.
+"""
+
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 
 
 class ExportClipDialog(FormBuilderModalDialog):
     def __init__(self):
-        from sleap.gui.dialogs.formbuilder import YamlFormWidget
         from sleap.io.videowriter import VideoWriter
 
-        form_widget = YamlFormWidget.from_name("labeled_clip_form")
-        super().__init__(form_widget=form_widget)
+        super().__init__(form_name="labeled_clip_form")
 
         can_use_skvideo = VideoWriter.can_use_skvideo()
 
