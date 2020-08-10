@@ -1,4 +1,4 @@
-sleap.nn.losses
+﻿sleap.nn.losses
 ===============
 
 .. automodule:: sleap.nn.losses

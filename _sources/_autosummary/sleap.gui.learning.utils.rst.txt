@@ -1,4 +1,4 @@
-sleap.gui.learning.utils
+﻿sleap.gui.learning.utils
 ========================
 
 .. automodule:: sleap.gui.learning.utils

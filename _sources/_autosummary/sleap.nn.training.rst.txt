@@ -1,4 +1,4 @@
-sleap.nn.training
+﻿sleap.nn.training
 =================
 
 .. automodule:: sleap.nn.training

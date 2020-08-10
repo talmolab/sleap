@@ -1,4 +1,4 @@
-sleap.gui.learning.dialog
+﻿sleap.gui.learning.dialog
 =========================
 
 .. automodule:: sleap.gui.learning.dialog

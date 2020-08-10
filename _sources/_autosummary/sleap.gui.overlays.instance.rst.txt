@@ -1,4 +1,4 @@
-sleap.gui.overlays.instance
+﻿sleap.gui.overlays.instance
 ===========================
 
 .. automodule:: sleap.gui.overlays.instance

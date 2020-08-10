@@ -1,4 +1,4 @@
-sleap.io.videowriter
+﻿sleap.io.videowriter
 ====================
 
 .. automodule:: sleap.io.videowriter

@@ -1,4 +1,4 @@
-sleap.gui.widgets.imagedir
+﻿sleap.gui.widgets.imagedir
 ==========================
 
 .. automodule:: sleap.gui.widgets.imagedir

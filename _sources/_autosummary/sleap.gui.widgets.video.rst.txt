@@ -1,4 +1,4 @@
-sleap.gui.widgets.video
+﻿sleap.gui.widgets.video
 =======================
 
 .. automodule:: sleap.gui.widgets.video

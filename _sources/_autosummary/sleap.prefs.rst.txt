@@ -1,4 +1,4 @@
-sleap.prefs
+﻿sleap.prefs
 ===========
 
 .. automodule:: sleap.prefs

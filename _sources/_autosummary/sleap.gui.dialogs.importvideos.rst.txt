@@ -1,4 +1,4 @@
-sleap.gui.dialogs.importvideos
+﻿sleap.gui.dialogs.importvideos
 ==============================
 
 .. automodule:: sleap.gui.dialogs.importvideos

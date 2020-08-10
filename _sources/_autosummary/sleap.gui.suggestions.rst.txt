@@ -1,4 +1,4 @@
-sleap.gui.suggestions
+﻿sleap.gui.suggestions
 =====================
 
 .. automodule:: sleap.gui.suggestions

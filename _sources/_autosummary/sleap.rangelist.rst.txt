@@ -1,4 +1,4 @@
-sleap.rangelist
+﻿sleap.rangelist
 ===============
 
 .. automodule:: sleap.rangelist

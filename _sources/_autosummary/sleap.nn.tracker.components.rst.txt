@@ -1,4 +1,4 @@
-sleap.nn.tracker.components
+﻿sleap.nn.tracker.components
 ===========================
 
 .. automodule:: sleap.nn.tracker.components

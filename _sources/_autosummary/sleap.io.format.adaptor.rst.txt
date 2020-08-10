@@ -1,4 +1,4 @@
-sleap.io.format.adaptor
+﻿sleap.io.format.adaptor
 =======================
 
 .. automodule:: sleap.io.format.adaptor

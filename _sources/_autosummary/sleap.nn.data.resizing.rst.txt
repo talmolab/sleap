@@ -1,4 +1,4 @@
-sleap.nn.data.resizing
+﻿sleap.nn.data.resizing
 ======================
 
 .. automodule:: sleap.nn.data.resizing

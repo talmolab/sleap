@@ -1,4 +1,4 @@
-sleap.io.visuals
+﻿sleap.io.visuals
 ================
 
 .. automodule:: sleap.io.visuals

@@ -1,4 +1,4 @@
-sleap.io.pathutils
+﻿sleap.io.pathutils
 ==================
 
 .. automodule:: sleap.io.pathutils

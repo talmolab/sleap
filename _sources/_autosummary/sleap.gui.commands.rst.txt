@@ -1,4 +1,4 @@
-sleap.gui.commands
+﻿sleap.gui.commands
 ==================
 
 .. automodule:: sleap.gui.commands

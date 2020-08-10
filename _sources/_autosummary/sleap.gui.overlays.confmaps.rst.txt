@@ -1,4 +1,4 @@
-sleap.gui.overlays.confmaps
+﻿sleap.gui.overlays.confmaps
 ===========================
 
 .. automodule:: sleap.gui.overlays.confmaps

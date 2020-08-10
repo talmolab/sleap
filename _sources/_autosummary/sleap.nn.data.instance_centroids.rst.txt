@@ -1,4 +1,4 @@
-sleap.nn.data.instance_centroids
+﻿sleap.nn.data.instance_centroids
 ================================
 
 .. automodule:: sleap.nn.data.instance_centroids

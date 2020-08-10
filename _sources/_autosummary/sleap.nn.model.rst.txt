@@ -1,4 +1,4 @@
-sleap.nn.model
+﻿sleap.nn.model
 ==============
 
 .. automodule:: sleap.nn.model

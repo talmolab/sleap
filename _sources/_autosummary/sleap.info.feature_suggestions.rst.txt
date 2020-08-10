@@ -1,4 +1,4 @@
-sleap.info.feature_suggestions
+﻿sleap.info.feature_suggestions
 ==============================
 
 .. automodule:: sleap.info.feature_suggestions

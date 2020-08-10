@@ -1,4 +1,4 @@
-sleap.diagnostic
+﻿sleap.diagnostic
 ================
 
 .. automodule:: sleap.diagnostic

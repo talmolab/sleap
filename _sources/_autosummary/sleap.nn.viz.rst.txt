@@ -1,4 +1,4 @@
-sleap.nn.viz
+﻿sleap.nn.viz
 ============
 
 .. automodule:: sleap.nn.viz

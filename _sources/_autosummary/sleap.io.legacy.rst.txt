@@ -1,4 +1,4 @@
-sleap.io.legacy
+﻿sleap.io.legacy
 ===============
 
 .. automodule:: sleap.io.legacy

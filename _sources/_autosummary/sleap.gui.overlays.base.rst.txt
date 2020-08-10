@@ -1,4 +1,4 @@
-sleap.gui.overlays.base
+﻿sleap.gui.overlays.base
 =======================
 
 .. automodule:: sleap.gui.overlays.base

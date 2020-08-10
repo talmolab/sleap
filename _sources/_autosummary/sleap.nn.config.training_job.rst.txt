@@ -1,4 +1,4 @@
-sleap.nn.config.training_job
+﻿sleap.nn.config.training_job
 ============================
 
 .. automodule:: sleap.nn.config.training_job

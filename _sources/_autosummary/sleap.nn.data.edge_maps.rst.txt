@@ -1,4 +1,4 @@
-sleap.nn.data.edge_maps
+﻿sleap.nn.data.edge_maps
 =======================
 
 .. automodule:: sleap.nn.data.edge_maps

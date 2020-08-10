@@ -1,4 +1,4 @@
-sleap.nn.data.inference
+﻿sleap.nn.data.inference
 =======================
 
 .. automodule:: sleap.nn.data.inference

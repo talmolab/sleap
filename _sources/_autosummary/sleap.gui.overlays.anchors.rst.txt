@@ -1,4 +1,4 @@
-sleap.gui.overlays.anchors
+﻿sleap.gui.overlays.anchors
 ==========================
 
 .. automodule:: sleap.gui.overlays.anchors

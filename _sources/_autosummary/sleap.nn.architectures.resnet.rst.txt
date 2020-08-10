@@ -1,4 +1,4 @@
-sleap.nn.architectures.resnet
+﻿sleap.nn.architectures.resnet
 =============================
 
 .. automodule:: sleap.nn.architectures.resnet

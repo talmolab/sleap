@@ -1,4 +1,4 @@
-sleap.nn.architectures.leap
+﻿sleap.nn.architectures.leap
 ===========================
 
 .. automodule:: sleap.nn.architectures.leap

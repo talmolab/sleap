@@ -1,4 +1,4 @@
-sleap.version
+﻿sleap.version
 =============
 
 .. automodule:: sleap.version

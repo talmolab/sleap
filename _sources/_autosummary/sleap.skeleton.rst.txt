@@ -1,4 +1,4 @@
-sleap.skeleton
+﻿sleap.skeleton
 ==============
 
 .. automodule:: sleap.skeleton

@@ -1,4 +1,4 @@
-sleap.gui.widgets.multicheck
+﻿sleap.gui.widgets.multicheck
 ============================
 
 .. automodule:: sleap.gui.widgets.multicheck

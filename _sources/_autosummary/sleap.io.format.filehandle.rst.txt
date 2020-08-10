@@ -1,4 +1,4 @@
-sleap.io.format.filehandle
+﻿sleap.io.format.filehandle
 ==========================
 
 .. automodule:: sleap.io.format.filehandle

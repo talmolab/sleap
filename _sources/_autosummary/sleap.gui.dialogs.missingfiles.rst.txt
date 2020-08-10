@@ -1,4 +1,4 @@
-sleap.gui.dialogs.missingfiles
+﻿sleap.gui.dialogs.missingfiles
 ==============================
 
 .. automodule:: sleap.gui.dialogs.missingfiles

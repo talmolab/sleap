@@ -1,4 +1,4 @@
-sleap.nn.data.pipelines
+﻿sleap.nn.data.pipelines
 =======================
 
 .. automodule:: sleap.nn.data.pipelines

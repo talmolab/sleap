@@ -1,4 +1,4 @@
-sleap.nn.peak_finding
+﻿sleap.nn.peak_finding
 =====================
 
 .. automodule:: sleap.nn.peak_finding

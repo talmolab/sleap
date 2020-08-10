@@ -1,4 +1,4 @@
-sleap.gui.dialogs.delete
+﻿sleap.gui.dialogs.delete
 ========================
 
 .. automodule:: sleap.gui.dialogs.delete

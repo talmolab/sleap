@@ -1,4 +1,4 @@
-sleap.gui.dialogs.formbuilder
+﻿sleap.gui.dialogs.formbuilder
 =============================
 
 .. automodule:: sleap.gui.dialogs.formbuilder

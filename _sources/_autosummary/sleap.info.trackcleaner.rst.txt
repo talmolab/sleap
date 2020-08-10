@@ -1,4 +1,4 @@
-sleap.info.trackcleaner
+﻿sleap.info.trackcleaner
 =======================
 
 .. automodule:: sleap.info.trackcleaner

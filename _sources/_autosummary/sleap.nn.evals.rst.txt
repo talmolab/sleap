@@ -1,4 +1,4 @@
-sleap.nn.evals
+﻿sleap.nn.evals
 ==============
 
 .. automodule:: sleap.nn.evals

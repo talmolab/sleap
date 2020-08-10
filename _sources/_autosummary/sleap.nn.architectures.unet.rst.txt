@@ -1,4 +1,4 @@
-sleap.nn.architectures.unet
+﻿sleap.nn.architectures.unet
 ===========================
 
 .. automodule:: sleap.nn.architectures.unet

@@ -1,4 +1,4 @@
-sleap.gui.shortcuts
+﻿sleap.gui.shortcuts
 ===================
 
 .. automodule:: sleap.gui.shortcuts

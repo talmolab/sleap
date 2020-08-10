@@ -1,4 +1,4 @@
-sleap.nn.monitor
+﻿sleap.nn.monitor
 ================
 
 .. automodule:: sleap.nn.monitor

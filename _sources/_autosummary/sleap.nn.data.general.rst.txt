@@ -1,4 +1,4 @@
-sleap.nn.data.general
+﻿sleap.nn.data.general
 =====================
 
 .. automodule:: sleap.nn.data.general

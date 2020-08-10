@@ -1,4 +1,4 @@
-sleap.gui.state
+﻿sleap.gui.state
 ===============
 
 .. automodule:: sleap.gui.state

@@ -1,4 +1,4 @@
-sleap.io.format.genericjson
+﻿sleap.io.format.genericjson
 ===========================
 
 .. automodule:: sleap.io.format.genericjson

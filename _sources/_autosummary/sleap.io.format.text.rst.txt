@@ -1,4 +1,4 @@
-sleap.io.format.text
+﻿sleap.io.format.text
 ====================
 
 .. automodule:: sleap.io.format.text

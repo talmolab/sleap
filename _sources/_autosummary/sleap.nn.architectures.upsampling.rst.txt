@@ -1,4 +1,4 @@
-sleap.nn.architectures.upsampling
+﻿sleap.nn.architectures.upsampling
 =================================
 
 .. automodule:: sleap.nn.architectures.upsampling

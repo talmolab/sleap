@@ -1,4 +1,4 @@
-sleap.nn.data.providers
+﻿sleap.nn.data.providers
 =======================
 
 .. automodule:: sleap.nn.data.providers

@@ -1,4 +1,4 @@
-sleap.gui.color
+﻿sleap.gui.color
 ===============
 
 .. automodule:: sleap.gui.color
