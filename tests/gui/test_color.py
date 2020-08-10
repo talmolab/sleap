@@ -1,5 +1,23 @@
-from sleap.gui.overlays.tracks import TrackTrailOverlay
 from sleap.gui.color import ColorManager
+
+
+def test_color_manager():
+    color_manager = ColorManager()
+
+    color_manager.palette = "standard"
+
+    colors = [color_manager.get_color_by_idx(i) for i in range(3)]
+
+    # make sure we can set palette by passing list of color tuples
+    color_manager.palette = colors
+
+    for i in range(3):
+        assert color_manager.get_color_by_idx(i) == colors[i]
+
+    # make sure standard palette is used if name isn't valid
+    color_manager.palette = "something that doesn't exist"
+    for i in range(3):
+        assert color_manager.get_color_by_idx(i) == colors[i]
 
 
 def test_track_color(centered_pair_predictions):
@@ -47,3 +65,11 @@ def test_track_color(centered_pair_predictions):
         color_manager.get_item_pen_width(inst_0.nodes[1], inst_0)
         == color_manager.thick_pen_width
     )
+
+    # Make sure that edges can be distinctly colored
+    color_manager.distinctly_color = "edges"
+
+    for edge_idx in range(4):
+        assert color_manager.get_item_color(
+            inst_0.skeleton.edges[edge_idx], inst_0
+        ) == color_manager.get_color_by_idx(edge_idx)
