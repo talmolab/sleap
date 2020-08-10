@@ -1,6 +1,6 @@
 from sleap.gui.learning import runners
 from sleap.gui.learning.configs import TrainingConfigsGetter
-from sleap.gui.learning.utils import ScopedKeyDict
+from sleap.gui.learning.scopedkeydict import ScopedKeyDict
 
 from sleap.io.video import Video
 

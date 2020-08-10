@@ -1,3 +1,7 @@
+"""
+Preview of training data (i.e., confidence maps and part affinity fields).
+"""
+
 import copy
 from collections import defaultdict
 from typing import List, Text
@@ -24,6 +28,9 @@ MAX_FRAMES_TO_PREVIEW = 20
 
 
 def show_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo]):
+    """
+    Shows window(s) with preview images of training data for model configs.
+    """
 
     labels_reader = LabelsReader.from_user_instances(labels)
 
@@ -73,7 +80,13 @@ def show_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo])
                 )
 
 
-def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig):
+def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig) -> np.ndarray:
+    """
+    Gets (subset of) raw images used for training.
+
+    TODO: Refactor so we can get this data without digging into details of the
+      the specific pipelines (e.g., key for confmaps depends on head type).
+    """
     cfg = copy.deepcopy(cfg)
     output_keys = dict()
 
