@@ -169,6 +169,7 @@ class FormBuilderModalDialog(QtWidgets.QDialog):
 
         self._results = None
         self.form_widget = form_widget
+        self.message_fields = []
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
@@ -192,12 +193,21 @@ class FormBuilderModalDialog(QtWidgets.QDialog):
         buttons.accepted.connect(self.on_accept)
         buttons.rejected.connect(self.reject)
 
-    def add_message(self, message):
+    def add_message(self, message: Text):
         """Adds text message between form fields and buttons."""
         field = QtWidgets.QLabel(message)
         field.setWordWrap(True)
 
+        self.message_fields.append(field)
+
         self.layout().insertWidget(1, field)
+
+    def set_message(self, message: Text):
+        """Adds/replaces text message between form fields and buttons."""
+        if self.message_fields:
+            self.message_fields[0].setText(message)
+        else:
+            self.add_message(message)
 
     def on_accept(self):
         self._results = self.form_widget.get_form_data()
