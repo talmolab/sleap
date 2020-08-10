@@ -35,10 +35,59 @@
             
   <div class="section" id="module-sleap.nn.tracker.components">
 <span id="sleap-nn-tracker-components"></span><h1>sleap.nn.tracker.components<a class="headerlink" href="#module-sleap.nn.tracker.components" title="Permalink to this headline">¶</a></h1>
+<p>Functions/classes used by multiple trackers.</p>
+<p>Main types of functions:</p>
+<ol class="arabic simple">
+<li><p>Calculate pair-wise instance similarity; used for populating similarity/cost
+matrix.</p></li>
+<li><p>Pick matches based on cost matrix.</p></li>
+<li><p>Other clean-up (e.g., cull instances, connect track breaks).</p></li>
+</ol>
 <dl class="py class">
 <dt id="sleap.nn.tracker.components.FrameMatches">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">FrameMatches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">matches</span><span class="p">:</span> <span class="n">List<span class="p">[</span>sleap.nn.tracker.components.Match<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">unmatched_instances</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/tracker/components.html#FrameMatches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">FrameMatches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">matches</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.nn.tracker.components.Match" title="sleap.nn.tracker.components.Match">sleap.nn.tracker.components.Match</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">unmatched_instances</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/tracker/components.html#FrameMatches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates (and stores) matches for a frame.</p>
+<p>This class encapsulates the logic to generate matches (using a custom
+matching function) from a cost matrix. One key feature is that it retains
+additional information, such as whether all the matches were first-choice
+(i.e., if each instance got the instance it would have matched to if there
+weren’t other instances).</p>
+<p>Typically this will be created using the <cite>from_candidate_instances</cite> method
+which creates the cost matrix and then uses the matching function to find
+matches.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.tracker.components.FrameMatches.matches">
+<code class="sig-name descname">matches</code><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>the list of <cite>Match</cite> objects.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.tracker.components.FrameMatches.cost_matrix">
+<code class="sig-name descname">cost_matrix</code><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches.cost_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>the cost matrix, shape is
+(number of untracked instances, number of candidate tracks).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.tracker.components.FrameMatches.unmatched_instances">
+<code class="sig-name descname">unmatched_instances</code><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches.unmatched_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>the instances for which we are finding matches.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.tracker.components.FrameMatches.has_only_first_choice_matches">
+<em class="property">property </em><code class="sig-name descname">has_only_first_choice_matches</code><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches.has_only_first_choice_matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether all the matches were first-choice.</p>
+<p>A match is a ‘first-choice’ for an instance if that instance would have
+matched to the same track even if there were no other instances.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.tracker.components.Match">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">Match</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">score</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_first_choice</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/tracker/components.html#Match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.Match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores a match between a specific instance and specific track.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -197,7 +246,7 @@ only use score to determine which instances to remove.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -233,6 +282,7 @@ only use score to determine which instances to remove.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

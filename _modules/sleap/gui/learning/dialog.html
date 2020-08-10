@@ -32,13 +32,16 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.learning.dialog</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">cattr</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Dialogs for running training and/or inference in GUI.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">cattr</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.learning</span> <span class="kn">import</span> <span class="n">runners</span><span class="p">,</span> <span class="n">utils</span><span class="p">,</span> <span class="n">configs</span><span class="p">,</span> <span class="n">datagen</span><span class="p">,</span> <span class="n">receptivefield</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.learning</span> <span class="kn">import</span> <span class="n">runners</span><span class="p">,</span> <span class="n">scopedkeydict</span><span class="p">,</span> <span class="n">configs</span><span class="p">,</span> <span class="n">datagen</span><span class="p">,</span> <span class="n">receptivefield</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span>
 
@@ -57,6 +60,24 @@
 
 
 <div class="viewcode-block" id="LearningDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.dialog.html#sleap.gui.learning.dialog.LearningDialog">[docs]</a><span class="k">class</span> <span class="nc">LearningDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog for running training and/or inference.</span>
+
+<span class="sd">    The dialog shows tabs for configuring the pipeline (</span>
+<span class="sd">    :py:class:`TrainingPipelineWidget`) and, depending on the pipeline, for</span>
+<span class="sd">    each specific model (:py:class:`TrainingEditorWidget`).</span>
+
+<span class="sd">    In training mode, the model hyperpameters are editable unless you&#39;re using</span>
+<span class="sd">    a trained model; they are read-only in inference mode.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        mode: either &quot;training&quot; or &quot;inference&quot;.</span>
+<span class="sd">        labels_filename: path to labels file, used for default location to</span>
+<span class="sd">            save models.</span>
+<span class="sd">        labels: the `Labels` object (can also be loaded from given filename)</span>
+<span class="sd">        skeleton: the `Skeleton` object (can also be taken from `Labels`), used</span>
+<span class="sd">            for list of nodes for (e.g.) selecting anchor node</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">learningFinished</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
@@ -418,7 +439,9 @@
                     <span class="n">pipeline_data</span><span class="o">=</span><span class="n">pipeline_form_data</span><span class="p">,</span>
                 <span class="p">)</span>
 
-                <span class="n">cfg</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">make_training_config_from_key_val_dict</span><span class="p">(</span><span class="n">tab_cfg_key_val_dict</span><span class="p">)</span>
+                <span class="n">cfg</span> <span class="o">=</span> <span class="n">scopedkeydict</span><span class="o">.</span><span class="n">make_training_config_from_key_val_dict</span><span class="p">(</span>
+                    <span class="n">tab_cfg_key_val_dict</span>
+                <span class="p">)</span>
                 <span class="n">cfg_info</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">ConfigFileInfo</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">head_name</span><span class="o">=</span><span class="n">tab_name</span><span class="p">)</span>
 
                 <span class="n">cfg_info_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
@@ -565,6 +588,10 @@
 
 
 <div class="viewcode-block" id="TrainingPipelineWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.dialog.html#sleap.gui.learning.dialog.TrainingPipelineWidget">[docs]</a><span class="k">class</span> <span class="nc">TrainingPipelineWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Widget used in :py:class:`LearningDialog` for configuring pipeline.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">updatePipeline</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
@@ -637,16 +664,19 @@
 
 <div class="viewcode-block" id="TrainingEditorWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.dialog.html#sleap.gui.learning.dialog.TrainingEditorWidget">[docs]</a><span class="k">class</span> <span class="nc">TrainingEditorWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Dialog for viewing and modifying training profiles.</span>
+<span class="sd">    Dialog for viewing and modifying training profiles (model hyperparameters).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        video: Video to use for receptive field preview</span>
-<span class="sd">        skeleton: Skeleton to use for node option list</span>
+<span class="sd">        video: `Video` to use for receptive field preview</span>
+<span class="sd">        skeleton: `Skeleton` to use for node option list</span>
 <span class="sd">        head: If given, then only show configs with specified head name</span>
 <span class="sd">        cfg_getter: Object to use for getting list of config files.</span>
-<span class="sd">            If given, then menu of config files will be shown.</span>
+<span class="sd">            If given, then menu of config files will be shown so user can</span>
+<span class="sd">            either copy hyperameters from another profile/model, or use a model</span>
+<span class="sd">            that was already trained.</span>
 <span class="sd">        require_trained: If True, then only show configs that are trained,</span>
-<span class="sd">            and don&#39;t allow user to uncheck &quot;use trained&quot; setting.</span>
+<span class="sd">            and don&#39;t allow user to uncheck &quot;use trained&quot; setting. This is set</span>
+<span class="sd">            when :py:class:`LearningDialog` is in &quot;inference&quot; mode.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
@@ -792,7 +822,7 @@
 
     <span class="k">def</span> <span class="nf">update_receptive_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">data_form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
-        <span class="n">model_cfg</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">make_model_config_from_key_val_dict</span><span class="p">(</span>
+        <span class="n">model_cfg</span> <span class="o">=</span> <span class="n">scopedkeydict</span><span class="o">.</span><span class="n">make_model_config_from_key_val_dict</span><span class="p">(</span>
             <span class="n">key_val_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">form_widgets</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
         <span class="p">)</span>
 
@@ -817,7 +847,9 @@
 
         <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span>
         <span class="n">cfg_dict</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-        <span class="n">key_val_dict</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">ScopedKeyDict</span><span class="o">.</span><span class="n">from_hierarchical_dict</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">)</span><span class="o">.</span><span class="n">key_val_dict</span>
+        <span class="n">key_val_dict</span> <span class="o">=</span> <span class="n">scopedkeydict</span><span class="o">.</span><span class="n">ScopedKeyDict</span><span class="o">.</span><span class="n">from_hierarchical_dict</span><span class="p">(</span>
+            <span class="n">cfg_dict</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">key_val_dict</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fields_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span>
 
     <span class="c1"># def _set_user_config(self):</span>

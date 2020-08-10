@@ -32,7 +32,21 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.io.format.deeplabcut</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Adaptor for reading DeepLabCut datasets.</span>
+
+<span class="sd">This can either read a CSV file with labeled frames for a single video,</span>
+<span class="sd">or a YAML file which potentially contains multiple videos.</span>
+
+<span class="sd">The adaptor was created by manually inspecting DeepLabCut files and there&#39;s no</span>
+<span class="sd">guarantee that it will perfectly import all data (especially metadata).</span>
+
+<span class="sd">If the adaptor can find full video files for the annotated frames, then the</span>
+<span class="sd">full videos will be used in the resulting SLEAP dataset. Otherwise, we&#39;ll</span>
+<span class="sd">create a video object which wraps the individual frame images.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 

@@ -1088,19 +1088,25 @@
     <span class="n">instance_count</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">iou_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;LabeledFrame&quot;</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]):</span>
         <span class="n">cull_instances</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_threshold</span><span class="p">)</span>
         <span class="n">connect_single_track_breaks</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_count</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">run_tracker</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">tracker</span><span class="p">):</span>
-    <span class="kn">import</span> <span class="nn">time</span>
+<div class="viewcode-block" id="run_tracker"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.tracking.html#sleap.nn.tracking.run_tracker">[docs]</a><span class="k">def</span> <span class="nf">run_tracker</span><span class="p">(</span><span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">],</span> <span class="n">tracker</span><span class="p">:</span> <span class="n">Tracker</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Run a tracker on a set of labeled frames.</span>
 
+<span class="sd">    Args:</span>
+<span class="sd">        frames: A list of labeled frames with instances.</span>
+<span class="sd">        tracker: An initialized Tracker.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The input frames with the new tracks assigned. If the frames already had tracks,</span>
+<span class="sd">        they will be cleared if the tracker has been re-initialized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Return original frames if we aren&#39;t retracking</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">tracker</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">frames</span>
-
-    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
     <span class="n">new_lfs</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -1124,12 +1130,7 @@
         <span class="p">)</span>
         <span class="n">new_lfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_lf</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">new_lfs</span>
+    <span class="k">return</span> <span class="n">new_lfs</span></div>
 
 
 <span class="k">def</span> <span class="nf">retrack</span><span class="p">():</span>

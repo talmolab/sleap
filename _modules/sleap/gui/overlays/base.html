@@ -1,282 +1,142 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>sleap.gui.overlays.base &mdash; SLEAP  documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.overlays.base &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../../search.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
+    <link rel="search" title="Search" href="../../../../search.html" />
    
-  <div class="wy-grid-for-nav">
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../index.html" class="icon icon-home"> SLEAP
-          
-
-          
-          </a>
-
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">SLEAP Package</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../skeleton.html">Skeleton</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../video.html">Video</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../instance.html">Instance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../dataset.html">Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../gui.html">GUI</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../misc.html">Misc</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../../index.html">SLEAP</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
-        
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
-      <li>sleap.gui.overlays.base</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-      </li>
-    
-  </ul>
-
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
   
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
             
   <h1>Source code for sleap.gui.overlays.base</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Base class for overlays.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base classes for overlays.</span>
 
-<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span>
+<span class="sd">Overlays are used for showing additional visuals on top of a video frame (i.e.,</span>
+<span class="sd">a `QtVideoPlayer` object). Overlay objects are created in the main GUI app,</span>
+<span class="sd">which then automatically calls the `add_to_scene` for each loaded overlay after</span>
+<span class="sd">drawing a frame (i.e., when user navigates to a new frame or something changes</span>
+<span class="sd">so that current frame must be redrawn).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">sleap</span>
-<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="k">import</span> <span class="n">Video</span><span class="p">,</span> <span class="n">HDF5Video</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="k">import</span> <span class="n">QtVideoPlayer</span>
-<span class="kn">from</span> <span class="nn">sleap.nn.transform</span> <span class="k">import</span> <span class="n">DataTransform</span>
-
-
-<div class="viewcode-block" id="HDF5Data"><a class="viewcode-back" href="../../../../gui.html#sleap.gui.overlays.base.HDF5Data">[docs]</a><span class="k">class</span> <span class="nc">HDF5Data</span><span class="p">(</span><span class="n">HDF5Video</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get data for frame i from `HDF5Video` object.&quot;&quot;&quot;</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.providers</span> <span class="kn">import</span> <span class="n">VideoReader</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.inference</span> <span class="kn">import</span> <span class="n">VisualPredictor</span>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">ModelData</span><span class="p">:</span>
-    <span class="n">inference_model</span><span class="p">:</span> <span class="s2">&quot;sleap.nn.inference.InferenceModel&quot;</span>
+<div class="viewcode-block" id="BaseOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.base.html#sleap.gui.overlays.base.BaseOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BaseOverlay</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for overlays.</span>
+
+<span class="sd">    Most overlays need rely on the `Labels` from which to get data and need the</span>
+<span class="sd">    `QtVideoPlayer` to which a `QGraphicsObject` item will be added, so these</span>
+<span class="sd">    attributes are included in the base class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">player</span><span class="p">:</span> <span class="n">QtVideoPlayer</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ModelData"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.base.html#sleap.gui.overlays.base.ModelData">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ModelData</span><span class="p">(</span><span class="n">Sequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sequence-type object which generates predictions for specified frames.&quot;&quot;&quot;</span>
+
+    <span class="n">predictor</span><span class="p">:</span> <span class="n">VisualPredictor</span>
+    <span class="n">result_key</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">video</span><span class="p">:</span> <span class="n">Video</span>
-    <span class="n">do_rescale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">output_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
     <span class="n">adjust_vals</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Data data for frame i from predictor.&quot;&quot;&quot;</span>
-        <span class="n">frame_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-
-        <span class="c1"># Trim to size that works for model</span>
-        <span class="n">size_reduction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">down_blocks</span><span class="p">)</span>
-        <span class="n">input_size</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="n">size_reduction</span><span class="p">)</span> <span class="o">*</span> <span class="n">size_reduction</span><span class="p">,</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="n">size_reduction</span><span class="p">)</span> <span class="o">*</span> <span class="n">size_reduction</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">channels</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">frame_img</span> <span class="o">=</span> <span class="n">frame_img</span><span class="p">[:,</span> <span class="p">:</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">:]</span>
-
-        <span class="n">inference_transform</span> <span class="o">=</span> <span class="n">DataTransform</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_rescale</span><span class="p">:</span>
-            <span class="c1"># Scale input image if model trained on scaled images</span>
-            <span class="n">frame_img</span> <span class="o">=</span> <span class="n">inference_transform</span><span class="o">.</span><span class="n">scale_to</span><span class="p">(</span>
-                <span class="n">imgs</span><span class="o">=</span><span class="n">frame_img</span><span class="p">,</span> <span class="n">target_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
-            <span class="p">)</span>
-
-        <span class="c1"># Get predictions</span>
-        <span class="n">frame_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">frame_img</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_rescale</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
-            <span class="n">inference_transform</span><span class="o">.</span><span class="n">scale</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span>
-            <span class="n">frame_result</span> <span class="o">=</span> <span class="n">inference_transform</span><span class="o">.</span><span class="n">invert_scale</span><span class="p">(</span><span class="n">frame_result</span><span class="p">)</span>
+        <span class="c1"># Get predictions for frame i</span>
+        <span class="n">frame_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">VideoReader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 
         <span class="c1"># We just want the single image results</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">slice</span><span class="p">:</span>
-            <span class="n">frame_result</span> <span class="o">=</span> <span class="n">frame_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">frame_result</span> <span class="o">=</span> <span class="n">frame_result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">result_key</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjust_vals</span><span class="p">:</span>
-            <span class="c1"># If max value is below 1, amplify values so max is 1.</span>
-            <span class="c1"># This allows us to visualize model with small ptp value</span>
-            <span class="c1"># even though this model may not give us adequate predictions.</span>
-            <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">frame_result</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">max_val</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">frame_result</span> <span class="o">=</span> <span class="n">frame_result</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">frame_result</span><span class="p">)</span>
-
-            <span class="c1"># Clip values to ensure that they&#39;re within [0, 1]</span>
             <span class="n">frame_result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">frame_result</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Determine output scale by comparing original image with model output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="n">frame_result</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">frame_result</span>
 
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">num_frames</span></div>
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">DataOverlay</span><span class="p">:</span>
+
+<div class="viewcode-block" id="DataOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.base.html#sleap.gui.overlays.base.DataOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DataOverlay</span><span class="p">(</span><span class="n">BaseOverlay</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for confidence maps/part affinity fields overlays.</span>
+
+<span class="sd">    These overlays use a `ModelData` class which provides the confidence maps/</span>
+<span class="sd">    part affinity fields for the frame (by running inference with a model).</span>
+<span class="sd">    They could easily be modified to use another &quot;data&quot; class, e.g., one</span>
+<span class="sd">    which load saved confidence maps/part affinity fields from a file.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data: instance of a class such that you can use `data[frame_idx]`</span>
+<span class="sd">            to get the data (e.g., confmaps) for a given frame.</span>
+<span class="sd">        overlay_class: determines how the data will be shown, i.e., as</span>
+<span class="sd">            confidence maps or as a quiver plot (for part affinity fields).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">player</span><span class="p">:</span> <span class="n">QtVideoPlayer</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">overlay_class</span><span class="p">:</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">transform</span><span class="p">:</span> <span class="n">DataTransform</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">overlay_class</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;ConfMapsPlot&quot;</span><span class="p">,</span> <span class="s2">&quot;MultiQuiverPlot&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="c1"># Check if video matches video for ModelData object</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;video&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">video</span> <span class="o">!=</span> <span class="n">video</span><span class="p">:</span>
-            <span class="n">video_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
-            <span class="n">prior_shape</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">channels</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="c1"># Check if the videos are both compatible with the loaded model</span>
-            <span class="k">if</span> <span class="n">video_shape</span> <span class="o">==</span> <span class="n">prior_shape</span><span class="p">:</span>
-                <span class="c1"># Shapes match so we can apply model to this video</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="n">video</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Shapes don&#39;t match so don&#39;t do anything with this video</span>
-                <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlay_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlay_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">]))</span>
+        <span class="n">img_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">]</span>
+        <span class="n">img_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">output_scale</span>
 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># If data indices are different than frame indices, use data</span>
-            <span class="c1"># index; otherwise just use frame index.</span>
-            <span class="n">idxs</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">get_data_idxs</span><span class="p">(</span><span class="n">frame_idx</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">frame_idxs</span>
-                <span class="k">else</span> <span class="p">[</span><span class="n">frame_idx</span><span class="p">]</span>
-            <span class="p">)</span>
-
-            <span class="c1"># Loop over indices, in case there&#39;s more than one for frame</span>
-            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">bounding_boxes</span><span class="p">:</span>
-                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">bounding_boxes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
-
-                <span class="n">overlay_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlay_class</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">scale</span>
-                <span class="p">)</span>
-
-                <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="n">overlay_object</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span>
+            <span class="n">to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span>
+            <span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">overlay_class</span><span class="p">(</span><span class="n">img_data</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">img_scale</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -288,77 +148,35 @@
         <span class="n">what</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="o">*</span><span class="n">where</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_h5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
-
-        <span class="k">with</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">frame_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">&quot;frame_idxs&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
-            <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">&quot;bounds&quot;</span><span class="p">])</span>
-
-        <span class="n">transform</span> <span class="o">=</span> <span class="n">DataTransform</span><span class="p">(</span><span class="n">frame_idxs</span><span class="o">=</span><span class="n">frame_idxs</span><span class="p">,</span> <span class="n">bounding_boxes</span><span class="o">=</span><span class="n">bounding_boxes</span><span class="p">)</span>
-
-        <span class="n">data_object</span> <span class="o">=</span> <span class="n">HDF5Data</span><span class="p">(</span>
-            <span class="n">filename</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">input_format</span><span class="p">,</span> <span class="n">convert_range</span><span class="o">=</span><span class="kc">False</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_object</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">make_predictor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VisualPredictor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VisualPredictor</span><span class="o">.</span><span class="n">from_trained_models</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">sleap.nn.model</span> <span class="k">import</span> <span class="n">ModelOutputType</span>
-        <span class="kn">from</span> <span class="nn">sleap.nn.inference</span> <span class="k">import</span> <span class="n">InferenceModel</span>
-        <span class="kn">from</span> <span class="nn">sleap.nn.training</span> <span class="k">import</span> <span class="n">TrainingJob</span>
+    <span class="k">def</span> <span class="nf">from_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_predictor</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">make_predictor</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="c1"># Load the trained model</span>
-        <span class="n">training_job</span> <span class="o">=</span> <span class="n">TrainingJob</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="n">inference_model</span> <span class="o">=</span> <span class="n">InferenceModel</span><span class="p">(</span><span class="n">training_job</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_predictor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">predictor</span><span class="p">:</span> <span class="n">VisualPredictor</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">show_pafs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="c1"># imports here so we don&#39;t get circular dependencies</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.confmaps</span> <span class="kn">import</span> <span class="n">ConfMapsPlot</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.pafs</span> <span class="kn">import</span> <span class="n">MultiQuiverPlot</span>
 
-        <span class="n">size_reduction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">inference_model</span><span class="o">.</span><span class="n">down_blocks</span><span class="p">)</span>
-        <span class="n">input_size</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="n">size_reduction</span><span class="p">)</span> <span class="o">*</span> <span class="n">size_reduction</span><span class="p">,</span>
-            <span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="n">size_reduction</span><span class="p">)</span> <span class="o">*</span> <span class="n">size_reduction</span><span class="p">,</span>
-            <span class="n">video</span><span class="o">.</span><span class="n">channels</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">model_output_type</span> <span class="o">=</span> <span class="n">training_job</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output_type</span>
-
-        <span class="c1"># Here we determine if the input should be scaled. If so, then</span>
-        <span class="c1"># the output of the model will also be rescaled accordingly.</span>
-        <span class="n">do_rescale</span> <span class="o">=</span> <span class="n">inference_model</span><span class="o">.</span><span class="n">input_scale</span> <span class="o">!=</span> <span class="mf">1.0</span>
-
-        <span class="c1"># Determine how the output from the model should be scaled</span>
-        <span class="n">img_output_scale</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># image rescaling</span>
-        <span class="n">obj_output_scale</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># scale to pass to overlay object</span>
-
-        <span class="k">if</span> <span class="n">model_output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">:</span>
-            <span class="n">obj_output_scale</span> <span class="o">=</span> <span class="n">inference_model</span><span class="o">.</span><span class="n">output_relative_scale</span>
-
+        <span class="k">if</span> <span class="n">show_pafs</span><span class="p">:</span>
+            <span class="n">result_key</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">part_affinity_fields_key_name</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">img_output_scale</span> <span class="o">=</span> <span class="n">inference_model</span><span class="o">.</span><span class="n">output_relative_scale</span>
+            <span class="n">result_key</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">confidence_maps_key_name</span>
 
-        <span class="c1"># Construct the ModelData object that runs inference</span>
-        <span class="n">data_object</span> <span class="o">=</span> <span class="n">ModelData</span><span class="p">(</span>
-            <span class="n">inference_model</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">do_rescale</span><span class="o">=</span><span class="n">do_rescale</span><span class="p">,</span> <span class="n">output_scale</span><span class="o">=</span><span class="n">img_output_scale</span>
-        <span class="p">)</span>
+        <span class="n">data_object</span> <span class="o">=</span> <span class="n">ModelData</span><span class="p">(</span><span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span> <span class="n">result_key</span><span class="o">=</span><span class="n">result_key</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span>
 
         <span class="c1"># Determine whether to use confmap or paf overlay</span>
-        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.confmaps</span> <span class="k">import</span> <span class="n">ConfMapsPlot</span>
-        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.pafs</span> <span class="k">import</span> <span class="n">MultiQuiverPlot</span>
-
-        <span class="k">if</span> <span class="n">model_output_type</span> <span class="o">==</span> <span class="n">ModelOutputType</span><span class="o">.</span><span class="n">PART_AFFINITY_FIELD</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show_pafs</span><span class="p">:</span>
             <span class="n">overlay_class</span> <span class="o">=</span> <span class="n">MultiQuiverPlot</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">overlay_class</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span>
 
-        <span class="c1"># We use the transform scale for *multiscale* models</span>
-        <span class="c1"># with full-scale input and lower-scale output.</span>
-        <span class="c1"># This doesn&#39;t require rescaling the input, and the &quot;scale&quot;</span>
-        <span class="c1"># will be passed to the overlay object to do its own upscaling</span>
-        <span class="c1"># (at least for pafs).</span>
-        <span class="n">transform</span> <span class="o">=</span> <span class="n">DataTransform</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">obj_output_scale</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">data_object</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">overlay_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_object</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">overlay_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <span class="n">h5_colors</span> <span class="o">=</span> <span class="p">[</span>
@@ -415,43 +233,72 @@
 <span class="p">]</span>
 </pre></div>
 
-           </div>
-           
           </div>
-          <footer>
-  
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
 
-  <hr/>
 
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, Murthy Lab @ Princeton
 
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-</footer>
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
 
         </div>
       </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
 
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
     
-   
 
-</body>
+    
+  </body>
 </html>

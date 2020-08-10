@@ -35,6 +35,28 @@
             
   <div class="section" id="module-sleap.info.align">
 <span id="sleap-info-align"></span><h1>sleap.info.align<a class="headerlink" href="#module-sleap.info.align" title="Permalink to this headline">¶</a></h1>
+<p>Functions to align instances.</p>
+<p>Usually you’ll want to</p>
+<ol class="arabic simple">
+<li><p>find out the skeleton edge to use for aligning instances,</p></li>
+<li><p>align all instances using this edge in the skeleton,</p></li>
+<li><p>calculate mean/std for node locations of aligned instances.</p></li>
+</ol>
+<p>For step (1), we use the most “stable” edge (smallest std in length) for the set
+of instances which has a (mean) length above some threshold. Usually this will
+be something like [head -&gt; thorax], i.e., an edge between two body parts which
+are relatively fixed relative to each other, and thus work well as an axis for
+aligning all the instances.</p>
+<p>Steps (2) and (3) are fairly straightforward: we calculate angle of the edge
+found in step (1) for each instance, then rotate each instance accordingly,
+then calculate mean/standard deviation for each node in the resulting matrix.</p>
+<p>Note that all these functions are vectorized and work on matrices with shape
+(instances, nodes, 2), where 2 corresponds to (x, y) for each node.</p>
+<p>After we have a “mean” instance (i.e., an instance with all points at mean
+of other, aligned instances), the “mean” instance can then itself be aligned
+with another instance using the <cite>align_instance_points</cite> function. This is
+useful so we can use “mean” instance to add “default” points to an instance
+which doesn’t yet have all points).</p>
 <dl class="py function">
 <dt id="sleap.info.align.align_instance_points">
 <code class="sig-prename descclassname">sleap.info.align.</code><code class="sig-name descname">align_instance_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source_points_array</span></em>, <em class="sig-param"><span class="n">target_points_array</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/info/align.html#align_instance_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.info.align.align_instance_points" title="Permalink to this definition">¶</a></dt>
@@ -137,7 +159,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -173,6 +195,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

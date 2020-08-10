@@ -33,9 +33,14 @@
             
   <h1>Source code for sleap.gui.dialogs.formbuilder</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Module for creating a form from a yaml file.</span>
+<span class="sd">Widgets and dialogues for YAML-based forms.</span>
 
-<span class="sd">Example:</span>
+<span class="sd">Most of the time you can use :py:class:`YamlFormWidget`. If you want to show</span>
+<span class="sd">the widget as a model dialog, :py:class:`FormBuilderModalDialog` makes this</span>
+<span class="sd">a little more convenient (it provides methods for adding a message for the</span>
+<span class="sd">dialog and for getting the results when the dialog is closed).</span>
+
+<span class="sd">Example of form widget:</span>
 
 <span class="sd">&gt;&gt;&gt; widget = YamlFormWidget(yaml_file=&quot;example.yaml&quot;)</span>
 <span class="sd">&gt;&gt;&gt; widget.mainAction.connect(my_function)</span>
@@ -43,11 +48,17 @@
 <span class="sd">my_function will get called with form data when user clicks the main button</span>
 <span class="sd">(main button has type &quot;button&quot; and default &quot;main action&quot;)</span>
 
+<span class="sd">Example of modal dialog:</span>
+
+<span class="sd">&gt;&gt;&gt; results = FormBuilderModalDialog(form_name=&quot;example&quot;).get_results()</span>
+
+<span class="sd">The results will be empty dictionary if the user hit &quot;cancel&quot;, otherwise it</span>
+<span class="sd">will contain all data from form (dict keys matching names of fields).</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">yaml</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
 
@@ -57,11 +68,18 @@
 
 <div class="viewcode-block" id="YamlFormWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.YamlFormWidget">[docs]</a><span class="k">class</span> <span class="nc">YamlFormWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGroupBox</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Custom QWidget which creates form based on yaml file.</span>
+<span class="sd">    Widget which shows form created from a YAML file.</span>
+
+<span class="sd">    Typically you&#39;ll want to save the YAML in `sleap/config/` and use the</span>
+<span class="sd">    :py:meth:`from_name` method to make the form (e.g., if your form data is in</span>
+<span class="sd">    `sleap/config/foo.yaml`, then you can create form like so:</span>
+
+<span class="sd">    &gt;&gt;&gt; widget = YamlFormWidget.from_name(&quot;foo&quot;)</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        yaml_file: filename</span>
-<span class="sd">        which_form (optional): key to form in yaml file, default &quot;main&quot;</span>
+<span class="sd">        yaml_file: filename of YAML file to load.</span>
+<span class="sd">        which_form (optional): key to form in YAML file, default is &quot;main&quot;.</span>
+<span class="sd">            this allows a single YAML file to contain data for multiple forms.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">mainAction</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
@@ -69,9 +87,9 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">yaml_file</span><span class="p">,</span>
-        <span class="n">which_form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
-        <span class="n">field_options_lists</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">yaml_file</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+        <span class="n">which_form</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+        <span class="n">field_options_lists</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
@@ -106,15 +124,15 @@
         <span class="n">FormBuilderLayout</span><span class="o">.</span><span class="n">set_widget_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
 
 <div class="viewcode-block" id="YamlFormWidget.from_name"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.YamlFormWidget.from_name">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">form_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;YamlFormWidget&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">form_name</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;YamlFormWidget&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate class from the short name of form (e.g., &quot;suggestions&quot;).</span>
 
-<span class="sd">        Short name is converted to path to yaml file, and then class is</span>
-<span class="sd">        instantiated using this path.</span>
+<span class="sd">        Short name is converted to path to YAML file in `sleap/config/`,</span>
+<span class="sd">        and then class is instantiated using this path.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            form_name: Short name of form, corresponds to name of yaml file.</span>
+<span class="sd">            form_name: Short name of form, corresponds to name of YAML file.</span>
 <span class="sd">            args: Positional args passed to class initializer.</span>
 <span class="sd">            kwargs: Named args passed to class initializer.</span>
 
@@ -142,11 +160,11 @@
         <span class="sd">&quot;&quot;&quot;Returns dict of form data.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="YamlFormWidget.set_field_options"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.YamlFormWidget.set_field_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="YamlFormWidget.set_field_options"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.YamlFormWidget.set_field_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets option list for specified field.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">set_field_options</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">options_list</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">set_field_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">is_enabled</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">set_field_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">is_enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_layout</span><span class="o">.</span><span class="n">set_field_enabled</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">is_enabled</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">set_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
@@ -158,15 +176,34 @@
 
 
 <div class="viewcode-block" id="FormBuilderModalDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog">[docs]</a><span class="k">class</span> <span class="nc">FormBuilderModalDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Blocking modal dialog wrapper for YamlFormWidget widget.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Blocking modal dialog to use with :py:class:`YamlFormWidget` widget.</span>
+
+<span class="sd">    You can either initialize with a :py:class:`YamlFormWidget` widget, or</span>
+<span class="sd">    provide the name of the YAML form (i.e., the string you&#39;d pass to</span>
+<span class="sd">    :py:meth:`YamlFormWidget.from_name()`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">form_widget</span><span class="p">:</span> <span class="n">YamlFormWidget</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">form_widget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">YamlFormWidget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">form_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FormBuilderModalDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">form_widget</span> <span class="ow">and</span> <span class="n">form_name</span><span class="p">:</span>
+            <span class="n">form_widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">form_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">form_widget</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;FormBuilderModalDialog must have either form widget or name.&quot;</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span> <span class="o">=</span> <span class="n">form_widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_fields</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># Layout for buttons</span>
         <span class="n">buttons</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="p">()</span>
@@ -190,18 +227,27 @@
         <span class="n">buttons</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_accept</span><span class="p">)</span>
         <span class="n">buttons</span><span class="o">.</span><span class="n">rejected</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reject</span><span class="p">)</span>
 
-<div class="viewcode-block" id="FormBuilderModalDialog.add_message"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.add_message">[docs]</a>    <span class="k">def</span> <span class="nf">add_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+<div class="viewcode-block" id="FormBuilderModalDialog.add_message"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.add_message">[docs]</a>    <span class="k">def</span> <span class="nf">add_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adds text message between form fields and buttons.&quot;&quot;&quot;</span>
         <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
         <span class="n">field</span><span class="o">.</span><span class="n">setWordWrap</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">insertWidget</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FormBuilderModalDialog.set_message"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.set_message">[docs]</a>    <span class="k">def</span> <span class="nf">set_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds/replaces text message between form fields and buttons.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">message_fields</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message_fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">on_accept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
 
-<div class="viewcode-block" id="FormBuilderModalDialog.get_results"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.get_results">[docs]</a>    <span class="k">def</span> <span class="nf">get_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FormBuilderModalDialog.get_results"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.get_results">[docs]</a>    <span class="k">def</span> <span class="nf">get_results</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Shows dialog, blocks till submitted, returns dict of form data.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
@@ -210,16 +256,30 @@
 
 <div class="viewcode-block" id="FormBuilderLayout"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout">[docs]</a><span class="k">class</span> <span class="nc">FormBuilderLayout</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Custom QFormLayout which populates itself from list of form fields.</span>
+<span class="sd">    Custom `QFormLayout` which populates itself from list of form fields.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        items_to_create: list which gets passed to :meth:`get_form_data`</span>
-<span class="sd">                         (see there for details about format)</span>
+<span class="sd">        items_to_create: list of form items, each item in list is a dictionary</span>
+<span class="sd">            with information about item. see :py::meth:`build_form` for details</span>
+<span class="sd">            about the keys/values. typically this list comes straight from a</span>
+<span class="sd">            YAML file.</span>
+<span class="sd">        field_options_lists: allows you to set list of options to use for &quot;list&quot;</span>
+<span class="sd">            fields (i.e., :py:class:`FieldComboWidget` or</span>
+<span class="sd">            :py:class:`TextOrListWidget` widgets)</span>
+<span class="sd">            when creating the form programmatically, instead of having options</span>
+<span class="sd">            as &quot;options&quot; key of dictionary (which typically would be hard-coded</span>
+<span class="sd">            in YAML).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">,</span> <span class="n">field_options_lists</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">items_to_create</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">field_options_lists</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FormBuilderLayout</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">form_text_widget</span> <span class="o">=</span> <span class="kc">None</span>
@@ -231,6 +291,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stacked</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;List of all &quot;stack&quot; widgets in form.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="n">StackBuilderWidget</span><span class="p">]</span>
 
 <div class="viewcode-block" id="FormBuilderLayout.setEnabled"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.setEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">setEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
@@ -259,7 +320,7 @@
             <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span></div>
 
-<div class="viewcode-block" id="FormBuilderLayout.set_form_data"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_form_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<div class="viewcode-block" id="FormBuilderLayout.set_form_data"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_form_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Set specified user-editable data.</span>
 
 <span class="sd">        Args:</span>
@@ -278,7 +339,7 @@
         <span class="k">for</span> <span class="n">stacked_widget</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stacked</span><span class="p">:</span>
             <span class="n">stacked_widget</span><span class="o">.</span><span class="n">set_form_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="FormBuilderLayout.set_field_options"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<div class="viewcode-block" id="FormBuilderLayout.set_field_options"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Sets custom list of options for specified field.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">options_list</span>
 
@@ -293,14 +354,14 @@
             <span class="k">if</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">:</span>
                 <span class="n">field</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_options_lists</span><span class="p">[</span><span class="n">field_name</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="FormBuilderLayout.set_field_enabled"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">is_enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<div class="viewcode-block" id="FormBuilderLayout.set_field_enabled"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">set_field_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">is_enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets whether the field is enabled/disabled.&quot;&quot;&quot;</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_field</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
             <span class="n">field</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">is_enabled</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="FormBuilderLayout.find_field"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.find_field">[docs]</a>    <span class="k">def</span> <span class="nf">find_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="FormBuilderLayout.find_field"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.find_field">[docs]</a>    <span class="k">def</span> <span class="nf">find_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Finds form fields by name.</span>
 
@@ -370,7 +431,7 @@
             <span class="n">val</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span> <span class="k">else</span> <span class="n">val</span>
         <span class="k">return</span> <span class="n">val</span></div>
 
-<div class="viewcode-block" id="FormBuilderLayout.build_form"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form">[docs]</a>    <span class="k">def</span> <span class="nf">build_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
+<div class="viewcode-block" id="FormBuilderLayout.build_form"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form">[docs]</a>    <span class="k">def</span> <span class="nf">build_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items_to_create</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
         <span class="sd">&quot;&quot;&quot;Adds widgets to form layout for each item in items_to_create.</span>
 
 <span class="sd">        Args:</span>
@@ -394,7 +455,7 @@
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_to_create</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">add_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">add_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span>
             <span class="n">field</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">])</span>
             <span class="n">field</span><span class="o">.</span><span class="n">setWordWrap</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
@@ -569,14 +630,16 @@
 
 <div class="viewcode-block" id="StackBuilderWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.StackBuilderWidget">[docs]</a><span class="k">class</span> <span class="nc">StackBuilderWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A custom widget that shows different subforms depending on menu selection.</span>
+<span class="sd">    Widget that shows different subforms depending on menu selection.</span>
 
-<span class="sd">    Args:</span>
+<span class="sd">    Arguments:</span>
 <span class="sd">        stack_data: Dictionary for field from `items_to_create`.</span>
 <span class="sd">            The &quot;options&quot; key will give the list of options to show in</span>
 <span class="sd">            menu. Each of the &quot;options&quot; will also be the key of a dictionary</span>
 <span class="sd">            within stack_data that has the same structure as the dictionary</span>
-<span class="sd">            passed to :meth:`FormBuilderLayout.build_form()`.</span>
+<span class="sd">            passed to :py:meth:`FormBuilderLayout.build_form()`.</span>
+<span class="sd">        field_options_list: passed to stacked forms, see</span>
+<span class="sd">            :py:class:`FormBuilderLayout` for details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
@@ -673,6 +736,17 @@
 
 
 <div class="viewcode-block" id="OptionalSpinWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.OptionalSpinWidget">[docs]</a><span class="k">class</span> <span class="nc">OptionalSpinWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Numeric (spin) widget with checkbox to disable.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        type: can be &quot;int&quot; or &quot;double&quot;.</span>
+<span class="sd">        none_string: value to use when numeric entry is disabled; i.e., widget</span>
+<span class="sd">            returns this as value if checkbox is set, and setting value to this</span>
+<span class="sd">            will make the checkbox checked.</span>
+<span class="sd">        note_label: text to show next to checkbox; defaults to none_string (in</span>
+<span class="sd">            title case).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
@@ -680,7 +754,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;int&quot;</span><span class="p">,</span>
         <span class="n">none_string</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
-        <span class="n">none_label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">none_label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
@@ -750,9 +824,9 @@
 
 <div class="viewcode-block" id="FieldComboWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FieldComboWidget">[docs]</a><span class="k">class</span> <span class="nc">FieldComboWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A custom ComboBox widget with method to easily add set of options.</span>
+<span class="sd">    Custom ComboBox-style widget with method to easily add set of options.</span>
 
-<span class="sd">    Args:</span>
+<span class="sd">    Arguments:</span>
 <span class="sd">        result_as_idx: If True, then set/get for value will use idx of option</span>
 <span class="sd">            rather than string.</span>
 <span class="sd">        add_blank_option: If True, then blank (&quot;&quot;) option will be added at</span>
@@ -774,7 +848,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">add_blank_option</span> <span class="o">=</span> <span class="n">add_blank_option</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options_list</span> <span class="o">=</span> <span class="p">[]</span>
 
-<div class="viewcode-block" id="FieldComboWidget.set_options"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FieldComboWidget.set_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">select_item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="FieldComboWidget.set_options"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.FieldComboWidget.set_options">[docs]</a>    <span class="k">def</span> <span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="n">select_item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets list of menu options.</span>
 
@@ -815,6 +889,15 @@
 
 
 <div class="viewcode-block" id="StringListWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.StringListWidget">[docs]</a><span class="k">class</span> <span class="nc">StringListWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Free-form text field which converts value to/from list.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        delim: the list delimiter to use; note that list values won&#39;t be</span>
+<span class="sd">            trimmed, so &quot;,&quot; and &quot;item a, item b&quot; will result in</span>
+<span class="sd">            [&quot;item a&quot;, &quot; item b&quot;].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delim</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">StringListWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">delim</span> <span class="o">=</span> <span class="n">delim</span>
@@ -830,6 +913,22 @@
 
 
 <div class="viewcode-block" id="TextOrListWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.formbuilder.html#sleap.gui.dialogs.formbuilder.TextOrListWidget">[docs]</a><span class="k">class</span> <span class="nc">TextOrListWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Widget with free-form text field or drop-down menu.</span>
+
+<span class="sd">    The &quot;text&quot; or &quot;list&quot; mode can be set using `setMode` method.</span>
+
+<span class="sd">    This widget is useful when we want a drop-down menu but need to fall back</span>
+<span class="sd">    to a text field when (e.g.) the current value isn&#39;t in list.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        result_as_idx: If True, then set/get for value will use idx of option</span>
+<span class="sd">            rather than string.</span>
+<span class="sd">        add_blank_option: If True, then blank (&quot;&quot;) option will be added at</span>
+<span class="sd">            beginning of list (which will return &quot;&quot; as val instead of idx if</span>
+<span class="sd">            result_as_idx is True).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_as_idx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">add_blank_option</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>

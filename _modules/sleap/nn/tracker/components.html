@@ -32,7 +32,21 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.nn.tracker.components</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">operator</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions/classes used by multiple trackers.</span>
+
+<span class="sd">Main types of functions:</span>
+
+<span class="sd">1. Calculate pair-wise instance similarity; used for populating similarity/cost</span>
+<span class="sd">   matrix.</span>
+
+<span class="sd">2. Pick matches based on cost matrix.</span>
+
+<span class="sd">3. Other clean-up (e.g., cull instances, connect track breaks).</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Callable</span>
 
@@ -377,17 +391,38 @@
     <span class="k">return</span> <span class="n">frames</span></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="Match"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.Match">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Match</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Stores a match between a specific instance and specific track.&quot;&quot;&quot;</span>
+
     <span class="n">track</span><span class="p">:</span> <span class="n">Track</span>
     <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span>
     <span class="n">score</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">is_first_choice</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">is_first_choice</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
 
 <div class="viewcode-block" id="FrameMatches"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.tracker.components.html#sleap.nn.tracker.components.FrameMatches">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">FrameMatches</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates (and stores) matches for a frame.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates (and stores) matches for a frame.</span>
+
+<span class="sd">    This class encapsulates the logic to generate matches (using a custom</span>
+<span class="sd">    matching function) from a cost matrix. One key feature is that it retains</span>
+<span class="sd">    additional information, such as whether all the matches were first-choice</span>
+<span class="sd">    (i.e., if each instance got the instance it would have matched to if there</span>
+<span class="sd">    weren&#39;t other instances).</span>
+
+<span class="sd">    Typically this will be created using the `from_candidate_instances` method</span>
+<span class="sd">    which creates the cost matrix and then uses the matching function to find</span>
+<span class="sd">    matches.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        matches: the list of `Match` objects.</span>
+<span class="sd">        cost_matrix: the cost matrix, shape is</span>
+<span class="sd">            (number of untracked instances, number of candidate tracks).</span>
+<span class="sd">        unmatched_instances: the instances for which we are finding matches.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">matches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Match</span><span class="p">]</span>
     <span class="n">cost_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
@@ -395,6 +430,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">has_only_first_choice_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Whether all the matches were first-choice.</span>
+
+<span class="sd">        A match is a &#39;first-choice&#39; for an instance if that instance would have</span>
+<span class="sd">        matched to the same track even if there were no other instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">is_first_choice</span> <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>

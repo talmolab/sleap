@@ -71,7 +71,7 @@
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
-<span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span><span class="p">,</span> <span class="n">FormBuilderModalDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.shortcuts</span> <span class="kn">import</span> <span class="n">Shortcuts</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.shortcuts</span> <span class="kn">import</span> <span class="n">ShortcutDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.state</span> <span class="kn">import</span> <span class="n">GuiState</span>
@@ -891,6 +891,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span>
         <span class="p">)</span>
 
+        <span class="c1"># When gui state changes, we also want to set corresponding attribute</span>
+        <span class="c1"># on overlay (or color manager shared by overlays) so that they can</span>
+        <span class="c1"># update/redraw as needed.</span>
         <span class="k">def</span> <span class="nf">overlay_state_connect</span><span class="p">(</span><span class="n">overlay</span><span class="p">,</span> <span class="n">state_key</span><span class="p">,</span> <span class="n">overlay_attribute</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
             <span class="n">overlay_attribute</span> <span class="o">=</span> <span class="n">overlay_attribute</span> <span class="ow">or</span> <span class="n">state_key</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
@@ -1388,8 +1391,23 @@
 
         <span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">DataOverlay</span>
 
-        <span class="n">overlay</span> <span class="o">=</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
-            <span class="n">filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="n">player</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span>
+        <span class="n">predictor</span> <span class="o">=</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">make_predictor</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">show_pafs</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># If multi-head model with both confmaps and pafs,</span>
+        <span class="c1"># ask user which to show.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">predictor</span><span class="o">.</span><span class="n">confidence_maps_key_name</span>
+            <span class="ow">and</span> <span class="n">predictor</span><span class="o">.</span><span class="n">part_affinity_fields_key_name</span>
+        <span class="p">):</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">FormBuilderModalDialog</span><span class="p">(</span><span class="n">form_name</span><span class="o">=</span><span class="s2">&quot;head_type_form&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+            <span class="n">show_pafs</span> <span class="o">=</span> <span class="s2">&quot;Part Affinity&quot;</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;head_type&quot;</span><span class="p">]</span>
+
+        <span class="n">overlay</span> <span class="o">=</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_predictor</span><span class="p">(</span>
+            <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+            <span class="n">video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span>
+            <span class="n">player</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">,</span>
+            <span class="n">show_pafs</span><span class="o">=</span><span class="n">show_pafs</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;inference&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overlay</span>

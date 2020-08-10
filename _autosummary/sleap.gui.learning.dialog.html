@@ -35,10 +35,29 @@
             
   <div class="section" id="module-sleap.gui.learning.dialog">
 <span id="sleap-gui-learning-dialog"></span><h1>sleap.gui.learning.dialog<a class="headerlink" href="#module-sleap.gui.learning.dialog" title="Permalink to this headline">¶</a></h1>
+<p>Dialogs for running training and/or inference in GUI.</p>
 <dl class="py class">
 <dt id="sleap.gui.learning.dialog.LearningDialog">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.dialog.</code><code class="sig-name descname">LearningDialog</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Skeleton<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/dialog.html#LearningDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.dialog.LearningDialog" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><p>Dialog for running training and/or inference.</p>
+<p>The dialog shows tabs for configuring the pipeline (
+<a class="reference internal" href="#sleap.gui.learning.dialog.TrainingPipelineWidget" title="sleap.gui.learning.dialog.TrainingPipelineWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingPipelineWidget</span></code></a>) and, depending on the pipeline, for
+each specific model (<a class="reference internal" href="#sleap.gui.learning.dialog.TrainingEditorWidget" title="sleap.gui.learning.dialog.TrainingEditorWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingEditorWidget</span></code></a>).</p>
+<p>In training mode, the model hyperpameters are editable unless you’re using
+a trained model; they are read-only in inference mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> – either “training” or “inference”.</p></li>
+<li><p><strong>labels_filename</strong> – path to labels file, used for default location to
+save models.</p></li>
+<li><p><strong>labels</strong> – the <cite>Labels</cite> object (can also be loaded from given filename)</p></li>
+<li><p><strong>skeleton</strong> – the <cite>Skeleton</cite> object (can also be taken from <cite>Labels</cite>), used
+for list of nodes for (e.g.) selecting anchor node</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
 <dt id="sleap.gui.learning.dialog.LearningDialog.frame_selection">
 <em class="property">property </em><code class="sig-name descname">frame_selection</code><a class="headerlink" href="#sleap.gui.learning.dialog.LearningDialog.frame_selection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns dictionary with frames that user has selected for learning.</p>
@@ -55,17 +74,20 @@
 <dl class="py class">
 <dt id="sleap.gui.learning.dialog.TrainingEditorWidget">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.dialog.</code><code class="sig-name descname">TrainingEditorWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Skeleton<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">head</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cfg_getter</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>TrainingConfigsGetter<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">require_trained</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/dialog.html#TrainingEditorWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.dialog.TrainingEditorWidget" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dialog for viewing and modifying training profiles.</p>
+<dd><p>Dialog for viewing and modifying training profiles (model hyperparameters).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>video</strong> – Video to use for receptive field preview</p></li>
-<li><p><strong>skeleton</strong> – Skeleton to use for node option list</p></li>
+<li><p><strong>video</strong> – <cite>Video</cite> to use for receptive field preview</p></li>
+<li><p><strong>skeleton</strong> – <cite>Skeleton</cite> to use for node option list</p></li>
 <li><p><strong>head</strong> – If given, then only show configs with specified head name</p></li>
 <li><p><strong>cfg_getter</strong> – Object to use for getting list of config files.
-If given, then menu of config files will be shown.</p></li>
+If given, then menu of config files will be shown so user can
+either copy hyperameters from another profile/model, or use a model
+that was already trained.</p></li>
 <li><p><strong>require_trained</strong> – If True, then only show configs that are trained,
-and don’t allow user to uncheck “use trained” setting.</p></li>
+and don’t allow user to uncheck “use trained” setting. This is set
+when <a class="reference internal" href="#sleap.gui.learning.dialog.LearningDialog" title="sleap.gui.learning.dialog.LearningDialog"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearningDialog</span></code></a> is in “inference” mode.</p></li>
 </ul>
 </dd>
 </dl>
@@ -74,7 +96,8 @@ and don’t allow user to uncheck “use trained” setting.</p></li>
 <dl class="py class">
 <dt id="sleap.gui.learning.dialog.TrainingPipelineWidget">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.dialog.</code><code class="sig-name descname">TrainingPipelineWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Skeleton<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/dialog.html#TrainingPipelineWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.dialog.TrainingPipelineWidget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Widget used in <a class="reference internal" href="#sleap.gui.learning.dialog.LearningDialog" title="sleap.gui.learning.dialog.LearningDialog"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearningDialog</span></code></a> for configuring pipeline.</p>
+</dd></dl>
 
 </div>
 
@@ -130,7 +153,7 @@ and don’t allow user to uncheck “use trained” setting.</p></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -166,6 +189,7 @@ and don’t allow user to uncheck “use trained” setting.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

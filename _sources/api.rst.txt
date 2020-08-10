@@ -38,7 +38,7 @@ Developer API
    sleap.gui.learning.dialog
    sleap.gui.learning.receptivefield
    sleap.gui.learning.runners
-   sleap.gui.learning.utils
+   sleap.gui.learning.scopedkeydict
    sleap.gui.overlays.anchors
    sleap.gui.overlays.base
    sleap.gui.overlays.confmaps
@@ -74,6 +74,7 @@ Developer API
    sleap.io.format.hdf5
    sleap.io.format.labels_json
    sleap.io.format.leap_matlab
+   sleap.io.format.main
    sleap.io.format.sleap_analysis
    sleap.io.format.text
    sleap.nn.callbacks

@@ -32,7 +32,15 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.overlays.pafs</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Overlay for part affinity fields.</span>
+
+<span class="sd">Currently a `DataOverlay` gets data from a model (i.e., it runs inference on the</span>
+<span class="sd">current frame) and then uses a `MultiQuiverPlot` object to show the resulting</span>
+<span class="sd">part affinity fields.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
@@ -43,12 +51,14 @@
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
 
 
-<span class="k">class</span> <span class="nc">PafOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
+<div class="viewcode-block" id="PafOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.PafOverlay">[docs]</a><span class="k">class</span> <span class="nc">PafOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class show pafs saved in HDF5 (not currently used).&quot;&quot;&quot;</span>
+
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_h5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;channels_last&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_h5</span><span class="p">(</span>
             <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;/pafs&quot;</span><span class="p">,</span> <span class="n">input_format</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">MultiQuiverPlot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MultiQuiverPlot"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.pafs.html#sleap.gui.overlays.pafs.MultiQuiverPlot">[docs]</a><span class="k">class</span> <span class="nc">MultiQuiverPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>
@@ -73,7 +83,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">decimation</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">decimation</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -154,7 +164,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">field_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_y</span> <span class="o">=</span> <span class="n">field_x</span><span class="p">,</span> <span class="n">field_y</span>
 
             <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_x</span><span class="o">.</span><span class="n">shape</span>
-            <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
 
@@ -173,7 +183,7 @@
             <span class="n">loc_yx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="c1"># Adjust by scaling factor</span>
-            <span class="n">loc_yx</span> <span class="o">=</span> <span class="n">loc_yx</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+            <span class="n">loc_yx</span> <span class="o">=</span> <span class="n">loc_yx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">decimation</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">delta_yx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decimate</span><span class="p">(</span><span class="n">raw_delta_yx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">decimation</span><span class="p">)</span>
@@ -182,6 +192,8 @@
                 <span class="n">loc_yx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decimation</span> <span class="o">//</span> <span class="mi">2</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">delta_yx</span> <span class="o">=</span> <span class="n">raw_delta_yx</span>
+
+            <span class="n">delta_yx</span> <span class="o">=</span> <span class="n">delta_yx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
 
             <span class="c1"># Split into x,y matrices</span>
             <span class="n">loc_y</span><span class="p">,</span> <span class="n">loc_x</span> <span class="o">=</span> <span class="n">loc_yx</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">loc_yx</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>

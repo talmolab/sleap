@@ -32,15 +32,35 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.dialogs.delete</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">sleap.gui.dialogs</span> <span class="kn">import</span> <span class="n">formbuilder</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Dialog for deleting various subsets of instances in dataset.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Instance</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.dialogs</span> <span class="kn">import</span> <span class="n">formbuilder</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span>
 
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
+
 
 <div class="viewcode-block" id="DeleteDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.delete.html#sleap.gui.dialogs.delete.DeleteDialog">[docs]</a><span class="k">class</span> <span class="nc">DeleteDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog for deleting various subsets of instances in dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        context: The `CommandContext` from which this dialog is being</span>
+<span class="sd">            shown. The context provides both a `labels` (`Labels`) and a</span>
+<span class="sd">            `state` (`GuiState`).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># NOTE: use type by name (rather than importing CommandContext) to avoid</span>
+    <span class="c1"># circular includes.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="s2">&quot;CommandContext&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
+
         <span class="nb">super</span><span class="p">(</span><span class="n">DeleteDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
@@ -129,7 +149,7 @@
 
         <span class="k">return</span> <span class="n">buttons_layout_widget</span>
 
-    <span class="k">def</span> <span class="nf">getSelectedTrack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_selected_track</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">track_menu_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks_menu</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
         <span class="n">track_idx</span> <span class="o">=</span> <span class="n">track_menu_idx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_idx_offset</span>
 
@@ -138,7 +158,11 @@
 
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">get_frames_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance_type_value</span><span class="p">,</span> <span class="n">frames_value</span><span class="p">,</span> <span class="n">tracks_value</span><span class="p">):</span>
+<div class="viewcode-block" id="DeleteDialog.get_frames_instances"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.delete.html#sleap.gui.dialogs.delete.DeleteDialog.get_frames_instances">[docs]</a>    <span class="k">def</span> <span class="nf">get_frames_instances</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instance_type_value</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">frames_value</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">tracks_value</span><span class="p">:</span> <span class="n">Text</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Instance</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get list of instances based on drop-down menu options selected.&quot;&quot;&quot;</span>
+
         <span class="k">def</span> <span class="nf">inst_condition</span><span class="p">(</span><span class="n">inst</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">instance_type_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;predicted&quot;</span><span class="p">):</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">):</span>
@@ -155,7 +179,7 @@
                 <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">return</span> <span class="kc">False</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">track_to_match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedTrack</span><span class="p">()</span>
+                <span class="n">track_to_match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_selected_track</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">track_to_match</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">track</span> <span class="o">!=</span> <span class="n">track_to_match</span><span class="p">:</span>
                         <span class="k">return</span> <span class="kc">False</span>
@@ -197,7 +221,7 @@
             <span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lf_list</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span> <span class="k">if</span> <span class="n">inst_condition</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
         <span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">lf_inst_list</span>
+        <span class="k">return</span> <span class="n">lf_inst_list</span></div>
 
     <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">instance_type_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_type_menu</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
@@ -216,7 +240,7 @@
         <span class="c1"># print(tracks_value)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_delete</span><span class="p">(</span><span class="n">lf_inst_list</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lf_inst_list</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lf_inst_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Instance</span><span class="p">]]):</span>
         <span class="c1"># Delete the instances</span>
         <span class="k">for</span> <span class="n">lf</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf_inst_list</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">,</span> <span class="n">in_transaction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

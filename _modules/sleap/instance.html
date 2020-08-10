@@ -61,6 +61,7 @@
 
 <span class="kn">from</span> <span class="nn">numpy.lib.recfunctions</span> <span class="kn">import</span> <span class="n">structured_to_unstructured</span>
 
+<span class="kn">import</span> <span class="nn">sleap</span>
 <span class="kn">from</span> <span class="nn">sleap.skeleton</span> <span class="kn">import</span> <span class="n">Skeleton</span><span class="p">,</span> <span class="n">Node</span>
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
 
@@ -1536,8 +1537,38 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns the image for this frame of shape (height, width, channels).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span></div>
+        <span class="sd">&quot;&quot;&quot;Return the image for this frame of shape (height, width, channels).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LabeledFrame.plot"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot the frame with all instances.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image: If False, only the instances will be plotted without loading the</span>
+<span class="sd">                original image.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting</span>
+<span class="sd">            options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">image</span><span class="p">:</span>
+            <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">plot_img</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">plot_instances</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LabeledFrame.plot_predicted"><a class="viewcode-back" href="../../_autosummary/sleap.instance.html#sleap.instance.LabeledFrame.plot_predicted">[docs]</a>    <span class="k">def</span> <span class="nf">plot_predicted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot the frame with all predicted instances.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image: If False, only the instances will be plotted without loading the</span>
+<span class="sd">                original image.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting</span>
+<span class="sd">            options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">image</span><span class="p">:</span>
+            <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">plot_img</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">plot_instances</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted_instances</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

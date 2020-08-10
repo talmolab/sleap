@@ -39,17 +39,21 @@
 <p>This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
 (videos, skeletons, etc.).</p>
-<p>To load a labels dataset file from disk:</p>
+<p>The most convenient way to load SLEAP labels files is to use the high level loader:</p>
+<p>&gt; import sleap
+&gt; labels = sleap.load_file(filename)</p>
+<p>The Labels class provides additional functionality for loading SLEAP labels files. To
+load a labels dataset file from disk:</p>
 <p>&gt; labels = Labels.load_file(filename)</p>
 <p>If you’re opening a dataset file created on a different computer (or if you’ve
 moved the video files), it’s likely that the paths to the original videos will
 not work. We automatically check for the videos in the same directory as the
 labels file, but if the videos aren’t there, you can tell <cite>load_file</cite> where
-to seach for the videos. There are various ways to do this:</p>
-<p>&gt; Labels.load_filename(filename, single_path_to_search)
-&gt; Labels.load_filename(filename, [path_a, path_b])
-&gt; Labels.load_filename(filename, callback_function)
-&gt; Labels.load_filename(filename, video_search=…)</p>
+to search for the videos. There are various ways to do this:</p>
+<p>&gt; Labels.load_file(filename, single_path_to_search)
+&gt; Labels.load_file(filename, [path_a, path_b])
+&gt; Labels.load_file(filename, callback_function)
+&gt; Labels.load_file(filename, video_search=…)</p>
 <p>The callback_function can be created via <cite>make_video_callback()</cite> and has the
 option to make a callback with a GUI window so the user can locate the videos.</p>
 <p>To save a labels dataset file, run:</p>
@@ -112,13 +116,13 @@ Dictionary key is <code class="xref py py-class docutils literal notranslate"><s
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.add_instance">
 <code class="sig-name descname">add_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.add_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds instance to frame, updating track occupancy.</p>
+<dd><p>Add instance to frame, updating track occupancy.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.add_track">
 <code class="sig-name descname">add_track</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.add_track"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.add_track" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds track to labels, updating occupancy.</p>
+<dd><p>Add track to labels, updating occupancy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -138,13 +142,13 @@ labeled frames are added.</p>
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.all_instances">
 <em class="property">property </em><code class="sig-name descname">all_instances</code><a class="headerlink" href="#sleap.io.dataset.Labels.all_instances" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns list of all instances.</p>
+<dd><p>Return list of all instances.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.append">
 <code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.append" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds labeled frame to list of labeled frames.</p>
+<dd><p>Add labeled frame to list of labeled frames.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -194,23 +198,7 @@ and value is list of <code class="xref py py-class docutils literal notranslate"
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.delete_suggestions">
 <code class="sig-name descname">delete_suggestions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.delete_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.delete_suggestions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes suggestions for specified video.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.dataset.Labels.export_training_data">
-<code class="sig-name descname">export_training_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.export_training_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.export_training_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exports a set of images and points for training with minimal metadata.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>save_path</strong> – Path to HDF5 that training data will be saved to.</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The exported HDF5 file will contain no SLEAP-specific metadata or
-dependencies for serialization. These files cannot be read back in for
-labeling, but are useful when training on environments where it is hard to
-install complex dependencies.</p>
+<dd><p>Delete suggestions for specified video.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -260,7 +248,7 @@ in which case it contains a new <cite>LabeledFrame</cite> with
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.find_first">
 <code class="sig-name descname">find_first</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.find_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_first" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds the first occurrence of a matching labeled frame.</p>
+<dd><p>Find the first occurrence of a matching labeled frame.</p>
 <p>Matches on frames for the given video and/or frame index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -281,7 +269,7 @@ or None if none were found.</p>
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.find_last">
 <code class="sig-name descname">find_last</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.find_last"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.find_last" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds the last occurrence of a matching labeled frame.</p>
+<dd><p>Find the last occurrence of a matching labeled frame.</p>
 <p>Matches on frames for the given video and/or frame index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -335,16 +323,13 @@ If None, return all instances for given track.</p></li>
 <li><p><strong>resolved_frames</strong> – the list of frames to add into base_labels</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.frames">
 <code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">from_frame_idx</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">reverse</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.frames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterator over all labeled frames in a video.</p>
+<dd><p>Return an iterator over all labeled frames in a video.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -361,71 +346,65 @@ Defaults to the first frame of video.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.dataset.Labels.generate_training_data">
-<code class="sig-name descname">generate_training_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>Union<span class="p">[</span>numpy.ndarray<span class="p">, </span>List<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">]</span><span class="p">, </span>List<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.generate_training_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.generate_training_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates images and points for training.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><p>A tuple of (imgs, points).</p>
-<p>imgs: Array of shape (n_samples, height, width, channels) containing the
-image data for all frames with user labels. If frames are of variable size,
-imgs is a list of length n_samples with elements of shape
-(height, width, channels).</p>
-<p>points: List of length n_samples with elements of shape
-(n_instances, n_nodes, 2), containing all user labeled instances in the
-frame, with NaN-padded xy coordinates for each visible body part.</p>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.io.dataset.Labels.get_next_suggestion">
-<code class="sig-name descname">get_next_suggestion</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span></em>, <em class="sig-param"><span class="n">frame_idx</span></em>, <em class="sig-param"><span class="n">seek_direction</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.get_next_suggestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_next_suggestion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a (video, frame_idx) tuple seeking from given frame.</p>
+<code class="sig-name descname">get_next_suggestion</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span></em>, <em class="sig-param"><span class="n">frame_idx</span></em>, <em class="sig-param"><span class="n">seek_direction</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.get_next_suggestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_next_suggestion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a (video, frame_idx) tuple seeking from given frame.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.get_suggestions">
-<code class="sig-name descname">get_suggestions</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.get_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_suggestions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_suggestions</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.gui.suggestions.html#sleap.gui.suggestions.SuggestionFrame" title="sleap.gui.suggestions.SuggestionFrame">sleap.gui.suggestions.SuggestionFrame</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.get_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_suggestions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all suggestions as a list of SuggestionFrame items.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.get_track_count">
 <code class="sig-name descname">get_track_count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.get_track_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_track_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the number of occupied tracks for a given video.</p>
+<dd><p>Return the number of occupied tracks for a given video.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.get_track_occupancy">
 <code class="sig-name descname">get_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em><span class="sig-paren">)</span> &#x2192; List<a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.get_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_track_occupancy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns track occupancy list for given video</p>
+<dd><p>Return track occupancy list for given video.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.get_video_suggestions">
 <code class="sig-name descname">get_video_suggestions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.get_video_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.get_video_suggestions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the list of suggested frames for the specified video
-or suggestions for all videos (if no video specified).</p>
+<dd><p>Return a list of suggested frame indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>video</strong> – Video to get suggestions for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Indices of the labeled frames for for the specified video.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.dataset.Labels.has_missing_videos">
+<em class="property">property </em><code class="sig-name descname">has_missing_videos</code><a class="headerlink" href="#sleap.io.dataset.Labels.has_missing_videos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if any of the video files in the labels are missing.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.index">
 <code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns index of labeled frame in list of labeled frames.</p>
+<dd><p>Return index of labeled frame in list of labeled frames.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.insert">
 <code class="sig-name descname">insert</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.insert" title="Permalink to this definition">¶</a></dt>
-<dd><p>Inserts labeled frame at given index.</p>
+<dd><p>Insert labeled frame at given index.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.instance_count">
 <code class="sig-name descname">instance_count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.instance_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.instance_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns number of instances matching video/frame index.</p>
+<dd><p>Return number of instances matching video/frame index.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -490,39 +469,55 @@ we’ll automatically try to find the missing videos.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>video</strong> – combine for this video; if None, do all videos</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.predicted_instances">
 <em class="property">property </em><code class="sig-name descname">predicted_instances</code><a class="headerlink" href="#sleap.io.dataset.Labels.predicted_instances" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns list of all user (non-predicted) instances.</p>
+<dd><p>Return list of all predicted instances.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.remove">
 <code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes given labeled frame.</p>
+<dd><p>Remove given labeled frame.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.remove_instance">
 <code class="sig-name descname">remove_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">in_transaction</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes instance from frame, updating track occupancy.</p>
+<dd><p>Remove instance from frame, updating track occupancy.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.remove_video">
 <code class="sig-name descname">remove_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_video" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes a video from the labels and ALL associated labeled frames.</p>
+<dd><p>Remove a video from the labels and all associated labeled frames.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>video</strong> – <cite>Video</cite> instance to be removed</p>
+<dd class="field-odd"><p><strong>video</strong> – <cite>Video</cite> instance to be removed.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.dataset.Labels.save">
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">with_images</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the labels to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – Path to save the labels to ending in <cite>.slp</cite>. If the filename does
+not end in <cite>.slp</cite>, the extension will be automatically appended.</p></li>
+<li><p><strong>with_images</strong> – If True, the image data for frames with labels will be embedded
+in the saved labels. This is useful for generating a single file to be
+used when training remotely.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This is an instance-level wrapper for the <cite>Labels.save_file</cite> class method.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -543,15 +538,12 @@ format). Doesn’t need to have “.” before file extension.</p></li>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If cannot detect valid filetype.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None.</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.save_frame_data_hdf5">
-<code class="sig-name descname">save_frame_data_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">all_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save_frame_data_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_hdf5" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_frame_data_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">all_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.HDF5Video" title="sleap.io.video.HDF5Video">sleap.io.video.HDF5Video</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save_frame_data_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write images for labeled frames from all videos to hdf5 file.</p>
 <p>Note that this will make an HDF5 video, not an HDF5 labels dataset.</p>
 <dl class="field-list simple">
@@ -571,7 +563,7 @@ we’ll use for training (i.e., those with Instances).</p></li>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.save_frame_data_imgstore">
-<code class="sig-name descname">save_frame_data_imgstore</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'./'</span></em>, <em class="sig-param"><span class="n">format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">all_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save_frame_data_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_imgstore" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_frame_data_imgstore</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'./'</span></em>, <em class="sig-param"><span class="n">format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">all_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.ImgStoreVideo" title="sleap.io.video.ImgStoreVideo">sleap.io.video.ImgStoreVideo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save_frame_data_imgstore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_imgstore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write images for labeled frames from all videos to imgstore datasets.</p>
 <p>This only writes frames that have been labeled. Videos without
 any labeled frames will be included as empty imgstores.</p>
@@ -596,23 +588,26 @@ frames.</p>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.set_suggestions">
-<code class="sig-name descname">set_suggestions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">suggestions</span><span class="p">:</span> <span class="n">List<span class="p">[</span>SuggestionFrame<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.set_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.set_suggestions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets the suggested frames.</p>
+<code class="sig-name descname">set_suggestions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">suggestions</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.gui.suggestions.html#sleap.gui.suggestions.SuggestionFrame" title="sleap.gui.suggestions.SuggestionFrame">sleap.gui.suggestions.SuggestionFrame</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.set_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.set_suggestions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the suggested frames.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.dataset.Labels.skeleton">
+<em class="property">property </em><code class="sig-name descname">skeleton</code><a class="headerlink" href="#sleap.io.dataset.Labels.skeleton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the skeleton if there is only a single skeleton in the labels.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.to_dict">
-<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">skip_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serialize all labels in the underling list of LabeledFrames to a
-dict structure. This function returns a nested dict structure
-composed entirely of primitive python types. It is used to create
-JSON and HDF5 serialized datasets.</p>
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">skip_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize all labels to dicts.</p>
+<p>Serializes the labels in the underling list of LabeledFrames to a dict
+structure. This function returns a nested dict structure composed entirely of
+primitive python types. It is used to create JSON and HDF5 serialized datasets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>skip_labels</strong> – If True, skip labels serialization and just do the</p></li>
-<li><p><strong>metadata.</strong> – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>skip_labels</strong> – If True, skip labels serialization and just do the metadata.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
@@ -637,8 +632,7 @@ instances.</p></li>
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.to_json">
 <code class="sig-name descname">to_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.to_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.to_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serialize all labels in the underling list of LabeledFrame(s) to a
-JSON structured string.</p>
+<dd><p>Serialize all labels in the underling list of LabeledFrame(s) to JSON.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>The JSON representation of the string.</p>
@@ -649,13 +643,13 @@ JSON structured string.</p>
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.track_set_instance">
 <code class="sig-name descname">track_set_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">new_track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.track_set_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.track_set_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets track on given instance, updating occupancy.</p>
+<dd><p>Set track on given instance, updating occupancy.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.track_swap">
 <code class="sig-name descname">track_swap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">new_track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em>, <em class="sig-param"><span class="n">old_track</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">frame_range</span><span class="p">:</span> <span class="n">tuple</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.track_swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.track_swap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Swaps track assignment for instances in two tracks.</p>
+<dd><p>Swap track assignment for instances in two tracks.</p>
 <p>If you need to change the track to or from None, you’ll need
 to use <a class="reference internal" href="#sleap.io.dataset.Labels.track_set_instance" title="sleap.io.dataset.Labels.track_set_instance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">track_set_instance()</span></code></a> for each specific
 instance you want to modify.</p>
@@ -671,22 +665,25 @@ If you want to swap tracks on a single frame, use
 (frame index, frame index + 1).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.user_instances">
 <em class="property">property </em><code class="sig-name descname">user_instances</code><a class="headerlink" href="#sleap.io.dataset.Labels.user_instances" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns list of all user (non-predicted) instances.</p>
+<dd><p>Return list of all user (non-predicted) instances.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.user_labeled_frames">
 <em class="property">property </em><code class="sig-name descname">user_labeled_frames</code><a class="headerlink" href="#sleap.io.dataset.Labels.user_labeled_frames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns all labeled frames with user (non-predicted) instances.</p>
+<dd><p>Return all labeled frames with user (non-predicted) instances.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.dataset.Labels.video">
+<em class="property">property </em><code class="sig-name descname">video</code><a class="headerlink" href="#sleap.io.dataset.Labels.video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the video if there is only a single video in the labels.</p>
 </dd></dl>
 
 </dd></dl>
@@ -698,79 +695,79 @@ If you want to swap tracks on a single frame, use
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.add_instance">
 <code class="sig-name descname">add_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.add_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.add_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates cache as needed.</p>
+<dd><p>Add an instance to the labels.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.add_track">
 <code class="sig-name descname">add_track</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.add_track"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.add_track" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates cache as needed.</p>
+<dd><p>Add track a track to the labels.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.find_fancy_frame_idxs">
 <code class="sig-name descname">find_fancy_frame_idxs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span></em>, <em class="sig-param"><span class="n">from_frame_idx</span></em>, <em class="sig-param"><span class="n">reverse</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.find_fancy_frame_idxs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.find_fancy_frame_idxs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of frame idxs, with optional start position/order.</p>
+<dd><p>Return a list of frame idxs, with optional start position/order.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.find_frames">
 <code class="sig-name descname">find_frames</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span>List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.find_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.find_frames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns list of LabeledFrames matching video/frame_idx, or None.</p>
+<dd><p>Return list of LabeledFrames matching video/frame_idx, or None.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.get_filtered_frame_idxs">
-<code class="sig-name descname">get_filtered_frame_idxs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">filter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.get_filtered_frame_idxs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_filtered_frame_idxs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns list of (video_idx, frame_idx) tuples matching video/filter.</p>
+<code class="sig-name descname">get_filtered_frame_idxs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">filter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; Set<span class="p">[</span>Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.get_filtered_frame_idxs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_filtered_frame_idxs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of (video_idx, frame_idx) tuples matching video/filter.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.get_frame_count">
-<code class="sig-name descname">get_frame_count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">filter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.get_frame_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_frame_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns (possibly cached) count of frames matching video/filter.</p>
+<code class="sig-name descname">get_frame_count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">filter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.get_frame_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_frame_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return (possibly cached) count of frames matching video/filter.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.get_track_occupancy">
 <code class="sig-name descname">get_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="sleap.rangelist.html#sleap.rangelist.RangeList" title="sleap.rangelist.RangeList">sleap.rangelist.RangeList</a><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.get_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_track_occupancy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accessor for track occupancy cache that adds video/track as needed.</p>
+<dd><p>Access track occupancy cache that adds video/track as needed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.get_video_track_occupancy">
 <code class="sig-name descname">get_video_track_occupancy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">, </span><a class="reference internal" href="sleap.rangelist.html#sleap.rangelist.RangeList" title="sleap.rangelist.RangeList">sleap.rangelist.RangeList</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.get_video_track_occupancy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.get_video_track_occupancy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns track occupancy information for specified video.</p>
+<dd><p>Return track occupancy information for specified video.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.remove_frame">
 <code class="sig-name descname">remove_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.remove_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.remove_frame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates cache as needed.</p>
+<dd><p>Remvoe frame and update cache as needed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.remove_instance">
 <code class="sig-name descname">remove_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.remove_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.remove_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates cache as needed.</p>
+<dd><p>Remove an instance and update the cache as needed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.remove_video">
 <code class="sig-name descname">remove_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.remove_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.remove_video" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates cache as needed.</p>
+<dd><p>Remove video and update cache as needed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.track_swap">
 <code class="sig-name descname">track_swap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">new_track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em>, <em class="sig-param"><span class="n">old_track</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">frame_range</span><span class="p">:</span> <span class="n">tuple</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.track_swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.track_swap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates cache as needed.</p>
+<dd><p>Swap tracks and update cache as needed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.LabelsDataCache.update">
 <code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_frame</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#LabelsDataCache.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.LabelsDataCache.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds (or rebuilds) various caches.</p>
+<dd><p>Build (or rebuilds) various caches.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -779,6 +776,51 @@ If you want to swap tracks on a single frame, use
 <dd><p>Updated the cached count. Should be called after frame is modified.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.dataset.find_path_using_paths">
+<code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">find_path_using_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">missing_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">search_paths</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/sleap/io/dataset.html#find_path_using_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.find_path_using_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a path to a missing file given a set of paths to search in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>missing_path</strong> – Path to the missing filename.</p></li>
+<li><p><strong>search_paths</strong> – List of paths to search in.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The corrected path if it was found, or the original missing path if it was not.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.io.dataset.load_file">
+<code class="sig-prename descclassname">sleap.io.dataset.</code><code class="sig-name descname">load_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">detect_videos</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">search_paths</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><a class="reference internal" href="../_modules/sleap/io/dataset.html#load_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.load_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a SLEAP labels file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – Path to a SLEAP labels (.slp) file.</p></li>
+<li><p><strong>detect_videos</strong> – If True, will attempt to detect missing videos by searching for
+their filenames in the search paths. This is useful when loading SLEAP
+labels files that were generated on another computer with different paths.</p></li>
+<li><p><strong>search_paths</strong> – A path or list of paths to search for the missing videos. This can
+be the direct path to the video file or its containing folder. If not
+specified, defaults to searching for the videos in the same folder as the
+labels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The loaded <cite>Labels</cite> instance.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This is a convenience method to call <cite>sleap.Labels.load_file</cite>. See that class
+method for more functionality in the loading process.</p>
+<p>The video files do not need to be accessible in order to load the labels, for
+example, when only the predicted instances or user labels are required.</p>
 </dd></dl>
 
 </div>
@@ -835,7 +877,7 @@ If you want to swap tracks on a single frame, use
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -871,6 +913,7 @@ If you want to swap tracks on a single frame, use
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

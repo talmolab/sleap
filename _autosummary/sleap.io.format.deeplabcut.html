@@ -35,10 +35,24 @@
             
   <div class="section" id="module-sleap.io.format.deeplabcut">
 <span id="sleap-io-format-deeplabcut"></span><h1>sleap.io.format.deeplabcut<a class="headerlink" href="#module-sleap.io.format.deeplabcut" title="Permalink to this headline">¶</a></h1>
+<p>Adaptor for reading DeepLabCut datasets.</p>
+<p>This can either read a CSV file with labeled frames for a single video,
+or a YAML file which potentially contains multiple videos.</p>
+<p>The adaptor was created by manually inspecting DeepLabCut files and there’s no
+guarantee that it will perfectly import all data (especially metadata).</p>
+<p>If the adaptor can find full video files for the annotated frames, then the
+full videos will be used in the resulting SLEAP dataset. Otherwise, we’ll
+create a video object which wraps the individual frame images.</p>
 <dl class="py class">
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.deeplabcut.</code><code class="sig-name descname">LabelsDeepLabCutCsvAdaptor</code><a class="reference internal" href="../_modules/sleap/io/format/deeplabcut.html#LabelsDeepLabCutCsvAdaptor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads DeepLabCut csv file with labeled frames for single video.</p>
+<dl class="py method">
+<dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.all_exts">
+<em class="property">property </em><code class="sig-name descname">all_exts</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.all_exts" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of all file extensions supported by adaptor.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.can_read_file">
 <code class="sig-name descname">can_read_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle">sleap.io.format.filehandle.FileHandle</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/deeplabcut.html#LabelsDeepLabCutCsvAdaptor.can_read_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
@@ -49,6 +63,12 @@
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.can_write_filename">
 <code class="sig-name descname">can_write_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/deeplabcut.html#LabelsDeepLabCutCsvAdaptor.can_write_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can write format of this filename.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.default_ext">
+<em class="property">property </em><code class="sig-name descname">default_ext</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.default_ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default file extension, e.g., ‘json’ (without ‘.’).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -67,12 +87,20 @@
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.handles">
 <em class="property">property </em><code class="sig-name descname">handles</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.handles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the type of object that can be read/written.</p>
+<p>The Dispatch class calls this method on all registered adaptors to
+determine which to use for reading/writing.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.make_video_for_image_list">
 <em class="property">classmethod </em><code class="sig-name descname">make_video_for_image_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_dir</span></em>, <em class="sig-param"><span class="n">filenames</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><a class="reference internal" href="../_modules/sleap/io/format/deeplabcut.html#LabelsDeepLabCutCsvAdaptor.make_video_for_image_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.make_video_for_image_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a Video object from frame images.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Human-reading name of the file format</p>
 </dd></dl>
 
 <dl class="py method">
@@ -87,6 +115,12 @@
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.deeplabcut.</code><code class="sig-name descname">LabelsDeepLabCutYamlAdaptor</code><a class="reference internal" href="../_modules/sleap/io/format/deeplabcut.html#LabelsDeepLabCutYamlAdaptor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
+<dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.all_exts">
+<em class="property">property </em><code class="sig-name descname">all_exts</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.all_exts" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of all file extensions supported by adaptor.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.can_read_file">
 <code class="sig-name descname">can_read_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle">sleap.io.format.filehandle.FileHandle</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/deeplabcut.html#LabelsDeepLabCutYamlAdaptor.can_read_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can read this file.</p>
@@ -96,6 +130,12 @@
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.can_write_filename">
 <code class="sig-name descname">can_write_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/deeplabcut.html#LabelsDeepLabCutYamlAdaptor.can_write_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can write format of this filename.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.default_ext">
+<em class="property">property </em><code class="sig-name descname">default_ext</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.default_ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default file extension, e.g., ‘json’ (without ‘.’).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -114,6 +154,14 @@
 <dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.handles">
 <em class="property">property </em><code class="sig-name descname">handles</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.handles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the type of object that can be read/written.</p>
+<p>The Dispatch class calls this method on all registered adaptors to
+determine which to use for reading/writing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Human-reading name of the file format</p>
 </dd></dl>
 
 <dl class="py method">
@@ -178,7 +226,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -214,6 +262,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

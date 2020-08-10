@@ -33,7 +33,11 @@
             
   <h1>Source code for sleap.gui.overlays.confmaps</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Module for showing confidence maps as an overlay within a QtVideoPlayer.</span>
+<span class="sd">Overlay for confidence maps.</span>
+
+<span class="sd">Currently a `DataOverlay` gets data from a model (i.e., it runs inference on the</span>
+<span class="sd">current frame) and then uses a `ConfMapsPlot` object to show the resulting</span>
+<span class="sd">confidence maps.</span>
 
 <span class="sd">Example:</span>
 <span class="sd">    &gt;&gt;&gt; cm = ConfMapsPlot(conf_data.get_frame(0))</span>
@@ -46,17 +50,6 @@
 <span class="kn">import</span> <span class="nn">qimage2ndarray</span>
 
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">DataOverlay</span><span class="p">,</span> <span class="n">h5_colors</span>
-
-
-<div class="viewcode-block" id="ConfmapOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfmapOverlay">[docs]</a><span class="k">class</span> <span class="nc">ConfmapOverlay</span><span class="p">(</span><span class="n">DataOverlay</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Overlay to show confidence maps.&quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="ConfmapOverlay.from_model"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfmapOverlay.from_model">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create object with live predictions from model as datasource.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">DataOverlay</span><span class="o">.</span><span class="n">from_model</span><span class="p">(</span>
-            <span class="n">filename</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">ConfMapsPlot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="ConfMapsPlot"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.confmaps.html#sleap.gui.overlays.confmaps.ConfMapsPlot">[docs]</a><span class="k">class</span> <span class="nc">ConfMapsPlot</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">):</span>

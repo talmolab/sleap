@@ -35,11 +35,13 @@
             
   <div class="section" id="module-sleap.gui.overlays.instance">
 <span id="sleap-gui-overlays-instance"></span><h1>sleap.gui.overlays.instance<a class="headerlink" href="#module-sleap.gui.overlays.instance" title="Permalink to this headline">¶</a></h1>
-<p>Module with overlay for showing instances.</p>
+<p>Overlay for showing instances.</p>
 <dl class="py class">
 <dt id="sleap.gui.overlays.instance.InstanceOverlay">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.instance.</code><code class="sig-name descname">InstanceOverlay</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">player</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.gui.widgets.video.html#sleap.gui.widgets.video.QtVideoPlayer" title="sleap.gui.widgets.video.QtVideoPlayer">sleap.gui.widgets.video.QtVideoPlayer</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">state</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.gui.state.html#sleap.gui.state.GuiState" title="sleap.gui.state.GuiState">sleap.gui.state.GuiState</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/overlays/instance.html#InstanceOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.instance.InstanceOverlay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for adding instances as overlays on video frames.</p>
+<p>Mostly this overlay just adds the relevant instances to the player (i.e.,
+<cite>QtVideoPlayer</cite>) which does the actual drawing.</p>
 <dl class="py attribute">
 <dt id="sleap.gui.overlays.instance.InstanceOverlay.labels">
 <code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.gui.overlays.instance.InstanceOverlay.labels" title="Permalink to this definition">¶</a></dt>
@@ -120,7 +122,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -156,6 +158,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

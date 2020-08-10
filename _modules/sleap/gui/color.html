@@ -32,7 +32,20 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.color</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Logic for determining what color/width to draw instance nodes/edges.</span>
+
+<span class="sd">The color can be determined by the current color palette as well as settings</span>
+<span class="sd">on the `ColorManager` object:</span>
+
+<span class="sd">* distinctly_color: &quot;instances&quot;, &quot;nodes&quot;, or &quot;edges&quot;</span>
+<span class="sd">* color_predicted: whether to use colors for predicted instances, or just plot</span>
+<span class="sd">  them in yellow/grey</span>
+
+<span class="sd">Initial color palette (and other settings, like default line width) is read</span>
+<span class="sd">from user preferences but can be changed after object is created.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">yaml</span>
 
@@ -42,7 +55,11 @@
 <span class="kn">from</span> <span class="nn">sleap.prefs</span> <span class="kn">import</span> <span class="n">prefs</span>
 
 
-<div class="viewcode-block" id="ColorManager"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager">[docs]</a><span class="k">class</span> <span class="nc">ColorManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="n">ColorTupleStringType</span> <span class="o">=</span> <span class="n">Text</span>
+<span class="n">ColorTupleType</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="ColorManager"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager">[docs]</a><span class="k">class</span> <span class="nc">ColorManager</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Class to determine color to use for track.</span>
 
 <span class="sd">    The color depends on the order of the tracks in `Labels` object,</span>
@@ -60,6 +77,7 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">get_config_file</span><span class="p">(</span><span class="s2">&quot;colors.yaml&quot;</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">distinctly_color</span> <span class="o">=</span> <span class="s2">&quot;instances&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_predicted</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -95,46 +113,68 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palette</span>
 
     <span class="nd">@palette</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">palette</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">palette</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ColorTupleStringType</span><span class="p">]]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_palette</span> <span class="o">=</span> <span class="n">palette</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="n">Text</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">index_mode</span> <span class="o">=</span> <span class="s2">&quot;clip&quot;</span> <span class="k">if</span> <span class="n">palette</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;cycle&quot;</span>
 
             <span class="k">if</span> <span class="n">palette</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="p">[</span><span class="n">palette</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Can&#39;t find palette by name so just use standard palette.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If palette is not given by name, it should be list of</span>
+            <span class="c1"># &quot;r,g,b&quot; strings.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span> <span class="o">=</span> <span class="n">palette</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">palette_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">palette_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Gets list of palette names.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_palettes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">tracks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">tracks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Track</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Gets tracks for project.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span>
         <span class="k">return</span> <span class="p">[]</span>
 
-<div class="viewcode-block" id="ColorManager.set_palette"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.set_palette">[docs]</a>    <span class="k">def</span> <span class="nf">set_palette</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">):</span>
+<div class="viewcode-block" id="ColorManager.set_palette"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.set_palette">[docs]</a>    <span class="k">def</span> <span class="nf">set_palette</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ColorTupleStringType</span><span class="p">]]):</span>
         <span class="sd">&quot;&quot;&quot;Functional alias for palette property setter.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">palette</span> <span class="o">=</span> <span class="n">palette</span></div>
 
-<div class="viewcode-block" id="ColorManager.fix_index"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.fix_index">[docs]</a>    <span class="k">def</span> <span class="nf">fix_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<div class="viewcode-block" id="ColorManager.fix_index"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.fix_index">[docs]</a>    <span class="k">def</span> <span class="nf">fix_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns an index within range of color palette.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_mode_functions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index_mode</span><span class="p">](</span><span class="n">idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ColorManager.get_color_by_idx"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.get_color_by_idx">[docs]</a>    <span class="k">def</span> <span class="nf">get_color_by_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<div class="viewcode-block" id="ColorManager.get_color_by_idx"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.get_color_by_idx">[docs]</a>    <span class="k">def</span> <span class="nf">get_color_by_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ColorTupleType</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns color tuple corresponding to item index.&quot;&quot;&quot;</span>
         <span class="n">color_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_to_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span><span class="p">[</span><span class="n">color_idx</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ColorManager.color_to_tuple"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.color_to_tuple">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">color_to_tuple</span><span class="p">(</span><span class="n">color</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">ColorTupleType</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convert and ensure color is (r, g, b)-tuple.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">Text</span><span class="p">):</span>
+            <span class="n">split_string</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split_string</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Color &#39;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&#39; is not &#39;r,g,b&#39; string.&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">split_string</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">result</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Color &#39;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&#39; is not &#39;r,g,b&#39; string.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">color</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Color &#39;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&#39; is not (r,g,b) tuple.&quot;</span><span class="p">)</span>
+
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span><span class="p">[</span><span class="n">color_idx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">color</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">result</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid color: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_map</span><span class="p">[</span><span class="n">color_idx</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Color &#39;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&#39; is not (r,g,b) tuple.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ColorManager.get_pseudo_track_index"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.get_pseudo_track_index">[docs]</a>    <span class="k">def</span> <span class="nf">get_pseudo_track_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="s2">&quot;Instance&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -151,7 +191,7 @@
 
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="p">)</span> <span class="o">+</span> <span class="n">non_track_instances</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ColorManager.get_track_color"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.get_track_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_track_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<div class="viewcode-block" id="ColorManager.get_track_color"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.get_track_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_track_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ColorTupleType</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns the color to use for a given track.</span>
 
 <span class="sd">        Args:</span>
@@ -207,7 +247,8 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pen_width</span></div>
 
-    <span class="k">def</span> <span class="nf">get_item_type_pen_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="ColorManager.get_item_type_pen_width"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.get_item_type_pen_width">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_type_pen_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gets pen width to use for given item type (as string).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">item_type</span> <span class="o">==</span> <span class="s2">&quot;node&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distinctly_color</span> <span class="o">==</span> <span class="s2">&quot;nodes&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">thick_pen_width</span>
@@ -217,14 +258,14 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distinctly_color</span> <span class="o">==</span> <span class="s2">&quot;edges&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">thick_pen_width</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pen_width</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pen_width</span></div>
 
 <div class="viewcode-block" id="ColorManager.get_item_color"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.color.html#sleap.gui.color.ColorManager.get_item_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_item_color</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">parent_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Instance</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_skeleton</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ColorTupleType</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Gets (r, g, b) tuple of color to use for drawing item.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parent_instance</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Instance</span><span class="p">):</span>

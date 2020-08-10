@@ -32,14 +32,17 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.learning.runners</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">abc</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Run training/inference in background process via CLI.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">sub</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
 
@@ -53,19 +56,36 @@
 
 <div class="viewcode-block" id="ItemForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.ItemForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ItemForInference</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for item on which we can run inference via CLI.</span>
+
+<span class="sd">    Must have `path` and `cli_args` properties, used to build CLI call.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="nd">@property</span>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
         <span class="k">pass</span>
 
     <span class="nd">@property</span>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span> <span class="nf">cli_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">cli_args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="VideoItemForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.VideoItemForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">VideoItemForInference</span><span class="p">(</span><span class="n">ItemForInference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encapsulate data about video on which inference should run.</span>
+
+<span class="sd">    This allows for inference on an arbitrary list of frames from video.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        video: the :py:class:`Video` object (which already stores its own path)</span>
+<span class="sd">        frames: list of frames for inference; if None, then all frames are used</span>
+<span class="sd">        use_absolute_path: whether to use absolute path for inference cli call</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">video</span><span class="p">:</span> <span class="n">Video</span>
     <span class="n">frames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">use_absolute_path</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -102,6 +122,17 @@
 
 <div class="viewcode-block" id="DatasetItemForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.DatasetItemForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">DatasetItemForInference</span><span class="p">(</span><span class="n">ItemForInference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encapsulate data about frame selection based on dataset data.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        labels_path: path to the saved :py:class:`Labels` dataset.</span>
+<span class="sd">        frame_filter: which subset of frames to get from dataset, supports</span>
+<span class="sd">            * &quot;user&quot;</span>
+<span class="sd">            * &quot;suggested&quot;</span>
+<span class="sd">        use_absolute_path: whether to use absolute path for inference cli call.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">labels_path</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">frame_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;user&quot;</span>
     <span class="n">use_absolute_path</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -122,8 +153,10 @@
         <span class="k">return</span> <span class="n">args_list</span></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="ItemsForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.ItemsForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ItemsForInference</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Encapsulates list of items for inference.&quot;&quot;&quot;</span>
+
     <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ItemForInference</span><span class="p">]</span>
     <span class="n">total_frame_count</span><span class="p">:</span> <span class="nb">int</span>
 
@@ -138,20 +171,23 @@
         <span class="k">for</span> <span class="n">video</span><span class="p">,</span> <span class="n">frames</span> <span class="ow">in</span> <span class="n">video_frames_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">frames</span><span class="p">:</span>
                 <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VideoItemForInference</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">total_frame_count</span><span class="o">=</span><span class="n">total_frame_count</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">total_frame_count</span><span class="o">=</span><span class="n">total_frame_count</span><span class="p">)</span></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="InferenceTask"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">InferenceTask</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Encapsulates all data needed for running inference via CLI.&quot;&quot;&quot;</span>
+
     <span class="n">trained_job_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
     <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Labels</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">make_predict_cli_call</span><span class="p">(</span>
+<div class="viewcode-block" id="InferenceTask.make_predict_cli_call"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask.make_predict_cli_call">[docs]</a>    <span class="k">def</span> <span class="nf">make_predict_cli_call</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">item_for_inference</span><span class="p">:</span> <span class="n">ItemForInference</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Makes list of CLI arguments needed for running inference.&quot;&quot;&quot;</span>
         <span class="n">cli_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sleap-track&quot;</span><span class="p">]</span>
 
         <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">item_for_inference</span><span class="o">.</span><span class="n">cli_args</span><span class="p">)</span>
@@ -219,14 +255,15 @@
 
         <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">cli_args</span><span class="p">,</span> <span class="n">output_path</span>
+        <span class="k">return</span> <span class="n">cli_args</span><span class="p">,</span> <span class="n">output_path</span></div>
 
-    <span class="k">def</span> <span class="nf">predict_subprocess</span><span class="p">(</span>
+<div class="viewcode-block" id="InferenceTask.predict_subprocess"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask.predict_subprocess">[docs]</a>    <span class="k">def</span> <span class="nf">predict_subprocess</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">item_for_inference</span><span class="p">:</span> <span class="n">ItemForInference</span><span class="p">,</span>
         <span class="n">append_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">waiting_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Runs inference in a subprocess.&quot;&quot;&quot;</span>
         <span class="n">cli_args</span><span class="p">,</span> <span class="n">output_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_predict_cli_call</span><span class="p">(</span><span class="n">item_for_inference</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Command line call:&quot;</span><span class="p">)</span>
@@ -251,9 +288,9 @@
             <span class="n">new_inference_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="n">match_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_inference_labels</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">success</span>
+        <span class="k">return</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">success</span></div>
 
-    <span class="k">def</span> <span class="nf">merge_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InferenceTask.merge_results"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask.merge_results">[docs]</a>    <span class="k">def</span> <span class="nf">merge_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Merges result frames into labels dataset.&quot;&quot;&quot;</span>
         <span class="c1"># Remove any frames without instances</span>
         <span class="n">new_lfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">))</span>
@@ -266,7 +303,7 @@
         <span class="p">)</span>
 
         <span class="c1"># new predictions should replace old ones</span>
-        <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_conflicts</span><span class="p">)</span>
+        <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_conflicts</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="write_pipeline_files"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.write_pipeline_files">[docs]</a><span class="k">def</span> <span class="nf">write_pipeline_files</span><span class="p">(</span>

@@ -33,18 +33,22 @@
             
   <h1>Source code for sleap.gui.overlays.instance</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Module with overlay for showing instances.</span>
+<span class="sd">Overlay for showing instances.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">attr</span>
 
+<span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">BaseOverlay</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.state</span> <span class="kn">import</span> <span class="n">GuiState</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 
 
 <div class="viewcode-block" id="InstanceOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.instance.html#sleap.gui.overlays.instance.InstanceOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">InstanceOverlay</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">InstanceOverlay</span><span class="p">(</span><span class="n">BaseOverlay</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class for adding instances as overlays on video frames.</span>
+
+<span class="sd">    Mostly this overlay just adds the relevant instances to the player (i.e.,</span>
+<span class="sd">    `QtVideoPlayer`) which does the actual drawing.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        labels: The :class:`Labels` dataset from which to get overlay data.</span>
@@ -52,8 +56,6 @@
 <span class="sd">        state: Object used to communicate with application.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">player</span><span class="p">:</span> <span class="n">QtVideoPlayer</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">GuiState</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

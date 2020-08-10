@@ -285,16 +285,17 @@
     <span class="k">def</span> <span class="nf">head_specific_output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence_maps_key_name</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence_maps_key_name</span>
         <span class="k">if</span> <span class="n">key</span><span class="p">:</span>
             <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
-        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">part_affinity_fields_key_name</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">part_affinity_fields_key_name</span>
         <span class="k">if</span> <span class="n">key</span><span class="p">:</span>
             <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">keys</span>
 
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">confidence_maps_key_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
         <span class="n">head_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">which_oneof_attrib_name</span><span class="p">()</span>
 
@@ -308,6 +309,7 @@
 
         <span class="k">return</span> <span class="kc">None</span>
 
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">part_affinity_fields_key_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
         <span class="n">head_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">which_oneof_attrib_name</span><span class="p">()</span>
 

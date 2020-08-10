@@ -35,7 +35,51 @@
             
   <div class="section" id="module-sleap.gui.overlays.base">
 <span id="sleap-gui-overlays-base"></span><h1>sleap.gui.overlays.base<a class="headerlink" href="#module-sleap.gui.overlays.base" title="Permalink to this headline">¶</a></h1>
-<p>Base class for overlays.</p>
+<p>Base classes for overlays.</p>
+<p>Overlays are used for showing additional visuals on top of a video frame (i.e.,
+a <cite>QtVideoPlayer</cite> object). Overlay objects are created in the main GUI app,
+which then automatically calls the <cite>add_to_scene</cite> for each loaded overlay after
+drawing a frame (i.e., when user navigates to a new frame or something changes
+so that current frame must be redrawn).</p>
+<dl class="py class">
+<dt id="sleap.gui.overlays.base.BaseOverlay">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.base.</code><code class="sig-name descname">BaseOverlay</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">player</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.gui.widgets.video.html#sleap.gui.widgets.video.QtVideoPlayer" title="sleap.gui.widgets.video.QtVideoPlayer">sleap.gui.widgets.video.QtVideoPlayer</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/overlays/base.html#BaseOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.base.BaseOverlay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for overlays.</p>
+<p>Most overlays need rely on the <cite>Labels</cite> from which to get data and need the
+<cite>QtVideoPlayer</cite> to which a <cite>QGraphicsObject</cite> item will be added, so these
+attributes are included in the base class.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.overlays.base.DataOverlay">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.base.</code><code class="sig-name descname">DataOverlay</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">player</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.gui.widgets.video.html#sleap.gui.widgets.video.QtVideoPlayer" title="sleap.gui.widgets.video.QtVideoPlayer">sleap.gui.widgets.video.QtVideoPlayer</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">overlay_class</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>ConfMapsPlot<span class="p">, </span>MultiQuiverPlot<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/overlays/base.html#DataOverlay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.base.DataOverlay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for confidence maps/part affinity fields overlays.</p>
+<p>These overlays use a <cite>ModelData</cite> class which provides the confidence maps/
+part affinity fields for the frame (by running inference with a model).
+They could easily be modified to use another “data” class, e.g., one
+which load saved confidence maps/part affinity fields from a file.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.overlays.base.DataOverlay.data">
+<code class="sig-name descname">data</code><a class="headerlink" href="#sleap.gui.overlays.base.DataOverlay.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>instance of a class such that you can use <cite>data[frame_idx]</cite>
+to get the data (e.g., confmaps) for a given frame.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.overlays.base.DataOverlay.overlay_class">
+<code class="sig-name descname">overlay_class</code><a class="headerlink" href="#sleap.gui.overlays.base.DataOverlay.overlay_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines how the data will be shown, i.e., as
+confidence maps or as a quiver plot (for part affinity fields).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.overlays.base.ModelData">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.overlays.base.</code><code class="sig-name descname">ModelData</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/overlays/base.html#ModelData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.overlays.base.ModelData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sequence-type object which generates predictions for specified frames.</p>
+</dd></dl>
+
 </div>
 
 
@@ -90,7 +134,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -126,6 +170,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

@@ -35,13 +35,121 @@
             
   <div class="section" id="module-sleap.gui.learning.configs">
 <span id="sleap-gui-learning-configs"></span><h1>sleap.gui.learning.configs<a class="headerlink" href="#module-sleap.gui.learning.configs" title="Permalink to this headline">¶</a></h1>
+<p>Find, load, and show lists of saved <cite>TrainingJobConfig</cite>.</p>
+<dl class="py class">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.configs.</code><code class="sig-name descname">ConfigFileInfo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a></span></em>, <em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">head_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dont_retrain</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tried_finding_skeleton</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dset_len_cache</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#ConfigFileInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object to represent a saved <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code></p>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> class holds information about the model
+and can be saved as a file. This class holds information about that file,
+e.g., the path, and also provides some properties/methods that make it
+easier to access certain data in or about the file.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.config">
+<code class="sig-name descname">config</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.config" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.path">
+<code class="sig-name descname">path</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>path to the <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.filename">
+<code class="sig-name descname">filename</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>just the filename, not the full path</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.head_name">
+<code class="sig-name descname">head_name</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.head_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>string which should match name of model.heads key</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.dont_retrain">
+<code class="sig-name descname">dont_retrain</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.dont_retrain" title="Permalink to this definition">¶</a></dt>
+<dd><p>allows us to keep track of whether we should retrain
+this config</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.timestamp">
+<em class="property">property </em><code class="sig-name descname">timestamp</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp on file; parsed from filename (not OS timestamp).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.training_frame_count">
+<em class="property">property </em><code class="sig-name descname">training_frame_count</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.training_frame_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of labeled frames in the training dataset</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.training_instance_count">
+<em class="property">property </em><code class="sig-name descname">training_instance_count</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.training_instance_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of instances in the training dataset</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.validation_frame_count">
+<em class="property">property </em><code class="sig-name descname">validation_frame_count</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.validation_frame_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of labeled frames in the validation dataset</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.ConfigFileInfo.validation_instance_count">
+<em class="property">property </em><code class="sig-name descname">validation_instance_count</code><a class="headerlink" href="#sleap.gui.learning.configs.ConfigFileInfo.validation_instance_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of instances in the validation dataset</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt id="sleap.gui.learning.configs.TrainingConfigFilesWidget">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.configs.</code><code class="sig-name descname">TrainingConfigFilesWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg_getter</span><span class="p">:</span> <span class="n">sleap.gui.learning.configs.TrainingConfigsGetter</span></em>, <em class="sig-param"><span class="n">head_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">require_trained</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.configs.</code><code class="sig-name descname">TrainingConfigFilesWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg_getter</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.configs.TrainingConfigsGetter" title="sleap.gui.learning.configs.TrainingConfigsGetter">sleap.gui.learning.configs.TrainingConfigsGetter</a></span></em>, <em class="sig-param"><span class="n">head_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">require_trained</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget to show list of saved <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> files.</p>
+<p>This is used inside <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingEditorWidget</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfg_getter</strong> – the <a class="reference internal" href="#sleap.gui.learning.configs.TrainingConfigsGetter" title="sleap.gui.learning.configs.TrainingConfigsGetter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingConfigsGetter</span></code></a> from which menu
+is populated.</p></li>
+<li><p><strong>head_name</strong> – used to filter configs from <cite>cfg_getter</cite>.</p></li>
+<li><p><strong>require_trained</strong> – used to filter configs from <cite>cfg_getter</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Signals:</dt><dd><p>onConfigSelection: triggered when user selects a config file</p>
+</dd>
+</dl>
+<dl class="py method">
 <dt id="sleap.gui.learning.configs.TrainingConfigFilesWidget.doFileSelection">
 <code class="sig-name descname">doFileSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget.doFileSelection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget.doFileSelection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allow user to add training profile for given model type.</p>
+<dd><p>Shows file browser to add training profile for given model type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigFilesWidget.getConfigInfoByMenuIdx">
+<code class="sig-name descname">getConfigInfoByMenuIdx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">menu_idx</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget.getConfigInfoByMenuIdx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget.getConfigInfoByMenuIdx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <cite>ConfigFileInfo</cite> for menu item index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigFilesWidget.getSelectedConfigInfo">
+<code class="sig-name descname">getSelectedConfigInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget.getSelectedConfigInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget.getSelectedConfigInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return currently selected <cite>ConfigFileInfo</cite> (if any, None otherwise).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigFilesWidget.onSelectionIdxChange">
+<code class="sig-name descname">onSelectionIdxChange</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">menu_idx</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget.onSelectionIdxChange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget.onSelectionIdxChange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for when user selects a menu item.</p>
+<p>Either allows selection of config using file browser, or emits
+<cite>onConfigSelection</cite> signal for selected config.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -52,10 +160,88 @@
 
 <dl class="py method">
 <dt id="sleap.gui.learning.configs.TrainingConfigFilesWidget.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>update(self, arg__1:PySide2.QtCore.QRect)
-update(self, arg__1:PySide2.QtGui.QRegion)
-update(self, x:int, y:int, w:int, h:int)</p>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">select</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigFilesWidget.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigFilesWidget.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates menu options, optionally selecting a specific config.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.configs.</code><code class="sig-name descname">TrainingConfigsGetter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir_paths</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">head_filter</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">search_depth</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">configs</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for and loads <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> files.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.dir_paths">
+<code class="sig-name descname">dir_paths</code><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.dir_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of paths in which to search for
+<code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> files.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.head_filter">
+<code class="sig-name descname">head_filter</code><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.head_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of head type to use when filtering,
+e.g., “centered_instance”.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.search_depth">
+<code class="sig-name descname">search_depth</code><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.search_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>How many subdirectories deep to search for config files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.find_configs">
+<code class="sig-name descname">find_configs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.find_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.find_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load configs from all saved paths.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.find_configs_in_dir">
+<code class="sig-name descname">find_configs_in_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">depth</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.find_configs_in_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.find_configs_in_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads configs in specified directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.get_filtered_configs">
+<code class="sig-name descname">get_filtered_configs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">head_filter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">only_trained</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.get_filtered_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.get_filtered_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns filtered subset of loaded configs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.get_first">
+<code class="sig-name descname">get_first</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.get_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.get_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get first loaded config.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.insert_first">
+<code class="sig-name descname">insert_first</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg_info</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.insert_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.insert_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert config at beginning of list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.insert_last">
+<code class="sig-name descname">insert_last</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg_info</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.insert_last"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.insert_last" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert config at end of list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.make_from_labels_filename">
+<em class="property">classmethod </em><code class="sig-name descname">make_from_labels_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">head_filter</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#sleap.gui.learning.configs.TrainingConfigsGetter" title="sleap.gui.learning.configs.TrainingConfigsGetter">sleap.gui.learning.configs.TrainingConfigsGetter</a><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.make_from_labels_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.make_from_labels_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes object which checks for models in default subdir for dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.try_loading_path">
+<code class="sig-name descname">try_loading_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.try_loading_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.try_loading_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to load config file and wrap in <cite>ConfigFileInfo</cite> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-searches paths and loads any previously unloaded config files.</p>
 </dd></dl>
 
 </dd></dl>
@@ -114,7 +300,7 @@ update(self, x:int, y:int, w:int, h:int)</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -150,6 +336,7 @@ update(self, x:int, y:int, w:int, h:int)</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

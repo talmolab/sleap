@@ -32,16 +32,18 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.dialogs.export_clip</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">FormBuilderModalDialog</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Dialog for exporting clip; shows message depending on available encoder.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">FormBuilderModalDialog</span>
 
 
 <div class="viewcode-block" id="ExportClipDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.export_clip.html#sleap.gui.dialogs.export_clip.ExportClipDialog">[docs]</a><span class="k">class</span> <span class="nc">ExportClipDialog</span><span class="p">(</span><span class="n">FormBuilderModalDialog</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
         <span class="kn">from</span> <span class="nn">sleap.io.videowriter</span> <span class="kn">import</span> <span class="n">VideoWriter</span>
 
-        <span class="n">form_widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="s2">&quot;labeled_clip_form&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">form_widget</span><span class="o">=</span><span class="n">form_widget</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">form_name</span><span class="o">=</span><span class="s2">&quot;labeled_clip_form&quot;</span><span class="p">)</span>
 
         <span class="n">can_use_skvideo</span> <span class="o">=</span> <span class="n">VideoWriter</span><span class="o">.</span><span class="n">can_use_skvideo</span><span class="p">()</span>
 

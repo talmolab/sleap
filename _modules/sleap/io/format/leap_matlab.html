@@ -32,7 +32,13 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.io.format.leap_matlab</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Adaptor to read (not write) LEAP MATLAB data files.</span>
+
+<span class="sd">This attempts to find videos. If they cannot automatically be found and the</span>
+<span class="sd">`gui` param is True, then the user will be prompted to find the videos.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">sio</span>
 

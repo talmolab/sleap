@@ -43,7 +43,7 @@ trying to track with the Kalman filter, since the skeleton fragments can mess
 up the filters.</p>
 <dl class="py function">
 <dt id="sleap.nn.tracker.kalman.get_track_instance_matches">
-<code class="sig-prename descclassname">sleap.nn.tracker.kalman.</code><code class="sig-name descname">get_track_instance_matches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instances</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">tracks</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">are_too_close_function</span><span class="p">:</span> <span class="n">Callable</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>sleap.nn.tracker.components.Match<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/tracker/kalman.html#get_track_instance_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.kalman.get_track_instance_matches" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.tracker.kalman.</code><code class="sig-name descname">get_track_instance_matches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instances</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">tracks</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">are_too_close_function</span><span class="p">:</span> <span class="n">Callable</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.nn.tracker.components.html#sleap.nn.tracker.components.Match" title="sleap.nn.tracker.components.Match">sleap.nn.tracker.components.Match</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/tracker/kalman.html#get_track_instance_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.kalman.get_track_instance_matches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Matches track identities (from filters) to instances in frame.</p>
 <p>Algorithm is modified greedy matching.</p>
 <p>Standard greedy matching:
@@ -160,7 +160,7 @@ to be valid.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -196,6 +196,7 @@ to be valid.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

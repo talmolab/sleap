@@ -32,7 +32,19 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.info.trackcleaner</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">operator</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CLI for TrackCleaner (mostly deprecated).</span>
+
+<span class="sd">This runs the track cleaner to (i) cull instances and (ii) connect track breaks</span>
+<span class="sd">in predictions which have already been tracked.</span>
+
+<span class="sd">The `sleap-track` CLI lets you run (or re-run) tracking on predictions, and</span>
+<span class="sd">includes options to cull instances *before* tracking (with more control over</span>
+<span class="sd">how instances are selected for culling) and connect track breaks. In most cases</span>
+<span class="sd">it will be better to use the `sleap-track` CLI.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Text</span>
 
 <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span>

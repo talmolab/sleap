@@ -39,7 +39,13 @@
 <span class="sd">together with all the other data that is saved for a SLEAP project</span>
 <span class="sd">(videos, skeletons, etc.).</span>
 
-<span class="sd">To load a labels dataset file from disk:</span>
+<span class="sd">The most convenient way to load SLEAP labels files is to use the high level loader:</span>
+
+<span class="sd">&gt; import sleap</span>
+<span class="sd">&gt; labels = sleap.load_file(filename)</span>
+
+<span class="sd">The Labels class provides additional functionality for loading SLEAP labels files. To</span>
+<span class="sd">load a labels dataset file from disk:</span>
 
 <span class="sd">&gt; labels = Labels.load_file(filename)</span>
 
@@ -47,12 +53,12 @@
 <span class="sd">moved the video files), it&#39;s likely that the paths to the original videos will</span>
 <span class="sd">not work. We automatically check for the videos in the same directory as the</span>
 <span class="sd">labels file, but if the videos aren&#39;t there, you can tell `load_file` where</span>
-<span class="sd">to seach for the videos. There are various ways to do this:</span>
+<span class="sd">to search for the videos. There are various ways to do this:</span>
 
-<span class="sd">&gt; Labels.load_filename(filename, single_path_to_search)</span>
-<span class="sd">&gt; Labels.load_filename(filename, [path_a, path_b])</span>
-<span class="sd">&gt; Labels.load_filename(filename, callback_function)</span>
-<span class="sd">&gt; Labels.load_filename(filename, video_search=...)</span>
+<span class="sd">&gt; Labels.load_file(filename, single_path_to_search)</span>
+<span class="sd">&gt; Labels.load_file(filename, [path_a, path_b])</span>
+<span class="sd">&gt; Labels.load_file(filename, callback_function)</span>
+<span class="sd">&gt; Labels.load_file(filename, video_search=...)</span>
 
 <span class="sd">The callback_function can be created via `make_video_callback()` and has the</span>
 <span class="sd">option to make a callback with a GUI window so the user can locate the videos.</span>
@@ -68,7 +74,7 @@
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">MutableSequence</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Set</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">cattr</span>
@@ -90,7 +96,7 @@
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">sleap.io</span> <span class="kn">import</span> <span class="n">pathutils</span>
-<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span><span class="p">,</span> <span class="n">ImgStoreVideo</span><span class="p">,</span> <span class="n">HDF5Video</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.suggestions</span> <span class="kn">import</span> <span class="n">SuggestionFrame</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.missingfiles</span> <span class="kn">import</span> <span class="n">MissingFilesDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.rangelist</span> <span class="kn">import</span> <span class="n">RangeList</span>
@@ -115,9 +121,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
 <div class="viewcode-block" id="LabelsDataCache.update"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_frame</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Builds (or rebuilds) various caches.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Build (or rebuilds) various caches.&quot;&quot;&quot;</span>
         <span class="c1"># Data structures for caching</span>
-
         <span class="k">if</span> <span class="n">new_frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_lf_by_video</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_frame_idx_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -145,7 +150,7 @@
 <div class="viewcode-block" id="LabelsDataCache.find_frames"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.find_frames">[docs]</a>    <span class="k">def</span> <span class="nf">find_frames</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Returns list of LabeledFrames matching video/frame_idx, or None.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return list of LabeledFrames matching video/frame_idx, or None.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">frame_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_idx_map</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
@@ -167,7 +172,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lf_by_video</span><span class="p">[</span><span class="n">video</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="LabelsDataCache.find_fancy_frame_idxs"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.find_fancy_frame_idxs">[docs]</a>    <span class="k">def</span> <span class="nf">find_fancy_frame_idxs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">from_frame_idx</span><span class="p">,</span> <span class="n">reverse</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a list of frame idxs, with optional start position/order.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of frame idxs, with optional start position/order.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_idx_map</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
@@ -205,9 +210,7 @@
         <span class="k">return</span> <span class="n">tracks</span>
 
 <div class="viewcode-block" id="LabelsDataCache.get_track_occupancy"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.get_track_occupancy">[docs]</a>    <span class="k">def</span> <span class="nf">get_track_occupancy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Track</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RangeList</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Accessor for track occupancy cache that adds video/track as needed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Access track occupancy cache that adds video/track as needed.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
@@ -216,24 +219,23 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="n">track</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="LabelsDataCache.get_video_track_occupancy"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.get_video_track_occupancy">[docs]</a>    <span class="k">def</span> <span class="nf">get_video_track_occupancy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Track</span><span class="p">,</span> <span class="n">RangeList</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Returns track occupancy information for specified video.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return track occupancy information for specified video.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="LabelsDataCache.remove_frame"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.remove_frame">[docs]</a>    <span class="k">def</span> <span class="nf">remove_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates cache as needed.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Remvoe frame and update cache as needed.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lf_by_video</span><span class="p">[</span><span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
-        <span class="c1"># we&#39;ll assume that there&#39;s only a single LabeledFrame for this video</span>
-        <span class="c1"># and frame_idx, and remove the frame_idx from the cache</span>
+        <span class="c1"># We&#39;ll assume that there&#39;s only a single LabeledFrame for this video and</span>
+        <span class="c1"># frame_idx, and remove the frame_idx from the cache.</span>
         <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_idx_map</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_idx_map</span><span class="p">[</span><span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">]:</span>
                 <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_idx_map</span><span class="p">[</span><span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">][</span><span class="n">frame</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="LabelsDataCache.remove_video"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.remove_video">[docs]</a>    <span class="k">def</span> <span class="nf">remove_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates cache as needed.&quot;&quot;&quot;</span>
-        <span class="c1"># Remove from caches</span>
+        <span class="sd">&quot;&quot;&quot;Remove video and update cache as needed.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lf_by_video</span><span class="p">:</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lf_by_video</span><span class="p">[</span><span class="n">video</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_idx_map</span><span class="p">:</span>
@@ -246,8 +248,7 @@
         <span class="n">old_track</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Track</span><span class="p">],</span>
         <span class="n">frame_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates cache as needed.&quot;&quot;&quot;</span>
-
+        <span class="sd">&quot;&quot;&quot;Swap tracks and update cache as needed.&quot;&quot;&quot;</span>
         <span class="c1"># Get ranges in track occupancy cache</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">within_old</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_track_occupancy</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">old_track</span><span class="p">)</span><span class="o">.</span><span class="n">cut_range</span><span class="p">(</span>
             <span class="n">frame_range</span>
@@ -266,11 +267,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="n">new_track</span><span class="p">]</span><span class="o">.</span><span class="n">insert_list</span><span class="p">(</span><span class="n">within_old</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="LabelsDataCache.add_track"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.add_track">[docs]</a>    <span class="k">def</span> <span class="nf">add_track</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Track</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates cache as needed.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Add track a track to the labels.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="n">track</span><span class="p">]</span> <span class="o">=</span> <span class="n">RangeList</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="LabelsDataCache.add_instance"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.add_instance">[docs]</a>    <span class="k">def</span> <span class="nf">add_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates cache as needed.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Add an instance to the labels.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
@@ -285,7 +286,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">update_counts_for_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="LabelsDataCache.remove_instance"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.remove_instance">[docs]</a>    <span class="k">def</span> <span class="nf">remove_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates cache as needed.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Remove an instance and update the cache as needed.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_occupancy</span><span class="p">[</span><span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">]:</span>
             <span class="k">return</span>
 
@@ -297,10 +298,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">update_counts_for_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LabelsDataCache.get_frame_count"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.get_frame_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns (possibly cached) count of frames matching video/filter.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LabelsDataCache.get_frame_count"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.get_frame_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_frame_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return (possibly cached) count of frames matching video/filter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">filter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Labels.get_labeled_frame_count() invalid filter: </span><span class="si">{</span><span class="nb">filter</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -315,10 +314,8 @@
 
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_count_cache</span><span class="p">[</span><span class="n">video</span><span class="p">][</span><span class="nb">filter</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="LabelsDataCache.get_filtered_frame_idxs"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.get_filtered_frame_idxs">[docs]</a>    <span class="k">def</span> <span class="nf">get_filtered_frame_idxs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns list of (video_idx, frame_idx) tuples matching video/filter.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LabelsDataCache.get_filtered_frame_idxs"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.get_filtered_frame_idxs">[docs]</a>    <span class="k">def</span> <span class="nf">get_filtered_frame_idxs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return list of (video_idx, frame_idx) tuples matching video/filter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">filter</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">filter_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">lf</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span>
         <span class="k">elif</span> <span class="nb">filter</span> <span class="o">==</span> <span class="s2">&quot;user&quot;</span><span class="p">:</span>
@@ -572,17 +569,45 @@
         <span class="sd">&quot;&quot;&quot;Alias for labeled_frames.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Skeleton</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the skeleton if there is only a single skeleton in the labels.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Labels.skeleton can only be used when there is only a single skeleton &quot;</span>
+                <span class="s2">&quot;saved in the labels. Use Labels.skeletons instead.&quot;</span>
+                <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">video</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Video</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the video if there is only a single video in the labels.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are no videos in the labels.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Labels.video can only be used when there is only a single video saved &quot;</span>
+                <span class="s2">&quot;in the labels. Use Labels.videos instead.&quot;</span>
+                <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_missing_videos</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return True if any of the video files in the labels are missing.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">is_missing</span> <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns number of labeled frames.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return number of labeled frames.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Labels.index"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns index of labeled frame in list of labeled frames.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return index of labeled frame in list of labeled frames.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Checks if object contains the given item.</span>
+        <span class="sd">&quot;&quot;&quot;Check if object contains the given item.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            item: The item to look for within `Labels`.</span>
@@ -605,22 +630,32 @@
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
             <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Video</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span>
         <span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="o">*</span><span class="n">item</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="o">*</span><span class="n">item</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Item is not an object type contained in labels.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Returns labeled frames matching key.</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return labeled frames matching key.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            key: `Video` or (`Video`, frame index) to match against.</span>
+<span class="sd">            key: Indexing argument to match against. If `key` is a `Video` or tuple of</span>
+<span class="sd">                `(Video, frame_index)`, frames that match the criteria will be searched</span>
+<span class="sd">                for. If a scalar, list, range or array of integers are provided, the</span>
+<span class="sd">                labels with those linear indices will be returned.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            KeyError: If labeled frame for `Video` or frame index</span>
-<span class="sd">            cannot be found.</span>
+<span class="sd">            KeyError: If the specified key could not be found.</span>
 
-<span class="sd">        Returns: A list with the matching labeled frame(s).</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A list with the matching `LabeledFrame`s, or a single `LabeledFrame` if a</span>
+<span class="sd">            scalar key was provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
@@ -633,32 +668,39 @@
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
             <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Video</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span>
         <span class="p">):</span>
             <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Video not found in labels.&quot;</span><span class="p">)</span>
 
-            <span class="n">_hit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-            <span class="k">if</span> <span class="n">_hit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No label found for specified video at frame </span><span class="si">{</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">_hit</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">_hit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">_hit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No label found for specified video at frame </span><span class="si">{</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">_hit</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">((</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">range</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid label indexing arguments.&quot;</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">range</span><span class="p">)):</span>
             <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">key</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid label indexing arguments.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sets labeled frame at given index.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set labeled frame at given index.&quot;&quot;&quot;</span>
         <span class="c1"># TODO: Maybe we should remove this method altogether?</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_containers</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Labels.insert"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Inserts labeled frame at given index.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Insert labeled frame at given index.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span> <span class="ow">or</span> <span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">frame_idx</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -666,15 +708,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_containers</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Labels.append"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adds labeled frame to list of labeled frames.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Add labeled frame to list of labeled frames.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Removes labeled frame with given index.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Remove labeled frame with given index.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
 <div class="viewcode-block" id="Labels.remove"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Removes given labeled frame.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Remove given labeled frame.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">remove_frame</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
@@ -684,7 +726,7 @@
         <span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_new</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot; Search for labeled frames given video and/or frame index.</span>
+        <span class="sd">&quot;&quot;&quot;Search for labeled frames given video and/or frame index.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            video: A :class:`Video` that is associated with the project.</span>
@@ -709,8 +751,7 @@
         <span class="k">return</span> <span class="n">null_result</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="Labels.frames"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.frames">[docs]</a>    <span class="k">def</span> <span class="nf">frames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">from_frame_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Iterator over all labeled frames in a video.</span>
+        <span class="sd">&quot;&quot;&quot;Return an iterator over all labeled frames in a video.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            video: A :class:`Video` that is associated with the project.</span>
@@ -721,7 +762,6 @@
 <span class="sd">        Yields:</span>
 <span class="sd">            :class:`LabeledFrame`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">frame_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">find_fancy_frame_idxs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">from_frame_idx</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
 
         <span class="c1"># Yield the frames</span>
@@ -731,8 +771,7 @@
 <div class="viewcode-block" id="Labels.find_first"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.find_first">[docs]</a>    <span class="k">def</span> <span class="nf">find_first</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Finds the first occurrence of a matching labeled frame.</span>
+        <span class="sd">&quot;&quot;&quot;Find the first occurrence of a matching labeled frame.</span>
 
 <span class="sd">        Matches on frames for the given video and/or frame index.</span>
 
@@ -746,7 +785,6 @@
 <span class="sd">            First `LabeledFrame` that match the criteria</span>
 <span class="sd">            or None if none were found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="p">(</span>
@@ -757,8 +795,7 @@
 <div class="viewcode-block" id="Labels.find_last"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.find_last">[docs]</a>    <span class="k">def</span> <span class="nf">find_last</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Finds the last occurrence of a matching labeled frame.</span>
+        <span class="sd">&quot;&quot;&quot;Find the last occurrence of a matching labeled frame.</span>
 
 <span class="sd">        Matches on frames for the given video and/or frame index.</span>
 
@@ -772,7 +809,6 @@
 <span class="sd">            Last `LabeledFrame` that match the criteria</span>
 <span class="sd">            or None if none were found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span> <span class="ow">and</span> <span class="p">(</span>
@@ -782,44 +818,39 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">user_labeled_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns all labeled frames with user (non-predicted) instances.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return all labeled frames with user (non-predicted) instances.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">lf</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span> <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_user_instances</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">get_labeled_frame_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get_frame_count</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="nb">filter</span><span class="p">)</span>
 
-    <span class="c1"># Methods for instances</span>
-
 <div class="viewcode-block" id="Labels.instance_count"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.instance_count">[docs]</a>    <span class="k">def</span> <span class="nf">instance_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns number of instances matching video/frame index.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return number of instances matching video/frame index.&quot;&quot;&quot;</span>
         <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">labeled_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_first</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">labeled_frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">Instance</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">Instance</span><span class="p">)]</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">count</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">all_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns list of all instances.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">all_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return list of all instances.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">())</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">user_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns list of all user (non-predicted) instances.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">Instance</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">user_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return list of all user (non-predicted) instances.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">Instance</span><span class="p">)]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">predicted_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns list of all user (non-predicted) instances.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">==</span> <span class="n">PredictedInstance</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">predicted_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictedInstance</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return list of all predicted instances.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">inst</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">PredictedInstance</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="Labels.instances"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.instances">[docs]</a>    <span class="k">def</span> <span class="nf">instances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Iterate over instances in the labels, optionally with filters.</span>
+        <span class="sd">&quot;&quot;&quot;Iterate over instances in the labels, optionally with filters.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            video: Only iterate through instances in this video</span>
@@ -859,7 +890,7 @@
                 <span class="p">)</span>
                 <span class="n">template_points</span> <span class="o">=</span> <span class="n">align</span><span class="o">.</span><span class="n">get_template_points_array</span><span class="p">(</span><span class="n">first_n_instances</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_template_instance_points</span><span class="p">[</span><span class="n">skeleton</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                    <span class="n">points</span><span class="o">=</span><span class="n">template_points</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span>
+                    <span class="n">points</span><span class="o">=</span><span class="n">template_points</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># No labeled frames so use force-directed graph layout</span>
@@ -876,30 +907,28 @@
                     <span class="p">]</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_template_instance_points</span><span class="p">[</span><span class="n">skeleton</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                    <span class="n">points</span><span class="o">=</span><span class="n">template_points</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span>
+                    <span class="n">points</span><span class="o">=</span><span class="n">template_points</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_template_instance_points</span><span class="p">[</span><span class="n">skeleton</span><span class="p">][</span><span class="s2">&quot;points&quot;</span><span class="p">]</span>
 
-    <span class="c1"># Methods for tracks</span>
-
 <div class="viewcode-block" id="Labels.get_track_count"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_track_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_track_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns the number of occupied tracks for a given video.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of occupied tracks for a given video.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_track_occupancy</span><span class="p">(</span><span class="n">video</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Labels.get_track_occupancy"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_track_occupancy">[docs]</a>    <span class="k">def</span> <span class="nf">get_track_occupancy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns track occupancy list for given video&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return track occupancy list for given video.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get_video_track_occupancy</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Labels.add_track"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.add_track">[docs]</a>    <span class="k">def</span> <span class="nf">add_track</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">track</span><span class="p">:</span> <span class="n">Track</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adds track to labels, updating occupancy.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Add track to labels, updating occupancy.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">add_track</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">track</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Labels.track_set_instance"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.track_set_instance">[docs]</a>    <span class="k">def</span> <span class="nf">track_set_instance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">new_track</span><span class="p">:</span> <span class="n">Track</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sets track on given instance, updating occupancy.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set track on given instance, updating occupancy.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">track_swap</span><span class="p">(</span>
             <span class="n">frame</span><span class="o">.</span><span class="n">video</span><span class="p">,</span>
             <span class="n">new_track</span><span class="p">,</span>
@@ -917,8 +946,7 @@
         <span class="n">old_track</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Track</span><span class="p">],</span>
         <span class="n">frame_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Swaps track assignment for instances in two tracks.</span>
+        <span class="sd">&quot;&quot;&quot;Swap track assignment for instances in two tracks.</span>
 
 <span class="sd">        If you need to change the track to or from None, you&#39;ll need</span>
 <span class="sd">        to use :meth:`track_set_instance` for each specific</span>
@@ -932,11 +960,7 @@
 <span class="sd">            frame_range: Tuple of (start, end) frame indexes.</span>
 <span class="sd">                If you want to swap tracks on a single frame, use</span>
 <span class="sd">                (frame index, frame index + 1).</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">track_swap</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">new_track</span><span class="p">,</span> <span class="n">old_track</span><span class="p">,</span> <span class="n">frame_range</span><span class="p">)</span>
 
         <span class="c1"># Update tracks set on instances</span>
@@ -959,13 +983,13 @@
 <div class="viewcode-block" id="Labels.remove_instance"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_instance">[docs]</a>    <span class="k">def</span> <span class="nf">remove_instance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">in_transaction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Removes instance from frame, updating track occupancy.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Remove instance from frame, updating track occupancy.&quot;&quot;&quot;</span>
         <span class="n">frame</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">in_transaction</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">instance</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Labels.add_instance"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.add_instance">[docs]</a>    <span class="k">def</span> <span class="nf">add_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adds instance to frame, updating track occupancy.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Add instance to frame, updating track occupancy.&quot;&quot;&quot;</span>
         <span class="c1"># Ensure that there isn&#39;t already an Instance with this track</span>
         <span class="n">tracks_in_frame</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">inst</span><span class="o">.</span><span class="n">track</span>
@@ -990,10 +1014,10 @@
 <span class="sd">            frame_range (optional):</span>
 <span class="sd">                If specified, only return instances on frames in range.</span>
 <span class="sd">                If None, return all instances for given track.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            List of :class:`Instance` objects.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">frame_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">frame_range</span><span class="p">)</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">frame_range</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span> <span class="k">else</span> <span class="n">frame_range</span>
 
         <span class="k">def</span> <span class="nf">does_track_match</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">labeled_frame</span><span class="p">):</span>
@@ -1017,16 +1041,18 @@
         <span class="p">]</span>
         <span class="k">return</span> <span class="n">track_frame_inst</span></div>
 
-    <span class="c1"># Methods for suggestions</span>
-
 <div class="viewcode-block" id="Labels.get_video_suggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_video_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">get_video_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the list of suggested frames for the specified video</span>
-<span class="sd">        or suggestions for all videos (if no video specified).</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of suggested frame indices.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            video: Video to get suggestions for.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Indices of the labeled frames for for the specified video.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">video</span> <span class="o">==</span> <span class="n">video</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Labels.get_suggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">get_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<div class="viewcode-block" id="Labels.get_suggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">get_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">SuggestionFrame</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Return all suggestions as a list of SuggestionFrame items.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span></div>
 
@@ -1043,8 +1069,8 @@
 
         <span class="k">return</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="Labels.get_next_suggestion"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_next_suggestion">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_suggestion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">seek_direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns a (video, frame_idx) tuple seeking from given frame.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Labels.get_next_suggestion"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.get_next_suggestion">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_suggestion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">seek_direction</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a (video, frame_idx) tuple seeking from given frame.&quot;&quot;&quot;</span>
         <span class="c1"># make sure we have valid seek_direction</span>
         <span class="k">if</span> <span class="n">seek_direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;seek_direction should be -1 or 1.&quot;</span><span class="p">)</span>
@@ -1091,18 +1117,16 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_suggestion</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_suggestion</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Labels.set_suggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.set_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">set_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suggestions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;SuggestionFrame&quot;</span><span class="p">]):</span>
-        <span class="sd">&quot;&quot;&quot;Sets the suggested frames.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Labels.set_suggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.set_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">set_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suggestions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SuggestionFrame</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Set the suggested frames.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="o">=</span> <span class="n">suggestions</span></div>
 
 <div class="viewcode-block" id="Labels.delete_suggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.delete_suggestions">[docs]</a>    <span class="k">def</span> <span class="nf">delete_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Deletes suggestions for specified video.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Delete suggestions for specified video.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestions</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">video</span> <span class="o">!=</span> <span class="n">video</span><span class="p">]</span></div>
 
-    <span class="c1"># Methods for videos</span>
-
 <div class="viewcode-block" id="Labels.add_video"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.add_video">[docs]</a>    <span class="k">def</span> <span class="nf">add_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Add a video to the labels if it is not already in it.</span>
+        <span class="sd">&quot;&quot;&quot;Add a video to the labels if it is not already in it.</span>
 
 <span class="sd">        Video instances are added automatically when adding labeled frames,</span>
 <span class="sd">        but this function allows for adding videos to the labels before any</span>
@@ -1116,10 +1140,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Labels.remove_video"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_video">[docs]</a>    <span class="k">def</span> <span class="nf">remove_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Removes a video from the labels and ALL associated labeled frames.</span>
+        <span class="sd">&quot;&quot;&quot;Remove a video from the labels and all associated labeled frames.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            video: `Video` instance to be removed</span>
+<span class="sd">            video: `Video` instance to be removed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Video is not in labels.&quot;</span><span class="p">)</span>
@@ -1138,8 +1162,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">remove_video</span><span class="p">(</span><span class="n">video</span><span class="p">)</span></div>
 
-    <span class="c1"># Methods for saving/loading</span>
-
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">sleap.io.format.labels_json</span> <span class="kn">import</span> <span class="n">LabelsJsonAdaptor</span>
@@ -1149,8 +1171,7 @@
 <div class="viewcode-block" id="Labels.extend_from"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.extend_from">[docs]</a>    <span class="k">def</span> <span class="nf">extend_from</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">new_frames</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Labels&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]],</span> <span class="n">unify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Merge data from another `Labels` object or `LabeledFrame` list.</span>
+        <span class="sd">&quot;&quot;&quot;Merge data from another `Labels` object or `LabeledFrame` list.</span>
 
 <span class="sd">        Arg:</span>
 <span class="sd">            new_frames: the object from which to copy data</span>
@@ -1194,8 +1215,7 @@
     <span class="k">def</span> <span class="nf">complex_merge_between</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">base_labels</span><span class="p">:</span> <span class="s2">&quot;Labels&quot;</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">:</span> <span class="s2">&quot;Labels&quot;</span><span class="p">,</span> <span class="n">unify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Merge frames and other data from one dataset into another.</span>
+        <span class="sd">&quot;&quot;&quot;Merge frames and other data from one dataset into another.</span>
 
 <span class="sd">        Anything that can be merged cleanly is merged into base_labels.</span>
 
@@ -1258,14 +1278,11 @@
     <span class="k">def</span> <span class="nf">finish_complex_merge</span><span class="p">(</span>
         <span class="n">base_labels</span><span class="p">:</span> <span class="s2">&quot;Labels&quot;</span><span class="p">,</span> <span class="n">resolved_frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Finish conflicted merge from complex_merge_between.</span>
+        <span class="sd">&quot;&quot;&quot;Finish conflicted merge from complex_merge_between.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            base_labels: the `Labels` that we&#39;re merging into</span>
 <span class="sd">            resolved_frames: the list of frames to add into base_labels</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Add all the resolved frames to base</span>
         <span class="n">base_labels</span><span class="o">.</span><span class="n">labeled_frames</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">resolved_frames</span><span class="p">)</span>
@@ -1290,13 +1307,10 @@
                 <span class="n">dict_a</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_b</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Labels.merge_matching_frames"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_matching_frames">[docs]</a>    <span class="k">def</span> <span class="nf">merge_matching_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Merge `LabeledFrame` objects that are for the same video frame.</span>
+        <span class="sd">&quot;&quot;&quot;Merge `LabeledFrame` objects that are for the same video frame.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            video: combine for this video; if None, do all videos</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="p">{</span><span class="n">lf</span><span class="o">.</span><span class="n">video</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">}:</span>
@@ -1306,16 +1320,15 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span>
             <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Labels.to_dict"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Serialize all labels in the underling list of LabeledFrames to a</span>
-<span class="sd">        dict structure. This function returns a nested dict structure</span>
-<span class="sd">        composed entirely of primitive python types. It is used to create</span>
-<span class="sd">        JSON and HDF5 serialized datasets.</span>
+<div class="viewcode-block" id="Labels.to_dict"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Serialize all labels to dicts.</span>
+
+<span class="sd">        Serializes the labels in the underling list of LabeledFrames to a dict</span>
+<span class="sd">        structure. This function returns a nested dict structure composed entirely of</span>
+<span class="sd">        primitive python types. It is used to create JSON and HDF5 serialized datasets.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            skip_labels: If True, skip labels serialization and just do the</span>
-<span class="sd">            metadata.</span>
+<span class="sd">            skip_labels: If True, skip labels serialization and just do the metadata.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A dict containing the followings top level keys:</span>
@@ -1329,7 +1342,6 @@
 <span class="sd">            * suggestions - The suggested frames.</span>
 <span class="sd">            * negative_anchors - The negative training sample anchors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="c1"># FIXME: Update list of nodes</span>
         <span class="c1"># We shouldn&#39;t have to do this here, but for some reason we&#39;re missing nodes</span>
         <span class="c1"># which are in the skeleton but don&#39;t have points (in the first instance?).</span>
@@ -1382,14 +1394,11 @@
         <span class="k">return</span> <span class="n">dicts</span></div>
 
 <div class="viewcode-block" id="Labels.to_json"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Serialize all labels in the underling list of LabeledFrame(s) to a</span>
-<span class="sd">        JSON structured string.</span>
+        <span class="sd">&quot;&quot;&quot;Serialize all labels in the underling list of LabeledFrame(s) to JSON.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The JSON representation of the string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="c1"># Unstructure the data into dicts and dump to JSON.</span>
         <span class="k">return</span> <span class="n">json_dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span></div>
 
@@ -1424,9 +1433,6 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: If cannot detect valid filetype.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Convert to full (absolute) path</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
@@ -1437,6 +1443,23 @@
         <span class="kn">from</span> <span class="nn">.format</span> <span class="kn">import</span> <span class="n">write</span>
 
         <span class="n">write</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Labels.save"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">with_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the labels to a file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: Path to save the labels to ending in `.slp`. If the filename does</span>
+<span class="sd">                not end in `.slp`, the extension will be automatically appended.</span>
+<span class="sd">            with_images: If True, the image data for frames with labels will be embedded</span>
+<span class="sd">                in the saved labels. This is useful for generating a single file to be</span>
+<span class="sd">                used when training remotely.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            This is an instance-level wrapper for the `Labels.save_file` class method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;.slp&quot;</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.slp&quot;</span>
+        <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">save_frame_data</span><span class="o">=</span><span class="n">with_images</span><span class="p">)</span></div>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Labels&quot;</span><span class="p">:</span>
@@ -1476,7 +1499,7 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load_coco</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">img_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use_missing_gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">img_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use_missing_gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Labels&quot;</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">sleap.io.format.coco</span> <span class="kn">import</span> <span class="n">LabelsCocoAdaptor</span>
         <span class="kn">from</span> <span class="nn">sleap.io.format.filehandle</span> <span class="kn">import</span> <span class="n">FileHandle</span>
@@ -1496,9 +1519,8 @@
 
 <div class="viewcode-block" id="Labels.save_frame_data_imgstore"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.save_frame_data_imgstore">[docs]</a>    <span class="k">def</span> <span class="nf">save_frame_data_imgstore</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="n">all_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Write images for labeled frames from all videos to imgstore datasets.</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ImgStoreVideo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Write images for labeled frames from all videos to imgstore datasets.</span>
 
 <span class="sd">        This only writes frames that have been labeled. Videos without</span>
 <span class="sd">        any labeled frames will be included as empty imgstores.</span>
@@ -1541,9 +1563,8 @@
 
 <div class="viewcode-block" id="Labels.save_frame_data_hdf5"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.save_frame_data_hdf5">[docs]</a>    <span class="k">def</span> <span class="nf">save_frame_data_hdf5</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="n">all_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Write images for labeled frames from all videos to hdf5 file.</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">HDF5Video</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Write images for labeled frames from all videos to hdf5 file.</span>
 
 <span class="sd">        Note that this will make an HDF5 video, not an HDF5 labels dataset.</span>
 
@@ -1583,8 +1604,7 @@
     <span class="k">def</span> <span class="nf">make_video_callback</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">search_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a callback for finding missing videos.</span>
+        <span class="sd">&quot;&quot;&quot;Create a callback for finding missing videos.</span>
 
 <span class="sd">        The callback can be used while loading a saved project and</span>
 <span class="sd">        allows the user to find videos which have been moved (or have</span>
@@ -1662,183 +1682,19 @@
                     <span class="n">vid</span> <span class="o">=</span> <span class="n">DummyVideo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">])</span>
                     <span class="n">item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">unstructure</span><span class="p">(</span><span class="n">vid</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">video_callback</span></div>
-
-<div class="viewcode-block" id="Labels.export_training_data"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.export_training_data">[docs]</a>    <span class="k">def</span> <span class="nf">export_training_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Exports a set of images and points for training with minimal metadata.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            save_path: Path to HDF5 that training data will be saved to.</span>
-
-<span class="sd">        Notes:</span>
-<span class="sd">            The exported HDF5 file will contain no SLEAP-specific metadata or</span>
-<span class="sd">            dependencies for serialization. These files cannot be read back in for</span>
-<span class="sd">            labeling, but are useful when training on environments where it is hard to</span>
-<span class="sd">            install complex dependencies.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Skeleton</span>
-        <span class="n">node_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">node_names</span><span class="p">)</span>
-        <span class="n">edge_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">edge_inds</span><span class="p">)</span>
-
-        <span class="c1"># Videos metadata</span>
-        <span class="n">video_paths</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">video_datasets</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">video_shapes</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">video_image_data_format</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">:</span>
-            <span class="n">video_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">):</span>
-                <span class="n">video_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">video_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">video_shapes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">video_image_data_format</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">input_format</span><span class="p">)</span>
-
-        <span class="n">video_paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">video_paths</span><span class="p">)</span>
-        <span class="n">video_datasets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">video_datasets</span><span class="p">)</span>
-        <span class="n">video_shapes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">video_shapes</span><span class="p">)</span>
-        <span class="n">video_image_data_format</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="n">video_image_data_format</span><span class="p">)</span>
-
-        <span class="c1"># Main labeling data</span>
-        <span class="n">video_inds</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">frame_inds</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">peak_samples</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">peak_instances</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">peak_channels</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">peak_tracks</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="c1"># Main labeling data.</span>
-        <span class="n">labeled_frames_with_instances</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">lf</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span> <span class="k">if</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_user_instances</span>
-        <span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">sample_ind</span><span class="p">,</span> <span class="n">lf</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labeled_frames_with_instances</span><span class="p">):</span>
-
-            <span class="c1"># Video index into the videos metadata</span>
-            <span class="n">video_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="p">)</span>
-
-            <span class="c1"># Frame index into the original images array</span>
-            <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;_HDF5Video__original_to_current_frame_idx&quot;</span><span class="p">):</span>
-                <span class="n">frame_ind</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">_HDF5Video__original_to_current_frame_idx</span><span class="p">[</span>
-                    <span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span>
-                <span class="p">]</span>
-
-            <span class="c1"># Actual image data</span>
-            <span class="n">img</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">image</span>
-
-            <span class="n">frame_peaks</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">frame_peak_samples</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">frame_peak_instances</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">frame_peak_channels</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">frame_peak_tracks</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">instance_ind</span><span class="p">,</span> <span class="n">instance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">user_instances</span><span class="p">):</span>
-                <span class="n">instance_peaks</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">points_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
-                <span class="n">frame_peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">)</span>
-                <span class="n">frame_peak_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">),),</span> <span class="n">sample_ind</span><span class="p">))</span>
-                <span class="n">frame_peak_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">),),</span> <span class="n">instance_ind</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">frame_peak_channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">)))</span>
-                <span class="n">track_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-                <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">track_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
-                <span class="n">frame_peak_tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">instance_peaks</span><span class="p">),),</span> <span class="n">track_ind</span><span class="p">))</span>
-
-            <span class="c1"># Concatenate into (n_peaks, 2) -&gt; x, y = frame_peaks[i]</span>
-            <span class="n">frame_peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peaks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-            <span class="c1"># Concatenate metadata</span>
-            <span class="n">frame_peak_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_samples</span><span class="p">)</span>
-            <span class="n">frame_peak_instances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_instances</span><span class="p">)</span>
-            <span class="n">frame_peak_channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_channels</span><span class="p">)</span>
-            <span class="n">frame_peak_tracks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">frame_peak_tracks</span><span class="p">)</span>
-
-            <span class="n">video_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video_ind</span><span class="p">)</span>
-            <span class="n">frame_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_ind</span><span class="p">)</span>
-            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-            <span class="n">peaks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peaks</span><span class="p">)</span>
-            <span class="n">peak_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peak_samples</span><span class="p">)</span>
-            <span class="n">peak_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peak_instances</span><span class="p">)</span>
-            <span class="n">peak_channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_peak_channels</span><span class="p">)</span>
-            <span class="n">peak_tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peak_tracks</span><span class="p">)</span>
-
-        <span class="n">video_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">video_inds</span><span class="p">)</span>
-        <span class="n">frame_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">frame_inds</span><span class="p">)</span>
-        <span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">peak_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_samples</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
-        <span class="n">peak_instances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_instances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
-        <span class="n">peak_channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_channels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
-        <span class="n">peak_tracks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">peak_channels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;skeleton/node_names&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">node_names</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;skeleton/n_nodes&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">node_names</span><span class="p">))</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;skeleton/edges&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">edge_inds</span><span class="p">)</span>
-
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/filepath&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_paths</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/dataset&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_datasets</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/shape&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_shapes</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;videos/image_data_format&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">video_image_data_format</span><span class="p">)</span>
-
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
-                <span class="s2">&quot;imgs&quot;</span><span class="p">,</span>
-                <span class="n">data</span><span class="o">=</span><span class="n">imgs</span><span class="p">,</span>
-                <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
-                <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
-                <span class="n">compression_opts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/xy&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peaks</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/sample&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_samples</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/instance&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_instances</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/channel&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_channels</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;peaks/track&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">peak_tracks</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Labels.generate_training_data"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.Labels.generate_training_data">[docs]</a>    <span class="k">def</span> <span class="nf">generate_training_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Generates images and points for training.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            A tuple of (imgs, points).</span>
-
-<span class="sd">            imgs: Array of shape (n_samples, height, width, channels) containing the</span>
-<span class="sd">            image data for all frames with user labels. If frames are of variable size,</span>
-<span class="sd">            imgs is a list of length n_samples with elements of shape</span>
-<span class="sd">            (height, width, channels).</span>
-
-<span class="sd">            points: List of length n_samples with elements of shape</span>
-<span class="sd">            (n_instances, n_nodes, 2), containing all user labeled instances in the</span>
-<span class="sd">            frame, with NaN-padded xy coordinates for each visible body part.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">lf</span><span class="o">.</span><span class="n">has_user_instances</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="n">imgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
-            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">inst</span><span class="o">.</span><span class="n">points_array</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">user_instances</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="c1"># Try to stack all images into a single 4D array.</span>
-        <span class="n">first_shape</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">can_stack</span> <span class="o">=</span> <span class="nb">all</span><span class="p">([</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">first_shape</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">can_stack</span><span class="p">:</span>
-            <span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">points</span></div></div>
+        <span class="k">return</span> <span class="n">video_callback</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">find_path_using_paths</span><span class="p">(</span><span class="n">missing_path</span><span class="p">,</span> <span class="n">search_paths</span><span class="p">):</span>
+<div class="viewcode-block" id="find_path_using_paths"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.find_path_using_paths">[docs]</a><span class="k">def</span> <span class="nf">find_path_using_paths</span><span class="p">(</span><span class="n">missing_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">search_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Find a path to a missing file given a set of paths to search in.</span>
 
+<span class="sd">    Args:</span>
+<span class="sd">        missing_path: Path to the missing filename.</span>
+<span class="sd">        search_paths: List of paths to search in.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The corrected path if it was found, or the original missing path if it was not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get basename (filename with directories) using current os path format</span>
     <span class="n">current_basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">missing_path</span><span class="p">)</span>
 
@@ -1860,7 +1716,42 @@
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">check_path</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">check_path</span>
 
-    <span class="k">return</span> <span class="n">missing_path</span>
+    <span class="k">return</span> <span class="n">missing_path</span></div>
+
+
+<div class="viewcode-block" id="load_file"><a class="viewcode-back" href="../../../_autosummary/sleap.io.dataset.html#sleap.io.dataset.load_file">[docs]</a><span class="k">def</span> <span class="nf">load_file</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+    <span class="n">detect_videos</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">search_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Labels</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Load a SLEAP labels file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: Path to a SLEAP labels (.slp) file.</span>
+<span class="sd">        detect_videos: If True, will attempt to detect missing videos by searching for</span>
+<span class="sd">            their filenames in the search paths. This is useful when loading SLEAP</span>
+<span class="sd">            labels files that were generated on another computer with different paths.</span>
+<span class="sd">        search_paths: A path or list of paths to search for the missing videos. This can</span>
+<span class="sd">            be the direct path to the video file or its containing folder. If not</span>
+<span class="sd">            specified, defaults to searching for the videos in the same folder as the</span>
+<span class="sd">            labels.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The loaded `Labels` instance.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        This is a convenience method to call `sleap.Labels.load_file`. See that class</span>
+<span class="sd">        method for more functionality in the loading process.</span>
+
+<span class="sd">        The video files do not need to be accessible in order to load the labels, for</span>
+<span class="sd">        example, when only the predicted instances or user labels are required.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">detect_videos</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">search_paths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">search_paths</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">search_paths</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

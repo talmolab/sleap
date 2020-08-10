@@ -32,7 +32,15 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.io.format.labels_json</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">atexit</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Adaptor for reading/writing old, JSON dataset format (kind of deprecated).</span>
+
+<span class="sd">This supports reading and writing both `.json` and `.json.zip`. The zip allows</span>
+<span class="sd">you to include image files, in imgstore videos. A better option now is to save</span>
+<span class="sd">a single HDF5 file which include both the SLEAP dataset (i.e., `Labels`) and</span>
+<span class="sd">also the videos/frames as HDF5 datasets.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shutil</span>

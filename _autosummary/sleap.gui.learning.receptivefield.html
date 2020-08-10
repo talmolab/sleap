@@ -35,20 +35,59 @@
             
   <div class="section" id="module-sleap.gui.learning.receptivefield">
 <span id="sleap-gui-learning-receptivefield"></span><h1>sleap.gui.learning.receptivefield<a class="headerlink" href="#module-sleap.gui.learning.receptivefield" title="Permalink to this headline">¶</a></h1>
+<p>Widget for previewing receptive field on sample image using model hyperparams.</p>
 <dl class="py class">
 <dt id="sleap.gui.learning.receptivefield.ReceptiveFieldImageWidget">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.receptivefield.</code><code class="sig-name descname">ReceptiveFieldImageWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#ReceptiveFieldImageWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.ReceptiveFieldImageWidget" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><p>Widget for showing image with receptive field.</p>
+<dl class="py method">
 <dt id="sleap.gui.learning.receptivefield.ReceptiveFieldImageWidget.viewportEvent">
-<code class="sig-name descname">viewportEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">event</span><span class="p">:</span> <span class="n">PySide2.QtCore.QEvent</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#ReceptiveFieldImageWidget.viewportEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.ReceptiveFieldImageWidget.viewportEvent" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">viewportEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#ReceptiveFieldImageWidget.viewportEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.ReceptiveFieldImageWidget.viewportEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-draw receptive field when needed by overriding QGraphicsView method.</p>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt id="sleap.gui.learning.receptivefield.ReceptiveFieldWidget">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.receptivefield.</code><code class="sig-name descname">ReceptiveFieldWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">head_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#ReceptiveFieldWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.ReceptiveFieldWidget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.receptivefield.</code><code class="sig-name descname">ReceptiveFieldWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">head_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#ReceptiveFieldWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.ReceptiveFieldWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget for previewing receptive field on sample image, with caption.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>head_name</strong> – If given, then used in caption to show which model the
+preview is for.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Usage:</dt><dd><p>Create, then call <cite>setImage</cite> and <cite>setModelConfig</cite> methods.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.learning.receptivefield.ReceptiveFieldWidget.setImage">
+<code class="sig-name descname">setImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#ReceptiveFieldWidget.setImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.ReceptiveFieldWidget.setImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets image on which receptive field box will be drawn.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.receptivefield.ReceptiveFieldWidget.setModelConfig">
+<code class="sig-name descname">setModelConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_cfg</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig" title="sleap.nn.config.model.ModelConfig">sleap.nn.config.model.ModelConfig</a></span></em>, <em class="sig-param"><span class="n">scale</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#ReceptiveFieldWidget.setModelConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.ReceptiveFieldWidget.setModelConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates receptive field preview from model config.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.gui.learning.receptivefield.compute_rf">
+<code class="sig-prename descclassname">sleap.gui.learning.receptivefield.</code><code class="sig-name descname">compute_rf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">down_blocks</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">convs_per_block</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#compute_rf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.compute_rf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes receptive field for specified model architecture.</p>
+<p>Ref: <a class="reference external" href="https://distill.pub/2019/computing-receptive-fields/">https://distill.pub/2019/computing-receptive-fields/</a> (Eq. 2)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.gui.learning.receptivefield.receptive_field_info_from_model_cfg">
+<code class="sig-prename descclassname">sleap.gui.learning.receptivefield.</code><code class="sig-name descname">receptive_field_info_from_model_cfg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_cfg</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig" title="sleap.nn.config.model.ModelConfig">sleap.nn.config.model.ModelConfig</a></span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="../_modules/sleap/gui/learning/receptivefield.html#receptive_field_info_from_model_cfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.receptivefield.receptive_field_info_from_model_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets receptive field information given specific model configuration.</p>
+</dd></dl>
 
 </div>
 
@@ -104,7 +143,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -140,6 +179,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

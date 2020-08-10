@@ -32,7 +32,10 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.io.format.adaptor</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File format adaptor base class.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
 
@@ -42,31 +45,45 @@
 
 
 <div class="viewcode-block" id="SleapObjectType"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.adaptor.html#sleap.io.format.adaptor.SleapObjectType">[docs]</a><span class="k">class</span> <span class="nc">SleapObjectType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Types of files that an adaptor could read/write.&quot;&quot;&quot;</span>
+
     <span class="n">misc</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">labels</span> <span class="o">=</span> <span class="mi">1</span></div>
 
 
 <div class="viewcode-block" id="Adaptor"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">Adaptor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Adaptor</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class which defines interface for file format adaptors.</span>
+<span class="sd">    File format adaptor base class.</span>
+
+<span class="sd">    An adaptor handles reading and/or writing a specific file format. To add</span>
+<span class="sd">    support for a new file format, you&#39;ll create a new class which inherits from</span>
+<span class="sd">    the Adaptor base class and implements the relevant functions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">handles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SleapObjectType</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns the type of object that can be read/written.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the type of object that can be read/written.</span>
+
+<span class="sd">        The Dispatch class calls this method on all registered adaptors to</span>
+<span class="sd">        determine which to use for reading/writing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">default_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The default file extension, e.g., &#39;json&#39; (without &#39;.&#39;).&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">all_exts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;List of all file extensions supported by adaptor.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Human-reading name of the file format&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
 <div class="viewcode-block" id="Adaptor.can_read_file"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.can_read_file">[docs]</a>    <span class="k">def</span> <span class="nf">can_read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>

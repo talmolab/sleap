@@ -33,12 +33,14 @@
             
   <h1>Source code for sleap.gui.overlays.tracks</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Module that handles track-related overlays (including track color).</span>
+<span class="sd">Track trail and track list overlays.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.overlays.base</span> <span class="kn">import</span> <span class="n">BaseOverlay</span>
 <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Track</span>
 <span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
 <span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
 <span class="kn">from</span> <span class="nn">sleap.prefs</span> <span class="kn">import</span> <span class="n">prefs</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtTextWithBackground</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
 
@@ -48,7 +50,7 @@
 
 
 <div class="viewcode-block" id="TrackTrailOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.tracks.html#sleap.gui.overlays.tracks.TrackTrailOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">TrackTrailOverlay</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">TrackTrailOverlay</span><span class="p">(</span><span class="n">BaseOverlay</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class to show track trails as overlay on video frame.</span>
 
 <span class="sd">    Initialize this object with both its data source and its visual output</span>
@@ -65,8 +67,6 @@
 <span class="sd">        to plot the trails in scene.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">player</span><span class="p">:</span> <span class="s2">&quot;QtVideoPlayer&quot;</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">trail_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">max_node_count</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -216,18 +216,15 @@
 
 
 <div class="viewcode-block" id="TrackListOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.tracks.html#sleap.gui.overlays.tracks.TrackListOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">TrackListOverlay</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">TrackListOverlay</span><span class="p">(</span><span class="n">BaseOverlay</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to show track number and names in overlay.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">player</span><span class="p">:</span> <span class="s2">&quot;QtVideoPlayer&quot;</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">text_box</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">text_box</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QtTextWithBackground</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="TrackListOverlay.add_to_scene"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.tracks.html#sleap.gui.overlays.tracks.TrackListOverlay.add_to_scene">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adds track list as overlay on video.&quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtTextWithBackground</span>
 
         <span class="n">html</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="n">num_to_show</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">))</span>

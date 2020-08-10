@@ -36,6 +36,20 @@
   <div class="section" id="module-sleap.gui.state">
 <span id="sleap-gui-state"></span><h1>sleap.gui.state<a class="headerlink" href="#module-sleap.gui.state" title="Permalink to this headline">¶</a></h1>
 <p>Module with object for storing and accessing gui state variables.</p>
+<p>Each project open in the GUI will have its own instance of GuiState, as will any
+video player (<cite>QtVideoPlayer</cite> widget) which shows different images than in the
+main app GUI (e.g., <cite>QtImageDirectoryWidget</cite> used for visualizing results
+during training).</p>
+<p>The state object makes it easier to separate code which updates state (e.g.,
+sets current frame or current video) and code which updates the GUI in response
+to state-change.</p>
+<p>The state object is effectively a dictionary which allows you to bind functions
+to keys so that the functions each get called when the value for that key
+changes (or is initially set).</p>
+<p>Note that there’s no type checking, e.g., to ensure that state[“video”] is
+being set to a <cite>Video</cite> object. This is a potential source of bugs since
+callbacks connected to some key will often assume that value will always be of
+some specific type.</p>
 <dl class="py class">
 <dt id="sleap.gui.state.GuiState">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.state.</code><code class="sig-name descname">GuiState</code><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState" title="Permalink to this definition">¶</a></dt>
@@ -48,32 +62,78 @@ automatically triggered on variable changes.</p>
 <dt id="sleap.gui.state.GuiState.connect">
 <code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">callbacks</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Callable<span class="p">, </span>List<span class="p">[</span>Callable<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connects one or more callbacks for state variable.</p>
+<p>Callbacks are called (triggered) whenever the state is changed, i.e.,
+when the value for some key is set either (i) initially or (ii) to
+a different value than the current value.</p>
+<p>This is analogous to connecting a function to a Qt slot.</p>
+<p>Callback should take a single arg, which will be the current (new)
+value of whatever state var is triggering the callback.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.gui.state.GuiState.emit">
 <code class="sig-name descname">emit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.emit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.emit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Triggers callbacks for state variable.</p>
+<dd><p>Trigger callbacks for state variable.</p>
+<p>This calls each callback for the specified key, without needing to
+change the value of the key.</p>
+<p>This is analogous to emitting a Qt signal.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.gui.state.GuiState.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.get" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">key: str</em>, <em class="sig-param">default=&lt;object object&gt;</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter with support for default value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.state.GuiState.next_int_in_list">
-<code class="sig-name descname">next_int_in_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">value_list</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">reverse</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.next_int_in_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.next_int_in_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Advances to subsequent (or prior) value in list.</p>
-<p>Goes to value subsequent (or prior) to current value, regardless
-of whether current value is member of list.</p>
+<dt id="sleap.gui.state.GuiState.increment">
+<code class="sig-name descname">increment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">mod</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">default</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.increment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.increment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment numeric value for specified key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The key.</p></li>
+<li><p><strong>step</strong> – What to add to current value.</p></li>
+<li><p><strong>mod</strong> – Wrap value (i.e., apply modulus) if not 1.</p></li>
+<li><p><strong>default</strong> – Set value to this if there’s no current value for key.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.state.GuiState.increment_in_list">
+<code class="sig-name descname">increment_in_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">value_list</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">reverse</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.increment_in_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.increment_in_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Advance to subsequent (or prior) value in list.</p>
+<p>When current value for key is not found in list, the value is set to
+the first (or last, if reverse) item in list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The key.</p></li>
+<li><p><strong>value_list</strong> – List of values of any type which supports equality check.</p></li>
+<li><p><strong>reverse</strong> – Whether to use next or previous item in value list.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.gui.state.GuiState.set">
 <code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Functional version of setter (for use in lambdas).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.state.GuiState.toggle">
+<code class="sig-name descname">toggle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">default</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/state.html#GuiState.toggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.state.GuiState.toggle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggle boolean value for specified key.</p>
 </dd></dl>
 
 </dd></dl>
@@ -132,7 +192,7 @@ of whether current value is member of list.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -168,6 +228,7 @@ of whether current value is member of list.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

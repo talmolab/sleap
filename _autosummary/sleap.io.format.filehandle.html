@@ -35,10 +35,66 @@
             
   <div class="section" id="module-sleap.io.format.filehandle">
 <span id="sleap-io-format-filehandle"></span><h1>sleap.io.format.filehandle<a class="headerlink" href="#module-sleap.io.format.filehandle" title="Permalink to this headline">¶</a></h1>
+<p>File object which can be passed to adaptors.</p>
+<p>We use this since multiple file adaptors may need to open/read the file while
+dispatch is determining which adaptor to use, and the <cite>FileHandle</cite> allows us
+to keep any results from previous reads.</p>
 <dl class="py class">
 <dt id="sleap.io.format.filehandle.FileHandle">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.filehandle.</code><code class="sig-name descname">FileHandle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">is_hdf5</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_json</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_open</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">text</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">json</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reference to a file; can hold loaded data so it needn’t be read twice.</p>
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.file">
+<em class="property">property </em><code class="sig-name descname">file</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.file" title="Permalink to this definition">¶</a></dt>
+<dd><p>The raw file object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.format_id">
+<em class="property">property </em><code class="sig-name descname">format_id</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.format_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an ID from the metadata we store in some HDF5 or JSON formats.</p>
+<p>This can be used if we need to distinguish multiple formats with a
+common underlying file type, e.g., HDF5-based file formats. See
+<cite>LabelsV1Adaptor</cite> for an example (the format id is here used to
+determine whether to convert from “gridline” to “midpixel” coordinates).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.is_hdf5">
+<em class="property">property </em><code class="sig-name descname">is_hdf5</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether file is HDF5.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.is_json">
+<em class="property">property </em><code class="sig-name descname">is_json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether file is JSON.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.json">
+<em class="property">property </em><code class="sig-name descname">json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.json" title="Permalink to this definition">¶</a></dt>
+<dd><p>The loaded JSON dictionary (for a JSON file).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.open">
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens the file (if it’s not already open).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.format.filehandle.FileHandle.text">
+<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>The text from a text file.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -95,7 +151,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -131,6 +187,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>

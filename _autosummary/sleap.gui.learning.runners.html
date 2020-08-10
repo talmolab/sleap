@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.gui.learning.utils" href="sleap.gui.learning.utils.html" />
+    <link rel="next" title="sleap.gui.learning.scopedkeydict" href="sleap.gui.learning.scopedkeydict.html" />
     <link rel="prev" title="sleap.gui.learning.receptivefield" href="sleap.gui.learning.receptivefield.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -35,24 +35,98 @@
             
   <div class="section" id="module-sleap.gui.learning.runners">
 <span id="sleap-gui-learning-runners"></span><h1>sleap.gui.learning.runners<a class="headerlink" href="#module-sleap.gui.learning.runners" title="Permalink to this headline">¶</a></h1>
+<p>Run training/inference in background process via CLI.</p>
 <dl class="py class">
 <dt id="sleap.gui.learning.runners.DatasetItemForInference">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">DatasetItemForInference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">frame_filter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'user'</span></em>, <em class="sig-param"><span class="n">use_absolute_path</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#DatasetItemForInference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.DatasetItemForInference" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Encapsulate data about frame selection based on dataset data.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.learning.runners.DatasetItemForInference.labels_path">
+<code class="sig-name descname">labels_path</code><a class="headerlink" href="#sleap.gui.learning.runners.DatasetItemForInference.labels_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>path to the saved <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> dataset.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.runners.DatasetItemForInference.frame_filter">
+<code class="sig-name descname">frame_filter</code><a class="headerlink" href="#sleap.gui.learning.runners.DatasetItemForInference.frame_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>which subset of frames to get from dataset, supports
+* “user”
+* “suggested”</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.runners.DatasetItemForInference.use_absolute_path">
+<code class="sig-name descname">use_absolute_path</code><a class="headerlink" href="#sleap.gui.learning.runners.DatasetItemForInference.use_absolute_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether to use absolute path for inference cli call.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.learning.runners.InferenceTask">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">InferenceTask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trained_job_paths</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">results</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#InferenceTask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.InferenceTask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encapsulates all data needed for running inference via CLI.</p>
+<dl class="py method">
+<dt id="sleap.gui.learning.runners.InferenceTask.make_predict_cli_call">
+<code class="sig-name descname">make_predict_cli_call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item_for_inference</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.runners.ItemForInference" title="sleap.gui.learning.runners.ItemForInference">sleap.gui.learning.runners.ItemForInference</a></span></em>, <em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#InferenceTask.make_predict_cli_call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.InferenceTask.make_predict_cli_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes list of CLI arguments needed for running inference.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.runners.InferenceTask.merge_results">
+<code class="sig-name descname">merge_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#InferenceTask.merge_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.InferenceTask.merge_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges result frames into labels dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.learning.runners.InferenceTask.predict_subprocess">
+<code class="sig-name descname">predict_subprocess</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item_for_inference</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.runners.ItemForInference" title="sleap.gui.learning.runners.ItemForInference">sleap.gui.learning.runners.ItemForInference</a></span></em>, <em class="sig-param"><span class="n">append_results</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">waiting_callback</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Callable<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>str<span class="p">, </span>bool<span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#InferenceTask.predict_subprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.InferenceTask.predict_subprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs inference in a subprocess.</p>
+</dd></dl>
+
+</dd></dl>
 
 <dl class="py class">
 <dt id="sleap.gui.learning.runners.ItemForInference">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">ItemForInference</code><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#ItemForInference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.ItemForInference" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Abstract base class for item on which we can run inference via CLI.</p>
+<p>Must have <cite>path</cite> and <cite>cli_args</cite> properties, used to build CLI call.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.learning.runners.ItemsForInference">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">ItemsForInference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">items</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.runners.ItemForInference" title="sleap.gui.learning.runners.ItemForInference">sleap.gui.learning.runners.ItemForInference</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">total_frame_count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#ItemsForInference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.ItemsForInference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encapsulates list of items for inference.</p>
+</dd></dl>
 
 <dl class="py class">
 <dt id="sleap.gui.learning.runners.VideoItemForInference">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">VideoItemForInference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_absolute_path</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#VideoItemForInference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.VideoItemForInference" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Encapsulate data about video on which inference should run.</p>
+<p>This allows for inference on an arbitrary list of frames from video.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.learning.runners.VideoItemForInference.video">
+<code class="sig-name descname">video</code><a class="headerlink" href="#sleap.gui.learning.runners.VideoItemForInference.video" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> object (which already stores its own path)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.runners.VideoItemForInference.frames">
+<code class="sig-name descname">frames</code><a class="headerlink" href="#sleap.gui.learning.runners.VideoItemForInference.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of frames for inference; if None, then all frames are used</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.learning.runners.VideoItemForInference.use_absolute_path">
+<code class="sig-name descname">use_absolute_path</code><a class="headerlink" href="#sleap.gui.learning.runners.VideoItemForInference.use_absolute_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether to use absolute path for inference cli call</p>
+</dd></dl>
+
+</dd></dl>
 
 <dl class="py function">
 <dt id="sleap.gui.learning.runners.run_gui_inference">
-<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">run_gui_inference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inference_task</span><span class="p">:</span> <span class="n">sleap.gui.learning.runners.InferenceTask</span></em>, <em class="sig-param"><span class="n">items_for_inference</span><span class="p">:</span> <span class="n">sleap.gui.learning.runners.ItemsForInference</span></em>, <em class="sig-param"><span class="n">gui</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#run_gui_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.run_gui_inference" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">run_gui_inference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inference_task</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.runners.InferenceTask" title="sleap.gui.learning.runners.InferenceTask">sleap.gui.learning.runners.InferenceTask</a></span></em>, <em class="sig-param"><span class="n">items_for_inference</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.runners.ItemsForInference" title="sleap.gui.learning.runners.ItemsForInference">sleap.gui.learning.runners.ItemsForInference</a></span></em>, <em class="sig-param"><span class="n">gui</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#run_gui_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.run_gui_inference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run inference on specified frames using models from training_jobs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -72,7 +146,7 @@ on which we’re running inference.</p></li>
 
 <dl class="py function">
 <dt id="sleap.gui.learning.runners.run_gui_training">
-<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">run_gui_training</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">config_info_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>sleap.gui.learning.configs.ConfigFileInfo<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">gui</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">save_viz</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#run_gui_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.run_gui_training" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">run_gui_training</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">config_info_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.gui.learning.configs.html#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">gui</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">save_viz</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#run_gui_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.run_gui_training" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs training for each training job.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -91,7 +165,7 @@ on which we’re running inference.</p></li>
 
 <dl class="py function">
 <dt id="sleap.gui.learning.runners.run_learning_pipeline">
-<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">run_learning_pipeline</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">config_info_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>sleap.gui.learning.configs.ConfigFileInfo<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">items_for_inference</span><span class="p">:</span> <span class="n">sleap.gui.learning.runners.ItemsForInference</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#run_learning_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.run_learning_pipeline" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">run_learning_pipeline</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">config_info_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.gui.learning.configs.html#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">items_for_inference</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.runners.ItemsForInference" title="sleap.gui.learning.runners.ItemsForInference">sleap.gui.learning.runners.ItemsForInference</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#run_learning_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.run_learning_pipeline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs training (as needed) and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -118,7 +192,7 @@ and inference.</p></li>
 
 <dl class="py function">
 <dt id="sleap.gui.learning.runners.write_pipeline_files">
-<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">write_pipeline_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">config_info_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>sleap.gui.learning.configs.ConfigFileInfo<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">items_for_inference</span><span class="p">:</span> <span class="n">sleap.gui.learning.runners.ItemsForInference</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#write_pipeline_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.write_pipeline_files" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.gui.learning.runners.</code><code class="sig-name descname">write_pipeline_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">labels_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">config_info_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.gui.learning.configs.html#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">items_for_inference</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.runners.ItemsForInference" title="sleap.gui.learning.runners.ItemsForInference">sleap.gui.learning.runners.ItemsForInference</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/runners.html#write_pipeline_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.runners.write_pipeline_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes the config files and scripts for manually running pipeline.</p>
 </dd></dl>
 
@@ -176,7 +250,7 @@ and inference.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.learning.runners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.utils.html">sleap.gui.learning.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
@@ -212,6 +286,7 @@ and inference.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
@@ -269,7 +344,7 @@ and inference.</p></li>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api.html">Developer API</a><ul>
       <li>Previous: <a href="sleap.gui.learning.receptivefield.html" title="previous chapter">sleap.gui.learning.receptivefield</a></li>
-      <li>Next: <a href="sleap.gui.learning.utils.html" title="next chapter">sleap.gui.learning.utils</a></li>
+      <li>Next: <a href="sleap.gui.learning.scopedkeydict.html" title="next chapter">sleap.gui.learning.scopedkeydict</a></li>
   </ul></li>
   </ul></li>
 </ul>

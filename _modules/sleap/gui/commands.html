@@ -34,6 +34,30 @@
   <h1>Source code for sleap.gui.commands</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Module for gui command context and commands objects.</span>
+
+<span class="sd">Each open project (i.e., `MainWindow`) will have its own `CommandContext`.</span>
+<span class="sd">The context enables commands to access and modify the `GuiState` and `Labels`,</span>
+<span class="sd">as well as potentially maintaining a command history (so we can add support for</span>
+<span class="sd">undo!). See `sleap.gui.app` for how the context is created and used.</span>
+
+<span class="sd">Every command will have both a method in `CommandContext` (this is what should</span>
+<span class="sd">be used to trigger the command, e.g., connected to the menu action) and a</span>
+<span class="sd">class which inherits from `AppCommand` (or a more specialized class such as</span>
+<span class="sd">`NavCommand`, `GoIteratorCommand`, or `EditCommand`). Note that this code relies</span>
+<span class="sd">on inheritance, so some care and attention is required.</span>
+
+<span class="sd">A typical command will override the `ask` and `do_action` methods. If the</span>
+<span class="sd">command updates something which affects the GUI, it should override the `topic`</span>
+<span class="sd">attribute (this then gets passed back to the `update_callback` from the context.</span>
+<span class="sd">If a command doesn&#39;t require any input from the user, then it doesn&#39;t need to</span>
+<span class="sd">override the `ask` method.</span>
+
+<span class="sd">If it&#39;s not possible to separate the GUI &quot;ask&quot; and the non-GUI &quot;do&quot; code, then</span>
+<span class="sd">instead of `ask` and `do_action` you should add an `ask_and_do` method</span>
+<span class="sd">(for instance, `DeleteDialogCommand` and `MergeProject` show dialogues which</span>
+<span class="sd">handle both the GUI and the action). Ideally we&#39;d endorse separation of &quot;ask&quot;</span>
+<span class="sd">and &quot;do&quot; for all commands (this is important if we&#39;re going to implement undo)--</span>
+<span class="sd">for now it&#39;s at least easy to see where this separation is violated.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
@@ -65,10 +89,13 @@
 <span class="kn">from</span> <span class="nn">sleap.gui.state</span> <span class="kn">import</span> <span class="n">GuiState</span>
 
 
+<span class="c1"># whether we support multiple project windows (i.e., &quot;open&quot; opens new window)</span>
 <span class="n">OPEN_IN_NEW</span> <span class="o">=</span> <span class="kc">True</span>
 
 
 <div class="viewcode-block" id="UpdateTopic"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.UpdateTopic">[docs]</a><span class="k">class</span> <span class="nc">UpdateTopic</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Topics so context can tell callback what was updated by the command.&quot;&quot;&quot;</span>
+
     <span class="nb">all</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">video</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">skeleton</span> <span class="o">=</span> <span class="mi">3</span>
@@ -81,8 +108,17 @@
     <span class="n">project_instances</span> <span class="o">=</span> <span class="mi">10</span></div>
 
 
-<div class="viewcode-block" id="AppCommand"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.AppCommand">[docs]</a><span class="k">class</span> <span class="nc">AppCommand</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Abstract Base Class for Commands.</span>
+<div class="viewcode-block" id="AppCommand"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.AppCommand">[docs]</a><span class="k">class</span> <span class="nc">AppCommand</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class for specific commands.</span>
+
+<span class="sd">    Note that this is not an abstract base class. For specific commands, you</span>
+<span class="sd">    should override `ask` and/or `do_action` methods, or add an `ask_and_do`</span>
+<span class="sd">    method. In many cases you&#39;ll want to override the `topics` and `does_edits`</span>
+<span class="sd">    attributes. That said, these are not virtual methods/attributes and have</span>
+<span class="sd">    are implemented in the base class with default behaviors (i.e., doing</span>
+<span class="sd">    nothing).</span>
+
+<span class="sd">    You should not override `execute` or `do_with_signal`.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        topics: List of `UpdateTopic` items. Override this to indicate what</span>
@@ -90,10 +126,10 @@
 <span class="sd">        does_edits: Whether command will modify data that could be saved.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">topics</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">does_edits</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">topics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UpdateTopic</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">does_edits</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="AppCommand.execute"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.AppCommand.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="s2">&quot;CommandContext&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AppCommand.execute"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.AppCommand.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="s2">&quot;CommandContext&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Entry point for running command.</span>
 
 <span class="sd">        This calls internal methods to gather information required for</span>
@@ -119,7 +155,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">params</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;ask_and_do&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;ask_and_do&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ask_and_do</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ask_and_do</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">okay</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
@@ -155,15 +191,22 @@
             <span class="n">context</span><span class="o">.</span><span class="n">changestack_push</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">FakeApp</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span>
+<div class="viewcode-block" id="FakeApp"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.FakeApp">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FakeApp</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Use if you want to execute commands independently of the GUI app.&quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span></div>
 
 
 <div class="viewcode-block" id="CommandContext"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">CommandContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">CommandContext</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Context within in which commands are executed.</span>
+
+<span class="sd">    When you create a new command, you should both create a class for the</span>
+<span class="sd">    command (which inherits from `CommandClass`) and add a distinct method</span>
+<span class="sd">    for the command in the `CommandContext` class. This method is what should</span>
+<span class="sd">    be connected/called from other code to invoke the command.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        state: The `GuiState` object used to store state and pass messages.</span>
@@ -178,14 +221,15 @@
     <span class="n">update_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">_change_stack</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_labels</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">):</span>
+<div class="viewcode-block" id="CommandContext.from_labels"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.from_labels">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_labels</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CommandContext&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a command context for use independently of GUI app.&quot;&quot;&quot;</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">GuiState</span><span class="p">()</span>
         <span class="n">app</span> <span class="o">=</span> <span class="n">FakeApp</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="n">app</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="n">app</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Labels</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Alias to app.labels.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">labels</span>
 

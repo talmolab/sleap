@@ -32,7 +32,10 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.learning.configs</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">attr</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Find, load, and show lists of saved `TrainingJobConfig`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -50,8 +53,25 @@
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="ConfigFileInfo"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.ConfigFileInfo">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ConfigFileInfo</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Object to represent a saved :py:class:`TrainingJobConfig`</span>
+
+<span class="sd">    The :py:class:`TrainingJobConfig` class holds information about the model</span>
+<span class="sd">    and can be saved as a file. This class holds information about that file,</span>
+<span class="sd">    e.g., the path, and also provides some properties/methods that make it</span>
+<span class="sd">    easier to access certain data in or about the file.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        config: the :py:class:`TrainingJobConfig`</span>
+<span class="sd">        path: path to the :py:class:`TrainingJobConfig`</span>
+<span class="sd">        filename: just the filename, not the full path</span>
+<span class="sd">        head_name: string which should match name of model.heads key</span>
+<span class="sd">        dont_retrain: allows us to keep track of whether we should retrain</span>
+<span class="sd">            this config</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">config</span><span class="p">:</span> <span class="n">TrainingJobConfig</span>
     <span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -124,22 +144,27 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">training_instance_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of instances in the training dataset&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset_len</span><span class="p">(</span><span class="s2">&quot;instances&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">validation_instance_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of instances in the validation dataset&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset_len</span><span class="p">(</span><span class="s2">&quot;instances&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">training_frame_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of labeled frames in the training dataset&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset_len</span><span class="p">(</span><span class="s2">&quot;frames&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">validation_frame_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of labeled frames in the validation dataset&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset_len</span><span class="p">(</span><span class="s2">&quot;frames&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Timestamp on file; parsed from filename (not OS timestamp).&quot;&quot;&quot;</span>
         <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
             <span class="sa">r</span><span class="s2">&quot;(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_name</span>
         <span class="p">)</span>
@@ -175,14 +200,30 @@
         <span class="k">return</span> <span class="n">metrics</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_config_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_config_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ConfigFileInfo&quot;</span><span class="p">:</span>
         <span class="n">cfg</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">head_name</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">which_oneof_attrib_name</span><span class="p">()</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">head_name</span><span class="o">=</span><span class="n">head_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">head_name</span><span class="o">=</span><span class="n">head_name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TrainingConfigFilesWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigFilesWidget">[docs]</a><span class="k">class</span> <span class="nc">TrainingConfigFilesWidget</span><span class="p">(</span><span class="n">FieldComboWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Widget to show list of saved :py:class:`TrainingJobConfig` files.</span>
+
+<span class="sd">    This is used inside :py:class:`TrainingEditorWidget`.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        cfg_getter: the :py:class:`TrainingConfigsGetter` from which menu</span>
+<span class="sd">            is populated.</span>
+<span class="sd">        head_name: used to filter configs from `cfg_getter`.</span>
+<span class="sd">        require_trained: used to filter configs from `cfg_getter`.</span>
+
+<span class="sd">    Signals:</span>
+<span class="sd">        onConfigSelection: triggered when user selects a config file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">onConfigSelection</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">ConfigFileInfo</span><span class="p">)</span>
 
     <span class="n">SELECT_FILE_OPTION</span> <span class="o">=</span> <span class="s2">&quot;Select training config file...&quot;</span>
@@ -206,6 +247,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">onSelectionIdxChange</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TrainingConfigFilesWidget.update"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigFilesWidget.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates menu options, optionally selecting a specific config.&quot;&quot;&quot;</span>
         <span class="n">cfg_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">get_filtered_configs</span><span class="p">(</span>
             <span class="n">head_filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_name</span><span class="p">,</span> <span class="n">only_trained</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_require_trained</span>
         <span class="p">)</span>
@@ -238,12 +280,12 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">option_list</span><span class="p">,</span> <span class="n">select_item</span><span class="o">=</span><span class="n">select_key</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">selectByIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">option_idx</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">onSelectionIdxChange</span><span class="p">(</span><span class="n">option_idx</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">lastOptionIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="c1"># def selectByIdx(self, option_idx: int):</span>
+    <span class="c1">#     self.setCurrentIndex(option_idx)</span>
+    <span class="c1">#     self.onSelectionIdxChange(option_idx)</span>
+    <span class="c1">#</span>
+    <span class="c1"># def lastOptionIdx(self):</span>
+    <span class="c1">#     return self.count()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_menu_cfg_idx_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -255,23 +297,33 @@
             <span class="k">return</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">getConfigInfoByMenuIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingConfigFilesWidget.getConfigInfoByMenuIdx"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigFilesWidget.getConfigInfoByMenuIdx">[docs]</a>    <span class="k">def</span> <span class="nf">getConfigInfoByMenuIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return `ConfigFileInfo` for menu item index.&quot;&quot;&quot;</span>
         <span class="n">cfg_idx</span> <span class="o">=</span> <span class="n">menu_idx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu_cfg_idx_offset</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list</span><span class="p">[</span><span class="n">cfg_idx</span><span class="p">]</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">cfg_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list</span><span class="p">[</span><span class="n">cfg_idx</span><span class="p">]</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">cfg_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">getSelectedConfigInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+<div class="viewcode-block" id="TrainingConfigFilesWidget.getSelectedConfigInfo"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigFilesWidget.getSelectedConfigInfo">[docs]</a>    <span class="k">def</span> <span class="nf">getSelectedConfigInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return currently selected `ConfigFileInfo` (if any, None otherwise).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">current_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfigInfoByMenuIdx</span><span class="p">(</span><span class="n">current_idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfigInfoByMenuIdx</span><span class="p">(</span><span class="n">current_idx</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">onSelectionIdxChange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingConfigFilesWidget.onSelectionIdxChange"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigFilesWidget.onSelectionIdxChange">[docs]</a>    <span class="k">def</span> <span class="nf">onSelectionIdxChange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handler for when user selects a menu item.</span>
+
+<span class="sd">        Either allows selection of config using file browser, or emits</span>
+<span class="sd">        `onConfigSelection` signal for selected config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_FILE_OPTION</span><span class="p">:</span>
             <span class="n">cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">doFileSelection</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">addFileSelectionToMenu</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_file_selection_to_menu</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">menu_idx</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu_cfg_idx_offset</span><span class="p">:</span>
             <span class="n">cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfigInfoByMenuIdx</span><span class="p">(</span><span class="n">menu_idx</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">cfg_info</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">onConfigSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">onConfigSelection</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TrainingConfigFilesWidget.setUserConfigData"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigFilesWidget.setUserConfigData">[docs]</a>    <span class="k">def</span> <span class="nf">setUserConfigData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_data_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Sets the user config option from settings made by user.&quot;&quot;&quot;</span>
@@ -282,7 +334,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">onSelectionIdxChange</span><span class="p">(</span><span class="n">menu_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TrainingConfigFilesWidget.doFileSelection"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigFilesWidget.doFileSelection">[docs]</a>    <span class="k">def</span> <span class="nf">doFileSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Allow user to add training profile for given model type.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Shows file browser to add training profile for given model type.&quot;&quot;&quot;</span>
         <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -295,7 +347,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">try_loading_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">addFileSelectionToMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_add_file_selection_to_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">cfg_info</span><span class="p">:</span>
             <span class="c1"># We were able to load config from selected file,</span>
             <span class="c1"># so add to options and select it.</span>
@@ -318,8 +370,19 @@
             <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
 
 
-<span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="TrainingConfigsGetter"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TrainingConfigsGetter</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Searches for and loads :py:class:`TrainingJobConfig` files.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        dir_paths: List of paths in which to search for</span>
+<span class="sd">            :py:class:`TrainingJobConfig` files.</span>
+<span class="sd">        head_filter: Name of head type to use when filtering,</span>
+<span class="sd">            e.g., &quot;centered_instance&quot;.</span>
+<span class="sd">        search_depth: How many subdirectories deep to search for config files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">dir_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span>
     <span class="n">head_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">search_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
@@ -328,7 +391,8 @@
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_configs</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.update"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Re-searches paths and loads any previously unloaded config files.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_configs</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -336,20 +400,22 @@
             <span class="n">new_cfgs</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">cfg</span> <span class="k">for</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_configs</span><span class="p">()</span> <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_cfg_paths</span>
             <span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="n">new_cfgs</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="n">new_cfgs</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span></div>
 
-    <span class="k">def</span> <span class="nf">find_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.find_configs"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.find_configs">[docs]</a>    <span class="k">def</span> <span class="nf">find_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Load configs from all saved paths.&quot;&quot;&quot;</span>
         <span class="n">configs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_paths</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
                 <span class="n">configs_in_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_configs_in_dir</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_depth</span><span class="p">)</span>
                 <span class="n">configs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">configs_in_dir</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">configs</span>
+        <span class="k">return</span> <span class="n">configs</span></div>
 
-    <span class="k">def</span> <span class="nf">get_filtered_configs</span><span class="p">(</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.get_filtered_configs"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.get_filtered_configs">[docs]</a>    <span class="k">def</span> <span class="nf">get_filtered_configs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">head_filter</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">only_trained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns filtered subset of loaded configs.&quot;&quot;&quot;</span>
 
         <span class="n">cfgs_to_return</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">paths_included</span> <span class="o">=</span> <span class="p">[]</span>
@@ -374,20 +440,24 @@
                         <span class="n">paths_included</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_dir</span><span class="p">)</span>
                         <span class="n">cfgs_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">cfgs_to_return</span>
+        <span class="k">return</span> <span class="n">cfgs_to_return</span></div>
 
-    <span class="k">def</span> <span class="nf">get_first</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.get_first"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.get_first">[docs]</a>    <span class="k">def</span> <span class="nf">get_first</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Get first loaded config.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">insert_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">)</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.insert_first"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.insert_first">[docs]</a>    <span class="k">def</span> <span class="nf">insert_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Insert config at beginning of list.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">insert_last</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.insert_last"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.insert_last">[docs]</a>    <span class="k">def</span> <span class="nf">insert_last</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Insert config at end of list.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">try_loading_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.try_loading_path"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.try_loading_path">[docs]</a>    <span class="k">def</span> <span class="nf">try_loading_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Attempts to load config file and wrap in `ConfigFileInfo` object.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">cfg</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -406,9 +476,10 @@
                     <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">head_name</span><span class="o">=</span><span class="n">key</span>
                 <span class="p">)</span>
 
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">find_configs_in_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.find_configs_in_dir"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.find_configs_in_dir">[docs]</a>    <span class="k">def</span> <span class="nf">find_configs_in_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Loads configs in specified directory.&quot;&quot;&quot;</span>
         <span class="c1"># Find all json files in dir and subdirs to specified depth</span>
         <span class="n">json_files</span> <span class="o">=</span> <span class="n">sleap_utils</span><span class="o">.</span><span class="n">find_files_by_suffix</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">)</span>
 
@@ -424,12 +495,15 @@
             <span class="k">if</span> <span class="n">cfg_info</span><span class="p">:</span>
                 <span class="n">configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">configs</span>
+        <span class="k">return</span> <span class="n">configs</span></div>
 
-    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TrainingConfigsGetter.make_from_labels_filename"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.configs.html#sleap.gui.learning.configs.TrainingConfigsGetter.make_from_labels_filename">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">make_from_labels_filename</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">head_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainingConfigsGetter&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes object which checks for models in default subdir for dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dir_paths</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">labels_filename</span><span class="p">:</span>
             <span class="n">labels_model_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span>
@@ -438,7 +512,7 @@
         <span class="n">base_config_dir</span> <span class="o">=</span> <span class="n">sleap_utils</span><span class="o">.</span><span class="n">get_package_file</span><span class="p">(</span><span class="s2">&quot;sleap/training_profiles&quot;</span><span class="p">)</span>
         <span class="n">dir_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_config_dir</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">dir_paths</span><span class="o">=</span><span class="n">dir_paths</span><span class="p">,</span> <span class="n">head_filter</span><span class="o">=</span><span class="n">head_filter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">dir_paths</span><span class="o">=</span><span class="n">dir_paths</span><span class="p">,</span> <span class="n">head_filter</span><span class="o">=</span><span class="n">head_filter</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

@@ -32,7 +32,11 @@
           <div class="body" role="main">
             
   <h1>Source code for sleap.gui.dialogs.metrics</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Dialog/widgets for showing metrics on trained models.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -49,7 +53,20 @@
 
 
 <div class="viewcode-block" id="MetricsTableDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.metrics.html#sleap.gui.dialogs.metrics.MetricsTableDialog">[docs]</a><span class="k">class</span> <span class="nc">MetricsTableDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dialog for showing table with multiple models.</span>
+
+<span class="sd">    The dialog is can show multiple models, including those which don&#39;t</span>
+<span class="sd">    already have metrics (ideally you&#39;d be able to generate evals but this isn&#39;t</span>
+<span class="sd">    currently supported).</span>
+
+<span class="sd">    You can then view details on the models (hyperparameters or more detailed</span>
+<span class="sd">    metrics).</span>
+
+<span class="sd">    The typical use-case is to init dialog with path to labels file, and it</span>
+<span class="sd">    will then show all trained models found within subdirectories.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MetricsTableDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="n">labels_filename</span> <span class="o">=</span> <span class="n">labels_filename</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
@@ -97,17 +114,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">setMinimumWidth</span><span class="p">(</span><span class="mi">1200</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_update_gui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enables/disables buttons as appropriate for table row selection.&quot;&quot;&quot;</span>
         <span class="n">is_selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_view</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;selected_trained_model&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_view_model_btn</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">is_selected</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_view_metrics_btn</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">is_selected</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_update_cfgs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Searches for models and updates table.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
         <span class="n">cfgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">get_filtered_configs</span><span class="p">(</span><span class="n">only_trained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="n">cfgs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">table_view</span><span class="o">.</span><span class="n">resizeColumnsToContents</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_add_model_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method called when user clicks &#39;add models&#39; button.&quot;&quot;&quot;</span>
         <span class="nb">dir</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">openDir</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
@@ -115,12 +135,22 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_cfgs</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_show_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method to show both hyperparam and metrics windows.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_show_model_params</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_show_metric_details</span><span class="p">(</span><span class="n">cfg_info</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_show_model_params</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_detail_widgets</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
     <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to show dialog with hyperparameters for model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cfg_info: The `ConfigFileInfo` for the model to show; if None,</span>
+<span class="sd">                then show for model currently selected in table.</span>
+<span class="sd">            model_detail_widgets: Not user param; cache for widgets so that we</span>
+<span class="sd">                don&#39;t create new window if user views same model twice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">cfg_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_view</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span>
 
@@ -137,6 +167,15 @@
     <span class="k">def</span> <span class="nf">_show_metric_details</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metric_detail_widgets</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
     <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to show dialog with metrics for model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cfg_info: The `ConfigFileInfo` for the model to show; if None,</span>
+<span class="sd">                then show for model currently selected in table.</span>
+<span class="sd">            metric_detail_widgets: Not user param; cache for widgets so that we</span>
+<span class="sd">                don&#39;t create new window if user views same model twice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">cfg_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cfg_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_view</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span>
 
@@ -150,6 +189,10 @@
 
 
 <div class="viewcode-block" id="MetricsTableModel"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.metrics.html#sleap.gui.dialogs.metrics.MetricsTableModel">[docs]</a><span class="k">class</span> <span class="nc">MetricsTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Model (i.e. Qt model/view) for table in MetricsTableDialog.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;Path&quot;</span><span class="p">,</span>
         <span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
@@ -248,6 +291,14 @@
 
 
 <div class="viewcode-block" id="DetailedMetricsDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.metrics.html#sleap.gui.dialogs.metrics.DetailedMetricsDialog">[docs]</a><span class="k">class</span> <span class="nc">DetailedMetricsDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog to show detailed metrics for a trained model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cfg_info: The `ConfigFileInfo` object (from `TrainingConfigsGetter`)</span>
+<span class="sd">            for the model we want to show.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">DetailedMetricsDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
@@ -279,19 +330,25 @@
                     <span class="n">text_widget</span><span class="o">.</span><span class="n">setTextInteractionFlags</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">TextSelectableByMouse</span><span class="p">)</span>
                     <span class="n">metrics_layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{</span><span class="n">key_str</span><span class="si">}</span><span class="s2">&lt;/b&gt;:&quot;</span><span class="p">,</span> <span class="n">text_widget</span><span class="p">)</span>
 
-        <span class="n">metrics_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
-        <span class="n">metrics_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">metrics_layout</span><span class="p">)</span>
+            <span class="n">metrics_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+            <span class="n">metrics_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">metrics_layout</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span> <span class="o">=</span> <span class="n">MplCanvas</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span> <span class="o">=</span> <span class="n">MplCanvas</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 
-        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">metrics_widget</span><span class="p">)</span>
-        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="p">)</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">metrics_widget</span><span class="p">)</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot_distances</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">text_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span>
+                <span class="s2">&quot;Metrics have not been generated for this model.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">text_widget</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">plot_distances</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">plot_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plot_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots node distances (using matplotlib widget).&quot;&quot;&quot;</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">axes</span>
 
         <span class="n">node_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">node_names</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span> <span class="k">else</span> <span class="kc">None</span>
@@ -313,7 +370,8 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Error (px)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">plot_oks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_plot_oks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots OKS -- not currently used.&quot;&quot;&quot;</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">axes</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span>
 
@@ -328,6 +386,16 @@
             <span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Recall&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Precision&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#     from PySide2.QtWidgets import QApplication</span>
+<span class="c1">#</span>
+<span class="c1">#     app = QApplication([])</span>
+<span class="c1">#     window = MetricsTableDialog(&quot;&quot;)</span>
+<span class="c1">#     window.show()</span>
+<span class="c1">#</span>
+<span class="c1">#     app.exec_()</span>
 </pre></div>
 
           </div>
