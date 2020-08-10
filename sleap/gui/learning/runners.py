@@ -1,3 +1,6 @@
+"""
+Run training/inference in background process via CLI.
+"""
 import abc
 import attr
 import os
@@ -5,7 +8,7 @@ import subprocess as sub
 import tempfile
 import time
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Text
+from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 
 from PySide2 import QtWidgets
 
@@ -19,19 +22,36 @@ SKIP_TRAINING = False
 
 @attr.s(auto_attribs=True)
 class ItemForInference(abc.ABC):
+    """
+    Abstract base class for item on which we can run inference via CLI.
+
+    Must have `path` and `cli_args` properties, used to build CLI call.
+    """
+
     @property
     @abc.abstractmethod
-    def path(self):
+    def path(self) -> Text:
         pass
 
     @property
     @abc.abstractmethod
-    def cli_args(self):
+    def cli_args(self) -> List[Text]:
         pass
 
 
 @attr.s(auto_attribs=True)
 class VideoItemForInference(ItemForInference):
+    """
+    Encapsulate data about video on which inference should run.
+
+    This allows for inference on an arbitrary list of frames from video.
+
+    Attributes:
+        video: the :py:class:`Video` object (which already stores its own path)
+        frames: list of frames for inference; if None, then all frames are used
+        use_absolute_path: whether to use absolute path for inference cli call
+    """
+
     video: Video
     frames: Optional[List[int]] = None
     use_absolute_path: bool = False
@@ -68,6 +88,17 @@ class VideoItemForInference(ItemForInference):
 
 @attr.s(auto_attribs=True)
 class DatasetItemForInference(ItemForInference):
+    """
+    Encapsulate data about frame selection based on dataset data.
+
+    Attributes:
+        labels_path: path to the saved :py:class:`Labels` dataset.
+        frame_filter: which subset of frames to get from dataset, supports
+            * "user"
+            * "suggested"
+        use_absolute_path: whether to use absolute path for inference cli call.
+    """
+
     labels_path: str
     frame_filter: str = "user"
     use_absolute_path: bool = False
@@ -90,6 +121,8 @@ class DatasetItemForInference(ItemForInference):
 
 @attr.s(auto_attribs=True)
 class ItemsForInference:
+    """Encapsulates list of items for inference."""
+
     items: List[ItemForInference]
     total_frame_count: int
 
@@ -109,6 +142,8 @@ class ItemsForInference:
 
 @attr.s(auto_attribs=True)
 class InferenceTask:
+    """Encapsulates all data needed for running inference via CLI."""
+
     trained_job_paths: List[str]
     inference_params: Dict[str, Any] = attr.ib(default=attr.Factory(dict))
     labels: Optional[Labels] = None
@@ -117,7 +152,8 @@ class InferenceTask:
 
     def make_predict_cli_call(
         self, item_for_inference: ItemForInference, output_path: Optional[str] = None
-    ):
+    ) -> List[Text]:
+        """Makes list of CLI arguments needed for running inference."""
         cli_args = ["sleap-track"]
 
         cli_args.extend(item_for_inference.cli_args)
@@ -192,7 +228,8 @@ class InferenceTask:
         item_for_inference: ItemForInference,
         append_results: bool = False,
         waiting_callback: Optional[Callable] = None,
-    ):
+    ) -> Tuple[Text, bool]:
+        """Runs inference in a subprocess."""
         cli_args, output_path = self.make_predict_cli_call(item_for_inference)
 
         print("Command line call:")
