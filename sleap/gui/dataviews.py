@@ -1,5 +1,18 @@
 """
 Data table widgets and view models used in GUI app.
+
+Typically you'll need to subclass :py:class:`GenericTableModel` for your data
+(unless your data is already a list of dictionaries with keys matching
+the columns of the table you want), but you can use :py:class:`GenericTableView`
+as is. For example::
+
+    videos_table = GenericTableView(
+        state=self.state,
+        row_name="video",
+        is_activatable=True,
+        model=VideosTableModel(items=self.labels.videos, context=self.commands),
+        )
+
 """
 
 from PySide2 import QtCore, QtWidgets, QtGui
@@ -20,7 +33,28 @@ from sleap.skeleton import Skeleton
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
-    """Generic table model to show a list of properties for some items.
+    """
+    Generic Qt table model to show a list of properties for some items.
+
+    Typically this will be used as base class. Subclasses can implement methods:
+        object_to_items: allows conversion from a single object to a list of
+            items which correspond to rows of table. for example, a table
+            which shows skeleton nodes could implement this method and return
+            the list of nodes for skeleton.
+        item_to_data: if each item isn't already a dictionary with keys for
+            columns of table (i.e., `properties` attribute) and values to show
+            in table, then use this method to convert each item to such a dict.
+
+    Note that if you need to convert a single object to a list of dictionaries,
+    you can implement both steps in `object_to_items` (and use the default
+    implementation of `item_to_data` which doesn't do any conversion), or you
+    can implement this in two steps using the two methods. It doesn't make
+    much difference which you do.
+
+    For editable table, you must implement `can_set` and `set_item` methods.
+
+    Usually it's simplest to override `properties` in the subclass, rather
+    than passing as an init arg.
 
     Args:
         properties: The list of property names (table columns).
@@ -155,7 +189,13 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         column_idx: int,
         order: QtCore.Qt.SortOrder = QtCore.Qt.SortOrder.AscendingOrder,
     ):
-        """Sorts table by given column and order."""
+        """
+        Sorts table by given column and order.
+
+        Correctly sorts numeric string (i.e., "123.45") numerically rather
+        than alphabetically. Has logic for correctly sorting video frames by
+        video then frame index.
+        """
         prop = self.properties[column_idx]
         reverse = order == QtCore.Qt.SortOrder.DescendingOrder
 
@@ -204,6 +244,24 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
 
 class GenericTableView(QtWidgets.QTableView):
+    """
+    Qt table view for use with `GenericTableModel` (and subclasses).
+
+    Uses the :py:class:`GuiState` object to keep track of which row/item is
+    selected. If the `row_name` attribute is "foo", then a "foo_selected"
+    state will be item corresponding to the currently selected row in table
+    (and the table will select the row if this state is updated by something
+    else). When `is_activatable` is True, then a "foo" state will also be
+    set to the item when a row is activated--typically by being double-clicked.
+    This state can then be used to trigger something else outside the table.
+
+    Note that by default "selected_" is used for the state key, e.g.,
+    "selected_foo", but you can set the `name_prefix` attribute/init arg if
+    for some reason you need this to be different. For instance, the table
+    of instances in the GUI sets this to "" so that the row for an instance
+    is automatically selected when `state["instance"]` is set outside the table.
+    """
+
     row_name: Optional[str] = None
     name_prefix: str = "selected_"
     is_activatable: bool = False
@@ -245,11 +303,23 @@ class GenericTableView(QtWidgets.QTableView):
             self.state[self.name_prefix + self.row_name] = item
 
     def activateSelected(self, *args):
-        """Activates item selected in table."""
+        """
+        Activates item currently selected in table.
+
+        "Activate" means that the relevant :py:class:`GuiState` state variable
+        is set to the currently selected item.
+        """
         if self.is_activatable:
             self.state[self.row_name] = self.getSelectedRowItem()
 
-    def selectRowItem(self, item):
+    def selectRowItem(self, item: Any):
+        """
+        Selects row corresponding to item.
+
+        If the table model converts items to dictionaries (using `item_to_data`
+        method), then `item` argument should be the original item, not the
+        converted dict.
+        """
         if not item:
             return
 
@@ -260,7 +330,14 @@ class GenericTableView(QtWidgets.QTableView):
         if self.row_name:
             self.state[self.name_prefix + self.row_name] = item
 
-    def getSelectedRowItem(self):
+    def getSelectedRowItem(self) -> Any:
+        """
+        Returns item corresponding to currently selected row.
+
+        Note that if the table model converts items to dictionaries (using
+        `item_to_data` method), then returned item will be the original item,
+        not the converted dict.
+        """
         idx = self.currentIndex()
         if not idx.isValid():
             return None
