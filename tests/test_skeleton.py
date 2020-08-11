@@ -319,7 +319,71 @@ def test_load_mat_format():
         )
 
 
-def test_edge_order():
-    """Test is edge list order is maintained upon insertion"""
+def test_arborescence():
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    skeleton.add_node("c")
 
-    skeleton = Skeleton("Test")
+    # linear: a -> b -> c
+    skeleton.add_edge("a", "b")
+    skeleton.add_edge("b", "c")
+
+    assert skeleton.is_arborescence
+
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    skeleton.add_node("c")
+
+    # two branches from a: a -> b and a -> c
+    skeleton.add_edge("a", "b")
+    skeleton.add_edge("a", "c")
+
+    assert skeleton.is_arborescence
+
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    skeleton.add_node("c")
+
+    # no edges so too many roots
+    assert not skeleton.is_arborescence
+    assert sorted((n.name for n in skeleton.root_nodes)) == ["a", "b", "c"]
+
+    # still too many roots: a and c
+    skeleton.add_edge("a", "b")
+
+    assert not skeleton.is_arborescence
+    assert sorted((n.name for n in skeleton.root_nodes)) == ["a", "c"]
+
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    skeleton.add_node("c")
+
+    # cycle
+    skeleton.add_edge("a", "b")
+    skeleton.add_edge("b", "c")
+    skeleton.add_edge("c", "a")
+
+    assert not skeleton.is_arborescence
+    assert len(skeleton.cycles) == 1
+    assert len(skeleton.root_nodes) == 0
+
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    skeleton.add_node("c")
+    skeleton.add_node("d")
+
+    # diamond, too many sources leading to d
+    skeleton.add_edge("a", "b")
+    skeleton.add_edge("a", "c")
+    skeleton.add_edge("b", "d")
+    skeleton.add_edge("c", "d")
+
+    assert not skeleton.is_arborescence
+    assert len(skeleton.cycles) == 0
+    assert len(skeleton.root_nodes) == 1
+    assert len(skeleton.in_degree_over_one) == 1
