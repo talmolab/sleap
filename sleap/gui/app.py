@@ -1,5 +1,48 @@
 """
 Main GUI application for labeling, training/inference, and proofreading.
+
+Each open project is an instance of :py:class:`MainWindow`.
+
+The main window contains a :py:class:`QtVideoPlayer` widget for showing
+video frames (the video player widget contains both a graphics view widget
+that shows the frame image and a seekbar widget for navigation). The main
+window also contains various "data views"--tables which can be docked
+in the window as well as a status bar.
+
+When a new instance of :py:class:`MainWindow` is created, it creates
+all of these widgets, sets up the menus, and also creates
+
+- single :py:class:`GuiState` object
+- single :py:class:`CommandContext` object
+- single :py:class:`ColorManager` object
+- multiple overlay objects (subclasses of :py:class:`BaseOverlay`)
+
+A timer is started (runs via Qt event loop) which enables/disables
+various menu items and buttons based on current state (e.g., you
+can't delete an instance if no instance is selected).
+
+Shortcuts are loaded using :py:class:`Shortcuts` class. Preferences
+are loaded by importing `prefs`, a singleton instance of
+:py:class:`Preferences`.
+
+:py:class:`GuiState` is used for storing "global" state for the project
+(e.g., :py:class:`Labels` object, the current frame, current instance,
+whether to show track trails, etc.). every menu command with state
+(e.g., check/uncheck) should be connected to a state variable.
+
+:py:class:`CommandContext` has methods which can be triggered
+by menu items/buttons/etc in the GUI to perform various actions. The
+command context enforces a pattern for implementing each command in
+its own class, it keeps track of whether there are unsaved changes
+(and in the future would make it easier to implement undo/redo), and
+it handles triggering the relevant updates in the GUI based on the
+effects of the command (these are passed using `UpdateTopic` enum and
+handed by :py:method:`MainWindow.on_data_update()`).
+
+:py:class:`ColorManager` loads color palettes, keeps track of current
+palette, and should always be queried for how to draw instances--this
+ensures consistency (e.g.) between color of instances drawn on video
+frame and instances listed in data view table.
 """
 
 
@@ -170,7 +213,7 @@ class MainWindow(QMainWindow):
         self._create_menus()
         self._create_dock_windows()
 
-        self.load_overlays()
+        self._load_overlays()
 
         # Create timer to update state of gui at regular intervals
         self.update_gui_timer = QtCore.QTimer()
@@ -184,7 +227,9 @@ class MainWindow(QMainWindow):
         )
         self.player.changedPlot.connect(self._after_plot_update)
 
-        self.player.view.instanceDoubleClicked.connect(self.doubleClickInstance)
+        self.player.view.instanceDoubleClicked.connect(
+            self._handle_instance_double_click
+        )
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
@@ -197,7 +242,7 @@ class MainWindow(QMainWindow):
                 self.state["frame_idx"] = 0
 
         self.state.connect(
-            "video", callbacks=[switch_frame, lambda x: self.updateSeekbarMarks()]
+            "video", callbacks=[switch_frame, lambda x: self._update_seekbar_marks()]
         )
 
     def _create_color_manager(self):
@@ -446,7 +491,7 @@ class MainWindow(QMainWindow):
         )
 
         self.state["seekbar_header"] = "None"
-        self.state.connect("seekbar_header", self.setSeekbarHeader)
+        self.state.connect("seekbar_header", self._set_seekbar_header)
 
         viewMenu.addSeparator()
 
@@ -541,13 +586,13 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "training",
             "Run Training...",
-            lambda: self.showLearningDialog("training"),
+            lambda: self._show_learning_dialog("training"),
         )
         add_menu_item(
             predictionMenu,
             "inference",
             "Run Inference...",
-            lambda: self.showLearningDialog("inference"),
+            lambda: self._show_learning_dialog("inference"),
         )
 
         predictionMenu.addSeparator()
@@ -556,14 +601,14 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "show metrics",
             "Evaluation Metrics for Trained Models...",
-            self.showMetricsDialog,
+            self._show_metrics_dialog,
         )
 
         add_menu_item(
             predictionMenu,
             "visualize models",
             "Visualize Model Outputs...",
-            self.visualizeOutputs,
+            self._handle_model_overlay_command,
         )
 
         predictionMenu.addSeparator()
@@ -631,7 +676,7 @@ class MainWindow(QMainWindow):
         ############
 
         helpMenu = self.menuBar().addMenu("Help")
-        helpMenu.addAction("Keyboard Shortcuts", self.openKeyRef)
+        helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""
@@ -849,7 +894,7 @@ class MainWindow(QMainWindow):
 
         self.state.connect("suggestion_idx", self.suggestionsTable.selectRow)
 
-    def load_overlays(self):
+    def _load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
         self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
@@ -875,7 +920,7 @@ class MainWindow(QMainWindow):
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
         overlay_state_connect(self.color_manager, "color predicted", "color_predicted")
-        self.state.connect("palette", lambda x: self.updateSeekbarMarks())
+        self.state.connect("palette", lambda x: self._update_seekbar_marks())
 
         # update the skeleton tables since we may want to redraw colors
         for state_var in ("palette", "distinctly_color", "edge style"):
@@ -981,12 +1026,12 @@ class MainWindow(QMainWindow):
                 UpdateTopic.suggestions,
             ]
         ):
-            self.updateSeekbarMarks()
+            self._update_seekbar_marks()
 
         if _has_topic(
             [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.tracks]
         ):
-            self.updateTrackMenu()
+            self._update_track_menu()
 
         if _has_topic([UpdateTopic.video]):
             self.videosTable.model().items = self.labels.videos
@@ -1154,7 +1199,7 @@ class MainWindow(QMainWindow):
         self.color_manager.labels = self.labels
         self.color_manager.set_palette(self.state["palette"])
 
-        self.load_overlays()
+        self._load_overlays()
 
         if len(self.labels.skeletons):
             self.state["skeleton"] = self.labels.skeletons[0]
@@ -1165,7 +1210,7 @@ class MainWindow(QMainWindow):
 
         self.on_data_update([UpdateTopic.project, UpdateTopic.all])
 
-    def updateTrackMenu(self):
+    def _update_track_menu(self):
         """Updates track menu options."""
         self.track_menu.clear()
         for track in self.labels.tracks:
@@ -1181,14 +1226,14 @@ class MainWindow(QMainWindow):
             "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
         )
 
-    def updateSeekbarMarks(self):
+    def _update_seekbar_marks(self):
         """Updates marks on seekbar."""
         set_slider_marks_from_labels(
             self.player.seekbar, self.labels, self.state["video"], self.color_manager
         )
 
-    def setSeekbarHeader(self, graph_name):
-        """Updates graph shown in seekbar header."""
+    def _set_seekbar_header(self, graph_name: str):
+        """Updates graph shown in seekbar header based on menu selection."""
         data_obj = StatisticSeries(self.labels)
         header_functions = {
             "Point Displacement (sum)": data_obj.get_point_displacement_series,
@@ -1216,7 +1261,7 @@ class MainWindow(QMainWindow):
             else:
                 print(f"Could not find function for {header_functions}")
 
-    def _frames_for_prediction(self):
+    def _get_frames_for_prediction(self):
         """Builds options for frames on which to run inference.
 
         Args:
@@ -1281,7 +1326,7 @@ class MainWindow(QMainWindow):
 
         return selection
 
-    def showLearningDialog(self, mode: str):
+    def _show_learning_dialog(self, mode: str):
         """Helper function to show learning dialog in given mode.
 
         Args:
@@ -1312,25 +1357,27 @@ class MainWindow(QMainWindow):
             self._child_windows[mode] = LearningDialog(
                 mode, self.state["filename"], self.labels,
             )
-            self._child_windows[mode].learningFinished.connect(self.learningFinished)
+            self._child_windows[mode]._handle_learning_finished.connect(
+                self._handle_learning_finished
+            )
 
         self._child_windows[mode].update_file_lists()
 
-        self._child_windows[mode].frame_selection = self._frames_for_prediction()
+        self._child_windows[mode].frame_selection = self._get_frames_for_prediction()
         self._child_windows[mode].open()
 
-    def learningFinished(self, new_count: int):
+    def _handle_learning_finished(self, new_count: int):
         """Called when inference finishes."""
         # we ran inference so update display/ui
         self.on_data_update([UpdateTopic.all])
         if new_count > 0:
             self.commands.changestack_push("new predictions")
 
-    def showMetricsDialog(self):
+    def _show_metrics_dialog(self):
         self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
         self._child_windows["metrics"].show()
 
-    def visualizeOutputs(self):
+    def _handle_model_overlay_command(self):
         """Gui for adding overlay with live visualization of predictions."""
         filters = ["Model (*.json)"]
 
@@ -1380,7 +1427,9 @@ class MainWindow(QMainWindow):
 
         self.plotFrame()
 
-    def doubleClickInstance(self, instance: Instance, event: QtGui.QMouseEvent = None):
+    def _handle_instance_double_click(
+        self, instance: Instance, event: QtGui.QMouseEvent = None
+    ):
         """
         Handles when the user has double-clicked an instance.
 
@@ -1406,7 +1455,7 @@ class MainWindow(QMainWindow):
         else:
             self.commands.completeInstanceNodes(instance)
 
-    def openKeyRef(self):
+    def _show_keyboard_shortcuts_window(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
 
