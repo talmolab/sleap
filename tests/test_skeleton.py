@@ -387,3 +387,13 @@ def test_arborescence():
     assert len(skeleton.cycles) == 0
     assert len(skeleton.root_nodes) == 1
     assert len(skeleton.in_degree_over_one) == 1
+
+
+def test_repr_str():
+    skel = Skeleton(name="skel")
+    skel.add_node("A")
+    skel.add_node("B")
+    skel.add_edge("A", "B")
+
+    assert repr(skel) == "Skeleton(name='skel', nodes=['A', 'B'], edges=[('A', 'B')])"
+    assert str(skel) == "Skeleton(nodes=2, edges=1)"

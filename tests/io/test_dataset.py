@@ -1001,3 +1001,28 @@ def test_save_with_images(tmpdir):
     labels_with_all = sleap.load_file(os.path.join(tmpdir, "labels_with_all.slp"))
     assert (labels_with_all[0].image == video.get_frame(0)).all()
     assert (labels_with_all[1].image == video.get_frame(1)).all()
+
+
+def test_repr():
+    labels = Labels()
+    skel = Skeleton()
+    labels.append(
+        LabeledFrame(
+            video=Video(backend=sleap.io.video.DummyVideo("vid", 10, 20, 30, 3)),
+            frame_idx=0,
+            instances=[Instance(skeleton=skel, track=Track(spawned_on=0))]
+        )
+    )
+    labels.append(LabeledFrame(video=Video(
+        backend=sleap.io.video.DummyVideo("foo", 10, 20, 30, 3)), frame_idx=0))
+    labels.videos.append(Video(backend=sleap.io.video.DummyVideo("bar", 10, 20, 30, 3)))
+
+    assert repr(labels) == (
+        "Labels("
+        "labeled_frames=2, "
+        "videos=3, "
+        "skeletons=1, "
+        "tracks=1"
+        ")"
+    )
+    assert repr(labels) == str(labels)

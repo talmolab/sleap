@@ -391,7 +391,8 @@ class Instance:
         """
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
-                f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})"
+                "Instance.from_predicted type must be PredictedInstance (not "
+                f"{type(from_predicted)})"
             )
 
     @_points.validator
@@ -425,7 +426,8 @@ class Instance:
         elif isinstance(points, PointArray):
             if len(points) != len(self.skeleton.nodes):
                 raise ValueError(
-                    "PointArray does not have the same number of rows as skeleton nodes."
+                    "PointArray does not have the same number of rows as skeleton "
+                    "nodes."
                 )
 
     def __attrs_post_init__(self):
@@ -505,7 +507,7 @@ class Instance:
         if not is_string_dict and not is_node_dict:
             raise ValueError(
                 "points dictionary must be keyed by either strings "
-                + "(node names) or Nodes."
+                "(node names) or Nodes."
             )
 
         # Get rid of the points dict and replace with equivalent point array.
@@ -552,8 +554,8 @@ class Instance:
             to each node.
 
         """
-
-        # If the node is a list of nodes, use get item recursively and return a list of _points.
+        # If the node is a list of nodes, use get item recursively and return a list of
+        # _points.
         if type(node) is list:
             ret_list = []
             for n in node:
@@ -624,8 +626,8 @@ class Instance:
                 "Node list for indexing must be same length and value list."
             )
 
-        # If we are dealing with lists, do multiple assignment recursively, this should be ok because
-        # skeletons and instances are small.
+        # If we are dealing with lists, do multiple assignment recursively, this should
+        # be ok because skeletons and instances are small.
         if type(node) is list:
             for n, v in zip(node, value):
                 self.__setitem__(n, v)
@@ -1076,7 +1078,7 @@ def make_instance_cattr() -> cattr.Converter:
     return converter
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, repr=False, str=False)
 class LabeledFrame:
     """
     Holds labeled data for a single frame of a video.
@@ -1124,6 +1126,19 @@ class LabeledFrame:
 
         # Modify the instance to remove reference to this frame
         value.frame = None
+
+    def __repr__(self) -> str:
+        """Return a readable representation of the LabeledFrame."""
+        return (
+            f"LabeledFrame(video={type(self.video.backend).__name__}"
+            f"('{self.video.filename}'), "
+            f"frame_idx={self.frame_idx}, "
+            f"instances={len(self.instances)})"
+        )
+
+    def __str__(self) -> str:
+        """Return a readable representation of the LabeledFrame."""
+        return self.__repr__()
 
     def insert(self, index: int, value: Instance):
         """

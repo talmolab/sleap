@@ -112,6 +112,15 @@ class Skeleton:
         # is returned.
         self._graph: nx.MultiDiGraph = nx.MultiDiGraph(name=name, num_edges_inserted=0)
 
+    def __repr__(self) -> str:
+        """Return full description of the skeleton."""
+        return (f"Skeleton(name='{self.name}', "
+                f"nodes={self.node_names}, edges={self.edge_names})")
+
+    def __str__(self) -> str:
+        """Return short readable description of the skeleton."""
+        return f"Skeleton(nodes={len(self.nodes)}, edges={len(self.edges)})"
+
     def matches(self, other: "Skeleton") -> bool:
         """
         Compare this `Skeleton` to another, ignoring skeleton name and
@@ -1182,9 +1191,6 @@ class Skeleton:
             )
 
         return skeleton
-
-    def __str__(self):
-        return "%s(name=%r)" % (self.__class__.__name__, self.name)
 
     def __hash__(self):
         """

@@ -380,7 +380,7 @@ class LabelsDataCache:
                 self._frame_count_cache[None][type_key].discard(idx_pair)
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
     """
     The :class:`Labels` class collects the data for a SLEAP project.
@@ -584,6 +584,21 @@ class Labels(MutableSequence):
     def index(self, value) -> int:
         """Return index of labeled frame in list of labeled frames."""
         return self.labeled_frames.index(value)
+
+    def __repr__(self) -> str:
+        """Return a readable representation of the labels."""
+        return (
+            "Labels("
+            f"labeled_frames={len(self.labeled_frames)}, "
+            f"videos={len(self.videos)}, "
+            f"skeletons={len(self.skeletons)}, "
+            f"tracks={len(self.tracks)}"
+            ")"
+        )
+
+    def __str__(self) -> str:
+        """Return a readable representation of the labels."""
+        return self.__repr__()
 
     def __contains__(self, item) -> bool:
         """Check if object contains the given item.

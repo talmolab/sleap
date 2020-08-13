@@ -5,6 +5,7 @@ import copy
 import pytest
 import numpy as np
 
+import sleap
 from sleap.skeleton import Skeleton
 from sleap.instance import (
     Instance,
@@ -311,3 +312,15 @@ def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
     assert user_inst in user_labels[0].instances
     assert pred_inst in user_labels[0].instances
     assert len(user_labels[0].instances) == 2
+
+
+def test_labeledframe_repr():
+    vid = sleap.Video.from_filename("tests/data/videos/small_robot.mp4")
+    lf = LabeledFrame(video=vid, frame_idx=0)
+
+    assert repr(lf) == (
+        "LabeledFrame("
+        "video=MediaVideo('tests/data/videos/small_robot.mp4'), "
+        "frame_idx=0, instances=0)"
+    )
+    assert repr(lf) == str(lf)
