@@ -217,6 +217,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         append: bool = False,
         save_frame_data: bool = False,
         frame_data_format: str = "png",
+        all_labels: bool = False,
     ):
 
         labels = source_object
@@ -231,7 +232,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         d = labels.to_dict(skip_labels=True)
 
         if save_frame_data:
-            new_videos = labels.save_frame_data_hdf5(filename, frame_data_format)
+            new_videos = labels.save_frame_data_hdf5(
+                output_path=filename, format=frame_data_format, all_labels=all_labels
+            )
 
             # Replace path to video file with "." (which indicates that the
             # video is in the same file as the HDF5 labels dataset).

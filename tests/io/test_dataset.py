@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 
+import sleap
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
@@ -933,3 +934,67 @@ def test_provenance(tmpdir):
     labels = Labels.load_file(filename)
     print(labels.provenance)
     assert labels.provenance["source"] == "test_provenance"
+
+
+def test_save_no_images(tmpdir):
+    video = Video.from_filename("tests/data/videos/small_robot.mp4")
+    labels = Labels()
+    labels.append(
+        LabeledFrame(
+            video=video,
+            frame_idx=0,
+            instances=[Instance(skeleton=Skeleton())]
+        )
+    )
+
+    labels.save(os.path.join(tmpdir, "labels_no_images.slp"), with_images=False)
+
+    labels_no_images = sleap.load_file(os.path.join(tmpdir, "labels_no_images.slp"))
+    assert len(labels_no_images) == 1
+    assert labels_no_images.video.filename == video.filename
+    assert labels_no_images[0].frame_idx == 0
+    assert len(labels_no_images[0].instances) == 1
+
+
+def test_save_with_images(tmpdir):
+    video = Video.from_filename("tests/data/videos/small_robot.mp4")
+    labels = Labels()
+    labels.append(
+        LabeledFrame(
+            video=video,
+            frame_idx=0,
+            instances=[Instance(skeleton=Skeleton())]
+        )
+    )
+
+    # Add an empty labeled frame.
+    labels.append(LabeledFrame(video=video, frame_idx=1))
+
+    labels.save(os.path.join(tmpdir, "labels_with_images.slp"), with_images=True)
+
+    labels_with_images = sleap.load_file(os.path.join(tmpdir, "labels_with_images.slp"))
+    assert len(labels_with_images) == 2
+    assert labels_with_images[0].frame_idx == 0
+    assert labels_with_images[1].frame_idx == 1
+
+    # Image data for labeled frame with instance should be stored:
+    assert (labels_with_images[0].image == video.get_frame(0)).all()
+
+    # Image data for labeled frame without instance should still be accessible if the
+    # source video is present:
+    assert (labels_with_images[1].image == video.get_frame(1)).all()
+
+    # Disabling source video access, the frame with user labeled instances should still
+    # be accessible:
+    labels_with_images.video.backend.enable_source_video = False
+    assert (labels_with_images[0].image == video.get_frame(0)).all()
+
+    # But the blank labeled frame should not have a stored image:
+    with pytest.raises(ValueError):
+        labels_with_images[1].image
+
+    # Both should work if we save with all images:
+    labels.save(os.path.join(tmpdir, "labels_with_all.slp"), with_images="all")
+    labels_with_all = sleap.load_file(os.path.join(tmpdir, "labels_with_all.slp"))
+    assert (labels_with_all[0].image == video.get_frame(0)).all()
+    assert (labels_with_all[1].image == video.get_frame(1)).all()

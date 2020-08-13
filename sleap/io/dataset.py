@@ -40,7 +40,18 @@ default extension to use if none is provided in the filename.
 import itertools
 import os
 from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional, Tuple, Text, Iterable, Any, Set
+from typing import (
+    Callable,
+    List,
+    Union,
+    Dict,
+    Optional,
+    Tuple,
+    Text,
+    Iterable,
+    Any,
+    Set,
+)
 
 import attr
 import cattr
@@ -280,7 +291,9 @@ class LabelsDataCache:
 
         return len(self._frame_count_cache[video][filter])
 
-    def get_filtered_frame_idxs(self, video: Optional[Video] = None, filter: Text = "") -> Set[Tuple[int, int]]:
+    def get_filtered_frame_idxs(
+        self, video: Optional[Video] = None, filter: Text = ""
+    ) -> Set[Tuple[int, int]]:
         """Return list of (video_idx, frame_idx) tuples matching video/filter."""
         if filter == "":
             filter_func = lambda lf: video is None or lf.video == video
@@ -544,7 +557,7 @@ class Labels(MutableSequence):
             raise ValueError(
                 "Labels.skeleton can only be used when there is only a single skeleton "
                 "saved in the labels. Use Labels.skeletons instead."
-                )
+            )
 
     @property
     def video(self) -> Video:
@@ -557,7 +570,7 @@ class Labels(MutableSequence):
             raise ValueError(
                 "Labels.video can only be used when there is only a single video saved "
                 "in the labels. Use Labels.videos instead."
-                )
+            )
 
     @property
     def has_missing_videos(self) -> bool:
@@ -592,11 +605,7 @@ class Labels(MutableSequence):
             return item in self.skeletons
         elif isinstance(item, Node):
             return item in self.nodes
-        elif (
-            isinstance(item, tuple)
-            and len(item) == 2
-            and isinstance(item[0], Video)
-        ):
+        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], Video):
             if isinstance(item[1], int):
                 return self.find_first(*item) is not None
             elif isinstance(item[1], np.integer):
@@ -630,18 +639,16 @@ class Labels(MutableSequence):
                 raise KeyError("Video not found in labels.")
             return self.find(video=key)
 
-        elif (
-            isinstance(key, tuple)
-            and len(key) == 2
-            and isinstance(key[0], Video)
-        ):
+        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
             if key[0] not in self.videos:
                 raise KeyError("Video not found in labels.")
 
             if isinstance(key[1], int):
                 _hit = self.find_first(video=key[0], frame_idx=key[1])
                 if _hit is None:
-                    raise KeyError(f"No label found for specified video at frame {key[1]}.")
+                    raise KeyError(
+                        f"No label found for specified video at frame {key[1]}."
+                    )
                 return _hit
             elif isinstance(key[1], (np.integer, np.ndarray)):
                 return self.__getitem__((key[0], key[1].tolist()))
@@ -813,7 +820,9 @@ class Labels(MutableSequence):
     @property
     def predicted_instances(self) -> List[PredictedInstance]:
         """Return list of all predicted instances."""
-        return [inst for inst in self.all_instances if isinstance(inst, PredictedInstance)]
+        return [
+            inst for inst in self.all_instances if isinstance(inst, PredictedInstance)
+        ]
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):
         """Iterate over instances in the labels, optionally with filters.
@@ -1410,7 +1419,7 @@ class Labels(MutableSequence):
 
         write(filename, labels, *args, **kwargs)
 
-    def save(self, filename: Text, with_images: bool = False):
+    def save(self, filename: Text, with_images: Union[bool, Text] = False):
         """Save the labels to a file.
 
         Args:
@@ -1418,14 +1427,28 @@ class Labels(MutableSequence):
                 not end in `.slp`, the extension will be automatically appended.
             with_images: If True, the image data for frames with labels will be embedded
                 in the saved labels. This is useful for generating a single file to be
-                used when training remotely.
+                used when training remotely. If "all", then images for `LabeledFrame`s
+                with no user labeled instances will also be included. This is useful for
+                including unlabeled images that might be needed for context or
+                subsequent inference.
 
         Notes:
             This is an instance-level wrapper for the `Labels.save_file` class method.
         """
+        # Figure out whether to save frames with user labels, any, or none.
+        save_frame_data = with_images
+        all_labels = False
+        if isinstance(with_images, str) and with_images.lower() == "all":
+            save_frame_data = True
+            all_labels = True
+
+        # Make sure filename ends with .slp.
         if os.path.splitext(filename)[1].lower() != ".slp":
             filename = filename + ".slp"
-        Labels.save_file(self, filename, save_frame_data=with_images)
+
+        Labels.save_file(
+            self, filename, save_frame_data=with_images, all_labels=all_labels
+        )
 
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
