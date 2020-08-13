@@ -657,6 +657,10 @@ class Labels(MutableSequence):
             else:
                 raise KeyError("Invalid label indexing arguments.")
 
+        elif isinstance(key, slice):
+            start, stop, step = key.indices(len(self))
+            return self.__getitem__(range(start, stop, step))
+
         elif isinstance(key, (list, range)):
             return [self.__getitem__(i) for i in key]
 
