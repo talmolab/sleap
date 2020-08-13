@@ -2,13 +2,84 @@
 Widget for previewing receptive field on sample image using model hyperparams.
 """
 from sleap import Video
-from sleap.gui.learning import utils
 from sleap.nn.config import ModelConfig
 from sleap.gui.widgets.video import GraphicsView
+
+import numpy as np
+
+from sleap import Skeleton
+from sleap.nn.model import Model
 
 from typing import Optional, Text
 
 from PySide2 import QtWidgets, QtGui, QtCore
+
+
+def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3) -> int:
+    """
+    Computes receptive field for specified model architecture.
+
+    Ref: https://distill.pub/2019/computing-receptive-fields/ (Eq. 2)
+    """
+    # Define the strides and kernel sizes for a single down block.
+    # convs have stride 1, pooling has stride 2:
+    block_strides = [1] * convs_per_block + [2]
+
+    # convs have `kernel_size` x `kernel_size` kernels, pooling has 2 x 2 kernels:
+    block_kernels = [kernel_size] * convs_per_block + [2]
+
+    # Repeat block parameters by the total number of down blocks.
+    strides = np.array(block_strides * down_blocks)
+    kernels = np.array(block_kernels * down_blocks)
+
+    # L = Total number of layers
+    L = len(strides)
+
+    # Compute the product term of the RF equation.
+    rf = 1
+    for l in range(L):
+        rf += (kernels[l] - 1) * np.prod(strides[:l])
+
+    return int(rf)
+
+
+def receptive_field_info_from_model_cfg(model_cfg: ModelConfig) -> dict:
+    """Gets receptive field information given specific model configuration."""
+    rf_info = dict(
+        size=None,
+        max_stride=None,
+        down_blocks=None,
+        convs_per_block=None,
+        kernel_size=None,
+    )
+
+    try:
+        model = Model.from_config(model_cfg, Skeleton())
+    except ZeroDivisionError:
+        # Unable to create model from these config parameters
+        return rf_info
+
+    if hasattr(model_cfg.backbone.which_oneof(), "max_stride"):
+        rf_info["max_stride"] = model_cfg.backbone.which_oneof().max_stride
+
+    if hasattr(model.backbone, "down_convs_per_block"):
+        rf_info["convs_per_block"] = model.backbone.down_convs_per_block
+    elif hasattr(model.backbone, "convs_per_block"):
+        rf_info["convs_per_block"] = model.backbone.convs_per_block
+
+    if hasattr(model.backbone, "kernel_size"):
+        rf_info["kernel_size"] = model.backbone.kernel_size
+
+    rf_info["down_blocks"] = model.backbone.down_blocks
+
+    if rf_info["down_blocks"] and rf_info["convs_per_block"] and rf_info["kernel_size"]:
+        rf_info["size"] = compute_rf(
+            down_blocks=rf_info["down_blocks"],
+            convs_per_block=rf_info["convs_per_block"],
+            kernel_size=rf_info["kernel_size"],
+        )
+
+    return rf_info
 
 
 class ReceptiveFieldWidget(QtWidgets.QWidget):
@@ -76,7 +147,7 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
 
     def setModelConfig(self, model_cfg: ModelConfig, scale: float):
         """Updates receptive field preview from model config."""
-        rf_info = utils.receptive_field_info_from_model_cfg(model_cfg)
+        rf_info = receptive_field_info_from_model_cfg(model_cfg)
 
         self._info_widget.setText(
             self._get_info_text(

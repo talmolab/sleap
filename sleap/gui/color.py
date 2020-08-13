@@ -11,7 +11,7 @@ on the `ColorManager` object:
 Initial color palette (and other settings, like default line width) is read
 from user preferences but can be changed after object is created.
 """
-from typing import Any, Optional, Union, Tuple
+from typing import Any, Iterable, Optional, Union, Text, Tuple
 
 import yaml
 
@@ -21,7 +21,11 @@ from sleap.io.dataset import Labels
 from sleap.prefs import prefs
 
 
-class ColorManager(object):
+ColorTupleStringType = Text
+ColorTupleType = Tuple[int, int, int]
+
+
+class ColorManager:
     """Class to determine color to use for track.
 
     The color depends on the order of the tracks in `Labels` object,
@@ -39,6 +43,7 @@ class ColorManager(object):
         with open(get_config_file("colors.yaml"), "r") as f:
             self._palettes = yaml.load(f, Loader=yaml.SafeLoader)
 
+        self._color_map = []
         self.distinctly_color = "instances"
         self.color_predicted = True
 
@@ -74,46 +79,68 @@ class ColorManager(object):
         return self._palette
 
     @palette.setter
-    def palette(self, palette):
+    def palette(self, palette: Union[Text, Iterable[ColorTupleStringType]]):
         self._palette = palette
 
-        if isinstance(palette, str):
+        if isinstance(palette, Text):
             self.index_mode = "clip" if palette.endswith("+") else "cycle"
 
             if palette in self._palettes:
                 self._color_map = self._palettes[palette]
             else:
+                # Can't find palette by name so just use standard palette.
                 self._color_map = self._palettes["standard"]
         else:
+            # If palette is not given by name, it should be list of
+            # "r,g,b" strings.
             self._color_map = palette
 
     @property
-    def palette_names(self):
+    def palette_names(self) -> Iterable[Text]:
         """Gets list of palette names."""
         return self._palettes.keys()
 
     @property
-    def tracks(self):
+    def tracks(self) -> Iterable[Track]:
         """Gets tracks for project."""
         if self.labels:
             return self.labels.tracks
         return []
 
-    def set_palette(self, palette):
+    def set_palette(self, palette: Union[Text, Iterable[ColorTupleStringType]]):
         """Functional alias for palette property setter."""
         self.palette = palette
 
-    def fix_index(self, idx):
+    def fix_index(self, idx: int) -> int:
         """Returns an index within range of color palette."""
         return self._index_mode_functions[self.index_mode](idx, len(self._color_map))
 
-    def get_color_by_idx(self, idx):
+    def get_color_by_idx(self, idx: int) -> ColorTupleType:
         """Returns color tuple corresponding to item index."""
         color_idx = self.fix_index(idx)
+        return self.color_to_tuple(self._color_map[color_idx])
+
+    @staticmethod
+    def color_to_tuple(color: Union[Text, Iterable[int]]) -> ColorTupleType:
+        """Convert and ensure color is (r, g, b)-tuple."""
+        if isinstance(color, Text):
+            split_string = color.split(",")
+            if len(split_string) != 3:
+                raise ValueError(f"Color '{color}' is not 'r,g,b' string.")
+            try:
+                result = tuple(map(int, split_string))
+                return result
+            except:
+                raise ValueError(f"Color '{color}' is not 'r,g,b' string.")
+
+        if len(color) != 3:
+            raise ValueError(f"Color '{color}' is not (r,g,b) tuple.")
+
         try:
-            return tuple(map(int, self._color_map[color_idx].split(",")))
+            result = tuple(map(int, color))
+            return result
         except:
-            raise ValueError(f"Invalid color: {self._color_map[color_idx]}")
+            raise ValueError(f"Color '{color}' is not (r,g,b) tuple.")
 
     def get_pseudo_track_index(self, instance: "Instance") -> Union[Track, int]:
         """
@@ -130,7 +157,7 @@ class ColorManager(object):
 
         return len(self.tracks) + non_track_instances.index(instance)
 
-    def get_track_color(self, track: Union[Track, int]) -> Tuple[int, int, int]:
+    def get_track_color(self, track: Union[Track, int]) -> ColorTupleType:
         """Returns the color to use for a given track.
 
         Args:
@@ -186,7 +213,7 @@ class ColorManager(object):
 
         return self.default_pen_width
 
-    def get_item_type_pen_width(self, item_type: str):
+    def get_item_type_pen_width(self, item_type: str) -> float:
         """Gets pen width to use for given item type (as string)."""
         if item_type == "node":
             if self.distinctly_color == "nodes":
@@ -204,7 +231,7 @@ class ColorManager(object):
         item: Any,
         parent_instance: Optional[Instance] = None,
         parent_skeleton: Optional["Skeleton"] = None,
-    ) -> Tuple[int, int, int]:
+    ) -> ColorTupleType:
         """Gets (r, g, b) tuple of color to use for drawing item."""
 
         if not parent_instance and isinstance(item, Instance):

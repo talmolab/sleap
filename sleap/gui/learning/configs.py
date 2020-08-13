@@ -1,3 +1,6 @@
+"""
+Find, load, and show lists of saved `TrainingJobConfig`.
+"""
 import attr
 import datetime
 import h5py
@@ -18,6 +21,23 @@ from PySide2 import QtCore, QtWidgets
 
 @attr.s(auto_attribs=True, slots=True)
 class ConfigFileInfo:
+    """
+    Object to represent a saved :py:class:`TrainingJobConfig`
+
+    The :py:class:`TrainingJobConfig` class holds information about the model
+    and can be saved as a file. This class holds information about that file,
+    e.g., the path, and also provides some properties/methods that make it
+    easier to access certain data in or about the file.
+
+    Attributes:
+        config: the :py:class:`TrainingJobConfig`
+        path: path to the :py:class:`TrainingJobConfig`
+        filename: just the filename, not the full path
+        head_name: string which should match name of model.heads key
+        dont_retrain: allows us to keep track of whether we should retrain
+            this config
+    """
+
     config: TrainingJobConfig
     path: Optional[Text] = None
     filename: Optional[Text] = None
@@ -90,22 +110,27 @@ class ConfigFileInfo:
 
     @property
     def training_instance_count(self):
+        """Number of instances in the training dataset"""
         return self._get_dataset_len("instances", "train")
 
     @property
     def validation_instance_count(self):
+        """Number of instances in the validation dataset"""
         return self._get_dataset_len("instances", "val")
 
     @property
     def training_frame_count(self):
+        """Number of labeled frames in the training dataset"""
         return self._get_dataset_len("frames", "train")
 
     @property
     def validation_frame_count(self):
+        """Number of labeled frames in the validation dataset"""
         return self._get_dataset_len("frames", "val")
 
     @property
     def timestamp(self):
+        """Timestamp on file; parsed from filename (not OS timestamp)."""
         match = re.match(
             r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b", self.config.outputs.run_name
         )
@@ -141,7 +166,7 @@ class ConfigFileInfo:
         return metrics
 
     @classmethod
-    def from_config_file(cls, path):
+    def from_config_file(cls, path: Text) -> "ConfigFileInfo":
         cfg = TrainingJobConfig.load_json(path)
         head_name = cfg.model.heads.which_oneof_attrib_name()
         filename = os.path.basename(path)
@@ -149,6 +174,22 @@ class ConfigFileInfo:
 
 
 class TrainingConfigFilesWidget(FieldComboWidget):
+    """
+    Widget to show list of saved :py:class:`TrainingJobConfig` files.
+
+    This is used inside :py:class:`TrainingEditorWidget`.
+
+    Arguments:
+        cfg_getter: the :py:class:`TrainingConfigsGetter` from which menu
+            is populated.
+        head_name: used to filter configs from `cfg_getter`.
+        require_trained: used to filter configs from `cfg_getter`.
+
+    Signals:
+        onConfigSelection: triggered when user selects a config file
+
+    """
+
     onConfigSelection = QtCore.Signal(ConfigFileInfo)
 
     SELECT_FILE_OPTION = "Select training config file..."
@@ -172,6 +213,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         self.currentIndexChanged.connect(self.onSelectionIdxChange)
 
     def update(self, select: Optional[ConfigFileInfo] = None):
+        """Updates menu options, optionally selecting a specific config."""
         cfg_list = self._cfg_getter.get_filtered_configs(
             head_filter=self._head_name, only_trained=self._require_trained
         )
@@ -204,12 +246,12 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
         self.set_options(option_list, select_item=select_key)
 
-    def selectByIdx(self, option_idx: int):
-        self.setCurrentIndex(option_idx)
-        self.onSelectionIdxChange(option_idx)
-
-    def lastOptionIdx(self):
-        return self.count()
+    # def selectByIdx(self, option_idx: int):
+    #     self.setCurrentIndex(option_idx)
+    #     self.onSelectionIdxChange(option_idx)
+    #
+    # def lastOptionIdx(self):
+    #     return self.count()
 
     @property
     def _menu_cfg_idx_offset(self):
@@ -221,18 +263,28 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             return 1
         return 0
 
-    def getConfigInfoByMenuIdx(self, menu_idx):
+    def getConfigInfoByMenuIdx(self, menu_idx: int) -> Optional[ConfigFileInfo]:
+        """Return `ConfigFileInfo` for menu item index."""
         cfg_idx = menu_idx - self._menu_cfg_idx_offset
         return self._cfg_list[cfg_idx] if 0 <= cfg_idx < len(self._cfg_list) else None
 
     def getSelectedConfigInfo(self) -> Optional[ConfigFileInfo]:
+        """
+        Return currently selected `ConfigFileInfo` (if any, None otherwise).
+        """
         current_idx = self.currentIndex()
         return self.getConfigInfoByMenuIdx(current_idx)
 
-    def onSelectionIdxChange(self, menu_idx):
+    def onSelectionIdxChange(self, menu_idx: int):
+        """
+        Handler for when user selects a menu item.
+
+        Either allows selection of config using file browser, or emits
+        `onConfigSelection` signal for selected config.
+        """
         if self.value() == self.SELECT_FILE_OPTION:
             cfg_info = self.doFileSelection()
-            self.addFileSelectionToMenu(cfg_info)
+            self._add_file_selection_to_menu(cfg_info)
 
         elif menu_idx >= self._menu_cfg_idx_offset:
             cfg_info = self.getConfigInfoByMenuIdx(menu_idx)
@@ -248,7 +300,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             self.onSelectionIdxChange(menu_idx=0)
 
     def doFileSelection(self):
-        """Allow user to add training profile for given model type."""
+        """Shows file browser to add training profile for given model type."""
         filename, _ = FileDialog.open(
             None,
             dir=None,
@@ -261,7 +313,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
         return self._cfg_getter.try_loading_path(filename)
 
-    def addFileSelectionToMenu(self, cfg_info: Optional[ConfigFileInfo] = None):
+    def _add_file_selection_to_menu(self, cfg_info: Optional[ConfigFileInfo] = None):
         if cfg_info:
             # We were able to load config from selected file,
             # so add to options and select it.
@@ -286,6 +338,17 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
 @attr.s(auto_attribs=True)
 class TrainingConfigsGetter:
+    """
+    Searches for and loads :py:class:`TrainingJobConfig` files.
+
+    Attributes:
+        dir_paths: List of paths in which to search for
+            :py:class:`TrainingJobConfig` files.
+        head_filter: Name of head type to use when filtering,
+            e.g., "centered_instance".
+        search_depth: How many subdirectories deep to search for config files.
+    """
+
     dir_paths: List[Text]
     head_filter: Optional[Text] = None
     search_depth: int = 1
@@ -295,6 +358,7 @@ class TrainingConfigsGetter:
         self._configs = self.find_configs()
 
     def update(self):
+        """Re-searches paths and loads any previously unloaded config files."""
         if len(self._configs) == 0:
             self._configs = self.find_configs()
         else:
@@ -304,7 +368,8 @@ class TrainingConfigsGetter:
             ]
             self._configs = new_cfgs + self._configs
 
-    def find_configs(self):
+    def find_configs(self) -> List[ConfigFileInfo]:
+        """Load configs from all saved paths."""
         configs = []
         for dir in self.dir_paths:
             if os.path.exists(dir):
@@ -316,6 +381,7 @@ class TrainingConfigsGetter:
     def get_filtered_configs(
         self, head_filter: Text = "", only_trained: bool = False
     ) -> List[ConfigFileInfo]:
+        """Returns filtered subset of loaded configs."""
 
         cfgs_to_return = []
         paths_included = []
@@ -343,17 +409,21 @@ class TrainingConfigsGetter:
         return cfgs_to_return
 
     def get_first(self) -> Optional[ConfigFileInfo]:
+        """Get first loaded config."""
         if self._configs:
             return self._configs[0]
         return None
 
     def insert_first(self, cfg_info: ConfigFileInfo):
+        """Insert config at beginning of list."""
         self._configs.insert(0, cfg_info)
 
     def insert_last(self, cfg_info: ConfigFileInfo):
+        """Insert config at end of list."""
         self._configs.append(cfg_info)
 
-    def try_loading_path(self, path: Text):
+    def try_loading_path(self, path: Text) -> Optional[ConfigFileInfo]:
+        """Attempts to load config file and wrap in `ConfigFileInfo` object."""
         try:
             cfg = TrainingJobConfig.load_json(path)
         except Exception as e:
@@ -374,7 +444,8 @@ class TrainingConfigsGetter:
 
         return None
 
-    def find_configs_in_dir(self, dir: Text, depth: int = 1):
+    def find_configs_in_dir(self, dir: Text, depth: int = 1) -> List[ConfigFileInfo]:
+        """Loads configs in specified directory."""
         # Find all json files in dir and subdirs to specified depth
         json_files = sleap_utils.find_files_by_suffix(dir, ".json", depth=depth)
 
@@ -395,7 +466,10 @@ class TrainingConfigsGetter:
     @classmethod
     def make_from_labels_filename(
         cls, labels_filename: Text, head_filter: Optional[Text] = None
-    ):
+    ) -> "TrainingConfigsGetter":
+        """
+        Makes object which checks for models in default subdir for dataset.
+        """
         dir_paths = []
         if labels_filename:
             labels_model_dir = os.path.join(os.path.dirname(labels_filename), "models")

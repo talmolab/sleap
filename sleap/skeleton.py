@@ -145,6 +145,22 @@ class Skeleton:
         return True
 
     @property
+    def is_arborescence(self) -> bool:
+        return nx.algorithms.tree.recognition.is_arborescence(self._graph)
+
+    @property
+    def in_degree_over_one(self) -> List[Node]:
+        return [node for node, in_degree in self._graph.in_degree if in_degree > 1]
+
+    @property
+    def root_nodes(self) -> List[Node]:
+        return [node for node, in_degree in self._graph.in_degree if in_degree == 0]
+
+    @property
+    def cycles(self) -> List[List[Node]]:
+        return list(nx.algorithms.simple_cycles(self._graph))
+
+    @property
     def graph(self):
         """Returns subgraph of BODY edges for skeleton."""
         edges = [
@@ -335,8 +351,8 @@ class Skeleton:
         """
 
         return [
-        (self.nodes.index(src_node), self.nodes.index(dst_node))
-        for src_node, dst_node in self.edges
+            (self.nodes.index(src_node), self.nodes.index(dst_node))
+            for src_node, dst_node in self.edges
         ]
 
     @property
@@ -873,7 +889,9 @@ class Skeleton:
         return Skeleton.from_json(json.dumps(d), node_to_idx)
 
     @classmethod
-    def from_names_and_edge_inds(cls, node_names: List[Text], edge_inds: List[Tuple[int, int]] = None) -> "Skeleton":
+    def from_names_and_edge_inds(
+        cls, node_names: List[Text], edge_inds: List[Tuple[int, int]] = None
+    ) -> "Skeleton":
         """Create skeleton from a list of node names and edge indices.
 
         Args:

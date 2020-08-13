@@ -1,10 +1,15 @@
+"""
+Dialogs for running training and/or inference in GUI.
+"""
 import cattr
 import os
+
+import networkx as nx
 
 from sleap import Labels, Video
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
-from sleap.gui.learning import runners, utils, configs, datagen, receptivefield
+from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
 
 from typing import Dict, List, Optional, Text
 
@@ -23,6 +28,24 @@ NODE_LIST_FIELDS = [
 
 
 class LearningDialog(QtWidgets.QDialog):
+    """
+    Dialog for running training and/or inference.
+
+    The dialog shows tabs for configuring the pipeline (
+    :py:class:`TrainingPipelineWidget`) and, depending on the pipeline, for
+    each specific model (:py:class:`TrainingEditorWidget`).
+
+    In training mode, the model hyperpameters are editable unless you're using
+    a trained model; they are read-only in inference mode.
+
+    Arguments:
+        mode: either "training" or "inference".
+        labels_filename: path to labels file, used for default location to
+            save models.
+        labels: the `Labels` object (can also be loaded from given filename)
+        skeleton: the `Skeleton` object (can also be taken from `Labels`), used
+            for list of nodes for (e.g.) selecting anchor node
+    """
 
     learningFinished = QtCore.Signal(int)
 
@@ -89,9 +112,12 @@ class LearningDialog(QtWidgets.QDialog):
         self.tab_widget.addTab(self.pipeline_form_widget, tab_label)
         self.make_tabs()
 
+        self.message_widget = QtWidgets.QLabel("")
+
         # Layout for entire dialog
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.tab_widget)
+        layout.addWidget(self.message_widget)
         layout.addWidget(buttons_layout_widget)
 
         self.setLayout(layout)
@@ -384,7 +410,9 @@ class LearningDialog(QtWidgets.QDialog):
                     pipeline_data=pipeline_form_data,
                 )
 
-                cfg = utils.make_training_config_from_key_val_dict(tab_cfg_key_val_dict)
+                cfg = scopedkeydict.make_training_config_from_key_val_dict(
+                    tab_cfg_key_val_dict
+                )
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
                 cfg_info_list.append(cfg_info)
@@ -452,15 +480,53 @@ class LearningDialog(QtWidgets.QDialog):
 
     def _validate_pipeline(self):
         can_run = True
+        message = ""
 
         if self.mode == "inference":
-            # Make sure we have trained models for each required head
-            for tab_name in self.shown_tab_names:
-                tab = self.tabs[tab_name]
-                if not tab.has_trained_config_selected:
-                    can_run = False
-                    break
+            # Make sure we have trained models for each required head.
+            untrained = [
+                tab_name
+                for tab_name in self.shown_tab_names
+                if not self.tabs[tab_name].has_trained_config_selected
+            ]
+            if untrained:
+                can_run = False
+                message = f"Cannot run inference with untrained models ({', '.join(untrained)})."
 
+        # Make sure skeleton will be valid for bottom-up inference.
+        if self.mode == "training" and self.current_pipeline == "bottom-up":
+            skeleton = self.labels.skeletons[0]
+
+            if not skeleton.is_arborescence:
+                message += "Cannot run bottom-up pipeline when skeleton is not an arborescence."
+
+                root_names = [n.name for n in skeleton.root_nodes]
+                over_max_in_degree = [n.name for n in skeleton.in_degree_over_one]
+                cycles = skeleton.cycles
+
+                if len(root_names) > 1:
+                    message += f" There are multiple root nodes: {', '.join(root_names)} (there should be exactly one node which is not a target)."
+
+                if over_max_in_degree:
+                    message += f" There are nodes which are target in multiple edges: {', '.join(over_max_in_degree)} (maximum in-degree should be 1).</li>"
+
+                if cycles:
+                    cycle_strings = []
+                    for cycle in cycles:
+                        cycle_strings.append(
+                            " &ndash;&gt; ".join((node.name for node in cycle))
+                        )
+
+                    message += (
+                        f" There are cycles in graph: {'; '.join(cycle_strings)}."
+                    )
+
+                can_run = False
+
+        if not can_run and message:
+            message = f"<b>Unable to run:</b><br />{message}"
+
+        self.message_widget.setText(message)
         self.run_button.setEnabled(can_run)
 
     def view_datagen(self):
@@ -531,6 +597,10 @@ class LearningDialog(QtWidgets.QDialog):
 
 
 class TrainingPipelineWidget(QtWidgets.QWidget):
+    """
+    Widget used in :py:class:`LearningDialog` for configuring pipeline.
+    """
+
     updatePipeline = QtCore.Signal(str)
     valueChanged = QtCore.Signal()
 
@@ -564,6 +634,9 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     @property
     def buttons(self):
         return self.form_widget.buttons
+
+    def set_message(self, message: Text):
+        self.form_widget.set_message()
 
     def get_form_data(self):
         return self.form_widget.get_form_data()
@@ -603,16 +676,19 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
 class TrainingEditorWidget(QtWidgets.QWidget):
     """
-    Dialog for viewing and modifying training profiles.
+    Dialog for viewing and modifying training profiles (model hyperparameters).
 
     Args:
-        video: Video to use for receptive field preview
-        skeleton: Skeleton to use for node option list
+        video: `Video` to use for receptive field preview
+        skeleton: `Skeleton` to use for node option list
         head: If given, then only show configs with specified head name
         cfg_getter: Object to use for getting list of config files.
-            If given, then menu of config files will be shown.
+            If given, then menu of config files will be shown so user can
+            either copy hyperameters from another profile/model, or use a model
+            that was already trained.
         require_trained: If True, then only show configs that are trained,
-            and don't allow user to uncheck "use trained" setting.
+            and don't allow user to uncheck "use trained" setting. This is set
+            when :py:class:`LearningDialog` is in "inference" mode.
     """
 
     valueChanged = QtCore.Signal()
@@ -758,7 +834,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     def update_receptive_field(self):
         data_form_data = self.form_widgets["data"].get_form_data()
-        model_cfg = utils.make_model_config_from_key_val_dict(
+        model_cfg = scopedkeydict.make_model_config_from_key_val_dict(
             key_val_dict=self.form_widgets["model"].get_form_data()
         )
 
@@ -783,7 +859,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         cfg = cfg_info.config
         cfg_dict = cattr.unstructure(cfg)
-        key_val_dict = utils.ScopedKeyDict.from_hierarchical_dict(cfg_dict).key_val_dict
+        key_val_dict = scopedkeydict.ScopedKeyDict.from_hierarchical_dict(
+            cfg_dict
+        ).key_val_dict
         self.set_fields_from_key_val_dict(key_val_dict)
 
     # def _set_user_config(self):

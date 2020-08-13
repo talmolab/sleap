@@ -3,6 +3,16 @@ import yaml
 from sleap.gui.dialogs import formbuilder
 
 
+def test_formbuilder_dialog(qtbot):
+    dialog = formbuilder.FormBuilderModalDialog(form_name="labeled_clip_form")
+
+    dialog.set_message("foo")
+    assert dialog.message_fields[0].text() == "foo"
+
+    dialog.set_message("bar")
+    assert dialog.message_fields[0].text() == "bar"
+
+
 def test_formbuilder(qtbot):
     form_yaml = """
 - name: method

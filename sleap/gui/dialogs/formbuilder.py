@@ -1,7 +1,12 @@
 """
-Module for creating a form from a yaml file.
+Widgets and dialogues for YAML-based forms.
 
-Example:
+Most of the time you can use :py:class:`YamlFormWidget`. If you want to show
+the widget as a model dialog, :py:class:`FormBuilderModalDialog` makes this
+a little more convenient (it provides methods for adding a message for the
+dialog and for getting the results when the dialog is closed).
+
+Example of form widget:
 
 >>> widget = YamlFormWidget(yaml_file="example.yaml")
 >>> widget.mainAction.connect(my_function)
@@ -9,6 +14,12 @@ Example:
 my_function will get called with form data when user clicks the main button
 (main button has type "button" and default "main action")
 
+Example of modal dialog:
+
+>>> results = FormBuilderModalDialog(form_name="example").get_results()
+
+The results will be empty dictionary if the user hit "cancel", otherwise it
+will contain all data from form (dict keys matching names of fields).
 """
 
 import yaml
@@ -23,11 +34,18 @@ from sleap.util import get_package_file
 
 class YamlFormWidget(QtWidgets.QGroupBox):
     """
-    Custom QWidget which creates form based on yaml file.
+    Widget which shows form created from a YAML file.
+
+    Typically you'll want to save the YAML in `sleap/config/` and use the
+    :py:meth:`from_name` method to make the form (e.g., if your form data is in
+    `sleap/config/foo.yaml`, then you can create form like so:
+
+    >>> widget = YamlFormWidget.from_name("foo")
 
     Args:
-        yaml_file: filename
-        which_form (optional): key to form in yaml file, default "main"
+        yaml_file: filename of YAML file to load.
+        which_form (optional): key to form in YAML file, default is "main".
+            this allows a single YAML file to contain data for multiple forms.
     """
 
     mainAction = QtCore.Signal(dict)
@@ -35,7 +53,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
 
     def __init__(
         self,
-        yaml_file,
+        yaml_file: Text,
         which_form: Text = "main",
         field_options_lists: Optional[Dict[Text, list]] = None,
         *args,
@@ -76,11 +94,11 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         """
         Instantiate class from the short name of form (e.g., "suggestions").
 
-        Short name is converted to path to yaml file, and then class is
-        instantiated using this path.
+        Short name is converted to path to YAML file in `sleap/config/`,
+        and then class is instantiated using this path.
 
         Args:
-            form_name: Short name of form, corresponds to name of yaml file.
+            form_name: Short name of form, corresponds to name of YAML file.
             args: Positional args passed to class initializer.
             kwargs: Named args passed to class initializer.
 
@@ -124,7 +142,13 @@ class YamlFormWidget(QtWidgets.QGroupBox):
 
 
 class FormBuilderModalDialog(QtWidgets.QDialog):
-    """Blocking modal dialog wrapper for YamlFormWidget widget."""
+    """
+    Blocking modal dialog to use with :py:class:`YamlFormWidget` widget.
+
+    You can either initialize with a :py:class:`YamlFormWidget` widget, or
+    provide the name of the YAML form (i.e., the string you'd pass to
+    :py:meth:`YamlFormWidget.from_name()`).
+    """
 
     def __init__(
         self,
@@ -145,6 +169,7 @@ class FormBuilderModalDialog(QtWidgets.QDialog):
 
         self._results = None
         self.form_widget = form_widget
+        self.message_fields = []
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
@@ -168,18 +193,27 @@ class FormBuilderModalDialog(QtWidgets.QDialog):
         buttons.accepted.connect(self.on_accept)
         buttons.rejected.connect(self.reject)
 
-    def add_message(self, message):
+    def add_message(self, message: Text):
         """Adds text message between form fields and buttons."""
         field = QtWidgets.QLabel(message)
         field.setWordWrap(True)
 
+        self.message_fields.append(field)
+
         self.layout().insertWidget(1, field)
+
+    def set_message(self, message: Text):
+        """Adds/replaces text message between form fields and buttons."""
+        if self.message_fields:
+            self.message_fields[0].setText(message)
+        else:
+            self.add_message(message)
 
     def on_accept(self):
         self._results = self.form_widget.get_form_data()
         self.accept()
 
-    def get_results(self):
+    def get_results(self) -> Optional[Dict[Text, Any]]:
         """Shows dialog, blocks till submitted, returns dict of form data."""
         self._results = None
         self.exec_()
@@ -188,16 +222,30 @@ class FormBuilderModalDialog(QtWidgets.QDialog):
 
 class FormBuilderLayout(QtWidgets.QFormLayout):
     """
-    Custom QFormLayout which populates itself from list of form fields.
+    Custom `QFormLayout` which populates itself from list of form fields.
 
     Args:
-        items_to_create: list which gets passed to :meth:`get_form_data`
-                         (see there for details about format)
+        items_to_create: list of form items, each item in list is a dictionary
+            with information about item. see :py::meth:`build_form` for details
+            about the keys/values. typically this list comes straight from a
+            YAML file.
+        field_options_lists: allows you to set list of options to use for "list"
+            fields (i.e., :py:class:`FieldComboWidget` or
+            :py:class:`TextOrListWidget` widgets)
+            when creating the form programmatically, instead of having options
+            as "options" key of dictionary (which typically would be hard-coded
+            in YAML).
     """
 
     valueChanged = QtCore.Signal()
 
-    def __init__(self, items_to_create, field_options_lists=None, *args, **kwargs):
+    def __init__(
+        self,
+        items_to_create: List[Dict[Text, Any]],
+        field_options_lists: Optional[Dict[Text, List[Text]]] = None,
+        *args,
+        **kwargs,
+    ):
         super(FormBuilderLayout, self).__init__(*args, **kwargs)
 
         self.form_text_widget = None
@@ -209,6 +257,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
     @property
     def stacked(self) -> list:
+        """List of all "stack" widgets in form."""
         return [w for w in self.fields.values() if type(w) == StackBuilderWidget]
 
     def setEnabled(self, enabled: bool):
@@ -237,7 +286,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             data.update(stack)
         return data
 
-    def set_form_data(self, data: dict):
+    def set_form_data(self, data: Dict[Text, Any]):
         """Set specified user-editable data.
 
         Args:
@@ -547,14 +596,16 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
 
 class StackBuilderWidget(QtWidgets.QWidget):
     """
-    A custom widget that shows different subforms depending on menu selection.
+    Widget that shows different subforms depending on menu selection.
 
-    Args:
+    Arguments:
         stack_data: Dictionary for field from `items_to_create`.
             The "options" key will give the list of options to show in
             menu. Each of the "options" will also be the key of a dictionary
             within stack_data that has the same structure as the dictionary
-            passed to :meth:`FormBuilderLayout.build_form()`.
+            passed to :py:meth:`FormBuilderLayout.build_form()`.
+        field_options_list: passed to stacked forms, see
+            :py:class:`FormBuilderLayout` for details.
     """
 
     valueChanged = QtCore.Signal()
@@ -651,6 +702,17 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
 
 class OptionalSpinWidget(QtWidgets.QWidget):
+    """
+    Numeric (spin) widget with checkbox to disable.
+
+    Arguments:
+        type: can be "int" or "double".
+        none_string: value to use when numeric entry is disabled; i.e., widget
+            returns this as value if checkbox is set, and setting value to this
+            will make the checkbox checked.
+        note_label: text to show next to checkbox; defaults to none_string (in
+            title case).
+    """
 
     valueChanged = QtCore.Signal()
 
@@ -728,9 +790,9 @@ class OptionalSpinWidget(QtWidgets.QWidget):
 
 class FieldComboWidget(QtWidgets.QComboBox):
     """
-    A custom ComboBox widget with method to easily add set of options.
+    Custom ComboBox-style widget with method to easily add set of options.
 
-    Args:
+    Arguments:
         result_as_idx: If True, then set/get for value will use idx of option
             rather than string.
         add_blank_option: If True, then blank ("") option will be added at
@@ -793,6 +855,15 @@ class FieldComboWidget(QtWidgets.QComboBox):
 
 
 class StringListWidget(QtWidgets.QLineEdit):
+    """
+    Free-form text field which converts value to/from list.
+
+    Arguments:
+        delim: the list delimiter to use; note that list values won't be
+            trimmed, so "," and "item a, item b" will result in
+            ["item a", " item b"].
+    """
+
     def __init__(self, delim=" ", *args, **kwargs):
         super(StringListWidget, self).__init__(*args, **kwargs)
         self.delim = delim
@@ -808,6 +879,22 @@ class StringListWidget(QtWidgets.QLineEdit):
 
 
 class TextOrListWidget(QtWidgets.QWidget):
+    """
+    Widget with free-form text field or drop-down menu.
+
+    The "text" or "list" mode can be set using `setMode` method.
+
+    This widget is useful when we want a drop-down menu but need to fall back
+    to a text field when (e.g.) the current value isn't in list.
+
+    Arguments:
+        result_as_idx: If True, then set/get for value will use idx of option
+            rather than string.
+        add_blank_option: If True, then blank ("") option will be added at
+            beginning of list (which will return "" as val instead of idx if
+            result_as_idx is True).
+    """
+
     valueChanged = QtCore.Signal()
 
     def __init__(self, result_as_idx=False, add_blank_option=False, *args, **kwargs):

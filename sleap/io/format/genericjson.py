@@ -1,3 +1,9 @@
+"""
+Adaptor for reading and writing any generic JSON file.
+
+This is a good example of a very simple adaptor class.
+"""
+
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 

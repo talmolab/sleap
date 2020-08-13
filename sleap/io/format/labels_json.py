@@ -1,3 +1,11 @@
+"""
+Adaptor for reading/writing old, JSON dataset format (kind of deprecated).
+
+This supports reading and writing both `.json` and `.json.zip`. The zip allows
+you to include image files, in imgstore videos. A better option now is to save
+a single HDF5 file which include both the SLEAP dataset (i.e., `Labels`) and
+also the videos/frames as HDF5 datasets.
+"""
 import atexit
 import os
 import re
