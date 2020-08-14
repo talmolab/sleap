@@ -167,6 +167,7 @@ class LabelsReader:
                 [ind],
                 [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
             )
+            image = tf.ensure_shape(image, test_image.shape)
             instances = tf.ensure_shape(instances, tf.TensorShape([None, None, 2]))
             skeleton_inds = tf.ensure_shape(skeleton_inds, tf.TensorShape([None]))
 
@@ -279,7 +280,7 @@ class VideoReader:
                     grid in order to properly map points to image coordinates.
         """
         # Grab an image to test for the dtype.
-        test_image = tf.convert_to_tensor(self.video.test_frame)
+        test_image = tf.convert_to_tensor(self.video.get_frame(0))
         image_dtype = test_image.dtype
 
         def py_fetch_frame(ind):
@@ -295,6 +296,7 @@ class VideoReader:
             image, raw_image_size, frame_ind = tf.py_function(
                 py_fetch_frame, [ind], [image_dtype, tf.int32, tf.int64]
             )
+            image = tf.ensure_shape(image, test_image.shape)
 
             return {
                 "image": image,
