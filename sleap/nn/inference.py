@@ -528,14 +528,25 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
         dists = a - b  # (batch_size, n_centroids, n_insts, n_nodes, 2)
         dists = tf.sqrt(tf.reduce_sum(dists ** 2, axis=-1))  # reduce over xy
         dists = tf.reduce_min(dists, axis=-1)  # reduce over nodes
+        dists = dists.to_tensor(
+            tf.cast(np.NaN, tf.float32)
+        )  # (batch_size, n_centroids, n_insts)
 
-        # Match detected centroids to instances greedily to the closest node.
-        # TODO: Do something when there's no match?
-        matches = tf.argmin(
-            dists.to_tensor(tf.cast(np.NaN, tf.float32)), axis=2
-        )  # (batch_size, n_centroids)
-        instance_peaks = tf.gather(
-            example_gt["instances"], matches, batch_dims=1
+        # Find nearest GT instance to each centroid.
+        matches = tf.argmin(dists, axis=2)  # (batch_size, n_centroids)
+
+        # Argmin will return indices for NaNs as well, so we must filter the matches.
+        subs = tf.where(~tf.reduce_all(tf.math.is_nan(dists), axis=2))
+        valid_matches = tf.gather_nd(matches, subs)
+        match_sample_inds = tf.gather(subs, 0, axis=1)
+
+        # Get the matched instances.
+        instance_peaks = tf.gather_nd(
+            example_gt["instances"],
+            tf.stack([match_sample_inds, valid_matches], axis=1),
+        )
+        instance_peaks = tf.RaggedTensor.from_value_rowids(
+            instance_peaks, match_sample_inds
         )  # (batch_size, n_centroids, n_nodes, 2)
 
         # Set all peak values to 1.

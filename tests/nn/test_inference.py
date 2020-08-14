@@ -91,6 +91,11 @@ def test_instance_peaks_gt_layer(test_labels, test_pipeline):
     assert tuple(out["instance_peaks"].shape) == (4, None, None, 2)
     assert tuple(out["instance_peak_vals"].shape) == (4, None, None)
 
+    assert out["centroids"][0].shape == (1, 2)
+    assert out["centroids"][1].shape == (1, 2)
+    assert out["centroids"][2].shape == (1, 2)
+    assert out["centroids"][3].shape == (2, 2)
+
     assert tuple(out["centroids"].bounding_shape()) == (4, 2, 2)
     assert tuple(out["centroid_vals"].bounding_shape()) == (4, 2)
     assert tuple(out["instance_peaks"].bounding_shape()) == (4, 2, 2, 2)
