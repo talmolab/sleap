@@ -44,7 +44,7 @@ from sleap.nn.data.inference import (
     PredictedCenterInstanceNormalizer,
 )
 from sleap.nn.paf_grouping import PartAffinityFieldInstanceGrouper
-from sleap.nn.data.utils import ensure_list
+from sleap.nn.data.utils import ensure_list, describe_tensors
 
 from sleap.nn.config import DataConfig, OptimizationConfig
 from sleap.nn.heads import (
@@ -307,20 +307,7 @@ class Pipeline:
             String description if `return_description` is `True`, otherwise `None`.
         """
         ex = self.peek()
-        desc = []
-        key_length = max(len(k) for k in ex.keys())
-        for key, val in ex.items():
-            desc.append(
-                f"{key.rjust(key_length)}: type={type(val).__name__}, "
-                f"shape={val.shape}, "
-                f"dtype={repr(val.dtype)}, "
-                f"device={val.device}"
-            )
-        desc = "\n".join(desc)
-        if return_description:
-            return desc
-        else:
-            print(desc)
+        return describe_tensors(ex, return_description=return_description)
 
 
 @attr.s(auto_attribs=True)

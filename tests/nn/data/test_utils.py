@@ -55,3 +55,20 @@ def test_gaussian_pdf():
     assert utils.gaussian_pdf(0, sigma=1) == 1.0
     assert utils.gaussian_pdf(1, sigma=1) == 0.6065306597126334
     assert utils.gaussian_pdf(1, sigma=2) == 0.8824969025845955
+
+
+def test_describe_tensors():
+    desc = utils.describe_tensors(
+        dict(
+            tens=tf.ones((1, 2), dtype=tf.uint8),
+            rag=tf.ragged.stack([tf.ones((3,)), tf.ones((4,))], axis=0),
+            np=np.array([1, 2])
+        ), return_description=True,
+    )
+    assert desc == "\n".join([
+        "tens: type=EagerTensor, shape=(1, 2), dtype=tf.uint8, "
+        "device=/job:localhost/replica:0/task:0/device:CPU:0",
+        " rag: type=RaggedTensor, shape=(2, None), dtype=tf.float32, device=N/A",
+        "  np: type=ndarray, shape=(2,), dtype=int32, device=N/A",
+        ])
+

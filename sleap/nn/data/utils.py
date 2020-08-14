@@ -1,7 +1,8 @@
 """Miscellaneous utility functions for data processing."""
 
 import tensorflow as tf
-from typing import Any, List, Tuple
+import numpy as np
+from typing import Any, List, Tuple, Dict, Text, Optional
 
 
 def ensure_list(x: Any) -> List[Any]:
@@ -80,3 +81,34 @@ def gaussian_pdf(x: tf.Tensor, sigma: float) -> tf.Tensor:
         Gaussian distribution. Values of 0 have an unnormalized PDF value of 1.0.
     """
     return tf.exp(-(tf.square(x)) / (2 * tf.square(sigma)))
+
+
+def describe_tensors(
+    example: Dict[Text, tf.Tensor], return_description: bool = False
+) -> Optional[str]:
+    """Print the keys in a example.
+
+    Args:
+        example: Dictionary keyed by strings with tensors as values.
+        return_description: If `True`, returns the string description instead of
+            printing it.
+
+    Returns:
+        String description if `return_description` is `True`, otherwise `None`.
+    """
+    desc = []
+    key_length = max(len(k) for k in example.keys())
+    for key, val in example.items():
+        dtype = str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
+        desc.append(
+            f"{key.rjust(key_length)}: type={type(val).__name__}, "
+            f"shape={val.shape}, "
+            f"dtype={dtype}, "
+            f"device={val.device if hasattr(val, 'device') else 'N/A'}"
+        )
+    desc = "\n".join(desc)
+
+    if return_description:
+        return desc
+    else:
+        print(desc)
