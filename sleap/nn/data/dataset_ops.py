@@ -5,7 +5,7 @@ These are mostly wrappers for standard tf.data.Dataset ops.
 
 import numpy as np
 import tensorflow as tf
-from sleap.nn.data.utils import expand_to_rank
+from sleap.nn.data.utils import expand_to_rank, unrag_example
 import attr
 from typing import List, Text, Optional, Any, Callable, Dict
 
@@ -91,10 +91,15 @@ class Batcher:
         drop_remainder: If True, final elements with fewer than `batch_size` examples
             will be dropped once the end of the input dataset iteration is reached. This
             should be True for training and False for inference.
+        unrag: If False, any tensors that were of variable length will be left as
+            `tf.RaggedTensor`s. If True, the tensors will be converted to full tensors
+            with NaN padding. Leaving tensors as ragged is useful when downstream ops
+            will continue to use them in variable length form.
     """
 
     batch_size: int = 8
     drop_remainder: bool = False
+    unrag: bool = True
 
     @property
     def input_keys(self) -> List[Text]:
@@ -132,15 +137,6 @@ class Batcher:
                 example[key] = expand_to_rank(example[key], target_rank=1, prepend=True)
             return example
 
-        def unrag(example):
-            """Convert all keys back to dense tensors NaN padded."""
-            for key in example:
-                if isinstance(example[key], tf.RaggedTensor):
-                    example[key] = example[key].to_tensor(
-                        default_value=tf.cast(np.nan, example[key].dtype)
-                    )
-            return example
-
         # Ensure that all keys have a rank of at least 1 (i.e., scalars).
         ds_output = ds_input.map(
             expand, num_parallel_calls=tf.data.experimental.AUTOTUNE
@@ -153,10 +149,11 @@ class Batcher:
             )
         )
 
-        # Convert elements back into dense tensors with padding.
-        ds_output = ds_output.map(
-            unrag, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
+        if self.unrag:
+            # Convert elements back into dense tensors with padding.
+            ds_output = ds_output.map(
+                unrag_example, num_parallel_calls=tf.data.experimental.AUTOTUNE
+            )
 
         return ds_output
 

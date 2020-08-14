@@ -112,3 +112,56 @@ def describe_tensors(
         return desc
     else:
         print(desc)
+
+
+def unrag_example(example: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
+    """Convert ragged tensors in an example into normal tensors with NaN padding.
+
+    Args:
+        example: Dictionary keyed by strings with tensors as values.
+
+    Returns:
+        The same dictionary, but values of type `tf.RaggedTensor` will be converted to
+        tensors of type `tf.Tensor` with NaN padding if the ragged dimensions are of
+        variable length.
+
+        The output shapes will be the bounding shape of the ragged tensors.
+    """
+    for key in example:
+        if isinstance(example[key], tf.RaggedTensor):
+            example[key] = example[key].to_tensor(
+                default_value=tf.cast(np.nan, example[key].dtype)
+            )
+    return example
+
+
+def unrag_tensor(x: tf.RaggedTensor, max_size: int, axis: int) -> tf.Tensor:
+    """Converts a ragged tensor to a full tensor by padding to a maximum size.
+
+    This function is useful for converting ragged tensors to a fixed size when one or
+    more of the dimensions are of variable length.
+
+    Args:
+        x: Ragged tensor to convert.
+        max_size: Maximum size of the axis to pad.
+        axis: Axis of `x` to pad to `max_size`. This must specify ragged dimensions.
+            If more than one axis is specified, `max_size` must be of the same length as
+            `axis`.
+
+    Returns:
+        A padded version of `x`. Padding will use the equivalent of NaNs in the tensor's
+        native dtype.
+
+        This will replace the shape of the specified `axis` with `max_size`, leaving the
+        remaining dimensions set to the bounding shape of the ragged tensor.
+    """
+    axis = tf.cast(axis, tf.int64)
+    axis = axis % len(x.shape)  # Handle negative indices.
+    axis = tf.reshape(axis, [-1, 1])  # Ensure (n, 1) shape for indexing.
+    max_size = tf.cast(max_size, tf.int64)
+    max_size = tf.reshape(max_size, [-1])  # Ensure (n,) shape for indexing.
+    shape = tf.tensor_scatter_nd_update(x.bounding_shape(), axis, max_size)
+    return x.to_tensor(
+        default_value=tf.cast(np.NaN, x.dtype),
+        shape=shape
+    )

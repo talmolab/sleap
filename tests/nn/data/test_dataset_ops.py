@@ -35,6 +35,15 @@ def test_batcher():
     assert examples_batched[0]["a"].shape == (2, 3, 2)
     assert np.isnan(examples_batched[0]["a"][0, 2, :]).all()
 
+    # Ragged batch without unragging
+    ds = tf.data.Dataset.range(2)
+    ds = ds.map(lambda i: {"a": tf.ones([2 + i, 2], tf.float32)})
+    ds_batched = dataset_ops.Batcher(batch_size=2, unrag=False).transform_dataset(ds)
+    examples_batched = list(ds_batched)
+    assert isinstance(examples_batched[0]["a"], tf.RaggedTensor)
+    assert tuple(examples_batched[0]["a"].shape) == (2, None, 2)
+    assert (examples_batched[0]["a"].bounding_shape() == (2, 3, 2)).numpy().all()
+
 
 def test_preloader():
     preloader = dataset_ops.Preloader()

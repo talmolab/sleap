@@ -70,5 +70,38 @@ def test_describe_tensors():
         "device=/job:localhost/replica:0/task:0/device:CPU:0",
         " rag: type=RaggedTensor, shape=(2, None), dtype=tf.float32, device=N/A",
         "  np: type=ndarray, shape=(2,), dtype=int32, device=N/A",
-        ])
+    ])
 
+
+def test_unrag_example():
+    ex = {
+        "not_ragged": tf.ones([1, 2]),
+        "ragged_float": tf.ragged.stack([
+            tf.ones([2], dtype=tf.float32),
+            tf.ones([1], dtype=tf.float32)], axis=0),
+        "ragged_int": tf.ragged.stack([
+            tf.ones([2], dtype=tf.uint8),
+            tf.ones([1], dtype=tf.uint8)], axis=0)
+    }
+
+    ex2 = utils.unrag_example(ex)
+
+    assert all(isinstance(v, tf.Tensor) for v in ex2.values())
+    assert (ex2["not_ragged"].numpy() == [[1, 1]]).all()
+    np.testing.assert_array_equal(ex2["ragged_float"], [[1., 1.], [1., np.nan]])
+    assert (ex2["ragged_int"].numpy() == [[1, 1], [1, 0]]).all()
+
+
+def test_unrag_tensor():
+    x = tf.RaggedTensor.from_tensor(tf.ones([3, 4, 5]), lengths=[2, 1, 1])
+    x = utils.unrag_tensor(x, max_size=3, axis=1)
+    assert x.shape == (3, 3, 5)
+    assert (x[0, :2] == 1).numpy().all()
+    assert np.isnan(x[0, 2]).all()
+    assert np.isnan(x[1, 1:]).all()
+    assert np.isnan(x[2, 1:]).all()
+
+    x = tf.ones([3, 3, 2])
+    x = tf.RaggedTensor.from_tensor(x, lengths=([2, 0, 3], [1, 1, 2, 0, 1]))
+    x = utils.unrag_tensor(x, max_size=[5, 4], axis=[1, -1])
+    assert x.shape == (3, 5, 4)
