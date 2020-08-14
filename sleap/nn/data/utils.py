@@ -155,12 +155,13 @@ def unrag_tensor(x: tf.RaggedTensor, max_size: int, axis: int) -> tf.Tensor:
         This will replace the shape of the specified `axis` with `max_size`, leaving the
         remaining dimensions set to the bounding shape of the ragged tensor.
     """
+    bounding_shape = x.bounding_shape()
     axis = tf.cast(axis, tf.int64)
     axis = axis % len(x.shape)  # Handle negative indices.
     axis = tf.reshape(axis, [-1, 1])  # Ensure (n, 1) shape for indexing.
-    max_size = tf.cast(max_size, tf.int64)
+    max_size = tf.cast(max_size, bounding_shape.dtype)
     max_size = tf.reshape(max_size, [-1])  # Ensure (n,) shape for indexing.
-    shape = tf.tensor_scatter_nd_update(x.bounding_shape(), axis, max_size)
+    shape = tf.tensor_scatter_nd_update(bounding_shape, axis, max_size)
     return x.to_tensor(
         default_value=tf.cast(np.NaN, x.dtype),
         shape=shape
