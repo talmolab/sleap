@@ -711,17 +711,17 @@ class TopDownModel(tf.keras.Model):
         else:
             peaks_output = self.instance_peaks(crop_output)
 
+        peaks_output["n_valid"] = peaks_output["instance_peaks"].row_lengths()
         if self.max_instances is None:
-            return sleap.nn.data.utils.unrag_example(peaks_output)
+            peaks_output = sleap.nn.data.utils.unrag_example(peaks_output)
 
         else:
-            n_valid = peaks_output["instance_peaks"].row_lengths()
             for k, v in peaks_output.items():
                 peaks_output[k] = sleap.nn.data.utils.unrag_tensor(
                     v, self.max_instances, axis=1
                 )
-            peaks_output["n_valid"] = n_valid
-            return peaks_output
+
+        return peaks_output
 
 
 @attr.s(auto_attribs=True)
@@ -818,7 +818,7 @@ class TopdownPredictor(Predictor):
             )
 
         topdown_model = TopDownModel(
-            centroid_crop=centroid_crop_layer, find_instance_peaks=instance_peaks_layer,
+            centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer,
         )
 
         return cls(
