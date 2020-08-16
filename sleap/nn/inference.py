@@ -711,7 +711,7 @@ class TopDownModel(tf.keras.Model):
         else:
             peaks_output = self.instance_peaks(crop_output)
 
-        peaks_output["n_valid"] = peaks_output["instance_peaks"].row_lengths()
+        n_valid = peaks_output["instance_peaks"].row_lengths()
         if self.max_instances is None:
             peaks_output = sleap.nn.data.utils.unrag_example(peaks_output)
 
@@ -720,7 +720,7 @@ class TopDownModel(tf.keras.Model):
                 peaks_output[k] = sleap.nn.data.utils.unrag_tensor(
                     v, self.max_instances, axis=1
                 )
-
+        peaks_output["n_valid"] = n_valid
         return peaks_output
 
 
