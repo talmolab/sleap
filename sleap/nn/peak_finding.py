@@ -455,6 +455,12 @@ def find_global_peaks_integral(
     rough_peaks, peak_vals = find_global_peaks(
         cms, threshold=threshold
     )  # (samples, channels, 2)
+
+    # Return early if no rough peaks found.
+    if tf.reduce_all(tf.math.is_nan(rough_peaks)):
+        return rough_peaks, peak_vals
+
+    # Flatten samples and channels to (n_peaks, 2).
     rough_peaks = tf.reshape(rough_peaks, [samples * channels, 2])
 
     # Make bounding boxes for cropping around peaks.
@@ -513,6 +519,10 @@ def find_local_peaks_integral(
     rough_peaks, peak_vals, peak_sample_inds, peak_channel_inds = find_local_peaks(
         cms, threshold=threshold
     )
+
+    # Return early if no rough peaks found.
+    if tf.shape(rough_peaks)[0] == 0:
+        return rough_peaks, peak_vals, peak_sample_inds, peak_channel_inds
 
     # Make bounding boxes for cropping around peaks.
     bboxes = make_centered_bboxes(
