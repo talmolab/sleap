@@ -93,10 +93,10 @@ def ensure_grayscale(image: tf.Tensor) -> tf.Tensor:
 
     See also: tf.image.rgb_to_grayscale
     """
-    if tf.shape(image)[-1] == 3:
+    if image.shape[-1] == 3:
         return tf.image.rgb_to_grayscale(image)
-
-    return image
+    else:
+        return image
 
 
 def ensure_rgb(image: tf.Tensor) -> tf.Tensor:
@@ -114,7 +114,7 @@ def ensure_rgb(image: tf.Tensor) -> tf.Tensor:
 
     See also: tf.image.grayscale_to_rgb
     """
-    if tf.shape(image)[-1] == 1:
+    if image.shape[-1] == 1:
         return tf.image.grayscale_to_rgb(image)
     else:
         return image
@@ -343,7 +343,6 @@ class Normalizer:
             A `tf.data.Dataset` with elements containing the same images with
             normalization applied.
         """
-
         def normalize(example):
             """Local processing function for dataset mapping."""
             if self.ensure_float:
