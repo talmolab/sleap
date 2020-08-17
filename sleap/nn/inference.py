@@ -563,50 +563,128 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
 
 
 class FindInstancePeaks(tf.keras.layers.Layer):
+    """Keras layer that predicts instance peaks from images using a trained model.
+
+    This layer encapsulates all of the inference operations requires for generating
+    predictions from a centered instance confidence map model. This includes
+    preprocessing, model forward pass, peak finding and coordinate adjustment.
+
+    Attributes:
+        keras_model: A `tf.keras.Model` that accepts rank-4 images as input and predicts
+            rank-4 confidence maps as output. This should be a model that is trained on
+            centered instance confidence maps.
+        input_scale: Float indicating if the images should be resized before being
+            passed to the model.
+        peak_threshold: Minimum confidence map value to consider a global peak as valid.
+        confmaps_stride: Output stride of the model, denoting the scale of the output
+            confidence maps relative to the images (after input scaling). This is used
+            for adjusting the peak coordinates to the image grid.
+        keep_confmaps: If `True`, the confidence maps will be returned together with the
+            predicted peaks. This will result in slower inference times since the data
+            must be copied off of the GPU, but is useful for visualizing the raw output
+            of the model.
+    """
+
     def __init__(
-        self, peak_threshold, input_scale, keras_model, confmaps_stride,
+        self,
+        keras_model: tf.keras.Model,
+        input_scale: float = 1.0,
+        peak_threshold: float = 0.2,
+        confmaps_stride: int = 1,
+        keep_confmaps: bool = False,
+        **kwargs
     ):
-        super().__init__()
-
-        self.peak_threshold = peak_threshold
-
-        self.input_scale = input_scale
+        super().__init__(**kwargs)
         self.keras_model = keras_model
+        self.input_scale = input_scale
+        self.peak_threshold = peak_threshold
         self.confmaps_stride = confmaps_stride
+        self.keep_confmaps = keep_confmaps
 
-    def call(self, inputs):
+    def call(
+        self, inputs: Union[Dict[str, tf.Tensor], tf.Tensor]
+    ) -> Dict[str, tf.Tensor]:
+        """Predict confidence maps and infer peak coordinates.
 
-        # Unpack inputs.
-        crops = inputs["crops"]
-        crop_offsets = inputs["crop_offsets"]
-        centroids = inputs["centroids"]
-        centroid_vals = inputs["centroid_vals"]
+        This layer can be chained with a `CentroidCrop` layer to create a top-down
+        inference function from full images.
 
-        # Flatten crops into (n_peaks, height, width, channels)
-        crop_sample_inds = crops.value_rowids()
-        samples = crops.nrows()
-        crops = crops.merge_dims(0, 1)
+        Args:
+            inputs: Tensor of shape `(samples, height, width, channels)` of instance-
+                centered images, or a dictionary with keys:
+                `"crops"`: Cropped images in a `tf.RaggedTensor` of shape
+                    `(samples, ?, height, width, channels)` where images are grouped by
+                    sample and may contain a variable number of crops.
+                `"crop_offsets"`: Coordinates of the top-left of the crops as `(x, y)`
+                    offsets of shape `(samples, ?, 2)` for adjusting the predicted peak
+                    coordinates. This is optional and not adjustment is performed if not
+                    provided.
+                `"centroids"`: If provided, will be passed through to the output.
+                `"centroid_vals"`: If provided, will be passed through to the output.
+
+        Returns:
+            A dictionary of outputs with keys:
+
+            `"instance_peaks"`: The predicted peaks for each instance in the batch as a
+                `tf.RaggedTensor` of shape `(samples, ?, nodes, 2)`.
+            `"instance_peak_vals"`: The value of the confidence maps at the predicted
+                peaks for each instance in the batch as a `tf.RaggedTensor` of shape
+                `(samples, ?, nodes)`.
+
+            If provided (e.g., from an input `CentroidCrop` layer), the centroids that
+            generated the crops will also be included in the keys `"centroids"` and
+            `"centroid_vals"`.
+
+            If the `keep_confmaps` attribute is set to `True`, the output will also
+            contain a key named `"instance_confmaps"` containing a `tf.RaggedTensor` of
+            shape `(samples, ?, output_height, output_width, nodes)` containing the
+            confidence maps predicted by the model.
+        """
+        if isinstance(inputs, tf.Tensor):
+            crops = inputs  # (samples, height, width, channels)
+            samples = tf.shape(crops)[0]
+            crop_sample_inds = tf.range(samples, dtype=tf.int32)
+            inputs = {}
+        else:
+            # Unpack inputs.
+            crops = inputs["crops"]  # (samples, ?, height, width, channels)
+
+            # Flatten crops into (n_peaks, height, width, channels)
+            crop_sample_inds = crops.value_rowids()  # (n_peaks,)
+            samples = crops.nrows()
+            crops = crops.merge_dims(0, 1)
 
         # Preprocess.
-        imgs = crops
         if self.input_scale != 1.0:
-            imgs = sleap.nn.data.resizing.resize_image(imgs, self.input_scale)
+            crops = sleap.nn.data.resizing.resize_image(crops, self.input_scale)
 
         # Confidence maps estimation.
-        cms = self.keras_model(imgs)
+        cms = self.keras_model(crops)
+        if isinstance(cms, list):
+            # Take the last output if multi-output model.
+            # TODO: Specify output index explicitly.
+            cms = cms[-1]
 
         # Peak finding
         peak_points, peak_vals = sleap.nn.peak_finding.find_global_peaks_integral(
             cms, threshold=self.peak_threshold
         )
 
-        # Adjust for scale and  offsets.
-        peak_points = (peak_points * self.confmaps_stride) / self.input_scale
-        peak_points = peak_points + tf.expand_dims(
-            crop_offsets.merge_dims(0, 1), axis=1
-        )
+        # Adjust for stride and scale.
+        peak_points = peak_points * self.confmaps_stride
+        if self.input_scale != 1.0:
+            # Note: We add 0.5 here to offset TensorFlow's weird image resizing. This
+            # may not always(?) be the most correct approach.
+            # See: https://github.com/tensorflow/tensorflow/issues/6720
+            peak_points = (peak_points / self.input_scale) + 0.5
 
-        # Pad peaks to full shape (samples, max_instances, nodes, 2).
+        # Adjust for crop offsets if provided.
+        if "crop_offsets" in inputs:
+            # Flatten (samples, ?, 2) -> (n_peaks, 2).
+            crop_offsets = inputs["crop_offsets"].merge_dims(0, 1)
+            peak_points = peak_points + tf.expand_dims(crop_offsets, axis=1)
+
+        # Group peaks by sample (samples, ?, nodes, 2).
         peaks = tf.RaggedTensor.from_value_rowids(
             peak_points, crop_sample_inds, nrows=samples
         )
@@ -614,12 +692,18 @@ class FindInstancePeaks(tf.keras.layers.Layer):
             peak_vals, crop_sample_inds, nrows=samples
         )
 
-        return dict(
-            instance_peaks=peaks,
-            instance_peak_vals=peak_vals,
-            centroids=centroids,
-            centroid_vals=centroid_vals,
-        )
+        # Build outputs.
+        outputs = {"instance_peaks": peaks, "instance_peak_vals": peak_vals}
+        if "centroids" in inputs:
+            outputs["centroids"] = inputs["centroids"]
+        if "centroids" in inputs:
+            outputs["centroid_vals"] = inputs["centroid_vals"]
+        if self.keep_confmaps:
+            cms = tf.RaggedTensor.from_value_rowids(
+                cms, crop_sample_inds, nrows=samples
+            )
+            outputs["instance_confmaps"] = cms
+        return outputs
 
 
 class TopDownModel(tf.keras.Model):
@@ -717,9 +801,10 @@ class TopDownModel(tf.keras.Model):
 
         else:
             for k, v in peaks_output.items():
-                peaks_output[k] = sleap.nn.data.utils.unrag_tensor(
-                    v, self.max_instances, axis=1
-                )
+                if isinstance(v, tf.RaggedTensor):
+                    peaks_output[k] = sleap.nn.data.utils.unrag_tensor(
+                        v, self.max_instances, axis=1
+                    )
         peaks_output["n_valid"] = n_valid
         return peaks_output
 
