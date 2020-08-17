@@ -897,11 +897,9 @@ class TopdownPredictor(Predictor):
             centroid_model.keras_model = tf.keras.models.load_model(
                 centroid_keras_model_path, compile=False
             )
-            # use_gt_centroid = False
         else:
             centroid_config = None
             centroid_model = None
-            # use_gt_centroid = True
 
         if confmap_model_path is not None:
             # Load confmap model.
@@ -911,57 +909,22 @@ class TopdownPredictor(Predictor):
             confmap_model.keras_model = tf.keras.models.load_model(
                 confmap_keras_model_path, compile=False
             )
-            # use_gt_confmap = False
         else:
             confmap_config = None
             confmap_model = None
-            # use_gt_confmap = True
 
-        # if use_gt_centroid:
-        #     centroid_crop_layer = CentroidCropGroundTruth(
-        #         crop_size=confmap_model.instance_cropping.crop_size
-        #     )
-        # else:
-        #     if use_gt_confmap:
-        #         crop_size = 1
-        #     else:
-        #         crop_size = confmap_config.data.instance_cropping.crop_size
-        #     centroid_crop_layer = CentroidCrop(
-        #         input_scale=centroid_config.data.preprocessing.input_scaling,
-        #         max_stride=centroid_config.data.preprocessing.pad_to_stride,
-        #         keras_model=centroid_model.keras_model,
-        #         confmaps_stride=centroid_config.model.heads.centroid.output_stride,
-        #         peak_threshold=peak_threshold,
-        #         crop_size=crop_size,
-        #     )
-
-        # if use_gt_confmap:
-        #     instance_peaks_layer = FindInstancePeaksGroundTruth()
-        # else:
-        #     instance_peaks_layer = FindInstancePeaks(
-        #         peak_threshold=peak_threshold,
-        #         input_scale=confmap_config.data.preprocessing.input_scaling,
-        #         keras_model=confmap_model.keras_model,
-        #         confmaps_stride=confmap_config.model.heads.centered_instance.output_stride,
-        #     )
-
-        # topdown_model = TopDownModel(
-        #     centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer,
-        # )
-
-        return cls(
+        obj = cls(
             centroid_config=centroid_config,
             centroid_model=centroid_model,
             confmap_config=confmap_config,
             confmap_model=confmap_model,
-            # topdown_model=None,
             batch_size=batch_size,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
         )
-        # obj._initialize_topdown_model()
-        # return obj
+        obj._initialize_topdown_model()
+        return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
