@@ -524,7 +524,9 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
         a = a.to_tensor(default_value=tf.cast(np.NaN, tf.float32))
         b = tf.expand_dims(
             tf.expand_dims(crop_output["centroids"], axis=2), axis=2
-        ).with_row_splits_dtype(tf.int64)  # (batch_size, n_centroids, 1, 1, 2)
+        ).with_row_splits_dtype(
+            tf.int64
+        )  # (batch_size, n_centroids, 1, 1, 2)
         dists = a - b  # (batch_size, n_centroids, n_insts, n_nodes, 2)
         dists = tf.sqrt(tf.reduce_sum(dists ** 2, axis=-1))  # reduce over xy
         dists = tf.reduce_min(dists, axis=-1)  # reduce over nodes
@@ -592,7 +594,7 @@ class FindInstancePeaks(tf.keras.layers.Layer):
         peak_threshold: float = 0.2,
         confmaps_stride: int = 1,
         keep_confmaps: bool = False,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.keras_model = keras_model
@@ -823,6 +825,43 @@ class TopdownPredictor(Predictor):
     integral_refinement: bool = True
     integral_patch_size: int = 5
 
+    def _initialize_topdown_model(self):
+        """Build the `TopDownModel` for this class from the config/models available."""
+        use_gt_centroid = self.centroid_config is None
+        use_gt_confmap = self.confmap_config is None
+
+        if use_gt_centroid:
+            centroid_crop_layer = CentroidCropGroundTruth(
+                crop_size=self.confmap_model.instance_cropping.crop_size
+            )
+        else:
+            if use_gt_confmap:
+                crop_size = 1
+            else:
+                crop_size = self.confmap_config.data.instance_cropping.crop_size
+            centroid_crop_layer = CentroidCrop(
+                input_scale=self.centroid_config.data.preprocessing.input_scaling,
+                max_stride=self.centroid_config.data.preprocessing.pad_to_stride,
+                keras_model=self.centroid_model.keras_model,
+                confmaps_stride=self.centroid_config.model.heads.centroid.output_stride,
+                peak_threshold=self.peak_threshold,
+                crop_size=crop_size,
+            )
+
+        if use_gt_confmap:
+            instance_peaks_layer = FindInstancePeaksGroundTruth()
+        else:
+            instance_peaks_layer = FindInstancePeaks(
+                peak_threshold=self.peak_threshold,
+                input_scale=self.confmap_config.data.preprocessing.input_scaling,
+                keras_model=self.confmap_model.keras_model,
+                confmaps_stride=self.confmap_config.model.heads.centered_instance.output_stride,
+            )
+
+        self.topdown_model = TopDownModel(
+            centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer,
+        )
+
     @classmethod
     def from_trained_models(
         cls,
@@ -858,11 +897,11 @@ class TopdownPredictor(Predictor):
             centroid_model.keras_model = tf.keras.models.load_model(
                 centroid_keras_model_path, compile=False
             )
-            use_gt_centroid = False
+            # use_gt_centroid = False
         else:
             centroid_config = None
             centroid_model = None
-            use_gt_centroid = True
+            # use_gt_centroid = True
 
         if confmap_model_path is not None:
             # Load confmap model.
@@ -872,51 +911,57 @@ class TopdownPredictor(Predictor):
             confmap_model.keras_model = tf.keras.models.load_model(
                 confmap_keras_model_path, compile=False
             )
-            use_gt_confmap = False
+            # use_gt_confmap = False
         else:
             confmap_config = None
             confmap_model = None
-            use_gt_confmap = True
+            # use_gt_confmap = True
 
-        if use_gt_centroid:
-            centroid_crop_layer = CentroidCropGroundTruth(
-                crop_size=confmap_model.instance_cropping.crop_size
-            )
-        else:
-            centroid_crop_layer = CentroidCrop(
-                input_scale=centroid_config.data.preprocessing.input_scaling,
-                max_stride=centroid_config.data.preprocessing.pad_to_stride,
-                keras_model=centroid_model.keras_model,
-                confmaps_stride=centroid_config.model.heads.centroid.output_stride,
-                peak_threshold=peak_threshold,
-                crop_size=confmap_config.data.instance_cropping.crop_size,
-            )
+        # if use_gt_centroid:
+        #     centroid_crop_layer = CentroidCropGroundTruth(
+        #         crop_size=confmap_model.instance_cropping.crop_size
+        #     )
+        # else:
+        #     if use_gt_confmap:
+        #         crop_size = 1
+        #     else:
+        #         crop_size = confmap_config.data.instance_cropping.crop_size
+        #     centroid_crop_layer = CentroidCrop(
+        #         input_scale=centroid_config.data.preprocessing.input_scaling,
+        #         max_stride=centroid_config.data.preprocessing.pad_to_stride,
+        #         keras_model=centroid_model.keras_model,
+        #         confmaps_stride=centroid_config.model.heads.centroid.output_stride,
+        #         peak_threshold=peak_threshold,
+        #         crop_size=crop_size,
+        #     )
 
-        if use_gt_confmap:
-            instance_peaks_layer = FindInstancePeaksGroundTruth()
-        else:
-            instance_peaks_layer = FindInstancePeaks(
-                peak_threshold=peak_threshold,
-                input_scale=confmap_config.data.preprocessing.input_scaling,
-                keras_model=confmap_model.keras_model,
-                confmaps_stride=confmap_config.model.heads.centered_instance.output_stride,
-            )
+        # if use_gt_confmap:
+        #     instance_peaks_layer = FindInstancePeaksGroundTruth()
+        # else:
+        #     instance_peaks_layer = FindInstancePeaks(
+        #         peak_threshold=peak_threshold,
+        #         input_scale=confmap_config.data.preprocessing.input_scaling,
+        #         keras_model=confmap_model.keras_model,
+        #         confmaps_stride=confmap_config.model.heads.centered_instance.output_stride,
+        #     )
 
-        topdown_model = TopDownModel(
-            centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer,
-        )
+        # topdown_model = TopDownModel(
+        #     centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer,
+        # )
 
         return cls(
             centroid_config=centroid_config,
             centroid_model=centroid_model,
             confmap_config=confmap_config,
             confmap_model=confmap_model,
-            topdown_model=topdown_model,
+            # topdown_model=None,
             batch_size=batch_size,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
         )
+        # obj._initialize_topdown_model()
+        # return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
@@ -931,18 +976,20 @@ class TopdownPredictor(Predictor):
         )
 
         # Infer colorspace preprocessing if not explicit.
+        cfg = self.confmap_config
+        model = self.confmap_model
+        if cfg is None:
+            cfg = self.centroid_config
+            model = self.centroid_model
         if not (
-            self.confmap_config.data.preprocessing.ensure_rgb
-            or self.confmap_config.data.preprocessing.ensure_grayscale
+            cfg.data.preprocessing.ensure_rgb or cfg.data.preprocessing.ensure_grayscale
         ):
-            if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
-                self.confmap_config.data.preprocessing.ensure_grayscale = True
+            if model.keras_model.inputs[0].shape[-1] == 1:
+                cfg.data.preprocessing.ensure_grayscale = True
             else:
-                self.confmap_config.data.preprocessing.ensure_rgb = True
+                cfg.data.preprocessing.ensure_rgb = True
 
-        pipeline += Normalizer.from_config(
-            self.confmap_config.data.preprocessing, image_key="image"
-        )
+        pipeline += Normalizer.from_config(cfg.data.preprocessing, image_key="image")
 
         pipeline += Prefetcher()
 
@@ -959,6 +1006,9 @@ class TopdownPredictor(Predictor):
                 self.make_pipeline(data_provider=data_provider)
 
         self.pipeline.providers = [data_provider]
+
+        if self.topdown_model is None:
+            self._initialize_topdown_model()
 
         for ex in self.pipeline.make_dataset():
             preds = self.topdown_model.predict(ex)
