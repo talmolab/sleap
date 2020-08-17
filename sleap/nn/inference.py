@@ -519,12 +519,12 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
         # Compute pairwise distances between centroids and all instance points within
         # each sample.
         a = tf.expand_dims(
-            example_gt["instances"], axis=1
+            example_gt["instances"].with_row_splits_dtype(tf.int64), axis=1
         )  # (batch_size, 1, n_insts, n_nodes, 2)
         a = a.to_tensor(default_value=tf.cast(np.NaN, tf.float32))
         b = tf.expand_dims(
             tf.expand_dims(crop_output["centroids"], axis=2), axis=2
-        )  # (batch_size, n_centroids, 1, 1, 2)
+        ).with_row_splits_dtype(tf.int64)  # (batch_size, n_centroids, 1, 1, 2)
         dists = a - b  # (batch_size, n_centroids, n_insts, n_nodes, 2)
         dists = tf.sqrt(tf.reduce_sum(dists ** 2, axis=-1))  # reduce over xy
         dists = tf.reduce_min(dists, axis=-1)  # reduce over nodes
