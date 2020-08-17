@@ -224,7 +224,7 @@ class InstanceCropper:
             that use both full and cropped images, at the cost of increased memory
             requirements usage. Setting this to False can substantially improve
             performance of large pipelines if the full images are no longer required.
-        mock_centroid_confidence: If True, add confidence keys for compatibility with 
+        mock_centroid_confidence: If True, add confidence keys for compatibility with
             predicted instance cropping.
     """
 
@@ -345,6 +345,7 @@ class InstanceCropper:
         keys_to_expand = [
             key for key in test_example.keys() if key not in self.input_keys
         ]
+        img_channels = test_example["image"].shape[-1]
         if self.keep_full_image:
             keys_to_expand.append("image")
 
@@ -359,6 +360,11 @@ class InstanceCropper:
 
             # Crop images from bounding boxes.
             instance_images = crop_bboxes(frame_data["image"], bboxes)
+
+            # Ensure shape is statically specified.
+            instance_images = tf.ensure_shape(
+                instance_images, [None, self.crop_height, self.crop_width, img_channels]
+            )
 
             # Pull out the bbox offsets as (n_instances, 2) in xy order.
             bboxes_x1y1 = tf.gather(bboxes, [1, 0], axis=1)
@@ -397,7 +403,7 @@ class InstanceCropper:
             }
             if self.mock_centroid_confidence:
                 instances_data["centroid_confidence"] = tf.ones(
-                    [n_instances,], dtype=tf.float32
+                    [n_instances], dtype=tf.float32
                 )  # (n_instances,)
             for key in keys_to_expand:
                 instances_data[key] = tf.repeat(

@@ -64,6 +64,9 @@ from sleap.nn.callbacks import (
 )
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, CSVLogger
 
+# Inference
+from sleap.nn.inference import FindInstancePeaks
+
 # Visualization
 import matplotlib
 import matplotlib.pyplot as plt
@@ -1096,21 +1099,34 @@ class TopdownConfmapsModelTrainer(Trainer):
         """Set up visualization pipelines and callbacks."""
         # Create visualization/inference pipelines.
         self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
-            self.data_readers.training_labels_reader, self.keras_model
+            self.data_readers.training_labels_reader
         )
         self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
-            self.data_readers.validation_labels_reader, self.keras_model
+            self.data_readers.validation_labels_reader
         )
 
         # Create static iterators.
         training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
         validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
 
+        # Create an instance peak finding layer.
+        find_instance_peaks = FindInstancePeaks(
+            peak_threshold=0.2,
+            input_scale=self.config.data.preprocessing.input_scaling,
+            keras_model=self.keras_model,
+            confmaps_stride=self.config.model.heads.centered_instance.output_stride,
+            keep_confmaps=True,
+        )
+
         def visualize_example(example):
+            # Find peaks by evaluating model.
+            crops = tf.expand_dims(example["instance_image"], axis=0)
+            peak_preds = find_instance_peaks(crops)
+
             img = example["instance_image"].numpy()
-            cms = example["predicted_instance_confidence_maps"].numpy()
+            cms = peak_preds["instance_confmaps"][0][0].numpy()
             pts_gt = example["center_instance"].numpy()
-            pts_pr = example["predicted_center_instance_points"].numpy()
+            pts_pr = peak_preds["instance_peaks"][0][0].numpy()
 
             scale = 1.0
             if img.shape[0] < 512:
@@ -1127,7 +1143,7 @@ class TopdownConfmapsModelTrainer(Trainer):
                 self.config.outputs,
                 run_path=self.run_path,
                 viz_fn=lambda: visualize_example(next(training_viz_ds_iter)),
-                name=f"train",
+                name="train",
             )
         )
         self.visualization_callbacks.extend(
@@ -1135,7 +1151,7 @@ class TopdownConfmapsModelTrainer(Trainer):
                 self.config.outputs,
                 run_path=self.run_path,
                 viz_fn=lambda: visualize_example(next(validation_viz_ds_iter)),
-                name=f"validation",
+                name="validation",
             )
         )
 

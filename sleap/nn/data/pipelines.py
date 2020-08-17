@@ -663,33 +663,27 @@ class TopdownConfmapsPipeline:
         return pipeline
 
     def make_viz_pipeline(
-        self, data_provider: Provider, keras_model: tf.keras.Model
+        self, data_provider: Provider,
     ) -> Pipeline:
         """Create visualization pipeline.
 
         Args:
             data_provider: A `Provider` that generates data examples, typically a
                 `LabelsReader` instance.
-            keras_model: A `tf.keras.Model` that can be used for inference.
 
         Returns:
-            A `Pipeline` instance configured to fetch data and run inference to generate
-            predictions useful for visualization during training.
+            A `Pipeline` instance configured to fetch data and for running inference to
+            generate predictions useful for visualization during training.
         """
-        pipeline = self.make_base_pipeline(data_provider=data_provider)
-        pipeline += Prefetcher()
+        pipeline = Pipeline(data_provider)
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        pipeline += InstanceCropper.from_config(self.data_config.instance_cropping)
         pipeline += Repeater()
-        pipeline += KerasModelPredictor(
-            keras_model=keras_model,
-            model_input_keys="instance_image",
-            model_output_keys="predicted_instance_confidence_maps",
-        )
-        pipeline += GlobalPeakFinder(
-            confmaps_key="predicted_instance_confidence_maps",
-            peaks_key="predicted_center_instance_points",
-            confmaps_stride=self.instance_confmap_head.output_stride,
-            peak_threshold=0.2,
-        )
+        pipeline += Prefetcher()
         return pipeline
 
 
