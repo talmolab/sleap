@@ -713,10 +713,12 @@ def evaluate_model(
         Labels.save_file(labels_pr, labels_pr_path)
         logger.info("Saved predictions: %s", labels_pr_path)
 
+        if metrics is not None:
+            metrics_path = os.path.join(cfg.outputs.run_path, f"metrics.{split_name}.npz")
+            np.savez_compressed(metrics_path, **{"metrics": metrics})
+            logger.info("Saved metrics: %s", metrics_path)
+
     if metrics is not None:
-        metrics_path = os.path.join(cfg.outputs.run_path, f"metrics.{split_name}.npz")
-        np.savez_compressed(metrics_path, **{"metrics": metrics})
-        logger.info("Saved metrics: %s", metrics_path)
         logger.info("OKS mAP: %f", metrics["oks_voc.mAP"])
 
     return labels_pr, metrics
