@@ -143,6 +143,8 @@ class MainWindow(QMainWindow):
 
         if labels_path:
             self.loadProjectFile(labels_path)
+        else:
+            self.state["project_loaded"] = False
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
@@ -1179,6 +1181,7 @@ class MainWindow(QMainWindow):
 
         if has_loaded:
             self.loadLabelsObject(labels, filename)
+            self.state["project_loaded"] = True
 
     def loadLabelsObject(self, labels: Labels, filename: Optional[str] = None):
         """

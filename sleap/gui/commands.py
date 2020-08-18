@@ -223,6 +223,10 @@ class CommandContext:
         self._change_stack = list()
         self.state["has_changes"] = False
 
+    @property
+    def has_any_changes(self):
+        return len(self._change_stack) > 0
+
     def execute(self, command: Type[AppCommand], **kwargs):
         """Execute command in this context, passing named arguments."""
         command().execute(context=self, params=kwargs)
@@ -505,7 +509,16 @@ class OpenProject(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
         filename = params["filename"]
-        if OPEN_IN_NEW and not params.get("first_open", False):
+
+        do_open_in_new = OPEN_IN_NEW and not params.get("first_open", False)
+
+        # If no project has been loaded in this window and no changes have been
+        # made by user, then it's an empty project window so we'll load project
+        # into this window rather than creating a new window.
+        if not context.state["project_loaded"] and not context.has_any_changes:
+            do_open_in_new = False
+
+        if do_open_in_new:
             new_window = context.app.__class__()
             new_window.showMaximized()
             new_window.loadProjectFile(filename)
