@@ -1356,6 +1356,13 @@ def main():
     logger.info(job_config.to_json())
     logger.info("")
 
+    logger.info("System:")
+    if sleap.nn.system.is_gpu_system():
+        # Disable preallocation to handle Linux/low GPU memory issue.
+        sleap.nn.system.disable_preallocation()
+    sleap.nn.system.summary()
+    logger.info("")
+
     logger.info("Initializing trainer...")
     # Create a trainer and run!
     trainer = Trainer.from_config(
