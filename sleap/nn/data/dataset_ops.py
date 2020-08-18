@@ -135,9 +135,10 @@ class Batcher:
         def unrag(example):
             """Convert all keys back to dense tensors NaN padded."""
             for key in example:
-                example[key] = example[key].to_tensor(
-                    default_value=tf.cast(np.nan, example[key].dtype)
-                )
+                if isinstance(example[key], tf.RaggedTensor):
+                    example[key] = example[key].to_tensor(
+                        default_value=tf.cast(np.nan, example[key].dtype)
+                    )
             return example
 
         # Ensure that all keys have a rank of at least 1 (i.e., scalars).
