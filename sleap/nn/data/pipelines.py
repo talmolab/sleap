@@ -7,9 +7,12 @@ This allows for convenient ways to configure individual variants of common pipel
 well as to define training vs inference versions based on the same configurations.
 """
 
+
 import tensorflow as tf
 import numpy as np
 import attr
+import logging
+import time
 from typing import Sequence, Text, Optional, List, Tuple, Union, TypeVar, Dict
 
 import sleap
@@ -89,6 +92,9 @@ TRANSFORMERS = (
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
+
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True)
@@ -265,7 +271,9 @@ class Pipeline:
 
         # Apply transformers.
         for transformer in self.transformers:
+            # t0 = time.time()
             ds = transformer.transform_dataset(ds)
+            # logger.debug(f"{transformer.__class__.__name__}:\t\t{time.time() - t0}")
 
         return ds
 
