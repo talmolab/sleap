@@ -120,7 +120,7 @@ class DataReaders:
             if isinstance(validation, Text):
                 labels_config.validation_labels = validation
             elif isinstance(validation, float):
-                validation_labels = labels_config.validation_fraction
+                labels_config.validation_fraction = validation
             if isinstance(test, Text):
                 labels_config.test_labels = test
 
