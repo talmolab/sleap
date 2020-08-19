@@ -262,3 +262,5 @@ def test_app_new_window(qtbot):
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
     )
     assert wins == (start_wins + 3)
+
+    app.closeAllWindows()
