@@ -66,6 +66,13 @@ def test_find_global_peaks_integral():
     assert tf.reduce_all(tf.math.is_nan(peaks))
     assert_array_equal(peak_vals, [[0, 0, 0]])
 
+    peaks, peak_vals = find_global_peaks_integral(
+        tf.stack([tf.zeros([12, 12, 3], dtype=tf.float32), cm], axis=0),
+        crop_size=5, threshold=0.1)
+    assert peaks.shape == (2, 3, 2)
+    assert tf.reduce_all(tf.math.is_nan(peaks[0]))
+    assert_allclose(peaks[1].numpy(), points.numpy(), atol=0.1)
+
 
 def test_find_local_peaks():
     xv, yv = make_grid_vectors(image_height=16, image_width=16, output_stride=1)

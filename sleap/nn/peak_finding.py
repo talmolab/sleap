@@ -463,9 +463,13 @@ def find_global_peaks_integral(
     # Flatten samples and channels to (n_peaks, 2).
     rough_peaks = tf.reshape(rough_peaks, [samples * channels, 2])
 
+    # Keep only peaks that are not NaNs.
+    valid_idx = tf.squeeze(tf.where(~tf.math.is_nan(tf.gather(rough_peaks, 0, axis=1))))
+    valid_peaks = tf.gather(rough_peaks, valid_idx, axis=0)
+
     # Make bounding boxes for cropping around peaks.
     bboxes = make_centered_bboxes(
-        rough_peaks, box_height=crop_size, box_width=crop_size
+        valid_peaks, box_height=crop_size, box_width=crop_size
     )
 
     # Crop patch around each grid-aligned peak.
@@ -474,15 +478,20 @@ def find_global_peaks_integral(
         [samples * channels, tf.shape(cms)[1], tf.shape(cms)[2], 1],
     )
     cm_crops = crop_bboxes(
-        cms, bboxes, sample_inds=tf.range(samples * channels, dtype=tf.int32)
+        cms, bboxes, sample_inds=valid_idx
     )
 
     # Compute offsets via integral regression on a local patch.
     gv = tf.cast(tf.range(crop_size), tf.float32) - ((crop_size - 1) / 2)
     dx_hat, dy_hat = integral_regression(cm_crops, xv=gv, yv=gv)
+    offsets = tf.concat([dx_hat, dy_hat], axis=1)
 
     # Apply offsets.
-    refined_peaks = rough_peaks + tf.concat([dx_hat, dy_hat], axis=1)
+    refined_peaks = tf.tensor_scatter_nd_add(
+        rough_peaks,
+        tf.expand_dims(valid_idx, axis=1),
+        tf.concat([dx_hat, dy_hat], axis=1)
+    )
 
     # Reshape to (samples, channels, 2).
     refined_peaks = tf.reshape(refined_peaks, [samples, channels, 2])
