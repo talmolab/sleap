@@ -1,8 +1,8 @@
 # Continuous integration using conda installation
 name: CI (Conda)
 
-# Run on any push or pull request
-on: [push, pull_request]
+# Run on any push
+on: [push]
 
 jobs:
   build:
@@ -33,16 +33,19 @@ jobs:
         run: |
           which python
           conda info
-      - name: Run pytest
-        shell: bash -l {0}
+      - name: Conda list
+        shell: pwsh
+        run: conda list
+      - name: Test with pytest
+        shell: pwsh
         run: |
           if("${{ matrix.os }}" -eq "windows-latest"){
-            pytest
+             pytest
           } else {
-            sudo apt-get install xvfb libxkbcommon-x11-0
-            sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-            export DISPLAY=":1"
-            xvfb-run pytest --cov=./ --cov-report=xml
+             sudo apt-get install xvfb libxkbcommon-x11-0
+             sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+             export DISPLAY=":1"
+             xvfb-run pytest --cov=./ --cov-report=xml
           }
       - name: Upload coverage
         uses: codecov/codecov-action@v1
