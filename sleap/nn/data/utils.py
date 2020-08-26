@@ -114,11 +114,14 @@ def describe_tensors(
         print(desc)
 
 
-def unrag_example(example: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
+def unrag_example(
+    example: Dict[str, tf.Tensor], numpy: bool = False
+) -> Dict[str, tf.Tensor]:
     """Convert ragged tensors in an example into normal tensors with NaN padding.
 
     Args:
         example: Dictionary keyed by strings with tensors as values.
+        numpy: If `True`, convert values to numpy arrays or Python primitives.
 
     Returns:
         The same dictionary, but values of type `tf.RaggedTensor` will be converted to
@@ -126,12 +129,19 @@ def unrag_example(example: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
         variable length.
 
         The output shapes will be the bounding shape of the ragged tensors.
+
+        If `numpy` is `True`, the values will be `numpy.ndarray`s or Python primitives
+        depending on their data type and shape.
+
+    See also: tf.python.keras.utils.tf_utils.to_numpy_or_python_type
     """
     for key in example:
         if isinstance(example[key], tf.RaggedTensor):
             example[key] = example[key].to_tensor(
                 default_value=tf.cast(np.nan, example[key].dtype)
             )
+    if numpy:
+        example = tf.python.keras.utils.tf_utils.to_numpy_or_python_type(example)
     return example
 
 
@@ -162,7 +172,4 @@ def unrag_tensor(x: tf.RaggedTensor, max_size: int, axis: int) -> tf.Tensor:
     max_size = tf.cast(max_size, bounding_shape.dtype)
     max_size = tf.reshape(max_size, [-1])  # Ensure (n,) shape for indexing.
     shape = tf.tensor_scatter_nd_update(bounding_shape, axis, max_size)
-    return x.to_tensor(
-        default_value=tf.cast(np.NaN, x.dtype),
-        shape=shape
-    )
+    return x.to_tensor(default_value=tf.cast(np.NaN, x.dtype), shape=shape)
