@@ -88,9 +88,6 @@ def ensure_grayscale(image: tf.Tensor) -> tf.Tensor:
     Returns:
         A grayscale image of shape (height, width, 1) of the same dtype as the input.
 
-    Raises:
-        ValueError: If the image had channels not equal to 1 or 3.
-
     See also: tf.image.rgb_to_grayscale
     """
     if image.shape[-1] == 3:
@@ -108,9 +105,6 @@ def ensure_rgb(image: tf.Tensor) -> tf.Tensor:
 
     Returns:
         A grayscale image of shape (height, width, 1) of the same dtype as the input.
-
-    Raises:
-        ValueError: If the image had channels not equal to 1 or 3.
 
     See also: tf.image.grayscale_to_rgb
     """
@@ -305,7 +299,9 @@ class Normalizer:
     )
 
     @classmethod
-    def from_config(cls, config: PreprocessingConfig, image_key: Text = "image") -> "Normalizer":
+    def from_config(
+        cls, config: PreprocessingConfig, image_key: Text = "image"
+    ) -> "Normalizer":
         """Build an instance of this class from its configuration options.
 
         Args:
@@ -343,6 +339,16 @@ class Normalizer:
             A `tf.data.Dataset` with elements containing the same images with
             normalization applied.
         """
+        test_ex = next(iter(ds_input))
+        img_shape = test_ex[self.image_key].shape
+        output_shape = img_shape[-3:]
+        if self.ensure_rgb or self.imagenet_mode is not None:
+            output_shape = img_shape[-3:-1] + (3,)
+        if self.ensure_grayscale:
+            output_shape = img_shape[-3:-1] + (1,)
+        if len(img_shape) == 4:
+            output_shape = (None,) + output_shape
+
         def normalize(example):
             """Local processing function for dataset mapping."""
             if self.ensure_float:
@@ -363,6 +369,9 @@ class Normalizer:
                 example[self.image_key] = scale_to_imagenet_torch_mode(
                     example[self.image_key]
                 )
+            example[self.image_key] = tf.ensure_shape(
+                example[self.image_key], output_shape
+            )
 
             return example
 
