@@ -15,18 +15,35 @@ jobs:
         os: ["ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
+      - name: Cache conda
+        uses: actions/cache@v1
+        env:
+          # Increase this value to reset cache if environment_no_cuda.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_no_cuda.yml', 'requirements.txt') }}
       - uses: goanpeca/setup-miniconda@v1
         with:
           python-version: 3.6
           environment-file: environment_no_cuda.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           activate-environment: sleap
       - name: Print environment info
         shell: bash -l {0}
         run: |
           which python
           conda info
-          conda list
-      - name: Test with pytest
+      - name: Run pytest on ubuntu using xvfb
+        if: matrix.os == 'ubuntu-latest'
         shell: bash -l {0}
         run: |
-          pytest tests
+          sudo apt-get install xvfb libxkbcommon-x11-0
+          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+          export DISPLAY=":1"
+          xvfb-run pytest
+      - name: Run pytest on Windows
+        if: matrix.os != 'ubuntu-latest'
+        shell: bash -l {0}
+        run: |
+          pytest
