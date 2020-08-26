@@ -78,6 +78,8 @@ def plot_confmaps(confmaps: np.ndarray, output_scale: float = 1.0):
         np.squeeze(confmaps.max(axis=-1)),
         alpha=0.5,
         origin="upper",
+        vmin=0,
+        vmax=1,
         extent=[
             -0.5,
             confmaps.shape[1] / output_scale - 0.5,
