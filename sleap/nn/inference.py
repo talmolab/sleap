@@ -953,7 +953,7 @@ class InferenceModel(tf.keras.Model):
     def predict(
         self,
         data: Union[
-            np.ndarray, tf.Tensor, Dict[str, tf.Tensor], tf.data.Dataset, Pipeline
+            np.ndarray, tf.Tensor, Dict[str, tf.Tensor], tf.data.Dataset, Pipeline, sleap.Video
         ],
         numpy: bool = True,
         batch_size: int = 4,
@@ -968,6 +968,8 @@ class InferenceModel(tf.keras.Model):
                 - `dict` with key `"image"` as a tensor
                 - `tf.data.Dataset` that generates examples in one of the above formats.
                 - `sleap.Pipeline` that generates examples in one of the above formats.
+                - `sleap.Video` which will be converted into a pipeline that generates
+                    batches of `batch_size` frames.
             numpy: If `True` (default), returned values will be converted to
                 `np.ndarray`s or Python primitives if scalars.
             batch_size: Batch size to use for inference. No effect if using a dataset or
@@ -986,6 +988,8 @@ class InferenceModel(tf.keras.Model):
             included to indicate the number of valid elements (before padding) in axis
             1 of the tensors.
         """
+        if isinstance(data, sleap.Video):
+            data = data.to_pipeline(batch_size=batch_size)
         if isinstance(data, Pipeline):
             data = data.make_dataset()
 
