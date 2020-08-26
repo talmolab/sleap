@@ -89,6 +89,14 @@ def make_multi_confmaps(
     grid_width = tf.shape(xv)[0]
     n_nodes = tf.shape(instances)[1]
     cms = tf.zeros((grid_height, grid_width, n_nodes), tf.float32)
+
+    in_img = (instances > 0) & (
+        instances < tf.reshape(tf.stack([xv[-1], yv[-1]], axis=0), [1, 1, 2])
+    )
+    in_img = tf.reduce_any(tf.reduce_all(in_img, axis=-1), axis=1)
+    in_img = tf.ensure_shape(in_img, [None])
+    instances = tf.boolean_mask(instances, in_img)
+
     for points in instances:
         cms = tf.maximum(cms, make_confmaps(points, xv=xv, yv=yv, sigma=sigma))
     return cms
@@ -348,7 +356,7 @@ class SingleInstanceConfidenceMapGenerator:
 
             # Generate confidence maps.
             example["confidence_maps"] = make_confmaps(
-                example["points"], xv=xv, yv=yv, sigma=self.sigma * self.output_stride,
+                example["points"], xv=xv, yv=yv, sigma=self.sigma * self.output_stride
             )
 
             return example

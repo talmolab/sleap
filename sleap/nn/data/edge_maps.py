@@ -196,6 +196,7 @@ def make_multi_pafs(
     grid_width = tf.shape(xv)[0]
     n_edges = tf.shape(edge_sources)[1]
     n_instances = tf.shape(edge_sources)[0]
+
     pafs = tf.zeros((grid_height, grid_width, n_edges, 2), tf.float32)
     for i in range(n_instances):
         paf = make_pafs(
@@ -205,7 +206,7 @@ def make_multi_pafs(
             edge_destination=tf.gather(edge_destinations, i, axis=0),
             sigma=sigma,
         )
-        pafs += tf.where(tf.math.is_nan(paf), 0., paf)
+        pafs += tf.where(tf.math.is_nan(paf), 0.0, paf)
 
     return pafs
 
@@ -322,9 +323,15 @@ class PartAffinityFieldsGenerator:
 
         def generate_pafs(example):
             """Local processing function for dataset mapping."""
-            edge_sources, edge_destinations = get_edge_points(
-                example["instances"], edge_inds
+            instances = example["instances"]
+            in_img = (instances > 0) & (
+                instances < tf.reshape(tf.stack([xv[-1], yv[-1]], axis=0), [1, 1, 2])
             )
+            in_img = tf.reduce_any(tf.reduce_all(in_img, axis=-1), axis=1)
+            in_img = tf.ensure_shape(in_img, [None])
+            instances = tf.boolean_mask(instances, in_img)
+
+            edge_sources, edge_destinations = get_edge_points(instances, edge_inds)
             edge_sources = tf.ensure_shape(edge_sources, (None, n_edges, 2))
             edge_destinations = tf.ensure_shape(edge_destinations, (None, n_edges, 2))
 

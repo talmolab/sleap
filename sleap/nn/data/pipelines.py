@@ -14,7 +14,11 @@ from typing import Sequence, Text, Optional, List, Tuple, Union, TypeVar, Dict
 
 import sleap
 from sleap.nn.data.providers import LabelsReader, VideoReader
-from sleap.nn.data.augmentation import AugmentationConfig, ImgaugAugmenter
+from sleap.nn.data.augmentation import (
+    AugmentationConfig,
+    ImgaugAugmenter,
+    RandomCropper,
+)
 from sleap.nn.data.normalization import Normalizer
 from sleap.nn.data.resizing import Resizer, PointsRescaler
 from sleap.nn.data.instance_centroids import InstanceCentroidFinder
@@ -59,6 +63,7 @@ from sleap.nn.heads import (
 PROVIDERS = (LabelsReader, VideoReader)
 TRANSFORMERS = (
     ImgaugAugmenter,
+    RandomCropper,
     Normalizer,
     Resizer,
     InstanceCentroidFinder,
@@ -339,6 +344,11 @@ class BottomUpPipeline:
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
+        if self.optimization_config.augmentation_config.random_crop:
+            pipeline += RandomCropper(
+                crop_height=self.optimization_config.augmentation_config.random_crop_height,
+                crop_width=self.optimization_config.augmentation_config.random_crop_width,
+            )
         return pipeline
 
     def make_training_pipeline(self, data_provider: Provider) -> Pipeline:
@@ -367,6 +377,11 @@ class BottomUpPipeline:
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
+        if self.optimization_config.augmentation_config.random_crop:
+            pipeline += RandomCropper(
+                crop_height=self.optimization_config.augmentation_config.random_crop_height,
+                crop_width=self.optimization_config.augmentation_config.random_crop_width,
+            )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
 
@@ -468,6 +483,11 @@ class CentroidConfmapsPipeline:
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
+        if self.optimization_config.augmentation_config.random_crop:
+            pipeline += RandomCropper(
+                crop_height=self.optimization_config.augmentation_config.random_crop_height,
+                crop_width=self.optimization_config.augmentation_config.random_crop_width,
+            )
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -500,6 +520,11 @@ class CentroidConfmapsPipeline:
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
+        if self.optimization_config.augmentation_config.random_crop:
+            pipeline += RandomCropper(
+                crop_height=self.optimization_config.augmentation_config.random_crop_height,
+                crop_width=self.optimization_config.augmentation_config.random_crop_width,
+            )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
 
@@ -550,6 +575,11 @@ class CentroidConfmapsPipeline:
         pipeline = self.make_base_pipeline(data_provider=data_provider)
         pipeline += Prefetcher()
         pipeline += Repeater()
+        if self.optimization_config.augmentation_config.random_crop:
+            pipeline += RandomCropper(
+                crop_height=self.optimization_config.augmentation_config.random_crop_height,
+                crop_width=self.optimization_config.augmentation_config.random_crop_width,
+            )
         pipeline += KerasModelPredictor(
             keras_model=keras_model,
             model_input_keys="image",
@@ -662,9 +692,7 @@ class TopdownConfmapsPipeline:
 
         return pipeline
 
-    def make_viz_pipeline(
-        self, data_provider: Provider,
-    ) -> Pipeline:
+    def make_viz_pipeline(self, data_provider: Provider) -> Pipeline:
         """Create visualization pipeline.
 
         Args:
@@ -715,6 +743,11 @@ class SingleInstanceConfmapsPipeline:
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
+        if self.optimization_config.augmentation_config.random_crop:
+            pipeline += RandomCropper(
+                crop_height=self.optimization_config.augmentation_config.random_crop_height,
+                crop_width=self.optimization_config.augmentation_config.random_crop_width,
+            )
         return pipeline
 
     def make_training_pipeline(self, data_provider: Provider) -> Pipeline:
@@ -743,6 +776,11 @@ class SingleInstanceConfmapsPipeline:
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
+        if self.optimization_config.augmentation_config.random_crop:
+            pipeline += RandomCropper(
+                crop_height=self.optimization_config.augmentation_config.random_crop_height,
+                crop_width=self.optimization_config.augmentation_config.random_crop_width,
+            )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
 
