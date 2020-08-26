@@ -15,6 +15,10 @@ from sleap.nn.inference import (
     FindInstancePeaksGroundTruth,
     FindInstancePeaks,
     TopDownModel,
+    InferenceLayer,
+    InferenceModel,
+    CentroidCrop,
+    get_model_output_stride
 )
 
 sleap.nn.system.use_cpu_only()
@@ -120,6 +124,36 @@ def test_instance_peaks_gt_layer(test_labels, test_pipeline):
     assert (out["instance_peaks"][1][0].numpy() == test_labels[1][0].numpy()).all()
 
 
+def test_centroid_crop_layer():
+    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
+    points = tf.cast([[[1.75, 2.75]], [[3.75, 4.75]], [[5.75, 6.75]]], tf.float32)
+    cms = tf.expand_dims(make_multi_confmaps(points, xv, yv, sigma=1.5), axis=0)
+
+    x_in = tf.keras.layers.Input([12, 12, 1])
+    x_out = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    model = tf.keras.Model(inputs=x_in, outputs=x_out)
+
+    layer = CentroidCrop(
+        keras_model=model, input_scale=1.0, crop_size=3, pad_to_stride=1,
+        output_stride=None, refinement="local", integral_patch_size=5,
+        peak_threshold=0.2, return_confmaps=False
+    )
+
+    out = layer(cms)
+    assert tuple(out["centroids"].shape) == (1, None, 2)
+    assert tuple(out["centroid_vals"].shape) == (1, None)
+    assert tuple(out["crops"].shape) == (1, None, 3, 3, 1)
+    assert tuple(out["crop_offsets"].shape) == (1, None, 2)
+
+    assert tuple(out["centroids"].bounding_shape()) == (1, 3, 2)
+    assert tuple(out["centroid_vals"].bounding_shape()) == (1, 3)
+    assert tuple(out["crops"].bounding_shape()) == (1, 3, 3, 3, 1)
+    assert tuple(out["crop_offsets"].bounding_shape()) == (1, 3, 2)
+
+    assert_allclose(out["centroids"][0].numpy(), points.numpy().squeeze(axis=1))
+    assert_allclose(out["centroid_vals"][0].numpy(), [1, 1, 1], atol=0.1)
+
+
 def test_instance_peaks_layer():
     xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
     points = tf.cast([[1.5, 2.5], [3.5, 4.5], [5.5, 6.5]], tf.float32)
@@ -136,7 +170,8 @@ def test_instance_peaks_layer():
     model = tf.keras.Model(inputs=x_in, outputs=x_out)
 
     instance_peaks_layer = FindInstancePeaks(
-        keras_model=model, input_scale=1.0, peak_threshold=0.2, keep_confmaps=False
+        keras_model=model, input_scale=1.0, peak_threshold=0.2, return_confmaps=False,
+        refinement="integral"
     )
 
     # Raw tensor
@@ -176,7 +211,8 @@ def test_instance_peaks_layer():
 
     # Offset adjustment and pass through centroids
     instance_peaks_layer = FindInstancePeaks(
-        keras_model=model, input_scale=1.0, peak_threshold=0.2, keep_confmaps=True
+        keras_model=model, input_scale=1.0, peak_threshold=0.2, return_confmaps=True,
+        refinement="integral"
     )
     # (samples, h, w, c) -> (samples, ?, h, w, c)
     crops = tf.RaggedTensor.from_tensor(tf.expand_dims(cms, axis=1), lengths=[1, 1])
@@ -208,7 +244,8 @@ def test_instance_peaks_layer():
     # Input scaling
     scale = 0.5
     instance_peaks_layer = FindInstancePeaks(
-        keras_model=model, input_scale=scale, peak_threshold=0.2, keep_confmaps=False
+        keras_model=model, input_scale=scale, peak_threshold=0.2, return_confmaps=False,
+        refinement="integral"
     )
     xv, yv = make_grid_vectors(
         image_height=12 / scale, image_width=12 / scale, output_stride=1
@@ -235,7 +272,6 @@ def test_topdown_model(test_pipeline):
     model = TopDownModel(
         centroid_crop=CentroidCropGroundTruth(crop_size=4),
         instance_peaks=FindInstancePeaksGroundTruth(),
-        max_instances=2,
     )
 
     out = model.predict(test_pipeline.make_dataset())
@@ -247,3 +283,134 @@ def test_topdown_model(test_pipeline):
     assert tuple(out["n_valid"].shape) == (8,)
 
     assert (out["n_valid"] == [1, 1, 1, 2, 2, 2, 2, 2]).all()
+
+
+def test_inference_layer():
+    # Convert to float
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=None
+    )
+    data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
+    out = layer(data)
+    assert out.dtype == tf.float32
+    assert tuple(out.shape) == (1, 4, 4, 1)
+    assert tf.reduce_all(out == 1.0)
+
+    # Convert from rgb to grayscale, infer ensure grayscale
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=None
+    )
+    data = tf.cast(tf.fill([1, 4, 4, 3], 255), tf.uint8)
+    out = layer(data)
+    assert layer.ensure_grayscale
+    assert out.dtype == tf.float32
+    assert tuple(out.shape) == (1, 4, 4, 1)
+    assert tf.reduce_all(out == 1.0)
+
+    # Infer ensure rgb, convert from grayscale
+    x_in = tf.keras.layers.Input([4, 4, 3])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=None
+    )
+    data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
+    out = layer(data)
+    assert not layer.ensure_grayscale
+    assert out.dtype == tf.float32
+    assert tuple(out.shape) == (1, 4, 4, 3)
+    assert tf.reduce_all(out == 1.0)
+
+    # Input scaling
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=0.5,
+        pad_to_stride=1,
+        ensure_grayscale=None
+    )
+    data = tf.cast(tf.fill([1, 8, 8, 1], 255), tf.uint8)
+    out = layer(data)
+    assert out.dtype == tf.float32
+    assert tuple(out.shape) == (1, 4, 4, 1)
+    assert tf.reduce_all(out == 1.0)
+
+    # Stride padding
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=1,
+        pad_to_stride=2,
+        ensure_grayscale=None
+    )
+    data = tf.cast(tf.fill([1, 3, 3, 1], 255), tf.uint8)
+    out = layer(data)
+    assert out.dtype == tf.float32
+    assert tuple(out.shape) == (1, 4, 4, 1)
+
+    # Scaling and stride padding
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=0.5,
+        pad_to_stride=2,
+        ensure_grayscale=None
+    )
+    data = tf.cast(tf.fill([1, 6, 6, 1], 255), tf.uint8)
+    out = layer(data)
+    assert out.dtype == tf.float32
+    assert tuple(out.shape) == (1, 4, 4, 1)
+
+
+def test_get_model_output_stride():
+    # Single input/output
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    model = tf.keras.Model(x_in, x)
+    assert get_model_output_stride(model) == 1
+
+    # Single input/output, downsampled
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.MaxPool2D(strides=2, padding="same")(x_in)
+    model = tf.keras.Model(x_in, x)
+    assert get_model_output_stride(model) == 2
+
+    # Single input/output, downsampled, uneven
+    x_in = tf.keras.layers.Input([5, 5, 1])
+    x = tf.keras.layers.MaxPool2D(strides=2, padding="same")(x_in)
+    model = tf.keras.Model(x_in, x)
+    assert model.output.shape[1] == 3
+    with pytest.warns(UserWarning):
+        stride = get_model_output_stride(model)
+    assert stride == 1
+
+    # Multi input/output
+    x_in = [tf.keras.layers.Input([4, 4, 1]), tf.keras.layers.Input([8, 8, 1])]
+    x = [tf.keras.layers.MaxPool2D(strides=2, padding="same")(x) for x in x_in]
+    model = tf.keras.Model(x_in, x)
+    assert get_model_output_stride(model) == 1
+    assert get_model_output_stride(model, input_ind=0, output_ind=0) == 2
+    assert get_model_output_stride(model, input_ind=0, output_ind=1) == 1
+    assert get_model_output_stride(model, input_ind=1, output_ind=0) == 4
+    assert get_model_output_stride(model, input_ind=1, output_ind=1) == 2
