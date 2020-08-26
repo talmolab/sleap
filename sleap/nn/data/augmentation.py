@@ -226,5 +226,4 @@ class RandomCropper:
             ex["image"] = tf.squeeze(crop_bboxes(ex["image"], bbox), axis=0)
             return ex
 
-        ds = ds.map(random_crop)
-        return ds
+        return input_ds.map(random_crop)
