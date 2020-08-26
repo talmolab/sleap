@@ -311,7 +311,12 @@ class VideoReader:
             ds_index = tf.data.Dataset.range(len(self))
         else:
             # Create indexing dataset from provided indices.
-            ds_index = tf.data.Dataset.from_tensor_slices(self.example_indices)
+            if isinstance(self.example_indices, range):
+                ds_index = tf.data.Dataset.from_tensor_slices(
+                    list(self.example_indices)
+                )
+            else:
+                ds_index = tf.data.Dataset.from_tensor_slices(self.example_indices)
 
         # Create reader dataset.
         # Note: We don't parallelize here for thread safety.
