@@ -7,21 +7,26 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Conda package test (${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Conda package test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
-        python-version: ["3.6"]
     steps:
       - uses: actions/checkout@v2
       - uses: goanpeca/setup-miniconda@v1
         with:
-          activate-environment: sleap
+          python-version: 3.6
           environment-file: environment.yml
-          auto-activate-base: false
-      - shell: bash -l {0}
+          activate-environment: sleap
+      - name: Print environment info
+        shell: bash -l {0}
         run: |
+          where python
           conda info
-          
+          conda list
+      - name: Test with pytest
+        shell: bash -l {0}
+        run: |
+          pytest tests
