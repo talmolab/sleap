@@ -600,6 +600,7 @@ class CentroidCrop(InferenceLayer):
         keras_model: A `tf.keras.Model` that accepts rank-4 images as input and predicts
             rank-4 confidence maps as output. This should be a model that is trained on
             centroid/anchor confidence maps.
+        crop_size: Integer scalar specifying the height/width of the centered crops.
         input_scale: Float indicating if the images should be resized before being
             passed to the model.
         pad_to_stride: If not 1, input image will be paded to ensure that it is
@@ -673,7 +674,7 @@ class CentroidCrop(InferenceLayer):
                 offsets of shape `(samples, ?, 2)` for adjusting the predicted peak
                 coordinates.
             `"centroids"`: The predicted centroids of shape `(samples, ?, 2)`.
-            `"centroid_vals": THe centroid confidence values of shape `(samples, ?)`.
+            `"centroid_vals": The centroid confidence values of shape `(samples, ?)`.
 
             If the `return_confmaps` attribute is set to `True`, the output will also
             contain a key named `"centroid_confmaps"` containing a `tf.RaggedTensor` of
@@ -953,7 +954,12 @@ class InferenceModel(tf.keras.Model):
     def predict(
         self,
         data: Union[
-            np.ndarray, tf.Tensor, Dict[str, tf.Tensor], tf.data.Dataset, Pipeline, sleap.Video
+            np.ndarray,
+            tf.Tensor,
+            Dict[str, tf.Tensor],
+            tf.data.Dataset,
+            Pipeline,
+            sleap.Video,
         ],
         numpy: bool = True,
         batch_size: int = 4,
@@ -1499,14 +1505,152 @@ class BottomupPredictor(Predictor):
         return list(generator)
 
 
+class SingleInstanceInferenceLayer(InferenceLayer):
+    """Inference layer for applying single instance models.
+
+    This layer encapsulates all of the inference operations requires for generating
+    predictions from a single instance confidence map model. This includes
+    preprocessing, model forward pass, peak finding and coordinate adjustment.
+    
+    Attributes:
+        keras_model: A `tf.keras.Model` that accepts rank-4 images as input and predicts
+            rank-4 confidence maps as output. This should be a model that is trained on
+            single instance confidence maps.
+        input_scale: Float indicating if the images should be resized before being
+            passed to the model.
+        pad_to_stride: If not 1, input image will be paded to ensure that it is
+            divisible by this value (after scaling). This should be set to the max
+            stride of the model.
+        output_stride: Output stride of the model, denoting the scale of the output
+            confidence maps relative to the images (after input scaling). This is used
+            for adjusting the peak coordinates to the image grid. This will be inferred
+            from the model shapes if not provided.
+        peak_threshold: Minimum confidence map value to consider a global peak as valid.
+        refinement: If `None`, returns the grid-aligned peaks with no refinement. If
+            `"integral"`, peaks will be refined with integral regression. If `"local"`,
+            peaks will be refined with quarter pixel local gradient offset.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        return_confmaps: If `True`, the confidence maps will be returned together with
+            the predicted peaks. This will result in slower inference times since the
+            data must be copied off of the GPU, but is useful for visualizing the raw
+            output of the model.
+    """
+
+    def __init__(
+        self,
+        keras_model: tf.keras.Model,
+        input_scale: float = 1.0,
+        pad_to_stride: int = 1,
+        output_stride: Optional[int] = None,
+        peak_threshold: float = 0.2,
+        refinement: Optional[str] = "local",
+        integral_patch_size: int = 5,
+        return_confmaps: bool = False,
+        **kwargs,
+    ):
+        super().__init__(
+            keras_model=keras_model,
+            input_scale=input_scale,
+            pad_to_stride=pad_to_stride,
+            **kwargs,
+        )
+        if output_stride is None:
+            # Attempt to automatically infer the output stride.
+            output_stride = get_model_output_stride(self.keras_model, output_ind=-1)
+        self.output_stride = output_stride
+
+        self.peak_threshold = peak_threshold
+        self.refinement = refinement
+        self.integral_patch_size = integral_patch_size
+        self.return_confmaps = return_confmaps
+
+    def call(self, data):
+        """Predict instance confidence maps and find peaks.
+
+        Args:
+            inputs: Full frame images as a `tf.Tensor` of shape
+                `(samples, height, width, channels)` or a dictionary with key:
+                `"image"`: Full frame images in the same format as above.
+
+        Returns:
+            A dictionary of outputs grouped by sample with keys:
+
+            `"peaks"`: The predicted peaks of shape `(samples, nodes, 2)`.
+            `"peak_vals": The peak confidence values of shape `(samples, nodes)`.
+
+            If the `return_confmaps` attribute is set to `True`, the output will also
+            contain a key named `"confmaps"` containing a `tf.Tensor` of shape
+            `(samples, output_height, output_width, 1)` containing the confidence maps
+            predicted by the model.
+        """
+        if isinstance(data, dict):
+            imgs = data["image"]
+        else:
+            imgs = data
+        imgs = self.preprocess(imgs)
+        preds = self.keras_model(imgs)
+        cms = preds
+        if isinstance(cms, list):
+            cms = cms[-1]
+        peaks, peak_vals = sleap.nn.peak_finding.find_global_peaks(
+            cms,
+            threshold=self.peak_threshold,
+            refinement=self.refinement,
+            integral_patch_size=self.integral_patch_size,
+        )
+
+        out = {"peaks": peaks, "peak_vals": peak_vals}
+        if self.return_confmaps:
+            out["confmaps"] = cms
+        return out
+
+
+class SingleInstanceInferenceModel(InferenceModel):
+    """Single instance prediction model.
+
+    This model encapsulates the basic single instance approach where it is assumed that
+    there is only one instance in the frame. The images are passed to a peak detector
+    which is trained to detect all body parts for the instance assuming a single peak
+    per body part.
+
+    Attributes:
+        single_instance_layer: A single instance instance peak detection layer. This
+            layer takes as input full images and outputs the detected peaks.
+    """
+
+    def __init__(self, single_instance_layer, **kwargs):
+        super().__init__(**kwargs)
+        self.single_instance_layer = single_instance_layer
+
+    def call(self, example):
+        """Predict instances for one batch of images.
+
+        Args:
+            example: This may be either a single batch of images as a 4-D tensor of
+                shape `(batch_size, height, width, channels)`, or a dictionary
+                containing the image batch in the `"images"` key.
+
+        Returns:
+            The predicted instances as a dictionary of tensors with keys:
+
+            `"peaks": (batch_size, n_nodes, 2)`: Instance skeleton points.
+            `"peak_vals": (batch_size, n_instances, n_nodes)`: Confidence values for the
+                instance skeleton points.
+        """
+        return self.single_instance_layer(example)
+
+
 @attr.s(auto_attribs=True)
 class SingleInstancePredictor(Predictor):
     confmap_config: TrainingJobConfig
     confmap_model: Model
+    inference_model: SingleInstanceInferenceModel
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     peak_threshold: float = 0.2
     integral_refinement: bool = True
     integral_patch_size: int = 5
+    batch_size: int = 4
 
     @classmethod
     def from_trained_models(
@@ -1515,6 +1659,7 @@ class SingleInstancePredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
+        batch_size: int = 4
     ) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
         # Load confmap model.
@@ -1524,13 +1669,24 @@ class SingleInstancePredictor(Predictor):
         confmap_model.keras_model = tf.keras.models.load_model(
             confmap_keras_model_path, compile=False
         )
+        inference_model = SingleInstanceInferenceModel(
+            SingleInstanceInferenceLayer(
+                keras_model=confmap_model.keras_model,
+                input_scale=confmap_config.data.preprocessing.input_scaling,
+                pad_to_stride=confmap_model.maximum_stride,
+                refinement="integral" if integral_refinement else "local",
+                integral_patch_size=integral_patch_size,
+            )
+        )
 
         return cls(
             confmap_config=confmap_config,
             confmap_model=confmap_model,
+            inference_model=inference_model,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
+            batch_size=batch_size,
         )
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
@@ -1539,75 +1695,49 @@ class SingleInstancePredictor(Predictor):
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
-        # Infer colorspace preprocessing if not explicit.
-        if not (
-            self.confmap_config.data.preprocessing.ensure_rgb
-            or self.confmap_config.data.preprocessing.ensure_grayscale
-        ):
-            if self.confmap_model.keras_model.inputs[0].shape[-1] == 1:
-                self.confmap_config.data.preprocessing.ensure_grayscale = True
-            else:
-                self.confmap_config.data.preprocessing.ensure_rgb = True
-
-        pipeline += Normalizer.from_config(self.confmap_config.data.preprocessing)
-        pipeline += Resizer.from_config(
-            self.confmap_config.data.preprocessing, points_key=None
+        pipeline += sleap.nn.data.pipelines.Batcher(
+            batch_size=self.batch_size, drop_remainder=False, unrag=False
         )
 
         pipeline += Prefetcher()
-
-        pipeline += KerasModelPredictor(
-            keras_model=self.confmap_model.keras_model,
-            model_input_keys="image",
-            model_output_keys="predicted_instance_confidence_maps",
-        )
-        pipeline += GlobalPeakFinder(
-            confmaps_key="predicted_instance_confidence_maps",
-            peaks_key="predicted_instance",
-            peak_vals_key="predicted_instance_confidences",
-            confmaps_stride=self.confmap_model.heads[0].output_stride,
-            peak_threshold=self.peak_threshold,
-            integral=self.integral_refinement,
-            integral_patch_size=self.integral_patch_size,
-        )
-
-        pipeline += KeyFilter(
-            keep_keys=[
-                "scale",
-                "video_ind",
-                "frame_ind",
-                "predicted_instance",
-                "predicted_instance_confidences",
-            ]
-        )
-
-        pipeline += PointsRescaler(
-            points_key="predicted_instance", scale_key="scale", invert=True
-        )
 
         self.pipeline = pipeline
 
         return pipeline
 
     def make_labeled_frames_from_generator(self, generator, data_provider):
-        grouped_generator = group_examples_iter(generator)
 
         skeleton = self.confmap_config.data.labels.skeletons[0]
 
-        def make_lfs(video_ind, frame_ind, frame_examples):
-            return make_grouped_labeled_frame(
-                video_ind=video_ind,
-                frame_ind=frame_ind,
-                frame_examples=frame_examples,
-                videos=data_provider.videos,
-                skeleton=skeleton,
-                points_key="predicted_instance",
-                point_confidences_key="predicted_instance_confidences",
-            )
-
+        # Loop over batches.
         predicted_frames = []
-        for (video_ind, frame_ind), grouped_examples in grouped_generator:
-            predicted_frames.extend(make_lfs(video_ind, frame_ind, grouped_examples))
+        for ex in generator:
+
+            # Loop over frames.
+            for video_ind, frame_ind, points, confidences in zip(
+                ex["video_ind"], ex["frame_ind"], ex["peaks"], ex["peak_vals"]
+            ):
+
+                frame_ind = frame_ind.numpy().squeeze()
+                video_ind = video_ind.numpy().squeeze()
+
+                # Loop over instances.
+                predicted_instances = [
+                    sleap.instance.PredictedInstance.from_arrays(
+                        points=points,
+                        point_confidences=confidences,
+                        instance_score=np.nansum(confidences),
+                        skeleton=skeleton,
+                    )
+                ]
+
+                predicted_frames.append(
+                    sleap.LabeledFrame(
+                        video=data_provider.videos[video_ind],
+                        frame_idx=frame_ind,
+                        instances=predicted_instances,
+                    )
+                )
 
         return predicted_frames
 
@@ -1617,8 +1747,11 @@ class SingleInstancePredictor(Predictor):
 
         self.pipeline.providers = [data_provider]
 
-        # Yield each example from dataset, catching and logging exceptions
-        return safely_generate(self.pipeline.make_dataset())
+        for ex in self.pipeline.make_dataset():
+            preds = self.inference_model.predict(ex)
+            preds["video_ind"] = ex["video_ind"]
+            preds["frame_ind"] = ex["frame_ind"]
+            yield preds
 
     def predict(
         self,

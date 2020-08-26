@@ -18,7 +18,9 @@ from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
     CentroidCrop,
-    get_model_output_stride
+    get_model_output_stride,
+    SingleInstanceInferenceLayer,
+    SingleInstanceInferenceModel
 )
 
 sleap.nn.system.use_cpu_only()
@@ -414,3 +416,43 @@ def test_get_model_output_stride():
     assert get_model_output_stride(model, input_ind=0, output_ind=1) == 1
     assert get_model_output_stride(model, input_ind=1, output_ind=0) == 4
     assert get_model_output_stride(model, input_ind=1, output_ind=1) == 2
+
+
+def test_single_instance_inference():
+    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
+    points = tf.cast([[1.75, 2.75], [3.75, 4.75], [5.75, 6.75]], tf.float32)
+    points = np.stack([points, points + 1], axis=0)
+    cms = tf.stack(
+        [
+            make_confmaps(points[0], xv, yv, sigma=1.0),
+            make_confmaps(points[1], xv, yv, sigma=1.0),
+        ],
+        axis=0,
+    )
+
+    x_in = tf.keras.layers.Input([12, 12, 3])
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+
+    layer = SingleInstanceInferenceLayer(keras_model=keras_model, refinement="local")
+    assert layer.output_stride == 1
+
+    out = layer(cms)
+    assert_array_equal(out["peaks"], points)
+    assert_allclose(out["peak_vals"], 1.0, atol=0.1)
+    assert "confmaps" not in out
+
+    out = layer({"image": cms})
+    assert_array_equal(out["peaks"], points)
+
+    layer = SingleInstanceInferenceLayer(keras_model=keras_model, refinement="local",
+        return_confmaps=True)
+    out = layer(cms)
+    assert "confmaps" in out
+    assert_array_equal(out["confmaps"], cms)
+
+    model = SingleInstanceInferenceModel(layer)
+    preds = model.predict(cms)
+    assert_array_equal(preds["peaks"], points)
+    assert "peak_vals" in preds
+    assert "confmaps" in preds
