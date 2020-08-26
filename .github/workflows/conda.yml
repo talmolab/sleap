@@ -18,12 +18,12 @@ jobs:
       - uses: goanpeca/setup-miniconda@v1
         with:
           python-version: 3.6
-          environment-file: environment.yml
+          environment-file: environment_no_cuda.yml
           activate-environment: sleap
       - name: Print environment info
         shell: bash -l {0}
         run: |
-          where python
+          which python
           conda info
           conda list
       - name: Test with pytest
