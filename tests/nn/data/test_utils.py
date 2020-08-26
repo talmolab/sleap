@@ -62,7 +62,7 @@ def test_describe_tensors():
         dict(
             tens=tf.ones((1, 2), dtype=tf.uint8),
             rag=tf.ragged.stack([tf.ones((3,)), tf.ones((4,))], axis=0),
-            np=np.array([1, 2])
+            np=np.array([1, 2], dtype="int32")
         ), return_description=True,
     )
     assert desc == "\n".join([
