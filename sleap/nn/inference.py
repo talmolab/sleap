@@ -725,18 +725,26 @@ class CentroidCrop(InferenceLayer):
         # Store crop offsets.
         crop_offsets = centroid_points - (self.crop_size / 2)
 
-        # Crop instances around centroids.
-        bboxes = sleap.nn.data.instance_cropping.make_centered_bboxes(
-            centroid_points, self.crop_size, self.crop_size
-        )
-        crops = sleap.nn.peak_finding.crop_bboxes(full_imgs, bboxes, crop_sample_inds)
-
-        # Reshape to (n_peaks, crop_height, crop_width, channels)
         n_peaks = tf.shape(centroid_points)[0]
-        img_channels = tf.shape(full_imgs)[3]
-        crops = tf.reshape(
-            crops, [n_peaks, self.crop_size, self.crop_size, img_channels]
-        )
+        if n_peaks > 0:
+            # Crop instances around centroids.
+            bboxes = sleap.nn.data.instance_cropping.make_centered_bboxes(
+                centroid_points, self.crop_size, self.crop_size
+            )
+            crops = sleap.nn.peak_finding.crop_bboxes(
+                full_imgs, bboxes, crop_sample_inds
+            )
+
+            # Reshape to (n_peaks, crop_height, crop_width, channels)
+            crops = tf.reshape(
+                crops, [n_peaks, self.crop_size, self.crop_size, tf.shape(full_imgs)[3]]
+            )
+        else:
+            # No peaks found, so just create a placeholder stack.
+            crops = tf.zeros(
+                [n_peaks, self.crop_size, self.crop_size, tf.shape(full_imgs)[3]],
+                dtype=full_imgs.dtype,
+            )
 
         # Group crops by sample (samples, ?, ...).
         samples = tf.shape(imgs)[0]
@@ -1659,7 +1667,7 @@ class SingleInstancePredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
-        batch_size: int = 4
+        batch_size: int = 4,
     ) -> "SingleInstancePredictor":
         """Create predictor from saved models."""
         # Load confmap model.
