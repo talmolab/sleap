@@ -43,7 +43,7 @@
             "centered_instance": {
                 "anchor_part": "thorax",
                 "part_names": null,
-                "sigma": 5.0,
+                "sigma": 2.5,
                 "output_stride": 4
             },
             "multi_instance": null
@@ -123,7 +123,7 @@
             "final_model": false
         },
         "tensorboard": {
-            "write_logs": true,
+            "write_logs": false,
             "loss_frequency": "epoch",
             "architecture_graph": true,
             "profile_graph": false,

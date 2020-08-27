@@ -40,7 +40,7 @@
         "heads": {
             "single_instance": {
                 "part_names": null,
-                "sigma": 5,
+                "sigma": 2.5,
                 "output_stride": 4
             },
             "centroid": null,

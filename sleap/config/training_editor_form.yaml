@@ -523,7 +523,7 @@ optimization:
   label: Plateau Patience
   name: optimization.early_stopping.plateau_patience
   type: int
-- default: true
+- default: false
   help: If True, online hard keypoint mining (OHKM) will be enabled. When this is
     enabled, the loss is computed per keypoint (or edge for PAFs) and sorted from
     lowest (easy) to highest (hard). The hard keypoint loss will be scaled to have

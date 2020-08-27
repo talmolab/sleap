@@ -179,7 +179,7 @@ training:
 - name: _save_viz
   label: Visualize Predictions During Training
   type: bool
-  default: False
+  default: true
 
 - name: _predict_frames
   label: Predict On

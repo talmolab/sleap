@@ -122,7 +122,7 @@
             "final_model": false
         },
         "tensorboard": {
-            "write_logs": true,
+            "write_logs": false,
             "loss_frequency": "epoch",
             "architecture_graph": false,
             "profile_graph": false,
