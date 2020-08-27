@@ -1110,23 +1110,21 @@ class TopdownConfmapsModelTrainer(Trainer):
         validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
 
         # Create an instance peak finding layer.
-        find_instance_peaks = FindInstancePeaks(
-            peak_threshold=0.2,
-            input_scale=self.config.data.preprocessing.input_scaling,
+        find_peaks = FindInstancePeaks(
             keras_model=self.keras_model,
-            confmaps_stride=self.config.model.heads.centered_instance.output_stride,
-            keep_confmaps=True,
+            input_scale=self.config.data.preprocessing.input_scaling,
+            peak_threshold=0.2,
+            refinement="local",
+            return_confmaps=True,
         )
 
         def visualize_example(example):
             # Find peaks by evaluating model.
-            crops = tf.expand_dims(example["instance_image"], axis=0)
-            peak_preds = find_instance_peaks(crops)
-
+            preds = find_peaks(tf.expand_dims(example["instance_image"], axis=0))
             img = example["instance_image"].numpy()
-            cms = peak_preds["instance_confmaps"][0][0].numpy()
+            cms = preds["instance_confmaps"][0][0].numpy()
             pts_gt = example["center_instance"].numpy()
-            pts_pr = peak_preds["instance_peaks"][0][0].numpy()
+            pts_pr = preds["instance_peaks"][0][0].numpy()
 
             scale = 1.0
             if img.shape[0] < 512:
