@@ -1089,7 +1089,7 @@ class TopdownPredictor(Predictor):
     topdown_model: Optional[TopDownModel] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
-    batch_size: int = 16
+    batch_size: int = 4
     peak_threshold: float = 0.2
     integral_refinement: bool = True
     integral_patch_size: int = 5
@@ -1142,7 +1142,7 @@ class TopdownPredictor(Predictor):
         cls,
         centroid_model_path: Optional[Text] = None,
         confmap_model_path: Optional[Text] = None,
-        batch_size: int = 1,
+        batch_size: int = 4,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
@@ -1895,7 +1895,7 @@ def make_cli_parser():
             parser.add_argument(
                 f"--{predictor_name}.batch_size",
                 type=int,
-                default=None,
+                default=4,
                 help=f"Batch size to use for model inference in {predictor_class.__name__} (default: {default_val}).",
             )
 
