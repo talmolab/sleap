@@ -31,18 +31,46 @@ from sleap.nn.config import MultiInstanceConfig
 
 @attr.s(auto_attribs=True, slots=True, frozen=True)
 class PeakID:
+    """Indices to uniquely identify a single peak.
+
+    This is a convenience named tuple for use in the matching pipeline.
+
+    Attributes:
+        node_ind: Index of the node type (channel) of the peak.
+        peak_ind: Index of the peak within its node type.
+    """
+
     node_ind: int
     peak_ind: int
 
 
 @attr.s(auto_attribs=True, slots=True, frozen=True)
 class EdgeType:
+    """Indices to uniquely identify a single edge type.
+
+    This is a convenience named tuple for use in the matching pipeline.
+
+    Attributes:
+        src_node_ind: Index of the source node type within the skeleton edges.
+        dst_node_ind: Index of the destination node type within the skeleton edges.
+    """
+
     src_node_ind: int
     dst_node_ind: int
 
 
 @attr.s(auto_attribs=True, slots=True)
 class EdgeConnection:
+    """Indices to specify a matched connection between two peaks.
+
+    This is a convenience named tuple for use in the matching pipeline.
+
+    Attributes:
+        src_peak_ind: Index of the source peak within all peaks.
+        dst_peak_ind: Index of the destination peak within all peaks.
+        score: Score of the match.
+    """
+
     src_peak_ind: int
     dst_peak_ind: int
     score: float
@@ -171,6 +199,22 @@ def assign_connections_to_instances(
 
 
 def make_predicted_instances(peaks, peak_scores, connections, instance_assignments):
+    """Group peaks by assignments and accumulate scores.
+
+    Args:
+        peaks: Node-grouped peaks
+        peak_scores: Node-grouped peak scores
+        connections: `EdgeConnection`s grouped by edge type
+        instance_assignments: `PeakID` to instance ID mapping
+
+    Returns:
+        Tuple of (predicted_instances, predicted_peak_scores, predicted_instance_scores)
+
+        predicted_instances: (n_instances, n_nodes, 2) array
+        predicted_peak_scores: (n_instances, n_nodes) array
+        predicted_instance_scores: (n_instances,) array
+    """
+
     # Ensure instance IDs are contiguous.
     instance_ids, instance_inds = np.unique(
         list(instance_assignments.values()), return_inverse=True
@@ -202,8 +246,7 @@ def make_predicted_instances(peaks, peak_scores, connections, instance_assignmen
                 )
                 assert instance_ind == instance_assignments[dst_peak_id]
 
-    # Fill in assigned peak data.
-    # n_nodes = peaks.shape[0]
+    # Fill out instances and peak scores.
     n_nodes = len(peaks)
     predicted_instances = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")
     predicted_peak_scores = np.full((n_instances, n_nodes), np.nan, dtype="float32")
@@ -220,6 +263,26 @@ def make_predicted_instances(peaks, peak_scores, connections, instance_assignmen
 
 @attr.s(auto_attribs=True)
 class PAFScorer:
+    """Scoring pipeline based on part affinity fields.
+
+    This class enables grouping of predicted peaks based on PAFs. It holds a set of
+    common parameters that are used across different steps of the pipeline.
+
+    Attributes:
+        part_names: List of string node names in the skeleton.
+        edges: List of (src_node, dst_node) names in the skeleton.
+        pafs_stride: Output stride of the part affinity fields. This will be used to
+            adjust the peak coordinates from full image to PAF subscripts.
+        max_edge_length: The maximum expected length of a connected pair of points in
+            image coordinate units. Candidate connections above this length will be
+            penalized during matching.
+        min_edge_score: Minimum score required to classify a connection as correct.
+        n_points: Number of points to sample along the line integral.
+        min_instance_peaks: Minimum number of peaks the instance should have to be
+            considered a real instance. Instances with fewer peaks than this will be
+            discarded (useful for filtering spurious detections).
+        """
+
     part_names: List[Text]
     edges: List[Tuple[Text, Text]]
     pafs_stride: int
@@ -254,6 +317,22 @@ class PAFScorer:
         n_points: int = 10,
         min_instance_peaks: Union[int, float] = 0,
     ) -> "PAFScorer":
+        """Initialize the PAF scorer from a `MultiInstanceConfig` head config.
+
+        Args:
+            config: `MultiInstanceConfig` from `cfg.model.heads.multi_instance`.
+            max_edge_length: The maximum expected length of a connected pair of points
+                in image coordinate units. Candidate connections above this length will
+                be penalized during matching.
+            min_edge_score: Minimum score required to classify a connection as correct.
+            n_points: Number of points to sample along the line integral.
+            min_instance_peaks: Minimum number of peaks the instance should have to be
+                considered a real instance. Instances with fewer peaks than this will be
+                discarded (useful for filtering spurious detections).
+
+        Returns:
+            The initialized instance of `PAFScorer`.
+        """
         return cls(
             part_names=config.confmaps.part_names,
             edges=config.pafs.edges,
@@ -265,7 +344,17 @@ class PAFScorer:
         )
 
     def sample_edge_line(self, paf, src_peak, dst_peak):
+        """Sample PAF along two points for computing the line integral.
 
+        Args:
+            paf: Single edge PAF of shape `(height, width, 2)`
+            src_peak: Single peak coordinate of shape `(2,)`
+            dst_peak: Single peak coordinate of shape `(2,)`
+
+        Returns:
+            PAF values sampled along the line formed by the two points as a tensor of
+            shape `(n_points, 2)`
+        """
         paf_x = tf.gather(paf, 0, axis=-1)
         paf_y = tf.gather(paf, 1, axis=-1)
 
@@ -294,7 +383,25 @@ class PAFScorer:
         return line_paf
 
     def score_pair(self, line_paf, src_peak, dst_peak):
+        """Compute the score for a pair of points.
 
+        Args:
+            line_paf: Line integral samples from `PAFScorer.sample_edge_line()` of shape
+                `(n_points, 2)`
+            src_peak: Single peak coordinate of shape `(2,)`
+            dst_peak: Single peak coordinate of shape `(2,)`
+
+        Returns:
+            A tuple of `(line_score_with_dist_penalty, fraction_correct)`.
+
+            `line_score_with_dist_penalty` is the line integral score with distance
+            penalty (`PAFScorer.max_edge_length`) applied.
+
+            `fraction_correct` is the fraction of the line integral points that were
+            classified as correct based on `PAFScorer.min_edge_score`.
+
+            Both are scalar `tf.float32`s.
+        """
         # Normalized spatial vector
         spatial_vec = dst_peak - src_peak
         spatial_vec_length = tf.norm(spatial_vec)
@@ -322,7 +429,25 @@ class PAFScorer:
         return line_score_with_dist_penalty, fraction_correct
 
     def score_edge(self, paf, src_peaks, dst_peaks):
+        """Compute scores for all candidates for an edge type.
 
+        Args:
+            paf: Single edge PAF of shape `(height, width, 2)`
+            src_peaks: Peak coordinates of shape `(n_src_peaks, 2)`
+            dst_peaks: Single peak coordinate of shape `(n_dst_peaks, 2)`
+
+        Returns:
+            A tuple of `(line_scores, fraction_correct)`.
+
+            `line_scores` is the line integral score with distance penalty
+            (`PAFScorer.max_edge_length`) applied.
+
+            `fraction_correct` is the fraction of the line integral points that were
+            classified as correct based on `PAFScorer.min_edge_score`.
+
+            Both are vector `tf.float32`s of length `n_src_peaks * n_dst_peaks`
+            containing the score for all combinations of source and destination peaks.
+        """
         line_scores = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
         fraction_correct = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
 
@@ -355,7 +480,7 @@ class PAFScorer:
             line_scores_i = line_scores_i.stack()
             fraction_correct_i = fraction_correct_i.stack()
             line_scores = line_scores.write(i, line_scores_i)
-            fraction_correct = line_scores.write(i, fraction_correct_i)
+            fraction_correct = fraction_correct.write(i, fraction_correct_i)
 
         line_scores = line_scores.stack()
         fraction_correct = fraction_correct.stack()
@@ -363,6 +488,31 @@ class PAFScorer:
         return line_scores, fraction_correct
 
     def score_and_match_edge(self, paf, src_peaks, dst_peaks):
+        """Score and match all peaks for a single edge type.
+
+        Args:
+            paf: Single edge PAF of shape `(height, width, 2)`
+            src_peaks: Peak coordinates of shape `(n_src_peaks, 2)`
+            dst_peaks: Single peak coordinate of shape `(n_dst_peaks, 2)`
+
+        Returns:
+            A tuple of `(src_inds, dst_inds, line_scores, fraction_correct)`.
+
+            `src_inds` and `dst_inds` are `tf.int32` vectors containing the indices to
+            the matched peaks within `src_peaks` and `dst_peaks`, respectively.
+
+            `line_scores` is the line integral score with distance penalty
+            (`PAFScorer.max_edge_length`) applied.
+
+            `fraction_correct` is the fraction of the line integral points that were
+            classified as correct based on `PAFScorer.min_edge_score`.
+
+            All of the returned vectors are of the same length, which is at most of
+            length `min(n_src_peaks, n_dst_peaks)`.
+
+        Notes:
+            Matching is done via Hungarian algorithm via a `tf.py_function` call.
+        """
         # Compute scores from PAF line integrals.
         line_scores, fraction_correct = self.score_edge(paf, src_peaks, dst_peaks)
 
@@ -386,6 +536,36 @@ class PAFScorer:
         return src_inds, dst_inds, line_scores, fraction_correct
 
     def match_all_peaks(self, pafs, flat_peaks, flat_channel_inds):
+        """Score and match all peaks for all edge types.
+
+        Args:
+            pafs: Single frame PAFs of shape `(height, width, n_edges*2)`
+            flat_peaks: All detected peaks for the frame of shape `(n_peaks, 2)` with
+                rows as `[x, y]` coordinates in the full image (not PAF coordinates).
+            flat_channel_inds: Channel (node type) indices for the detected peaks as a
+                `tf.int32` vector of shape `(n_peaks,)`.
+
+        Returns:
+            A tuple of `(flat_edge_inds, flat_src_inds, flat_dst_inds, flat_line_scores,
+            flat_fraction_correct)`.
+
+            `flat_edge_inds` is the edge type index that each match corresponds to as a
+            `tf.int32` vector. This indexes into the skeleton's edge list
+            (`PAFScorer.edge_inds`).
+
+            `flat_src_inds` and `flat_dst_inds` are the indices of the source and
+            destination peaks, respectively, in the input list of `flat_peaks` as
+            `tf.int32` vectors.
+
+            `flat_line_scores` is the line integral score with distance penalty
+            (`PAFScorer.max_edge_length`) applied.
+
+            `flat_fraction_correct` is the fraction of the line integral points that
+            were classified as correct based on `PAFScorer.min_edge_score`.
+
+            All of the returned vectors are of the same length which is the total number
+            of matched pairs of peaks.
+        """
 
         # Make sure PAFs are unflattened into (..., n_edges, 2).
         pafs = tf.reshape(pafs, [tf.shape(pafs)[0], tf.shape(pafs)[1], -1, 2])
@@ -400,22 +580,72 @@ class PAFScorer:
             values=peaks, value_rowids=channel_inds, nrows=self.n_nodes
         )
 
+        # Determine which edges to score by counting the number of candidate source and
+        # destination peaks.
+        edge_src_counts = tf.TensorArray(
+            dtype=tf.int32, size=self.n_edges, dynamic_size=False
+        )
+        edge_dst_counts = tf.TensorArray(
+            dtype=tf.int32, size=self.n_edges, dynamic_size=False
+        )
+        for edge_ind in range(self.n_edges):
+            src_peaks = tf.gather(peaks, self.edge_inds[edge_ind][0], axis=0)
+            dst_peaks = tf.gather(peaks, self.edge_inds[edge_ind][1], axis=0)
+            edge_src_counts = edge_src_counts.write(edge_ind, tf.shape(src_peaks)[0:1])
+            edge_dst_counts = edge_dst_counts.write(edge_ind, tf.shape(dst_peaks)[0:1])
+        edge_src_counts = edge_src_counts.concat()
+        edge_dst_counts = edge_dst_counts.concat()
+        valid_edge_inds = tf.cast(
+            tf.where((edge_src_counts > 0) & (edge_dst_counts > 0)), tf.int32
+        )
+        n_valid_edges = tf.shape(valid_edge_inds)[0]
+
         # Initialize dynamically sized containers.
-        all_edge_inds = tf.TensorArray(dtype=tf.int32, size=0, dynamic_size=True)
-        all_src_inds = tf.TensorArray(dtype=tf.int32, size=0, dynamic_size=True)
-        all_dst_inds = tf.TensorArray(dtype=tf.int32, size=0, dynamic_size=True)
-        all_line_scores = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        all_edge_inds = tf.TensorArray(
+            dtype=tf.int32,
+            size=n_valid_edges,
+            dynamic_size=False,
+            infer_shape=False,
+            element_shape=tf.TensorShape([None]),
+        )
+        all_src_inds = tf.TensorArray(
+            dtype=tf.int32,
+            size=n_valid_edges,
+            dynamic_size=False,
+            infer_shape=False,
+            element_shape=tf.TensorShape([None]),
+        )
+        all_dst_inds = tf.TensorArray(
+            dtype=tf.int32,
+            size=n_valid_edges,
+            dynamic_size=False,
+            infer_shape=False,
+            element_shape=tf.TensorShape([None]),
+        )
+        all_line_scores = tf.TensorArray(
+            dtype=tf.float32,
+            size=n_valid_edges,
+            dynamic_size=False,
+            infer_shape=False,
+            element_shape=tf.TensorShape([None]),
+        )
         all_fraction_correct = tf.TensorArray(
-            dtype=tf.float32, size=0, dynamic_size=True
+            dtype=tf.float32,
+            size=n_valid_edges,
+            dynamic_size=False,
+            infer_shape=False,
+            element_shape=tf.TensorShape([None]),
         )
 
         # Iterate over edges.
-        for edge_ind in range(self.n_edges):
+        for i in range(n_valid_edges):
+            edge_ind = tf.squeeze(tf.gather(valid_edge_inds, i, axis=0))
 
             # Pull out edge data.
             paf = tf.gather(pafs, edge_ind, axis=-2)
-            src_peaks = peaks[self.edge_inds[edge_ind][0]]
-            dst_peaks = peaks[self.edge_inds[edge_ind][1]]
+            src_dst_inds = tf.gather(self.edge_inds, edge_ind, axis=0)
+            src_peaks = tf.gather(peaks, src_dst_inds[0], axis=0)
+            dst_peaks = tf.gather(peaks, src_dst_inds[1], axis=0)
 
             # Score the edge.
             (
@@ -427,14 +657,12 @@ class PAFScorer:
 
             # Store edge results.
             all_edge_inds = all_edge_inds.write(
-                edge_ind, tf.broadcast_to(edge_ind, tf.shape(src_inds))
+                i, tf.broadcast_to(edge_ind, tf.shape(src_inds))
             )
-            all_src_inds = all_src_inds.write(edge_ind, src_inds)
-            all_dst_inds = all_dst_inds.write(edge_ind, dst_inds)
-            all_line_scores = all_line_scores.write(edge_ind, line_scores)
-            all_fraction_correct = all_fraction_correct.write(
-                edge_ind, fraction_correct
-            )
+            all_src_inds = all_src_inds.write(i, src_inds)
+            all_dst_inds = all_dst_inds.write(i, dst_inds)
+            all_line_scores = all_line_scores.write(i, line_scores)
+            all_fraction_correct = all_fraction_correct.write(i, fraction_correct)
 
         # Concatenate dynamic tensors into flat ones. These can be split again by using
         # flat_edge_inds as a grouping vector.
@@ -463,7 +691,49 @@ class PAFScorer:
         flat_line_scores,
         flat_fraction_correct,
     ):
+        """Group matched peaks for a single frame into instances.
 
+        This function performs the final grouping of matched edges into full graphs,
+        i.e., instances.
+
+        Args:
+            flat_peaks: All detected peaks for the frame of shape `(n_peaks, 2)` with
+                rows as `[x, y]` coordinates in the full image (not PAF coordinates).
+            flat_peak_scores: All detected peak scores for the frame of shape
+                `(n_peaks,)`.
+            flat_channel_inds: Channel (node type) indices for the detected peaks as an
+                `int32` vector of shape `(n_peaks,)`.
+            flat_edge_inds: The edge type index that each match corresponds to as a
+                `int32` vector. This indexes into the skeleton's edge list
+                (`PAFScorer.edge_inds`). From `PAFScorer.match_all_peaks()`.
+            flat_src_inds: The indices of the source peaks in the input list of
+                `flat_peaks` as a `int32` vector. From `PAFScorer.match_all_peaks()`.
+            flat_dst_inds: The indices of the destination peaks in the input list of
+                `flat_peaks` as a `int32` vector. From `PAFScorer.match_all_peaks()`.
+            flat_line_scores: The line integral score with distance penalty
+                (`PAFScorer.max_edge_length`) applied for all matches. From
+                `PAFScorer.match_all_peaks()`.
+            flat_fraction_correct: The fraction of the line integral points that were
+                classified as correct based on `PAFScorer.min_edge_score`. From
+                `PAFScorer.match_all_peaks()`.
+
+        Returns:
+            A tuple of `(predicted_instances, predicted_peak_scores,
+            predicted_instance_scores)`.
+
+            `predicted_instances` are the grouped instances as an array of shape
+            `(n_instances, n_nodes, 2)`.
+
+            `predicted_peak_scores` are the scores for the peaks within each instance as
+            an array of shape `(n_instances, n_nodes)`.
+
+            `predicted_instance_scores` are the scores of the instances as the sum of
+            the matched edge scores in an array of shape `(n_instances,)`.
+
+        Notes:
+            This is a Python/numpy function, not TensorFlow, so must be called using
+            `tf.py_function()`.
+        """
         # Convert all the data to numpy arrays.
         flat_peaks = flat_peaks.numpy()
         flat_peak_scores = flat_peak_scores.numpy()
@@ -523,6 +793,34 @@ class PAFScorer:
         return predicted_instances, predicted_peak_scores, predicted_instance_scores
 
     def match_with_pafs(self, pafs, flat_peaks, flat_peak_scores, flat_channel_inds):
+        """Group matched peaks for a single frame into instances.
+
+        Args:
+            pafs: Single frame PAFs of shape `(height, width, n_edges*2)`
+            flat_peaks: All detected peaks for the frame of shape `(n_peaks, 2)` with
+                rows as `[x, y]` coordinates in the full image (not PAF coordinates).
+            flat_peak_scores: All detected peak scores for the frame of shape
+                `(n_peaks,)`.
+            flat_channel_inds: Channel (node type) indices for the detected peaks as a
+                `tf.int32` vector of shape `(n_peaks,)`.
+
+        Returns:
+            A tuple of `(predicted_instances, predicted_peak_scores,
+            predicted_instance_scores)`.
+
+            `predicted_instances` are the grouped instances as an array of shape
+            `(n_instances, n_nodes, 2)`.
+
+            `predicted_peak_scores` are the scores for the peaks within each instance as
+            an array of shape `(n_instances, n_nodes)`.
+
+            `predicted_instance_scores` are the scores of the instances as the sum of
+            the matched edge scores in an array of shape `(n_instances,)`.
+
+        Notes:
+            This is just a wrapper for jointly scoring, matching and grouping based on
+            `PAFScorer.match_all_peaks()` and `PAFScorer.match_instances()`.
+        """
         # Match peaks within each edge using PAF scores.
         (
             flat_edge_inds,
@@ -553,6 +851,97 @@ class PAFScorer:
         )
 
         return predicted_instances, predicted_peak_scores, predicted_instance_scores
+
+    def group_peaks(self, pafs, peaks, peak_vals, peak_channel_inds):
+        """Group matched peaks for a batch of frames into instances.
+
+        Args:
+            pafs: PAFs of shape `(samples, height, width, n_edges*2)`
+            peaks: All detected peaks for all frames as a sample grouped
+                `tf.RaggedTensor` of shape `(samples, (n_instances), 2)` with peaks as
+                `[x, y]` coordinates in the full image (not PAF coordinates).
+            peak_vals: All detected peak scores for all frames as a sample grouped
+                `tf.RaggedTensor` of shape `(samples, (n_instances))`.
+            peak_channel_inds: Channel (node type) indices for the detected peaks as a
+                `tf.int32` type `tf.RaggedTensor` of shape `(samples, (n_instances))`.
+
+        Returns:
+            A tuple of `(predicted_instances, predicted_peak_scores,
+            predicted_instance_scores, sample_inds)`.
+
+            `predicted_instances` are the grouped instances as an array of shape
+            `(n_instances, n_nodes, 2)`.
+
+            `predicted_peak_scores` are the scores for the peaks within each instance as
+            an array of shape `(n_instances, n_nodes)`.
+
+            `predicted_instance_scores` are the scores of the instances as the sum of
+            the matched edge scores in an array of shape `(n_instances,)`.
+
+            `sample_inds` is a `tf.int32` vector of shape `(n_instances)` indicating the
+            sample that each instance corresponds to. This indexes into the first
+            dimension of the inputs and can be used to group the outputs back into
+            samples.
+        """
+        samples = tf.shape(pafs)[0]
+        predicted_instances = tf.TensorArray(
+            dtype=tf.float32,
+            size=samples,
+            dynamic_size=True,
+            element_shape=tf.TensorShape([None, self.n_nodes, 2]),
+            infer_shape=False,
+        )
+        predicted_peak_scores = tf.TensorArray(
+            dtype=tf.float32,
+            size=samples,
+            dynamic_size=True,
+            element_shape=tf.TensorShape([None, self.n_nodes]),
+            infer_shape=False,
+        )
+        predicted_instance_scores = tf.TensorArray(
+            dtype=tf.float32,
+            size=samples,
+            dynamic_size=True,
+            element_shape=tf.TensorShape([None]),
+            infer_shape=False,
+        )
+        sample_inds = tf.TensorArray(
+            dtype=tf.int32,
+            size=samples,
+            dynamic_size=True,
+            element_shape=tf.TensorShape([None]),
+            infer_shape=False,
+        )
+        for i in range(samples):
+            pafs_i = tf.gather(pafs, i, axis=0)
+            peaks_i = tf.gather(peaks, i, axis=0)
+            peak_vals_i = tf.gather(peak_vals, i, axis=0)
+            peak_channel_inds_i = tf.gather(peak_channel_inds, i, axis=0)
+            (
+                predicted_instances_i,
+                predicted_peak_scores_i,
+                predicted_instance_scores_i,
+            ) = self.match_with_pafs(pafs_i, peaks_i, peak_vals_i, peak_channel_inds_i)
+            predicted_instances = predicted_instances.write(i, predicted_instances_i)
+            predicted_peak_scores = predicted_peak_scores.write(
+                i, predicted_peak_scores_i
+            )
+            predicted_instance_scores = predicted_instance_scores.write(
+                i, predicted_instance_scores_i
+            )
+            sample_inds = sample_inds.write(
+                i, tf.fill([tf.shape(predicted_instances_i)[0]], i)
+            )
+        predicted_instances = predicted_instances.concat()
+        predicted_peak_scores = predicted_peak_scores.concat()
+        predicted_instance_scores = predicted_instance_scores.concat()
+        sample_inds = sample_inds.concat()
+        return (
+            predicted_instances,
+            predicted_peak_scores,
+            predicted_instance_scores,
+            sample_inds,
+        )
 
 
 @attr.s(auto_attribs=True)
