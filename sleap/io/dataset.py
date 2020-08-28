@@ -1604,6 +1604,47 @@ class Labels(MutableSequence):
 
         return new_vids
 
+    def to_pipeline(
+        self,
+        batch_size: Optional[int] = None,
+        prefetch: bool = True,
+        frame_indices: Optional[List[int]] = None,
+        user_labeled_only: bool = True,
+    ) -> "sleap.pipelines.Pipeline":
+        """Create a pipeline for reading the dataset.
+
+        Args:
+            batch_size: If not `None`, the video frames will be batched into rank-4
+                tensors. Otherwise, single rank-3 images will be returned.
+            prefetch: If `True`, pipeline will include prefetching.
+            frame_indices: Labeled frame indices to limit the pipeline reader to. If not
+                specified (default), pipeline will read all the labeled frames in the
+                dataset.
+            user_labeled_only: If `True` (default), will only read frames with user
+                labeled instances.
+
+        Returns:
+            A `sleap.pipelines.Pipeline` that builds `tf.data.Dataset` for high
+            throughput I/O during inference.
+
+        See also: sleap.pipelines.LabelsReader
+        """
+        from sleap.nn.data import pipelines
+
+        if user_labeled_only:
+            reader = pipelines.LabelsReader.from_user_instances(self)
+            reader.example_indices = frame_indices
+        else:
+            reader = pipelines.LabelsReader(self, example_indices=frame_indices)
+        pipeline = pipelines.Pipeline(reader)
+        if batch_size is not None:
+            pipeline += pipelines.Batcher(
+                batch_size=batch_size, drop_remainder=False, unrag=False
+            )
+
+        pipeline += pipelines.Prefetcher()
+        return pipeline
+
     @classmethod
     def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
         return cls.make_video_callback(search_paths=search_paths, use_gui=True)

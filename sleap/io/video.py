@@ -1351,7 +1351,10 @@ class Video:
         )
 
     def to_pipeline(
-        self, batch_size: Optional[int] = None, prefetch: bool = True, frame_indices: Optional[List[int]] = None
+        self,
+        batch_size: Optional[int] = None,
+        prefetch: bool = True,
+        frame_indices: Optional[List[int]] = None,
     ) -> "sleap.pipelines.Pipeline":
         """Create a pipeline for reading the video.
 
@@ -1369,7 +1372,10 @@ class Video:
         See also: sleap.pipelines.VideoReader
         """
         from sleap.nn.data import pipelines
-        pipeline = pipelines.Pipeline(pipelines.VideoReader(self, example_indices=frame_indices))
+
+        pipeline = pipelines.Pipeline(
+            pipelines.VideoReader(self, example_indices=frame_indices)
+        )
         if batch_size is not None:
             pipeline += pipelines.Batcher(
                 batch_size=batch_size, drop_remainder=False, unrag=False
