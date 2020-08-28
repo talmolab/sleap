@@ -47,7 +47,7 @@ class LearningDialog(QtWidgets.QDialog):
             for list of nodes for (e.g.) selecting anchor node
     """
 
-    learningFinished = QtCore.Signal(int)
+    _handle_learning_finished = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -559,7 +559,7 @@ class LearningDialog(QtWidgets.QDialog):
             items_for_inference=items_for_inference,
         )
 
-        self.learningFinished.emit(new_counts)
+        self._handle_learning_finished.emit(new_counts)
 
         # count < 0 means there was an error and we didn't get any results.
         if new_counts >= 0:
