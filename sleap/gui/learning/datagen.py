@@ -135,7 +135,7 @@ def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig) -> np.nda
     elif isinstance(head_config, MultiInstanceConfig):
         output_keys["image"] = "image"
         output_keys["confmap"] = "confidence_maps"
-        output_keys["paf"] = "confidence_maps"
+        output_keys["paf"] = "part_affinity_fields"
 
         pipeline += pipelines.MultiConfidenceMapGenerator(
             sigma=cfg.model.heads.multi_instance.confmaps.sigma,
@@ -145,6 +145,7 @@ def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig) -> np.nda
             sigma=cfg.model.heads.multi_instance.pafs.sigma,
             output_stride=cfg.model.heads.multi_instance.pafs.output_stride,
             skeletons=reader.labels.skeletons,
+            flatten_channels=True
         )
 
     ds = pipeline.make_dataset()

@@ -492,8 +492,15 @@ class NumpyVideo:
         else:
             self.__data = None
 
+    def set_video_ndarray(self, data: np.ndarray):
+        self.__data = data
+
     # The properties and methods below complete our contract with the
     # higher level Video interface.
+
+    @property
+    def test_frame(self):
+        return self.get_frame(0)
 
     def matches(self, other: "NumpyVideo") -> np.ndarray:
         """

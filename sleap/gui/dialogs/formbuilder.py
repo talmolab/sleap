@@ -20,6 +20,11 @@ Example of modal dialog:
 
 The results will be empty dictionary if the user hit "cancel", otherwise it
 will contain all data from form (dict keys matching names of fields).
+
+The logic which creates each form field based on the data from the YAML file
+is :py:method:`FormBuilderLayout.add_item()`. Look there if you want to know
+what's supported in the YAML file, what exactly each field type does, or if you
+want to add a new type of supported form field.
 """
 
 import yaml

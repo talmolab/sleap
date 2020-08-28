@@ -5,7 +5,6 @@ import copy
 import pytest
 import numpy as np
 
-import sleap
 from sleap.skeleton import Skeleton
 from sleap.instance import (
     Instance,
@@ -314,13 +313,19 @@ def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
     assert len(user_labels[0].instances) == 2
 
 
-def test_labeledframe_repr():
-    vid = sleap.Video.from_filename("tests/data/videos/small_robot.mp4")
-    lf = LabeledFrame(video=vid, frame_idx=0)
+def test_instance_rotation(skeleton):
 
-    assert repr(lf) == (
-        "LabeledFrame("
-        "video=MediaVideo('tests/data/videos/small_robot.mp4'), "
-        "frame_idx=0, instances=0)"
+    instance = Instance(skeleton=skeleton)
+    instance["head"].x = 20
+    instance["head"].y = 50
+
+    # affine transformation matrix w/ rotation and translation
+    # cv2.getRotationMatrix2D((10, 10), 45, 1)
+    mat = np.array(
+        [[0.70710678, 0.70710678, -4.14213562], [-0.70710678, 0.70710678, 10.0]]
     )
-    assert repr(lf) == str(lf)
+
+    instance.transform_points(mat)
+
+    assert int(instance["head"].x) == 45
+    assert int(instance["head"].y) == 31
