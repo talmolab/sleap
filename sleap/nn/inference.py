@@ -1582,11 +1582,31 @@ class BottomUpInferenceModel(InferenceModel):
 class BottomupPredictor(Predictor):
     bottomup_config: TrainingJobConfig
     bottomup_model: Model
-    inference_model: BottomUpInferenceModel
+    inference_model: Optional[BottomUpInferenceModel] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
     peak_threshold: float = 0.2
     batch_size: int = 4
+    integral_refinement: bool = False
+    integral_patch_size: int = 5
+
+    def _initialize_inference_model(self):
+        self.inference_model = BottomUpInferenceModel(
+            BottomUpInferenceLayer(
+                keras_model=self.bottomup_model.keras_model,
+                paf_scorer=PAFScorer.from_config(
+                    self.bottomup_config.model.heads.multi_instance,
+                    max_edge_length=128,
+                    min_edge_score=0.05,
+                    n_points=10,
+                    min_instance_peaks=0,
+                ),
+                input_scale=self.bottomup_config.data.preprocessing.input_scaling,
+                pad_to_stride=self.bottomup_model.maximum_stride,
+                refinement="integral" if self.integral_refinement else "local",
+                integral_patch_size=self.integral_patch_size,
+            )
+        )
 
     @classmethod
     def from_trained_models(
@@ -1605,30 +1625,17 @@ class BottomupPredictor(Predictor):
         bottomup_model.keras_model = tf.keras.models.load_model(
             bottomup_keras_model_path, compile=False
         )
-        inference_model = BottomUpInferenceModel(
-            BottomUpInferenceLayer(
-                keras_model=bottomup_model.keras_model,
-                paf_scorer=PAFScorer.from_config(
-                    bottomup_config.model.heads.multi_instance,
-                    max_edge_length=128,
-                    min_edge_score=0.05,
-                    n_points=10,
-                    min_instance_peaks=0,
-                ),
-                input_scale=bottomup_config.data.preprocessing.input_scaling,
-                pad_to_stride=bottomup_model.maximum_stride,
-                refinement="integral" if integral_refinement else "local",
-                integral_patch_size=integral_patch_size,
-            )
-        )
-
-        return cls(
+        obj = cls(
             bottomup_config=bottomup_config,
             bottomup_model=bottomup_model,
             inference_model=inference_model,
             peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
             batch_size=batch_size,
         )
+        obj._initialize_inference_model()
+        return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         pipeline = Pipeline()
@@ -1701,6 +1708,8 @@ class BottomupPredictor(Predictor):
 
         if self.pipeline is None:
             self.make_pipeline()
+        if self.inference_model is None:
+            self._initialize_inference_model()
 
         self.pipeline.providers = [data_provider]
 
@@ -1880,12 +1889,23 @@ class SingleInstanceInferenceModel(InferenceModel):
 class SingleInstancePredictor(Predictor):
     confmap_config: TrainingJobConfig
     confmap_model: Model
-    inference_model: SingleInstanceInferenceModel
+    inference_model: Optional[SingleInstanceInferenceModel] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     peak_threshold: float = 0.2
     integral_refinement: bool = True
     integral_patch_size: int = 5
     batch_size: int = 4
+
+    def _initialize_inference_model(self):
+        self.inference_model = SingleInstanceInferenceModel(
+            SingleInstanceInferenceLayer(
+                keras_model=self.confmap_model.keras_model,
+                input_scale=self.confmap_config.data.preprocessing.input_scaling,
+                pad_to_stride=self.confmap_model.maximum_stride,
+                refinement="integral" if self.integral_refinement else "local",
+                integral_patch_size=self.integral_patch_size,
+            )
+        )
 
     @classmethod
     def from_trained_models(
@@ -1904,17 +1924,7 @@ class SingleInstancePredictor(Predictor):
         confmap_model.keras_model = tf.keras.models.load_model(
             confmap_keras_model_path, compile=False
         )
-        inference_model = SingleInstanceInferenceModel(
-            SingleInstanceInferenceLayer(
-                keras_model=confmap_model.keras_model,
-                input_scale=confmap_config.data.preprocessing.input_scaling,
-                pad_to_stride=confmap_model.maximum_stride,
-                refinement="integral" if integral_refinement else "local",
-                integral_patch_size=integral_patch_size,
-            )
-        )
-
-        return cls(
+        obj = cls(
             confmap_config=confmap_config,
             confmap_model=confmap_model,
             inference_model=inference_model,
@@ -1923,6 +1933,8 @@ class SingleInstancePredictor(Predictor):
             integral_patch_size=integral_patch_size,
             batch_size=batch_size,
         )
+        obj._initialize_inference_model()
+        return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
 
@@ -1979,6 +1991,9 @@ class SingleInstancePredictor(Predictor):
     def predict_generator(self, data_provider: Provider):
         if self.pipeline is None:
             self.make_pipeline()
+
+        if self.inference_model is None:
+            self._initialize_inference_model()
 
         self.pipeline.providers = [data_provider]
 
