@@ -380,7 +380,9 @@ class BottomUpPipeline:
             pipeline += Preloader()
 
         if self.optimization_config.online_shuffling:
-            pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
+            pipeline += Shuffler(
+                shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
+            )
 
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
@@ -410,14 +412,18 @@ class BottomUpPipeline:
             # such that no sample is repeated within the epoch. But this breaks if there
             # are fewer samples than the batch size.
             pipeline += Batcher(
-                batch_size=self.optimization_config.batch_size, drop_remainder=True
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
             )
             pipeline += Repeater()
 
         else:
             pipeline += Repeater()
             pipeline += Batcher(
-                batch_size=self.optimization_config.batch_size, drop_remainder=True
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
             )
 
         if self.optimization_config.prefetch:
@@ -523,7 +529,9 @@ class CentroidConfmapsPipeline:
             pipeline += Preloader()
 
         if self.optimization_config.online_shuffling:
-            pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
+            pipeline += Shuffler(
+                shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
+            )
 
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
@@ -551,14 +559,18 @@ class CentroidConfmapsPipeline:
             # such that no sample is repeated within the epoch. But this breaks if there
             # are fewer samples than the batch size.
             pipeline += Batcher(
-                batch_size=self.optimization_config.batch_size, drop_remainder=True
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
             )
             pipeline += Repeater()
 
         else:
             pipeline += Repeater()
             pipeline += Batcher(
-                batch_size=self.optimization_config.batch_size, drop_remainder=True
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
             )
 
         if self.optimization_config.prefetch:
@@ -661,7 +673,9 @@ class TopdownConfmapsPipeline:
             pipeline += Preloader()
 
         if self.optimization_config.online_shuffling:
-            pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
+            pipeline += Shuffler(
+                shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
+            )
 
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
@@ -685,14 +699,18 @@ class TopdownConfmapsPipeline:
             # such that no sample is repeated within the epoch. But this breaks if there
             # are fewer samples than the batch size.
             pipeline += Batcher(
-                batch_size=self.optimization_config.batch_size, drop_remainder=True
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
             )
             pipeline += Repeater()
 
         else:
             pipeline += Repeater()
             pipeline += Batcher(
-                batch_size=self.optimization_config.batch_size, drop_remainder=True
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
             )
 
         if self.optimization_config.prefetch:
