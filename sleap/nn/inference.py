@@ -1628,7 +1628,6 @@ class BottomupPredictor(Predictor):
         obj = cls(
             bottomup_config=bottomup_config,
             bottomup_model=bottomup_model,
-            inference_model=inference_model,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
@@ -1927,7 +1926,6 @@ class SingleInstancePredictor(Predictor):
         obj = cls(
             confmap_config=confmap_config,
             confmap_model=confmap_model,
-            inference_model=inference_model,
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
