@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.io.format.filehandle &#8212; SLEAP  documentation</title>
+    <title>sleap.io.asyncvideo &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -15,8 +15,8 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.io.format.genericjson" href="sleap.io.format.genericjson.html" />
-    <link rel="prev" title="sleap.io.format.dispatch" href="sleap.io.format.dispatch.html" />
+    <link rel="next" title="sleap.io.convert" href="sleap.io.convert.html" />
+    <link rel="prev" title="sleap.info.write_tracking_h5" href="sleap.info.write_tracking_h5.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -33,66 +33,68 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-sleap.io.format.filehandle">
-<span id="sleap-io-format-filehandle"></span><h1>sleap.io.format.filehandle<a class="headerlink" href="#module-sleap.io.format.filehandle" title="Permalink to this headline">¶</a></h1>
-<p>File object which can be passed to adaptors.</p>
-<p>We use this since multiple file adaptors may need to open/read the file while
-dispatch is determining which adaptor to use, and the <cite>FileHandle</cite> allows us
-to keep any results from previous reads.</p>
+  <div class="section" id="module-sleap.io.asyncvideo">
+<span id="sleap-io-asyncvideo"></span><h1>sleap.io.asyncvideo<a class="headerlink" href="#module-sleap.io.asyncvideo" title="Permalink to this headline">¶</a></h1>
+<p>Support for loading video frames (by chunk) in background process.</p>
 <dl class="py class">
-<dt id="sleap.io.format.filehandle.FileHandle">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.filehandle.</code><code class="sig-name descname">FileHandle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">is_hdf5</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_json</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_open</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">text</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">json</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference to a file; can hold loaded data so it needn’t be read twice.</p>
+<dt id="sleap.io.asyncvideo.AsyncVideo">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.asyncvideo.</code><code class="sig-name descname">AsyncVideo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_port</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">9010</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/asyncvideo.html#AsyncVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.asyncvideo.AsyncVideo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supports fetching chunks from video in background process.</p>
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Closes the file.</p>
+<dt id="sleap.io.asyncvideo.AsyncVideo.chunks">
+<em class="property">property </em><code class="sig-name descname">chunks</code><a class="headerlink" href="#sleap.io.asyncvideo.AsyncVideo.chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator for fetching chunks of frames.</p>
+<p>When all chunks are loaded, closes the server and communication ports.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><p>Tuple with (list of frame indices, ndarray of frames)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.file">
-<em class="property">property </em><code class="sig-name descname">file</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.file" title="Permalink to this definition">¶</a></dt>
-<dd><p>The raw file object.</p>
+<dt id="sleap.io.asyncvideo.AsyncVideo.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/asyncvideo.html#AsyncVideo.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.asyncvideo.AsyncVideo.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the async video server and communication ports.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.format_id">
-<em class="property">property </em><code class="sig-name descname">format_id</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.format_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an ID from the metadata we store in some HDF5 or JSON formats.</p>
-<p>This can be used if we need to distinguish multiple formats with a
-common underlying file type, e.g., HDF5-based file formats. See
-<cite>LabelsV1Adaptor</cite> for an example (the format id is here used to
-determine whether to convert from “gridline” to “midpixel” coordinates).</p>
+<dt id="sleap.io.asyncvideo.AsyncVideo.from_video">
+<em class="property">classmethod </em><code class="sig-name descname">from_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idxs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frames_per_chunk</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#sleap.io.asyncvideo.AsyncVideo" title="sleap.io.asyncvideo.AsyncVideo">sleap.io.asyncvideo.AsyncVideo</a><a class="reference internal" href="../_modules/sleap/io/asyncvideo.html#AsyncVideo.from_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.asyncvideo.AsyncVideo.from_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create object and start loading frames in background process.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.is_hdf5">
-<em class="property">property </em><code class="sig-name descname">is_hdf5</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether file is HDF5.</p>
+<dt id="sleap.io.asyncvideo.AsyncVideo.load_by_chunk">
+<code class="sig-name descname">load_by_chunk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idxs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frames_per_chunk</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/asyncvideo.html#AsyncVideo.load_by_chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.asyncvideo.AsyncVideo.load_by_chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends request for loading video in background process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> to load</p></li>
+<li><p><strong>frame_idxs</strong> – Frame indices we want to load; if None, then full video
+is loaded.</p></li>
+<li><p><strong>frames_per_chunk</strong> – How many frames to load per chunk.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None, data should be accessed via <a href="#id1"><span class="problematic" id="id2">:py:method:`chunks`</span></a>.</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.is_json">
-<em class="property">property </em><code class="sig-name descname">is_json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether file is JSON.</p>
 </dd></dl>
 
+<dl class="py class">
+<dt id="sleap.io.asyncvideo.AsyncVideoServer">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.asyncvideo.</code><code class="sig-name descname">AsyncVideoServer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_port</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/asyncvideo.html#AsyncVideoServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.asyncvideo.AsyncVideoServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class which loads video frames in background on request.</p>
+<p>All interactions with video server should go through <a class="reference internal" href="#sleap.io.asyncvideo.AsyncVideo" title="sleap.io.asyncvideo.AsyncVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncVideo</span></code></a>
+which runs in local thread.</p>
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.json">
-<em class="property">property </em><code class="sig-name descname">json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.json" title="Permalink to this definition">¶</a></dt>
-<dd><p>The loaded JSON dictionary (for a JSON file).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.open">
-<code class="sig-name descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.open" title="Permalink to this definition">¶</a></dt>
-<dd><p>Opens the file (if it’s not already open).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.text">
-<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.text" title="Permalink to this definition">¶</a></dt>
-<dd><p>The text from a text file.</p>
+<dt id="sleap.io.asyncvideo.AsyncVideoServer.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/asyncvideo.html#AsyncVideoServer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.asyncvideo.AsyncVideoServer.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to be run in sub-process; can be overridden in sub-class</p>
 </dd></dl>
 
 </dd></dl>
@@ -171,7 +173,7 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.io.asyncvideo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
@@ -184,7 +186,7 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
@@ -246,8 +248,8 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api.html">Developer API</a><ul>
-      <li>Previous: <a href="sleap.io.format.dispatch.html" title="previous chapter">sleap.io.format.dispatch</a></li>
-      <li>Next: <a href="sleap.io.format.genericjson.html" title="next chapter">sleap.io.format.genericjson</a></li>
+      <li>Previous: <a href="sleap.info.write_tracking_h5.html" title="previous chapter">sleap.info.write_tracking_h5</a></li>
+      <li>Next: <a href="sleap.io.convert.html" title="next chapter">sleap.io.convert</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -282,7 +284,7 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/_autosummary/sleap.io.format.filehandle.rst.txt"
+      <a href="../_sources/_autosummary/sleap.io.asyncvideo.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

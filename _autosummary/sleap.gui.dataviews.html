@@ -36,10 +36,42 @@
   <div class="section" id="module-sleap.gui.dataviews">
 <span id="sleap-gui-dataviews"></span><h1>sleap.gui.dataviews<a class="headerlink" href="#module-sleap.gui.dataviews" title="Permalink to this headline">¶</a></h1>
 <p>Data table widgets and view models used in GUI app.</p>
+<p>Typically you’ll need to subclass <a class="reference internal" href="#sleap.gui.dataviews.GenericTableModel" title="sleap.gui.dataviews.GenericTableModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenericTableModel</span></code></a> for your data
+(unless your data is already a list of dictionaries with keys matching
+the columns of the table you want), but you can use <a class="reference internal" href="#sleap.gui.dataviews.GenericTableView" title="sleap.gui.dataviews.GenericTableView"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenericTableView</span></code></a>
+as is. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">videos_table</span> <span class="o">=</span> <span class="n">GenericTableView</span><span class="p">(</span>
+    <span class="n">state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span>
+    <span class="n">row_name</span><span class="o">=</span><span class="s2">&quot;video&quot;</span><span class="p">,</span>
+    <span class="n">is_activatable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">VideosTableModel</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="p">),</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py class">
 <dt id="sleap.gui.dataviews.GenericTableModel">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">GenericTableModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">items</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>list<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">properties</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.gui.commands.html#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dataviews.html#GenericTableModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic table model to show a list of properties for some items.</p>
+<dd><p>Generic Qt table model to show a list of properties for some items.</p>
+<dl class="simple">
+<dt>Typically this will be used as base class. Subclasses can implement methods:</dt><dd><dl class="simple">
+<dt>object_to_items: allows conversion from a single object to a list of</dt><dd><p>items which correspond to rows of table. for example, a table
+which shows skeleton nodes could implement this method and return
+the list of nodes for skeleton.</p>
+</dd>
+<dt>item_to_data: if each item isn’t already a dictionary with keys for</dt><dd><p>columns of table (i.e., <cite>properties</cite> attribute) and values to show
+in table, then use this method to convert each item to such a dict.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Note that if you need to convert a single object to a list of dictionaries,
+you can implement both steps in <cite>object_to_items</cite> (and use the default
+implementation of <cite>item_to_data</cite> which doesn’t do any conversion), or you
+can implement this in two steps using the two methods. It doesn’t make
+much difference which you do.</p>
+<p>For editable table, you must implement <cite>can_set</cite> and <cite>set_item</cite> methods.</p>
+<p>Usually it’s simplest to override <cite>properties</cite> in the subclass, rather
+than passing as an init arg.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -131,6 +163,9 @@
 <dt id="sleap.gui.dataviews.GenericTableModel.sort">
 <code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">column_idx: int</em>, <em class="sig-param">order: &lt;class 'PySide2.QtCore.Qt.SortOrder'&gt; = PySide2.QtCore.Qt.SortOrder.AscendingOrder</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dataviews.html#GenericTableModel.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableModel.sort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sorts table by given column and order.</p>
+<p>Correctly sorts numeric string (i.e., “123.45”) numerically rather
+than alphabetically. Has logic for correctly sorting video frames by
+video then frame index.</p>
 </dd></dl>
 
 </dd></dl>
@@ -138,10 +173,43 @@
 <dl class="py class">
 <dt id="sleap.gui.dataviews.GenericTableView">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dataviews.</code><code class="sig-name descname">GenericTableView</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="p">:</span> <span class="n">PySide2.QtCore.QAbstractTableModel</span></em>, <em class="sig-param"><span class="n">state</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.gui.state.html#sleap.gui.state.GuiState" title="sleap.gui.state.GuiState">sleap.gui.state.GuiState</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">row_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name_prefix</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_sortable</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_activatable</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dataviews.html#GenericTableView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableView" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><p>Qt table view for use with <cite>GenericTableModel</cite> (and subclasses).</p>
+<p>Uses the <code class="xref py py-class docutils literal notranslate"><span class="pre">GuiState</span></code> object to keep track of which row/item is
+selected. If the <cite>row_name</cite> attribute is “foo”, then a “foo_selected”
+state will be item corresponding to the currently selected row in table
+(and the table will select the row if this state is updated by something
+else). When <cite>is_activatable</cite> is True, then a “foo” state will also be
+set to the item when a row is activated–typically by being double-clicked.
+This state can then be used to trigger something else outside the table.</p>
+<p>Note that by default “<a href="#id1"><span class="problematic" id="id2">selected_</span></a>” is used for the state key, e.g.,
+“selected_foo”, but you can set the <cite>name_prefix</cite> attribute/init arg if
+for some reason you need this to be different. For instance, the table
+of instances in the GUI sets this to “” so that the row for an instance
+is automatically selected when <cite>state[“instance”]</cite> is set outside the table.</p>
+<dl class="py method">
 <dt id="sleap.gui.dataviews.GenericTableView.activateSelected">
 <code class="sig-name descname">activateSelected</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dataviews.html#GenericTableView.activateSelected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableView.activateSelected" title="Permalink to this definition">¶</a></dt>
-<dd><p>Activates item selected in table.</p>
+<dd><p>Activates item currently selected in table.</p>
+<p>“Activate” means that the relevant <code class="xref py py-class docutils literal notranslate"><span class="pre">GuiState</span></code> state variable
+is set to the currently selected item.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dataviews.GenericTableView.getSelectedRowItem">
+<code class="sig-name descname">getSelectedRowItem</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/sleap/gui/dataviews.html#GenericTableView.getSelectedRowItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableView.getSelectedRowItem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns item corresponding to currently selected row.</p>
+<p>Note that if the table model converts items to dictionaries (using
+<cite>item_to_data</cite> method), then returned item will be the original item,
+not the converted dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dataviews.GenericTableView.selectRowItem">
+<code class="sig-name descname">selectRowItem</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dataviews.html#GenericTableView.selectRowItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dataviews.GenericTableView.selectRowItem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects row corresponding to item.</p>
+<p>If the table model converts items to dictionaries (using <cite>item_to_data</cite>
+method), then <cite>item</cite> argument should be the original item, not the
+converted dict.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -329,6 +397,7 @@ selected edge source node.</p></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
@@ -375,6 +444,7 @@ selected edge source node.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>

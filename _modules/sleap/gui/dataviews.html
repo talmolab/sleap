@@ -34,6 +34,19 @@
   <h1>Source code for sleap.gui.dataviews</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Data table widgets and view models used in GUI app.</span>
+
+<span class="sd">Typically you&#39;ll need to subclass :py:class:`GenericTableModel` for your data</span>
+<span class="sd">(unless your data is already a list of dictionaries with keys matching</span>
+<span class="sd">the columns of the table you want), but you can use :py:class:`GenericTableView`</span>
+<span class="sd">as is. For example::</span>
+
+<span class="sd">    videos_table = GenericTableView(</span>
+<span class="sd">        state=self.state,</span>
+<span class="sd">        row_name=&quot;video&quot;,</span>
+<span class="sd">        is_activatable=True,</span>
+<span class="sd">        model=VideosTableModel(items=self.labels.videos, context=self.commands),</span>
+<span class="sd">        )</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span>
@@ -54,7 +67,28 @@
 
 
 <div class="viewcode-block" id="GenericTableModel"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.dataviews.html#sleap.gui.dataviews.GenericTableModel">[docs]</a><span class="k">class</span> <span class="nc">GenericTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generic table model to show a list of properties for some items.</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic Qt table model to show a list of properties for some items.</span>
+
+<span class="sd">    Typically this will be used as base class. Subclasses can implement methods:</span>
+<span class="sd">        object_to_items: allows conversion from a single object to a list of</span>
+<span class="sd">            items which correspond to rows of table. for example, a table</span>
+<span class="sd">            which shows skeleton nodes could implement this method and return</span>
+<span class="sd">            the list of nodes for skeleton.</span>
+<span class="sd">        item_to_data: if each item isn&#39;t already a dictionary with keys for</span>
+<span class="sd">            columns of table (i.e., `properties` attribute) and values to show</span>
+<span class="sd">            in table, then use this method to convert each item to such a dict.</span>
+
+<span class="sd">    Note that if you need to convert a single object to a list of dictionaries,</span>
+<span class="sd">    you can implement both steps in `object_to_items` (and use the default</span>
+<span class="sd">    implementation of `item_to_data` which doesn&#39;t do any conversion), or you</span>
+<span class="sd">    can implement this in two steps using the two methods. It doesn&#39;t make</span>
+<span class="sd">    much difference which you do.</span>
+
+<span class="sd">    For editable table, you must implement `can_set` and `set_item` methods.</span>
+
+<span class="sd">    Usually it&#39;s simplest to override `properties` in the subclass, rather</span>
+<span class="sd">    than passing as an init arg.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        properties: The list of property names (table columns).</span>
@@ -189,7 +223,13 @@
         <span class="n">column_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">order</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">AscendingOrder</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sorts table by given column and order.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sorts table by given column and order.</span>
+
+<span class="sd">        Correctly sorts numeric string (i.e., &quot;123.45&quot;) numerically rather</span>
+<span class="sd">        than alphabetically. Has logic for correctly sorting video frames by</span>
+<span class="sd">        video then frame index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">column_idx</span><span class="p">]</span>
         <span class="n">reverse</span> <span class="o">=</span> <span class="n">order</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SortOrder</span><span class="o">.</span><span class="n">DescendingOrder</span>
 
@@ -238,6 +278,24 @@
 
 
 <div class="viewcode-block" id="GenericTableView"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.dataviews.html#sleap.gui.dataviews.GenericTableView">[docs]</a><span class="k">class</span> <span class="nc">GenericTableView</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Qt table view for use with `GenericTableModel` (and subclasses).</span>
+
+<span class="sd">    Uses the :py:class:`GuiState` object to keep track of which row/item is</span>
+<span class="sd">    selected. If the `row_name` attribute is &quot;foo&quot;, then a &quot;foo_selected&quot;</span>
+<span class="sd">    state will be item corresponding to the currently selected row in table</span>
+<span class="sd">    (and the table will select the row if this state is updated by something</span>
+<span class="sd">    else). When `is_activatable` is True, then a &quot;foo&quot; state will also be</span>
+<span class="sd">    set to the item when a row is activated--typically by being double-clicked.</span>
+<span class="sd">    This state can then be used to trigger something else outside the table.</span>
+
+<span class="sd">    Note that by default &quot;selected_&quot; is used for the state key, e.g.,</span>
+<span class="sd">    &quot;selected_foo&quot;, but you can set the `name_prefix` attribute/init arg if</span>
+<span class="sd">    for some reason you need this to be different. For instance, the table</span>
+<span class="sd">    of instances in the GUI sets this to &quot;&quot; so that the row for an instance</span>
+<span class="sd">    is automatically selected when `state[&quot;instance&quot;]` is set outside the table.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">row_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;selected_&quot;</span>
     <span class="n">is_activatable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -279,11 +337,23 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span></div>
 
 <div class="viewcode-block" id="GenericTableView.activateSelected"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.dataviews.html#sleap.gui.dataviews.GenericTableView.activateSelected">[docs]</a>    <span class="k">def</span> <span class="nf">activateSelected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Activates item selected in table.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activates item currently selected in table.</span>
+
+<span class="sd">        &quot;Activate&quot; means that the relevant :py:class:`GuiState` state variable</span>
+<span class="sd">        is set to the currently selected item.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_activatable</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelectedRowItem</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">selectRowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+<div class="viewcode-block" id="GenericTableView.selectRowItem"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.dataviews.html#sleap.gui.dataviews.GenericTableView.selectRowItem">[docs]</a>    <span class="k">def</span> <span class="nf">selectRowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selects row corresponding to item.</span>
+
+<span class="sd">        If the table model converts items to dictionaries (using `item_to_data`</span>
+<span class="sd">        method), then `item` argument should be the original item, not the</span>
+<span class="sd">        converted dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -292,13 +362,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">table_row_idx</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span></div>
 
-    <span class="k">def</span> <span class="nf">getSelectedRowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GenericTableView.getSelectedRowItem"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.dataviews.html#sleap.gui.dataviews.GenericTableView.getSelectedRowItem">[docs]</a>    <span class="k">def</span> <span class="nf">getSelectedRowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns item corresponding to currently selected row.</span>
+
+<span class="sd">        Note that if the table model converts items to dictionaries (using</span>
+<span class="sd">        `item_to_data` method), then returned item will be the original item,</span>
+<span class="sd">        not the converted dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">idx</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">original_items</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">row</span><span class="p">()]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">original_items</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">row</span><span class="p">()]</span></div></div>
 
 
 <div class="viewcode-block" id="VideosTableModel"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.dataviews.html#sleap.gui.dataviews.VideosTableModel">[docs]</a><span class="k">class</span> <span class="nc">VideosTableModel</span><span class="p">(</span><span class="n">GenericTableModel</span><span class="p">):</span>

@@ -38,6 +38,8 @@
 <span class="kn">import</span> <span class="nn">cattr</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
 <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.formbuilder</span> <span class="kn">import</span> <span class="n">YamlFormWidget</span>
@@ -79,7 +81,7 @@
 <span class="sd">            for list of nodes for (e.g.) selecting anchor node</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">learningFinished</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">_handle_learning_finished</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -144,9 +146,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="p">,</span> <span class="n">tab_label</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_tabs</span><span class="p">()</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
         <span class="c1"># Layout for entire dialog</span>
         <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
         <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tab_widget</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message_widget</span><span class="p">)</span>
         <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons_layout_widget</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
@@ -509,15 +514,53 @@
 
     <span class="k">def</span> <span class="nf">_validate_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">can_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;inference&quot;</span><span class="p">:</span>
-            <span class="c1"># Make sure we have trained models for each required head</span>
-            <span class="k">for</span> <span class="n">tab_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span><span class="p">:</span>
-                <span class="n">tab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">]</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">tab</span><span class="o">.</span><span class="n">has_trained_config_selected</span><span class="p">:</span>
-                    <span class="n">can_run</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="k">break</span>
+            <span class="c1"># Make sure we have trained models for each required head.</span>
+            <span class="n">untrained</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">tab_name</span>
+                <span class="k">for</span> <span class="n">tab_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shown_tab_names</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="n">tab_name</span><span class="p">]</span><span class="o">.</span><span class="n">has_trained_config_selected</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">untrained</span><span class="p">:</span>
+                <span class="n">can_run</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot run inference with untrained models (</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">untrained</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span>
 
+        <span class="c1"># Make sure skeleton will be valid for bottom-up inference.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;training&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_pipeline</span> <span class="o">==</span> <span class="s2">&quot;bottom-up&quot;</span><span class="p">:</span>
+            <span class="n">skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">is_arborescence</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;Cannot run bottom-up pipeline when skeleton is not an arborescence.&quot;</span>
+
+                <span class="n">root_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">root_nodes</span><span class="p">]</span>
+                <span class="n">over_max_in_degree</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">in_degree_over_one</span><span class="p">]</span>
+                <span class="n">cycles</span> <span class="o">=</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">cycles</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">root_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; There are multiple root nodes: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_names</span><span class="p">)</span><span class="si">}</span><span class="s2"> (there should be exactly one node which is not a target).&quot;</span>
+
+                <span class="k">if</span> <span class="n">over_max_in_degree</span><span class="p">:</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; There are nodes which are target in multiple edges: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">over_max_in_degree</span><span class="p">)</span><span class="si">}</span><span class="s2"> (maximum in-degree should be 1).&lt;/li&gt;&quot;</span>
+
+                <span class="k">if</span> <span class="n">cycles</span><span class="p">:</span>
+                    <span class="n">cycle_strings</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="n">cycles</span><span class="p">:</span>
+                        <span class="n">cycle_strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="s2">&quot; &amp;ndash;&amp;gt; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">cycle</span><span class="p">))</span>
+                        <span class="p">)</span>
+
+                    <span class="n">message</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot; There are cycles in graph: </span><span class="si">{</span><span class="s1">&#39;; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cycle_strings</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">can_run</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">can_run</span> <span class="ow">and</span> <span class="n">message</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&lt;b&gt;Unable to run:&lt;/b&gt;&lt;br /&gt;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_widget</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">run_button</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">can_run</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">view_datagen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -550,7 +593,7 @@
             <span class="n">items_for_inference</span><span class="o">=</span><span class="n">items_for_inference</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">learningFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">new_counts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle_learning_finished</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">new_counts</span><span class="p">)</span>
 
         <span class="c1"># count &lt; 0 means there was an error and we didn&#39;t get any results.</span>
         <span class="k">if</span> <span class="n">new_counts</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
@@ -625,6 +668,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">buttons</span>
+
+    <span class="k">def</span> <span class="nf">set_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">set_message</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">get_form_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>

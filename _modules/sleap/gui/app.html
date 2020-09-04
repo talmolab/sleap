@@ -34,6 +34,49 @@
   <h1>Source code for sleap.gui.app</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Main GUI application for labeling, training/inference, and proofreading.</span>
+
+<span class="sd">Each open project is an instance of :py:class:`MainWindow`.</span>
+
+<span class="sd">The main window contains a :py:class:`QtVideoPlayer` widget for showing</span>
+<span class="sd">video frames (the video player widget contains both a graphics view widget</span>
+<span class="sd">that shows the frame image and a seekbar widget for navigation). The main</span>
+<span class="sd">window also contains various &quot;data views&quot;--tables which can be docked</span>
+<span class="sd">in the window as well as a status bar.</span>
+
+<span class="sd">When a new instance of :py:class:`MainWindow` is created, it creates</span>
+<span class="sd">all of these widgets, sets up the menus, and also creates</span>
+
+<span class="sd">- single :py:class:`GuiState` object</span>
+<span class="sd">- single :py:class:`CommandContext` object</span>
+<span class="sd">- single :py:class:`ColorManager` object</span>
+<span class="sd">- multiple overlay objects (subclasses of :py:class:`BaseOverlay`)</span>
+
+<span class="sd">A timer is started (runs via Qt event loop) which enables/disables</span>
+<span class="sd">various menu items and buttons based on current state (e.g., you</span>
+<span class="sd">can&#39;t delete an instance if no instance is selected).</span>
+
+<span class="sd">Shortcuts are loaded using :py:class:`Shortcuts` class. Preferences</span>
+<span class="sd">are loaded by importing `prefs`, a singleton instance of</span>
+<span class="sd">:py:class:`Preferences`.</span>
+
+<span class="sd">:py:class:`GuiState` is used for storing &quot;global&quot; state for the project</span>
+<span class="sd">(e.g., :py:class:`Labels` object, the current frame, current instance,</span>
+<span class="sd">whether to show track trails, etc.). every menu command with state</span>
+<span class="sd">(e.g., check/uncheck) should be connected to a state variable.</span>
+
+<span class="sd">:py:class:`CommandContext` has methods which can be triggered</span>
+<span class="sd">by menu items/buttons/etc in the GUI to perform various actions. The</span>
+<span class="sd">command context enforces a pattern for implementing each command in</span>
+<span class="sd">its own class, it keeps track of whether there are unsaved changes</span>
+<span class="sd">(and in the future would make it easier to implement undo/redo), and</span>
+<span class="sd">it handles triggering the relevant updates in the GUI based on the</span>
+<span class="sd">effects of the command (these are passed using `UpdateTopic` enum and</span>
+<span class="sd">handed by :py:method:`MainWindow.on_data_update()`).</span>
+
+<span class="sd">:py:class:`ColorManager` loads color palettes, keeps track of current</span>
+<span class="sd">palette, and should always be queried for how to draw instances--this</span>
+<span class="sd">ensures consistency (e.g.) between color of instances drawn on video</span>
+<span class="sd">frame and instances listed in data view table.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -134,6 +177,8 @@
 
         <span class="k">if</span> <span class="n">labels_path</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">loadProjectFile</span><span class="p">(</span><span class="n">labels_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;project_loaded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="MainWindow.setWindowTitle"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.setWindowTitle">[docs]</a>    <span class="k">def</span> <span class="nf">setWindowTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets window title (if value is not None).&quot;&quot;&quot;</span>
@@ -204,7 +249,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_menus</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_dock_windows</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_overlays</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_overlays</span><span class="p">()</span>
 
         <span class="c1"># Create timer to update state of gui at regular intervals</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_gui_timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">()</span>
@@ -218,7 +263,9 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_after_plot_update</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">instanceDoubleClicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doubleClickInstance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">instanceDoubleClicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handle_instance_double_click</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">selectionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateStatusMessage</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">)</span>
 
@@ -231,7 +278,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
-            <span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">switch_frame</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateSeekbarMarks</span><span class="p">()]</span>
+            <span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">switch_frame</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_seekbar_marks</span><span class="p">()]</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_create_color_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -480,7 +527,7 @@
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;seekbar_header&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;seekbar_header&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">setSeekbarHeader</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;seekbar_header&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_seekbar_header</span><span class="p">)</span>
 
         <span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
 
@@ -575,13 +622,13 @@
             <span class="n">predictionMenu</span><span class="p">,</span>
             <span class="s2">&quot;training&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Run Training...&quot;</span><span class="p">,</span>
-            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">showLearningDialog</span><span class="p">(</span><span class="s2">&quot;training&quot;</span><span class="p">),</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_learning_dialog</span><span class="p">(</span><span class="s2">&quot;training&quot;</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">predictionMenu</span><span class="p">,</span>
             <span class="s2">&quot;inference&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Run Inference...&quot;</span><span class="p">,</span>
-            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">showLearningDialog</span><span class="p">(</span><span class="s2">&quot;inference&quot;</span><span class="p">),</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_learning_dialog</span><span class="p">(</span><span class="s2">&quot;inference&quot;</span><span class="p">),</span>
         <span class="p">)</span>
 
         <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
@@ -590,14 +637,14 @@
             <span class="n">predictionMenu</span><span class="p">,</span>
             <span class="s2">&quot;show metrics&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Evaluation Metrics for Trained Models...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">showMetricsDialog</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_metrics_dialog</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">predictionMenu</span><span class="p">,</span>
             <span class="s2">&quot;visualize models&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Visualize Model Outputs...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">visualizeOutputs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handle_model_overlay_command</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
@@ -665,7 +712,7 @@
         <span class="c1">############</span>
 
         <span class="n">helpMenu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menuBar</span><span class="p">()</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s2">&quot;Help&quot;</span><span class="p">)</span>
-        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Keyboard Shortcuts&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">openKeyRef</span><span class="p">)</span>
+        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Keyboard Shortcuts&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_keyboard_shortcuts_window</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MainWindow.process_events_then"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.process_events_then">[docs]</a>    <span class="k">def</span> <span class="nf">process_events_then</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Decorates a function with a call to first process events.&quot;&quot;&quot;</span>
@@ -883,7 +930,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;suggestion_idx&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestionsTable</span><span class="o">.</span><span class="n">selectRow</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MainWindow.load_overlays"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.load_overlays">[docs]</a>    <span class="k">def</span> <span class="nf">load_overlays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_load_overlays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load all standard video overlays.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;track_labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TrackListOverlay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;trails&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TrackTrailOverlay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="p">)</span>
@@ -909,7 +956,7 @@
         <span class="n">overlay_state_connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="p">,</span> <span class="s2">&quot;palette&quot;</span><span class="p">)</span>
         <span class="n">overlay_state_connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="p">,</span> <span class="s2">&quot;distinctly_color&quot;</span><span class="p">)</span>
         <span class="n">overlay_state_connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="p">,</span> <span class="s2">&quot;color predicted&quot;</span><span class="p">,</span> <span class="s2">&quot;color_predicted&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateSeekbarMarks</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_seekbar_marks</span><span class="p">())</span>
 
         <span class="c1"># update the skeleton tables since we may want to redraw colors</span>
         <span class="k">for</span> <span class="n">state_var</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="s2">&quot;distinctly_color&quot;</span><span class="p">,</span> <span class="s2">&quot;edge style&quot;</span><span class="p">):</span>
@@ -923,7 +970,7 @@
         <span class="c1"># Emit signals for default that may have been set earlier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;distinctly_color&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;color predicted&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;color predicted&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_update_gui_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Enable/disable gui items based on current state.&quot;&quot;&quot;</span>
@@ -1015,12 +1062,12 @@
                 <span class="n">UpdateTopic</span><span class="o">.</span><span class="n">suggestions</span><span class="p">,</span>
             <span class="p">]</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">updateSeekbarMarks</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_seekbar_marks</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">_has_topic</span><span class="p">(</span>
             <span class="p">[</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">UpdateTopic</span><span class="o">.</span><span class="n">project_instances</span><span class="p">,</span> <span class="n">UpdateTopic</span><span class="o">.</span><span class="n">tracks</span><span class="p">]</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">updateTrackMenu</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_track_menu</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">_has_topic</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">video</span><span class="p">]):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">videosTable</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span>
@@ -1167,7 +1214,8 @@
                 <span class="n">QMessageBox</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Unable to load </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">has_loaded</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">loadLabelsObject</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loadLabelsObject</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;project_loaded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="MainWindow.loadLabelsObject"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.loadLabelsObject">[docs]</a>    <span class="k">def</span> <span class="nf">loadLabelsObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1188,7 +1236,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span><span class="o">.</span><span class="n">set_palette</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">])</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_overlays</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_overlays</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1199,7 +1247,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">on_data_update</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">project</span><span class="p">,</span> <span class="n">UpdateTopic</span><span class="o">.</span><span class="n">all</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="MainWindow.updateTrackMenu"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.updateTrackMenu">[docs]</a>    <span class="k">def</span> <span class="nf">updateTrackMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_update_track_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates track menu options.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">track_menu</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
@@ -1213,16 +1261,16 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">track_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
             <span class="s2">&quot;New Track&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">addTrack</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">CTRL</span> <span class="o">+</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_0</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-<div class="viewcode-block" id="MainWindow.updateSeekbarMarks"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.updateSeekbarMarks">[docs]</a>    <span class="k">def</span> <span class="nf">updateSeekbarMarks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_update_seekbar_marks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates marks on seekbar.&quot;&quot;&quot;</span>
         <span class="n">set_slider_marks_from_labels</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_manager</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-<div class="viewcode-block" id="MainWindow.setSeekbarHeader"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.setSeekbarHeader">[docs]</a>    <span class="k">def</span> <span class="nf">setSeekbarHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Updates graph shown in seekbar header.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_set_seekbar_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates graph shown in seekbar header based on menu selection.&quot;&quot;&quot;</span>
         <span class="n">data_obj</span> <span class="o">=</span> <span class="n">StatisticSeries</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
         <span class="n">header_functions</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;Point Displacement (sum)&quot;</span><span class="p">:</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">get_point_displacement_series</span><span class="p">,</span>
@@ -1248,9 +1296,9 @@
                 <span class="n">series</span> <span class="o">=</span> <span class="n">header_functions</span><span class="p">[</span><span class="n">graph_name</span><span class="p">](</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">setHeaderSeries</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find function for </span><span class="si">{</span><span class="n">header_functions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find function for </span><span class="si">{</span><span class="n">header_functions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_frames_for_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_frames_for_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds options for frames on which to run inference.</span>
 
 <span class="sd">        Args:</span>
@@ -1315,7 +1363,7 @@
 
         <span class="k">return</span> <span class="n">selection</span>
 
-<div class="viewcode-block" id="MainWindow.showLearningDialog"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.showLearningDialog">[docs]</a>    <span class="k">def</span> <span class="nf">showLearningDialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_show_learning_dialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Helper function to show learning dialog in given mode.</span>
 
 <span class="sd">        Args:</span>
@@ -1346,25 +1394,27 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span> <span class="o">=</span> <span class="n">LearningDialog</span><span class="p">(</span>
                 <span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">learningFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">learningFinished</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">_handle_learning_finished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_handle_learning_finished</span>
+            <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">update_file_lists</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">frame_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frames_for_prediction</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">open</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">frame_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_frames_for_prediction</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MainWindow.learningFinished"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.learningFinished">[docs]</a>    <span class="k">def</span> <span class="nf">learningFinished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_handle_learning_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Called when inference finishes.&quot;&quot;&quot;</span>
         <span class="c1"># we ran inference so update display/ui</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_data_update</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">all</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">new_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">changestack_push</span><span class="p">(</span><span class="s2">&quot;new predictions&quot;</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">changestack_push</span><span class="p">(</span><span class="s2">&quot;new predictions&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">showMetricsDialog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_show_metrics_dialog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="s2">&quot;metrics&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MetricsTableDialog</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_child_windows</span><span class="p">[</span><span class="s2">&quot;metrics&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MainWindow.visualizeOutputs"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.visualizeOutputs">[docs]</a>    <span class="k">def</span> <span class="nf">visualizeOutputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_handle_model_overlay_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Gui for adding overlay with live visualization of predictions.&quot;&quot;&quot;</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Model (*.json)&quot;</span><span class="p">]</span>
 
@@ -1412,9 +1462,11 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">overlays</span><span class="p">[</span><span class="s2">&quot;inference&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overlay</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">plotFrame</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotFrame</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MainWindow.doubleClickInstance"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.doubleClickInstance">[docs]</a>    <span class="k">def</span> <span class="nf">doubleClickInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMouseEvent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_handle_instance_double_click</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMouseEvent</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handles when the user has double-clicked an instance.</span>
 
@@ -1438,11 +1490,11 @@
 
         <span class="c1"># When a regular instance is double-clicked, add any missing points</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">completeInstanceNodes</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">completeInstanceNodes</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MainWindow.openKeyRef"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.openKeyRef">[docs]</a>    <span class="k">def</span> <span class="nf">openKeyRef</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_show_keyboard_shortcuts_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Shows gui for viewing/modifying keyboard shortucts.&quot;&quot;&quot;</span>
-        <span class="n">ShortcutDialog</span><span class="p">()</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div></div>
+        <span class="n">ShortcutDialog</span><span class="p">()</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>

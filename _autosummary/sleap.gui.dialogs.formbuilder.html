@@ -53,6 +53,10 @@ dialog and for getting the results when the dialog is closed).</p>
 </div>
 <p>The results will be empty dictionary if the user hit “cancel”, otherwise it
 will contain all data from form (dict keys matching names of fields).</p>
+<p>The logic which creates each form field based on the data from the YAML file
+is <a href="#id1"><span class="problematic" id="id2">:py:method:`FormBuilderLayout.add_item()`</span></a>. Look there if you want to know
+what’s supported in the YAML file, what exactly each field type does, or if you
+want to add a new type of supported form field.</p>
 <dl class="py class">
 <dt id="sleap.gui.dialogs.formbuilder.FieldComboWidget">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">FieldComboWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result_as_idx</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">add_blank_option</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FieldComboWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FieldComboWidget" title="Permalink to this definition">¶</a></dt>
@@ -490,6 +494,7 @@ and then class is instantiated using this path.</p>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
@@ -536,6 +541,7 @@ and then class is instantiated using this path.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>

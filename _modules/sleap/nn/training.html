@@ -1262,13 +1262,10 @@
             <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
                 <span class="n">scale</span> <span class="o">=</span> <span class="mf">4.0</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_img</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">72</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
-            <span class="n">plot_pafs</span><span class="p">(</span>
-                <span class="n">pafs</span><span class="p">,</span>
-                <span class="n">output_scale</span><span class="o">=</span><span class="n">pafs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">scale</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
-                <span class="n">width</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="p">)</span>
+
+            <span class="n">pafs</span> <span class="o">=</span> <span class="n">pafs</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">pafs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pafs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">pafs_mag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pafs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">pafs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">plot_confmaps</span><span class="p">(</span><span class="n">pafs_mag</span><span class="p">,</span> <span class="n">output_scale</span><span class="o">=</span><span class="n">pafs_mag</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">return</span> <span class="n">fig</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">visualization_callbacks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
@@ -1286,25 +1283,25 @@
                 <span class="n">viz_fn</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">visualize_confmaps_example</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">validation_viz_ds_iter</span><span class="p">)),</span>
                 <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;validation&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
         <span class="c1"># Memory leak:</span>
-        <span class="c1"># self.visualization_callbacks.extend(</span>
-        <span class="c1">#     setup_visualization(</span>
-        <span class="c1">#         self.config.outputs,</span>
-        <span class="c1">#         run_path=self.run_path,</span>
-        <span class="c1">#         viz_fn=lambda: visualize_pafs_example(next(training_viz_ds_iter)),</span>
-        <span class="c1">#         name=f&quot;train_pafs&quot;,</span>
-        <span class="c1">#     )</span>
-        <span class="c1"># )</span>
-        <span class="c1"># self.visualization_callbacks.extend(</span>
-        <span class="c1">#     setup_visualization(</span>
-        <span class="c1">#         self.config.outputs,</span>
-        <span class="c1">#         run_path=self.run_path,</span>
-        <span class="c1">#         viz_fn=lambda: visualize_pafs_example(next(validation_viz_ds_iter)),</span>
-        <span class="c1">#         name=f&quot;validation_pafs&quot;,</span>
-        <span class="c1">#     )</span>
-        <span class="c1"># )</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visualization_callbacks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">setup_visualization</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span>
+                <span class="n">run_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span>
+                <span class="n">viz_fn</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">visualize_pafs_example</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">training_viz_ds_iter</span><span class="p">)),</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;train_pafs_magnitude&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visualization_callbacks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">setup_visualization</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span>
+                <span class="n">run_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_path</span><span class="p">,</span>
+                <span class="n">viz_fn</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">visualize_pafs_example</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">validation_viz_ds_iter</span><span class="p">)),</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;validation_pafs_magnitude&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.training.html#sleap.nn.training.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
@@ -1391,6 +1388,13 @@
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Training job:&quot;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">job_config</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;System:&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">is_gpu_system</span><span class="p">():</span>
+        <span class="c1"># Disable preallocation to handle Linux/low GPU memory issue.</span>
+        <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">disable_preallocation</span><span class="p">()</span>
+    <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing trainer...&quot;</span><span class="p">)</span>

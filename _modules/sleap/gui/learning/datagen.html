@@ -169,7 +169,7 @@
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_config</span><span class="p">,</span> <span class="n">MultiInstanceConfig</span><span class="p">):</span>
         <span class="n">output_keys</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;image&quot;</span>
         <span class="n">output_keys</span><span class="p">[</span><span class="s2">&quot;confmap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;confidence_maps&quot;</span>
-        <span class="n">output_keys</span><span class="p">[</span><span class="s2">&quot;paf&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;confidence_maps&quot;</span>
+        <span class="n">output_keys</span><span class="p">[</span><span class="s2">&quot;paf&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;part_affinity_fields&quot;</span>
 
         <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">pipelines</span><span class="o">.</span><span class="n">MultiConfidenceMapGenerator</span><span class="p">(</span>
             <span class="n">sigma</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">multi_instance</span><span class="o">.</span><span class="n">confmaps</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
@@ -179,6 +179,7 @@
             <span class="n">sigma</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">multi_instance</span><span class="o">.</span><span class="n">pafs</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
             <span class="n">output_stride</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">multi_instance</span><span class="o">.</span><span class="n">pafs</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
             <span class="n">skeletons</span><span class="o">=</span><span class="n">reader</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">,</span>
+            <span class="n">flatten_channels</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
 
     <span class="n">ds</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">make_dataset</span><span class="p">()</span>

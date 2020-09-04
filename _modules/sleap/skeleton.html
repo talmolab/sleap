@@ -179,6 +179,22 @@
         <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_arborescence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">recognition</span><span class="o">.</span><span class="n">is_arborescence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">in_degree_over_one</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">in_degree</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">in_degree</span> <span class="k">if</span> <span class="n">in_degree</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">root_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">in_degree</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">in_degree</span> <span class="k">if</span> <span class="n">in_degree</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cycles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">simple_cycles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns subgraph of BODY edges for skeleton.&quot;&quot;&quot;</span>
         <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
@@ -369,8 +385,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="p">[</span>
-        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">src_node</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dst_node</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">src_node</span><span class="p">,</span> <span class="n">dst_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">src_node</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dst_node</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">src_node</span><span class="p">,</span> <span class="n">dst_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span>
         <span class="p">]</span>
 
     <span class="nd">@property</span>
@@ -907,7 +923,9 @@
         <span class="k">return</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="n">node_to_idx</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Skeleton.from_names_and_edge_inds"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.from_names_and_edge_inds">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_names_and_edge_inds</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">node_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="n">edge_inds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">from_names_and_edge_inds</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">node_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="n">edge_inds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create skeleton from a list of node names and edge indices.</span>
 
 <span class="sd">        Args:</span>

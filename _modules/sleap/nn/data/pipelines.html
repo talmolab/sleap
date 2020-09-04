@@ -41,9 +41,12 @@
 <span class="sd">well as to define training vs inference versions based on the same configurations.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Dict</span>
 
 <span class="kn">import</span> <span class="nn">sleap</span>
@@ -123,6 +126,9 @@
 <span class="p">)</span>
 <span class="n">Provider</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;Provider&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">PROVIDERS</span><span class="p">)</span>
 <span class="n">Transformer</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;Transformer&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">TRANSFORMERS</span><span class="p">)</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -299,7 +305,9 @@
 
         <span class="c1"># Apply transformers.</span>
         <span class="k">for</span> <span class="n">transformer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformers</span><span class="p">:</span>
+            <span class="c1"># t0 = time.time()</span>
             <span class="n">ds</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform_dataset</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+            <span class="c1"># logger.debug(f&quot;{transformer.__class__.__name__}:\t\t{time.time() - t0}&quot;)</span>
 
         <span class="k">return</span> <span class="n">ds</span></div>
 

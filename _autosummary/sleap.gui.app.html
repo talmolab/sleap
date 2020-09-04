@@ -36,6 +36,42 @@
   <div class="section" id="module-sleap.gui.app">
 <span id="sleap-gui-app"></span><h1>sleap.gui.app<a class="headerlink" href="#module-sleap.gui.app" title="Permalink to this headline">¶</a></h1>
 <p>Main GUI application for labeling, training/inference, and proofreading.</p>
+<p>Each open project is an instance of <a class="reference internal" href="#sleap.gui.app.MainWindow" title="sleap.gui.app.MainWindow"><code class="xref py py-class docutils literal notranslate"><span class="pre">MainWindow</span></code></a>.</p>
+<p>The main window contains a <code class="xref py py-class docutils literal notranslate"><span class="pre">QtVideoPlayer</span></code> widget for showing
+video frames (the video player widget contains both a graphics view widget
+that shows the frame image and a seekbar widget for navigation). The main
+window also contains various “data views”–tables which can be docked
+in the window as well as a status bar.</p>
+<p>When a new instance of <a class="reference internal" href="#sleap.gui.app.MainWindow" title="sleap.gui.app.MainWindow"><code class="xref py py-class docutils literal notranslate"><span class="pre">MainWindow</span></code></a> is created, it creates
+all of these widgets, sets up the menus, and also creates</p>
+<ul class="simple">
+<li><p>single <code class="xref py py-class docutils literal notranslate"><span class="pre">GuiState</span></code> object</p></li>
+<li><p>single <code class="xref py py-class docutils literal notranslate"><span class="pre">CommandContext</span></code> object</p></li>
+<li><p>single <code class="xref py py-class docutils literal notranslate"><span class="pre">ColorManager</span></code> object</p></li>
+<li><p>multiple overlay objects (subclasses of <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseOverlay</span></code>)</p></li>
+</ul>
+<p>A timer is started (runs via Qt event loop) which enables/disables
+various menu items and buttons based on current state (e.g., you
+can’t delete an instance if no instance is selected).</p>
+<p>Shortcuts are loaded using <code class="xref py py-class docutils literal notranslate"><span class="pre">Shortcuts</span></code> class. Preferences
+are loaded by importing <cite>prefs</cite>, a singleton instance of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Preferences</span></code>.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">GuiState</span></code> is used for storing “global” state for the project
+(e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> object, the current frame, current instance,
+whether to show track trails, etc.). every menu command with state
+(e.g., check/uncheck) should be connected to a state variable.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandContext</span></code> has methods which can be triggered
+by menu items/buttons/etc in the GUI to perform various actions. The
+command context enforces a pattern for implementing each command in
+its own class, it keeps track of whether there are unsaved changes
+(and in the future would make it easier to implement undo/redo), and
+it handles triggering the relevant updates in the GUI based on the
+effects of the command (these are passed using <cite>UpdateTopic</cite> enum and
+handed by <a href="#id1"><span class="problematic" id="id2">:py:method:`MainWindow.on_data_update()`</span></a>).</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">ColorManager</span></code> loads color palettes, keeps track of current
+palette, and should always be queried for how to draw instances–this
+ensures consistency (e.g.) between color of instances drawn on video
+frame and instances listed in data view table.</p>
 <dl class="py class">
 <dt id="sleap.gui.app.MainWindow">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.app.</code><code class="sig-name descname">MainWindow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow" title="Permalink to this definition">¶</a></dt>
@@ -63,20 +99,6 @@ whether to show node labels, etc.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.app.MainWindow.doubleClickInstance">
-<code class="sig-name descname">doubleClickInstance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">event</span><span class="p">:</span> <span class="n">PySide2.QtGui.QMouseEvent</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.doubleClickInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.doubleClickInstance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handles when the user has double-clicked an instance.</p>
-<p>If prediction, then copy to new user-instance.
-If already user instance, then add any missing nodes (in case
-skeleton has been changed after instance was created).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>instance</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> that was double-clicked.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.app.MainWindow.event">
 <code class="sig-name descname">event</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">e</span><span class="p">:</span> <span class="n">PySide2.QtCore.QEvent</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom event handler.</p>
@@ -90,12 +112,6 @@ skeleton has been changed after instance was created).</p>
 event handler would return.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.app.MainWindow.learningFinished">
-<code class="sig-name descname">learningFinished</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.learningFinished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.learningFinished" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called when inference finishes.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -134,18 +150,6 @@ then don’t do anything.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.app.MainWindow.load_overlays">
-<code class="sig-name descname">load_overlays</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.load_overlays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.load_overlays" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load all standard video overlays.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.app.MainWindow.openKeyRef">
-<code class="sig-name descname">openKeyRef</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.openKeyRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.openKeyRef" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows gui for viewing/modifying keyboard shortucts.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.app.MainWindow.plotFrame">
 <code class="sig-name descname">plotFrame</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.plotFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.plotFrame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots (or replots) current frame.</p>
@@ -158,57 +162,15 @@ then don’t do anything.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.app.MainWindow.setSeekbarHeader">
-<code class="sig-name descname">setSeekbarHeader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.setSeekbarHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.setSeekbarHeader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates graph shown in seekbar header.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.app.MainWindow.setWindowTitle">
 <code class="sig-name descname">setWindowTitle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.setWindowTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.setWindowTitle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets window title (if value is not None).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.app.MainWindow.showLearningDialog">
-<code class="sig-name descname">showLearningDialog</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.showLearningDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.showLearningDialog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function to show learning dialog in given mode.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mode</strong> – A string representing mode for dialog, which could be:</p></li>
-<li><p><strong>&quot;training&quot;</strong> (<em>*</em>) – </p></li>
-<li><p><strong>&quot;inference&quot;</strong> (<em>*</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.app.MainWindow.updateSeekbarMarks">
-<code class="sig-name descname">updateSeekbarMarks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.updateSeekbarMarks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.updateSeekbarMarks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates marks on seekbar.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.app.MainWindow.updateStatusMessage">
 <code class="sig-name descname">updateStatusMessage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.updateStatusMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.updateStatusMessage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates status bar.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.app.MainWindow.updateTrackMenu">
-<code class="sig-name descname">updateTrackMenu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.updateTrackMenu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.updateTrackMenu" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates track menu options.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.app.MainWindow.visualizeOutputs">
-<code class="sig-name descname">visualizeOutputs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/app.html#MainWindow.visualizeOutputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.app.MainWindow.visualizeOutputs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gui for adding overlay with live visualization of predictions.</p>
 </dd></dl>
 
 </dd></dl>
@@ -246,6 +208,7 @@ then don’t do anything.</p>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
@@ -292,6 +255,7 @@ then don’t do anything.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>

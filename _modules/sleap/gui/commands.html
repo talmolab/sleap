@@ -257,6 +257,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_change_stack</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;has_changes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_any_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_change_stack</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
 <div class="viewcode-block" id="CommandContext.execute"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">AppCommand</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Execute command in this context, passing named arguments.&quot;&quot;&quot;</span>
         <span class="n">command</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -539,7 +543,16 @@
 <div class="viewcode-block" id="OpenProject.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.OpenProject.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="s2">&quot;CommandContext&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">OPEN_IN_NEW</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;first_open&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+
+        <span class="n">do_open_in_new</span> <span class="o">=</span> <span class="n">OPEN_IN_NEW</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;first_open&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># If no project has been loaded in this window and no changes have been</span>
+        <span class="c1"># made by user, then it&#39;s an empty project window so we&#39;ll load project</span>
+        <span class="c1"># into this window rather than creating a new window.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;project_loaded&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">has_any_changes</span><span class="p">:</span>
+            <span class="n">do_open_in_new</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">do_open_in_new</span><span class="p">:</span>
             <span class="n">new_window</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
             <span class="n">new_window</span><span class="o">.</span><span class="n">showMaximized</span><span class="p">()</span>
             <span class="n">new_window</span><span class="o">.</span><span class="n">loadProjectFile</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>

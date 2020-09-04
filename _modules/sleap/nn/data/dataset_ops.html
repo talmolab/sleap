@@ -169,9 +169,10 @@
         <span class="k">def</span> <span class="nf">unrag</span><span class="p">(</span><span class="n">example</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;Convert all keys back to dense tensors NaN padded.&quot;&quot;&quot;</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">example</span><span class="p">:</span>
-                <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">(</span>
-                    <span class="n">default_value</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="p">):</span>
+                    <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">(</span>
+                        <span class="n">default_value</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">example</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="p">)</span>
             <span class="k">return</span> <span class="n">example</span>
 
         <span class="c1"># Ensure that all keys have a rank of at least 1 (i.e., scalars).</span>

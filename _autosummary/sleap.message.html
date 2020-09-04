@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.io.format.filehandle &#8212; SLEAP  documentation</title>
+    <title>sleap.message &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -15,8 +15,8 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.io.format.genericjson" href="sleap.io.format.genericjson.html" />
-    <link rel="prev" title="sleap.io.format.dispatch" href="sleap.io.format.dispatch.html" />
+    <link rel="next" title="sleap.prefs" href="sleap.prefs.html" />
+    <link rel="prev" title="sleap.instance" href="sleap.instance.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -33,66 +33,62 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-sleap.io.format.filehandle">
-<span id="sleap-io-format-filehandle"></span><h1>sleap.io.format.filehandle<a class="headerlink" href="#module-sleap.io.format.filehandle" title="Permalink to this headline">¶</a></h1>
-<p>File object which can be passed to adaptors.</p>
-<p>We use this since multiple file adaptors may need to open/read the file while
-dispatch is determining which adaptor to use, and the <cite>FileHandle</cite> allows us
-to keep any results from previous reads.</p>
+  <div class="section" id="module-sleap.message">
+<span id="sleap-message"></span><h1>sleap.message<a class="headerlink" href="#module-sleap.message" title="Permalink to this headline">¶</a></h1>
+<p>Module with classes for sending and receiving messages between processes.</p>
+<p>These use ZMQ pub/sub sockets.</p>
+<p>Most of the time you’ll want the PairedSender and PairedReceiver.
+These support a “handshake” to confirm connection. Without an initial
+handshake there’s a good chance early messages will be dropped.</p>
+<p>Each message is either dictionary or dictionary + numpy ndarray.</p>
 <dl class="py class">
-<dt id="sleap.io.format.filehandle.FileHandle">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.filehandle.</code><code class="sig-name descname">FileHandle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">is_hdf5</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_json</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_open</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">text</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">json</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference to a file; can hold loaded data so it needn’t be read twice.</p>
+<dt id="sleap.message.BaseMessageParticipant">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.message.</code><code class="sig-name descname">BaseMessageParticipant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'tcp://127.0.0.1:9001'</span></em>, <em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>zmq.sugar.context.Context<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">socket</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>zmq.sugar.socket.Socket<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/message.html#BaseMessageParticipant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.BaseMessageParticipant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for simple Sender and Receiver.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.message.Receiver">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.message.</code><code class="sig-name descname">Receiver</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'tcp://127.0.0.1:9001'</span></em>, <em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>zmq.sugar.context.Context<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">socket</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>zmq.sugar.socket.Socket<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">message_queue</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/message.html#Receiver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.Receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives messages from corresponding Sender.</p>
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Closes the file.</p>
+<dt id="sleap.message.Receiver.check_message">
+<code class="sig-name descname">check_message</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">fresh</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/sleap/message.html#Receiver.check_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.Receiver.check_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to receive a single message.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.file">
-<em class="property">property </em><code class="sig-name descname">file</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.file" title="Permalink to this definition">¶</a></dt>
-<dd><p>The raw file object.</p>
+<dt id="sleap.message.Receiver.check_messages">
+<code class="sig-name descname">check_messages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">times_to_check</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>dict<span class="p">]</span><a class="reference internal" href="../_modules/sleap/message.html#Receiver.check_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.Receiver.check_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to receive multiple messages.</p>
+<p>This method allows us to keep up with the messages by getting
+multiple messages that have been sent since the last check.
+It keeps checking until limit is reached <em>or</em> we check without
+getting any messages back.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.format_id">
-<em class="property">property </em><code class="sig-name descname">format_id</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.format_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an ID from the metadata we store in some HDF5 or JSON formats.</p>
-<p>This can be used if we need to distinguish multiple formats with a
-common underlying file type, e.g., HDF5-based file formats. See
-<cite>LabelsV1Adaptor</cite> for an example (the format id is here used to
-determine whether to convert from “gridline” to “midpixel” coordinates).</p>
+<dt id="sleap.message.Receiver.push_back_message">
+<code class="sig-name descname">push_back_message</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/message.html#Receiver.push_back_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.Receiver.push_back_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Act like we didn’t receive this message yet.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.message.Sender">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.message.</code><code class="sig-name descname">Sender</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'tcp://127.0.0.1:9001'</span></em>, <em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>zmq.sugar.context.Context<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">socket</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>zmq.sugar.socket.Socket<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/message.html#Sender"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.Sender" title="Permalink to this definition">¶</a></dt>
+<dd><p>Publishes messages to corresponding Receiver.</p>
+<dl class="py method">
+<dt id="sleap.message.Sender.send_array">
+<code class="sig-name descname">send_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">header_data</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">A</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">flags</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">copy</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">track</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/message.html#Sender.send_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.Sender.send_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends dictionary + numpy ndarray.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.is_hdf5">
-<em class="property">property </em><code class="sig-name descname">is_hdf5</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether file is HDF5.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.is_json">
-<em class="property">property </em><code class="sig-name descname">is_json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether file is JSON.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.json">
-<em class="property">property </em><code class="sig-name descname">json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.json" title="Permalink to this definition">¶</a></dt>
-<dd><p>The loaded JSON dictionary (for a JSON file).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.open">
-<code class="sig-name descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/filehandle.html#FileHandle.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.open" title="Permalink to this definition">¶</a></dt>
-<dd><p>Opens the file (if it’s not already open).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.filehandle.FileHandle.text">
-<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.text" title="Permalink to this definition">¶</a></dt>
-<dd><p>The text from a text file.</p>
+<dt id="sleap.message.Sender.send_dict">
+<code class="sig-name descname">send_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/message.html#Sender.send_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.message.Sender.send_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends dictionary.</p>
 </dd></dl>
 
 </dd></dl>
@@ -124,7 +120,7 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
@@ -184,7 +180,7 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
@@ -246,8 +242,8 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api.html">Developer API</a><ul>
-      <li>Previous: <a href="sleap.io.format.dispatch.html" title="previous chapter">sleap.io.format.dispatch</a></li>
-      <li>Next: <a href="sleap.io.format.genericjson.html" title="next chapter">sleap.io.format.genericjson</a></li>
+      <li>Previous: <a href="sleap.instance.html" title="previous chapter">sleap.instance</a></li>
+      <li>Next: <a href="sleap.prefs.html" title="next chapter">sleap.prefs</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -282,7 +278,7 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/_autosummary/sleap.io.format.filehandle.rst.txt"
+      <a href="../_sources/_autosummary/sleap.message.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
