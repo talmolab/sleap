@@ -817,6 +817,22 @@ class Instance:
         """
         return self.points_array
 
+    def transform_points(self, transformation_matrix):
+        """Applies transformation matrix to points."""
+        points = self.get_points_array(copy=True, full=False, invisible_as_nan=False)
+
+        if transformation_matrix.shape[1] == 3:
+            rotation = transformation_matrix[:, :2]
+            translation = transformation_matrix[:, 2]
+
+            transformed = points @ rotation.T + translation
+
+        else:
+            transformed = points @ transformation_matrix.T
+
+        self._points["x"] = transformed[:, 0]
+        self._points["y"] = transformed[:, 1]
+
     @property
     def centroid(self) -> np.ndarray:
         """Returns instance centroid as (x,y) numpy row vector."""

@@ -4,6 +4,8 @@ Dialogs for running training and/or inference in GUI.
 import cattr
 import os
 
+import networkx as nx
+
 from sleap import Labels, Video
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
@@ -45,7 +47,7 @@ class LearningDialog(QtWidgets.QDialog):
             for list of nodes for (e.g.) selecting anchor node
     """
 
-    learningFinished = QtCore.Signal(int)
+    _handle_learning_finished = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -110,9 +112,12 @@ class LearningDialog(QtWidgets.QDialog):
         self.tab_widget.addTab(self.pipeline_form_widget, tab_label)
         self.make_tabs()
 
+        self.message_widget = QtWidgets.QLabel("")
+
         # Layout for entire dialog
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.tab_widget)
+        layout.addWidget(self.message_widget)
         layout.addWidget(buttons_layout_widget)
 
         self.setLayout(layout)
@@ -475,15 +480,53 @@ class LearningDialog(QtWidgets.QDialog):
 
     def _validate_pipeline(self):
         can_run = True
+        message = ""
 
         if self.mode == "inference":
-            # Make sure we have trained models for each required head
-            for tab_name in self.shown_tab_names:
-                tab = self.tabs[tab_name]
-                if not tab.has_trained_config_selected:
-                    can_run = False
-                    break
+            # Make sure we have trained models for each required head.
+            untrained = [
+                tab_name
+                for tab_name in self.shown_tab_names
+                if not self.tabs[tab_name].has_trained_config_selected
+            ]
+            if untrained:
+                can_run = False
+                message = f"Cannot run inference with untrained models ({', '.join(untrained)})."
 
+        # Make sure skeleton will be valid for bottom-up inference.
+        if self.mode == "training" and self.current_pipeline == "bottom-up":
+            skeleton = self.labels.skeletons[0]
+
+            if not skeleton.is_arborescence:
+                message += "Cannot run bottom-up pipeline when skeleton is not an arborescence."
+
+                root_names = [n.name for n in skeleton.root_nodes]
+                over_max_in_degree = [n.name for n in skeleton.in_degree_over_one]
+                cycles = skeleton.cycles
+
+                if len(root_names) > 1:
+                    message += f" There are multiple root nodes: {', '.join(root_names)} (there should be exactly one node which is not a target)."
+
+                if over_max_in_degree:
+                    message += f" There are nodes which are target in multiple edges: {', '.join(over_max_in_degree)} (maximum in-degree should be 1).</li>"
+
+                if cycles:
+                    cycle_strings = []
+                    for cycle in cycles:
+                        cycle_strings.append(
+                            " &ndash;&gt; ".join((node.name for node in cycle))
+                        )
+
+                    message += (
+                        f" There are cycles in graph: {'; '.join(cycle_strings)}."
+                    )
+
+                can_run = False
+
+        if not can_run and message:
+            message = f"<b>Unable to run:</b><br />{message}"
+
+        self.message_widget.setText(message)
         self.run_button.setEnabled(can_run)
 
     def view_datagen(self):
@@ -516,7 +559,7 @@ class LearningDialog(QtWidgets.QDialog):
             items_for_inference=items_for_inference,
         )
 
-        self.learningFinished.emit(new_counts)
+        self._handle_learning_finished.emit(new_counts)
 
         # count < 0 means there was an error and we didn't get any results.
         if new_counts >= 0:
@@ -591,6 +634,9 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     @property
     def buttons(self):
         return self.form_widget.buttons
+
+    def set_message(self, message: Text):
+        self.form_widget.set_message()
 
     def get_form_data(self):
         return self.form_widget.get_form_data()

@@ -231,7 +231,7 @@ class BareKalmanTracker:
             # track will be used first so we set spawn to -1 so we can
             # set it correctly when the reset track is first matched.
             if match.track.spawned_on < 0:
-                match.track.spawned_on = frame_idx
+                match.track.spawned_on = int(frame_idx)
 
         # Check how many tracks have a gap since they were last matched
         tracks_with_gap = self.tracks_with_gap(frame_idx)

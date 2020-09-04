@@ -1228,13 +1228,10 @@ class BottomUpModelTrainer(Trainer):
             if img.shape[0] < 256:
                 scale = 4.0
             fig = plot_img(img, dpi=72 * scale, scale=scale)
-            plot_pafs(
-                pafs,
-                output_scale=pafs.shape[0] / img.shape[0],
-                stride=1,
-                scale=8.0,
-                width=1.0,
-            )
+
+            pafs = pafs.reshape((pafs.shape[0], pafs.shape[1], -1, 2))
+            pafs_mag = np.sqrt(pafs[..., 0] ** 2 + pafs[..., 1] ** 2)
+            plot_confmaps(pafs_mag, output_scale=pafs_mag.shape[0] / img.shape[0])
             return fig
 
         self.visualization_callbacks.extend(
@@ -1255,22 +1252,22 @@ class BottomUpModelTrainer(Trainer):
         )
 
         # Memory leak:
-        # self.visualization_callbacks.extend(
-        #     setup_visualization(
-        #         self.config.outputs,
-        #         run_path=self.run_path,
-        #         viz_fn=lambda: visualize_pafs_example(next(training_viz_ds_iter)),
-        #         name=f"train_pafs",
-        #     )
-        # )
-        # self.visualization_callbacks.extend(
-        #     setup_visualization(
-        #         self.config.outputs,
-        #         run_path=self.run_path,
-        #         viz_fn=lambda: visualize_pafs_example(next(validation_viz_ds_iter)),
-        #         name=f"validation_pafs",
-        #     )
-        # )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_pafs_example(next(training_viz_ds_iter)),
+                name=f"train_pafs_magnitude",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_pafs_example(next(validation_viz_ds_iter)),
+                name=f"validation_pafs_magnitude",
+            )
+        )
 
 
 def main():
@@ -1357,6 +1354,13 @@ def main():
     logger.info("")
     logger.info("Training job:")
     logger.info(job_config.to_json())
+    logger.info("")
+
+    logger.info("System:")
+    if sleap.nn.system.is_gpu_system():
+        # Disable preallocation to handle Linux/low GPU memory issue.
+        sleap.nn.system.disable_preallocation()
+    sleap.nn.system.summary()
     logger.info("")
 
     logger.info("Initializing trainer...")

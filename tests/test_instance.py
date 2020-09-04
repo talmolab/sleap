@@ -311,3 +311,21 @@ def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
     assert user_inst in user_labels[0].instances
     assert pred_inst in user_labels[0].instances
     assert len(user_labels[0].instances) == 2
+
+
+def test_instance_rotation(skeleton):
+
+    instance = Instance(skeleton=skeleton)
+    instance["head"].x = 20
+    instance["head"].y = 50
+
+    # affine transformation matrix w/ rotation and translation
+    # cv2.getRotationMatrix2D((10, 10), 45, 1)
+    mat = np.array(
+        [[0.70710678, 0.70710678, -4.14213562], [-0.70710678, 0.70710678, 10.0]]
+    )
+
+    instance.transform_points(mat)
+
+    assert int(instance["head"].x) == 45
+    assert int(instance["head"].y) == 31

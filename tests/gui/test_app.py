@@ -1,3 +1,5 @@
+from PySide2.QtWidgets import QApplication
+
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
 
@@ -204,3 +206,61 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     assert inst_31_0.track == track_c
     assert inst_31_2.track == track_a
     assert inst_31_1.track == track_b
+
+
+def test_app_new_window(qtbot):
+    app = QApplication.instance()
+    app.closeAllWindows()
+    win = MainWindow()
+
+    assert win.commands.has_any_changes == False
+    assert win.state["project_loaded"] == False
+
+    start_wins = sum(
+        (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
+    )
+
+    # there's no loaded project, so this should load into same window
+    OpenProject.do_action(
+        win.commands, dict(filename="tests/data/json_format_v1/centered_pair.json")
+    )
+
+    assert win.state["project_loaded"] == True
+    wins = sum(
+        (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
+    )
+    assert wins == start_wins
+
+    # this time it will open in new window, so current window shouldn't change
+    OpenProject.do_action(
+        win.commands, dict(filename="tests/data/slp_hdf5/minimal_instance.slp")
+    )
+
+    assert win.state["filename"] == "tests/data/json_format_v1/centered_pair.json"
+
+    wins = sum(
+        (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
+    )
+    assert wins == (start_wins + 1)
+
+    new_win = MainWindow()
+
+    wins = sum(
+        (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
+    )
+    assert wins == (start_wins + 2)
+
+    # add something so this is no longer empty project
+    new_win.commands.newNode()
+
+    # should open in new window
+    OpenProject.do_action(
+        win.commands, dict(filename="tests/data/json_format_v1/centered_pair.json")
+    )
+
+    wins = sum(
+        (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
+    )
+    assert wins == (start_wins + 3)
+
+    app.closeAllWindows()
