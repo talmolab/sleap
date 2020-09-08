@@ -1059,7 +1059,7 @@ class TrackCleaner:
         connect_single_track_breaks(frames, self.instance_count)
 
 
-def run_tracker(frames: List[LabeledFrame], tracker: Tracker) -> List[LabeledFrame]:
+def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[LabeledFrame]:
     """Run a tracker on a set of labeled frames.
 
     Args:
