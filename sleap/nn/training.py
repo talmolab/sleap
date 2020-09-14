@@ -1229,6 +1229,8 @@ class BottomUpModelTrainer(Trainer):
                 scale = 4.0
             fig = plot_img(img, dpi=72 * scale, scale=scale)
             plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plt.xlim(plt.xlim())
+            plt.ylim(plt.ylim())
             plot_peaks(pts_gt, pts_pr, paired=False)
             return fig
 
