@@ -181,18 +181,12 @@ class KeyMapper:
             A dataset that generates examples with the tensors in `input_keys` mapped to
             keys in `output_keys` according to the structure in `key_maps`.
         """
-        test_example = next(iter(ds_input))
-        key_shapes = {}
-        for key_map in self.key_maps:
-            for key_in in key_map.keys():
-                key_shapes[key_in] = tuple(test_example[key_in].shape)
-
         def map_keys(example):
             """Local processing function for dataset mapping."""
             output_keys = []
             for key_map in self.key_maps:
                 output_keys.append(
-                    {key_out: tf.ensure_shape(example[key_in], key_shapes[key_in]) for key_in, key_out in key_map.items()}
+                    {key_out: example[key_in] for key_in, key_out in key_map.items()}
                 )
             return tuple(output_keys)
 

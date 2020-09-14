@@ -312,22 +312,12 @@ class Preloader:
             generator and loaded when this method is called rather than during pipeline
             iteration.
         """
-        # Preload examples from the input dataset.
-        self.examples = list(iter(ds_input))
+        ds = ds_input.cache()
 
-        # Store example metadata.
-        keys = list(self.examples[0].keys())
-        dtypes = [self.examples[0][key].dtype for key in keys]
+        # Preload examples from the input dataset and populate cache.
+        self.examples = list(iter(ds))
 
-        def gen():
-            for example in self.examples:
-                yield tuple(example[key] for key in keys)
-
-        ds_output = tf.data.Dataset.from_generator(gen, output_types=tuple(dtypes))
-        ds_output = ds_output.map(
-            lambda *example: {key: val for key, val in zip(keys, example)}
-        )
-        return ds_output
+        return ds
 
 
 @attr.s(auto_attribs=True)
