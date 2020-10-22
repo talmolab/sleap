@@ -1413,10 +1413,13 @@ class InstanceDeleteCommand(EditCommand):
     @staticmethod
     def _do_deletion(context: CommandContext, lf_inst_list: List[int]):
         # Delete the instances
+        lfs_to_remove = []
         for lf, inst in lf_inst_list:
             context.labels.remove_instance(lf, inst, in_transaction=True)
-            if not lf.instances:
-                context.labels.remove(lf)
+            if len(lf.instances) == 0:
+                lfs_to_remove.append(lf)
+
+        context.labels.remove_frames(lfs_to_remove)
 
         # Update caches since we skipped doing this after each deletion
         context.labels.update_cache()

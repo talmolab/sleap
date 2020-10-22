@@ -683,8 +683,30 @@ class Labels(MutableSequence):
 
     def remove(self, value: LabeledFrame):
         """Remove given labeled frame."""
-        self.labeled_frames.remove(value)
-        self._cache.remove_frame(value)
+        self.remove_frame(value)
+
+    def remove_frame(self, lf: LabeledFrame, update_cache: bool=True):
+        """Remove a given labeled frame.
+
+        Args:
+            lf: Labeled frame instance to remove.
+            update_cache: If True, update the internal frame cache. If False, cache
+                update can be postponed (useful when removing many frames).
+        """
+        self.labeled_frames.remove(lf)
+        if update_cache:
+            self._cache.remove_frame(lf)
+
+    def remove_frames(self, lfs: List[LabeledFrame]):
+        """Remove a list of frames from the labels.
+
+        Args:
+            lfs: A sequence of labeled frames to remove.
+        """
+        to_remove = set(lfs)
+        self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
+        self.update_cache()
+
 
     def find(
         self,
