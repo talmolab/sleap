@@ -1,4 +1,8 @@
+# Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html
+
+# Jinja template: Process setup.py to obtain version and metadata
 {% set data = load_setup_py_data() %}
+
 
 package:
   # Repeating name because of the following issue:
@@ -20,26 +24,14 @@ source:
 requirements:
   host:
     - python=3.6
+    - cudatoolkit=10.1
+    - cudnn=7.6
     - pip
 
   run:
     - python=3.6
-    - numpy>=1.18.1
-    - scipy<=1.4.1
-    - attrs=19.3
-    - jsonpickle=1.2
-    - networkx
-    - tensorflow-gpu=2.1
-    - tensorboard=2.1
-    - scikit-learn
-    - h5py
-    - pandas
     - Pillow
     - Shapely
-    - psutil
-    - pyzmq
-    - pyyaml
-    - python-rapidjson
     - pip
 
   run_constrained:
