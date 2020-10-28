@@ -692,7 +692,7 @@ class Labels(MutableSequence):
         """Remove given labeled frame."""
         self.remove_frame(value)
 
-    def remove_frame(self, lf: LabeledFrame, update_cache: bool=True):
+    def remove_frame(self, lf: LabeledFrame, update_cache: bool = True):
         """Remove a given labeled frame.
 
         Args:
@@ -713,7 +713,6 @@ class Labels(MutableSequence):
         to_remove = set(lfs)
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
         self.update_cache()
-
 
     def find(
         self,
@@ -1243,7 +1242,7 @@ class Labels(MutableSequence):
         lf: Optional[LabeledFrame] = None,
         video: Optional[Video] = None,
         frame_idx: Optional[int] = None,
-        use_cache: bool = True
+        use_cache: bool = True,
     ) -> bool:
         """Check if the labels contain a specified frame.
 
@@ -1274,10 +1273,7 @@ class Labels(MutableSequence):
             raise ValueError("Either lf or video and frame_idx must be provided.")
 
         if use_cache:
-            lf = self.find(
-                lf.video, frame_idx=lf.frame_idx, return_new=False
-            )
-            return len(lf) > 0
+            return len(self.find(video, frame_idx=frame_idx, return_new=False)) > 0
 
         else:
             if video not in self.videos:
