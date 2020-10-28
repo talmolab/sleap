@@ -1,9 +1,9 @@
-numpy>=1.18.1
+numpy>=1.18.1,<1.19.0
 attrs==19.3
 cattrs==1.0.0rc
 jsonpickle==1.2
 networkx
-tensorflow==2.1
+tensorflow==2.1.2
 h5py
 python-rapidjson
 opencv-python-headless==4.2.0.34

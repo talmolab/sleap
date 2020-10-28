@@ -1092,7 +1092,7 @@ def make_instance_cattr() -> cattr.Converter:
     return converter
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False)
 class LabeledFrame:
     """
     Holds labeled data for a single frame of a video.
