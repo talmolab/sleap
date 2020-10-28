@@ -40,7 +40,18 @@ default extension to use if none is provided in the filename.
 import itertools
 import os
 from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional, Tuple, Text, Iterable, Any, Set
+from typing import (
+    Callable,
+    List,
+    Union,
+    Dict,
+    Optional,
+    Tuple,
+    Text,
+    Iterable,
+    Any,
+    Set,
+)
 
 import attr
 import cattr
@@ -280,7 +291,9 @@ class LabelsDataCache:
 
         return len(self._frame_count_cache[video][filter])
 
-    def get_filtered_frame_idxs(self, video: Optional[Video] = None, filter: Text = "") -> Set[Tuple[int, int]]:
+    def get_filtered_frame_idxs(
+        self, video: Optional[Video] = None, filter: Text = ""
+    ) -> Set[Tuple[int, int]]:
         """Return list of (video_idx, frame_idx) tuples matching video/filter."""
         if filter == "":
             filter_func = lambda lf: video is None or lf.video == video
@@ -544,7 +557,7 @@ class Labels(MutableSequence):
             raise ValueError(
                 "Labels.skeleton can only be used when there is only a single skeleton "
                 "saved in the labels. Use Labels.skeletons instead."
-                )
+            )
 
     @property
     def video(self) -> Video:
@@ -557,7 +570,7 @@ class Labels(MutableSequence):
             raise ValueError(
                 "Labels.video can only be used when there is only a single video saved "
                 "in the labels. Use Labels.videos instead."
-                )
+            )
 
     @property
     def has_missing_videos(self) -> bool:
@@ -592,11 +605,7 @@ class Labels(MutableSequence):
             return item in self.skeletons
         elif isinstance(item, Node):
             return item in self.nodes
-        elif (
-            isinstance(item, tuple)
-            and len(item) == 2
-            and isinstance(item[0], Video)
-        ):
+        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], Video):
             if isinstance(item[1], int):
                 return self.find_first(*item) is not None
             elif isinstance(item[1], np.integer):
@@ -630,18 +639,16 @@ class Labels(MutableSequence):
                 raise KeyError("Video not found in labels.")
             return self.find(video=key)
 
-        elif (
-            isinstance(key, tuple)
-            and len(key) == 2
-            and isinstance(key[0], Video)
-        ):
+        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
             if key[0] not in self.videos:
                 raise KeyError("Video not found in labels.")
 
             if isinstance(key[1], int):
                 _hit = self.find_first(video=key[0], frame_idx=key[1])
                 if _hit is None:
-                    raise KeyError(f"No label found for specified video at frame {key[1]}.")
+                    raise KeyError(
+                        f"No label found for specified video at frame {key[1]}."
+                    )
                 return _hit
             elif isinstance(key[1], (np.integer, np.ndarray)):
                 return self.__getitem__((key[0], key[1].tolist()))
@@ -1351,6 +1358,7 @@ class Labels(MutableSequence):
 
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
+
     @classmethod
     def complex_merge_between(
         cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
