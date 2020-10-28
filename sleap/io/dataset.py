@@ -1231,6 +1231,54 @@ class Labels(MutableSequence):
 
         return True
 
+    def has_frame(
+        self,
+        lf: Optional[LabeledFrame] = None,
+        video: Optional[Video] = None,
+        frame_idx: Optional[int] = None,
+        use_cache: bool = True
+    ) -> bool:
+        """Check if the labels contain a specified frame.
+
+        Args:
+            lf: `LabeledFrame` to search for. If not provided, the `video` and
+                `frame_idx` must not be `None`.
+            video: `Video` of the frame. Not necessary if `lf` is given.
+            frame_idx: Integer frame index of the frame. Not necessary if `lf` is given.
+            use_cache: If `True` (the default), use label lookup cache for faster
+                searching. If `False`, check every frame without the cache.
+
+        Returns:
+            A `bool` indicating whether the specified `LabeledFrame` is contained in the
+            labels.
+
+            This will return `True` if there is a matching frame with the same video and
+            frame index, even if they contain different instances.
+
+        Notes:
+            The `Video` instance must be the same as the ones in these labels, so if
+            comparing to `Video`s loaded from another file, be sure to load those labels
+            with matching, i.e.: `sleap.Labels.load_file(..., match_to=labels)`.
+        """
+        if lf is not None:
+            video = lf.video
+            frame_idx = lf.frame_idx
+        if video is None or frame_idx is None:
+            raise ValueError("Either lf or video and frame_idx must be provided.")
+
+        if use_cache:
+            lf = self.find(
+                lf.video, frame_idx=lf.frame_idx, return_new=False
+            )
+            return len(lf) > 0
+
+        else:
+            if video not in self.videos:
+                return False
+            for lf in self.labeled_frames:
+                if lf.video == video and lf.frame_idx == frame_idx:
+                    return True
+            return False
     @classmethod
     def complex_merge_between(
         cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
