@@ -957,7 +957,7 @@ def test_has_frame():
     assert labels.has_frame(video=video, frame_idx=0)
     assert labels.has_frame(video=video, frame_idx=0, use_cache=False)
     assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1))
-    assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1, use_cache=False))
+    assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1), use_cache=False)
     assert not labels.has_frame(video=video, frame_idx=1)
     with pytest.raises(ValueError):
         labels.has_frame()
