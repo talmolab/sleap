@@ -257,8 +257,16 @@ def test_scalar_properties():
     # More than one video
     dummy_skeleton = Skeleton()
     labels = Labels()
-    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
-    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
+    labels.append(
+        LabeledFrame(
+            Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]
+        )
+    )
+    labels.append(
+        LabeledFrame(
+            Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]
+        )
+    )
     assert labels.skeleton == dummy_skeleton
     with pytest.raises(ValueError):
         labels.video
@@ -266,8 +274,12 @@ def test_scalar_properties():
     # More than one skeleton
     dummy_video = Video(backend=MediaVideo)
     labels = Labels()
-    labels.append(LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())]))
-    labels.append(LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())]))
+    labels.append(
+        LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())])
+    )
+    labels.append(
+        LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())])
+    )
     assert labels.video == dummy_video
     with pytest.raises(ValueError):
         labels.skeleton
@@ -933,3 +945,113 @@ def test_provenance(tmpdir):
     labels = Labels.load_file(filename)
     print(labels.provenance)
     assert labels.provenance["source"] == "test_provenance"
+
+
+def test_has_frame():
+    video = Video(backend=MediaVideo)
+    labels = Labels([LabeledFrame(video=video, frame_idx=0)])
+
+    assert labels.has_frame(labels[0])
+    assert labels.has_frame(LabeledFrame(video=video, frame_idx=0))
+    assert labels.has_frame(video=video, frame_idx=0)
+    assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1))
+    assert not labels.has_frame(video=video, frame_idx=1)
+    with pytest.raises(ValueError):
+        labels.has_frame()
+    with pytest.raises(ValueError):
+        labels.has_frame(video=video)
+    with pytest.raises(ValueError):
+        labels.has_frame(frame_idx=1)
+
+
+@pytest.fixture
+def removal_test_labels():
+    skeleton = Skeleton()
+    video = Video(backend=MediaVideo)
+    lf_user_only = LabeledFrame(
+        video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
+    )
+    lf_pred_only = LabeledFrame(
+        video=video, frame_idx=1, instances=[PredictedInstance(skeleton=skeleton)]
+    )
+    lf_both = LabeledFrame(
+        video=video,
+        frame_idx=2,
+        instances=[Instance(skeleton=skeleton), PredictedInstance(skeleton=skeleton)],
+    )
+    labels = Labels([lf_user_only, lf_pred_only, lf_both])
+    return labels
+
+
+def test_remove_user_instances(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    labels.remove_user_instances()
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 1
+    assert not labels[0].has_user_instances
+    assert labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert not labels[1].has_user_instances
+    assert labels[1].has_predicted_instances
+
+
+def test_remove_user_instances_with_new_labels(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    new_labels = Labels(
+        [
+            LabeledFrame(
+                video=labels.video,
+                frame_idx=0,
+                instances=[Instance(skeleton=labels.skeleton)],
+            )
+        ]
+    )
+    labels.remove_user_instances(new_labels=new_labels)
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 1
+    assert not labels[0].has_user_instances
+    assert labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert labels[1].has_predicted_instances
+
+
+def test_remove_predictions(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    labels.remove_predictions()
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 0
+    assert labels[0].has_user_instances
+    assert not labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert not labels[1].has_predicted_instances
+
+
+def test_remove_predictions_with_new_labels(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    new_labels = Labels(
+        [
+            LabeledFrame(
+                video=labels.video,
+                frame_idx=1,
+                instances=[PredictedInstance(skeleton=labels.skeleton)],
+            )
+        ]
+    )
+    labels.remove_predictions(new_labels=new_labels)
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 0
+    assert labels[0].has_user_instances
+    assert not labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert labels[1].has_predicted_instances

@@ -2,7 +2,8 @@ from sleap.gui.learning import runners
 from sleap.gui.learning.configs import TrainingConfigsGetter
 from sleap.gui.learning.scopedkeydict import ScopedKeyDict
 
-from sleap.io.video import Video
+from sleap import Labels, LabeledFrame, Instance, PredictedInstance, Skeleton
+from sleap.io.video import Video, MediaVideo
 
 
 def test_config_list_load():
@@ -63,3 +64,46 @@ def test_inference_cli_output_path():
 
     assert output_path == "another_output_path.slp"
     assert "another_output_path.slp" in cli_args
+
+
+def test_inference_merging():
+    skeleton = Skeleton()
+    video = Video(backend=MediaVideo)
+    lf_user_only = LabeledFrame(
+        video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
+    )
+    lf_pred_only = LabeledFrame(
+        video=video, frame_idx=1, instances=[PredictedInstance(skeleton=skeleton)]
+    )
+    lf_both = LabeledFrame(
+        video=video,
+        frame_idx=2,
+        instances=[Instance(skeleton=skeleton), PredictedInstance(skeleton=skeleton)],
+    )
+    labels = Labels([lf_user_only, lf_pred_only, lf_both])
+
+    task = runners.InferenceTask(
+        trained_job_paths=None,
+        inference_params=None,
+        labels=labels,
+        results=[
+            LabeledFrame(
+                video=labels.video,
+                frame_idx=2,
+                instances=[
+                    PredictedInstance(skeleton=skeleton),
+                    PredictedInstance(skeleton=skeleton),
+                ],
+            )
+        ],
+    )
+    task.merge_results()
+
+    assert len(labels) == 3
+    assert labels[0].frame_idx == 0
+    assert labels[0].has_user_instances
+    assert labels[1].frame_idx == 1
+    assert labels[1].has_predicted_instances
+    assert labels[2].frame_idx == 2
+    assert len(labels[2].user_instances) == 1
+    assert len(labels[2].predicted_instances) == 2
