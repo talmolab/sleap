@@ -1279,6 +1279,78 @@ class Labels(MutableSequence):
                 if lf.video == video and lf.frame_idx == frame_idx:
                     return True
             return False
+
+    def remove_user_instances(self, new_labels: Optional["Labels"] = None):
+        """Clear user instances from the labels.
+
+        Useful prior to merging operations to prevent overlapping instances from new
+        labels.
+
+        Args:
+            new_labels: If not `None`, only user instances in frames that also contain
+                user instances in the new labels will be removed. If not provided
+                (the default), all user instances will be removed.
+
+        Notes:
+            If providing `new_labels`, it must have been loaded using
+            `sleap.Labels.load_file(..., match_to=labels)` to ensure that conflicting
+            frames can be detected.
+
+            Labeled frames without any instances after clearing will also be removed
+            from the dataset.
+        """
+        keep_lfs = []
+        for lf in self.labeled_frames:
+            if new_labels is not None:
+                if not new_labels.has_frame(lf):
+                    # Base frame is not in new labels, so just keep it without
+                    # modification.
+                    keep_lfs.append(lf)
+                    continue
+
+            if lf.has_predicted_instances:
+                # Remove predictions from base frame.
+                lf.instances = lf.predicted_instances
+                keep_lfs.append(lf)
+
+        # Keep only labeled frames with no conflicting predictions.
+        self.labeled_frames = keep_lfs
+
+    def remove_predictions(self, new_labels: Optional["Labels"] = None):
+        """Clear predicted instances from the labels.
+
+        Useful prior to merging operations to prevent overlapping instances from new
+        predictions.
+
+        Args:
+            new_labels: If not `None`, only predicted instances in frames that also
+                contain predictions in the new labels will be removed. If not provided
+                (the default), all predicted instances will be removed.
+
+        Notes:
+            If providing `new_labels`, it must have been loaded using
+            `sleap.Labels.load_file(..., match_to=labels)` to ensure that conflicting
+            frames can be detected.
+
+            Labeled frames without any instances after clearing will also be removed
+            from the dataset.
+        """
+        keep_lfs = []
+        for lf in self.labeled_frames:
+            if new_labels is not None:
+                if not new_labels.has_frame(lf):
+                    # Base frame is not in new labels, so just keep it without
+                    # modification.
+                    keep_lfs.append(lf)
+                    continue
+
+            if lf.has_user_instances:
+                # Remove predictions from base frame.
+                lf.instances = lf.user_instances
+                keep_lfs.append(lf)
+
+        # Keep only labeled frames with no conflicting predictions.
+        self.labeled_frames = keep_lfs
     @classmethod
     def complex_merge_between(
         cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
