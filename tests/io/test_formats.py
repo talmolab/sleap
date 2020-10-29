@@ -97,7 +97,7 @@ def test_hdf5_v1(tmpdir):
     assert len(y.labeled_frames) == 1100
 
 
-def test_hdf5_v1():
+def test_hdf5_v1_filehandle():
     filename = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
 
     labels = hdf5.LabelsV1Adaptor.read_headers(filehandle.FileHandle(filename))
@@ -150,8 +150,3 @@ def test_matching_adaptor():
         as_format="*",
     )
 
-    # read(
-    #     "tests/data/mat/labels.mat",
-    #     for_object="labels",
-    #     as_format="*"
-    # )
