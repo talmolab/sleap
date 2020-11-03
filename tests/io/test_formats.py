@@ -1,6 +1,8 @@
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 import pytest
 import os
+import numpy as np
+from numpy.testing import assert_array_equal
 
 
 def test_text_adaptor(tmpdir):
@@ -150,3 +152,22 @@ def test_matching_adaptor():
         as_format="*",
     )
 
+
+def test_madlc():
+    labels = read(
+        "tests/data/dlc/madlc_testdata.csv",
+        for_object="labels",
+        as_format="deeplabcut",
+    )
+
+    assert labels.skeleton.node_names == ["A", "B", "C"]
+    assert len(labels) == 3
+    assert len(labels[0]) == 2
+    assert len(labels[1]) == 2
+    assert len(labels[2]) == 1
+
+    assert_array_equal(labels[0][0].numpy(), [[0, 1], [2, 3], [4, 5]])
+    assert_array_equal(labels[0][1].numpy(), [[6, 7], [8, 9], [10, 11]])
+    assert_array_equal(labels[1][0].numpy(), [[12, 13], [np.nan, np.nan], [15, 16]])
+    assert_array_equal(labels[1][1].numpy(), [[17, 18], [np.nan, np.nan], [20, 21]])
+    assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
