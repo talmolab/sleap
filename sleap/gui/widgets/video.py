@@ -1053,7 +1053,7 @@ class GraphicsView(QGraphicsView):
         rect = QRectF()
         for item in self.all_instances:
             rect = rect.united(item.boundingRect())
-        if margin > 0:
+        if margin > 0 and not rect.isNull():
             rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
         return rect
 
@@ -1085,9 +1085,11 @@ class GraphicsView(QGraphicsView):
             self.updateViewer()
 
         # Trigger wheelEvent for all child elements. This is a bit of a hack.
-        # We can't use QGraphicsView.wheelEvent(self, event) since that will scroll view.
+        # We can't use QGraphicsView.wheelEvent(self, event) since that will scroll
+        # view.
         # We want to trigger for all children, since wheelEvent should continue rotating
-        # an skeleton even if the skeleton node/node label is no longer under the cursor.
+        # an skeleton even if the skeleton node/node label is no longer under the
+        # cursor.
         # Note that children expect a QGraphicsSceneWheelEvent event, which is why we're
         # explicitly ignoring TypeErrors. Everything seems to work fine since we don't
         # care about the mouse position; if we did, we'd need to map pos to scene.
