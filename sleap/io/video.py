@@ -19,7 +19,7 @@ from sleap.util import json_loads, json_dumps
 logger = logging.getLogger(__name__)
 
 
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False, order=False)
 class DummyVideo:
     """
     Fake video backend,returns frames with all zeros.
@@ -43,7 +43,7 @@ class DummyVideo:
         return np.zeros((self.height, self.width, self.channels))
 
 
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False, order=False)
 class HDF5Video:
     """
     Video data stored as 4D datasets in HDF5 files.
@@ -304,7 +304,7 @@ class HDF5Video:
         return frame
 
 
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False, order=False)
 class MediaVideo:
     """
     Video data stored in traditional media formats readable by FFMPEG
@@ -351,7 +351,8 @@ class MediaVideo:
                     f"Could not find filename video filename named {self.filename}"
                 )
 
-            # Try and open the file either locally in current directory or with full path
+            # Try and open the file either locally in current directory or with full
+            # path
             self._reader_ = cv2.VideoCapture(self.filename)
 
             # If the user specified None for grayscale bool, figure it out based on the
@@ -458,7 +459,7 @@ class MediaVideo:
         return frame
 
 
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False, order=False)
 class NumpyVideo:
     """
     Video data stored as Numpy array.
@@ -556,7 +557,7 @@ class NumpyVideo:
         return not os.path.exists(self.filename)
 
 
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False, order=False)
 class ImgStoreVideo:
     """
     Video data stored as an ImgStore dataset.
@@ -747,7 +748,7 @@ class ImgStoreVideo:
             self.__store = None
 
 
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False, order=False)
 class SingleImageVideo:
     """
     Video wrapper for individual image files.
@@ -884,7 +885,7 @@ class SingleImageVideo:
         return self.__data[idx]
 
 
-@attr.s(auto_attribs=True, cmp=False)
+@attr.s(auto_attribs=True, eq=False, order=False)
 class Video:
     """
     The top-level interface to any Video data used by SLEAP.
