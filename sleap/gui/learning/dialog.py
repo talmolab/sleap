@@ -566,9 +566,12 @@ class LearningDialog(QtWidgets.QDialog):
             total_count = items_for_inference.total_frame_count
             no_result_count = total_count - new_counts
 
-            message = f"Inference ran on {total_count} frames."
-            message += f"\n\nInstances were predicted on {new_counts} frames "
-            message += f"({no_result_count} frame{'s' if no_result_count != 1 else ''} with no instances found)."
+            message = (
+                f"Inference ran on {total_count} frames."
+                f"\n\nInstances were predicted on {new_counts} frames "
+                f"({no_result_count} frame{'s' if no_result_count != 1 else ''} with "
+                "no instances found)."
+            )
 
             win = QtWidgets.QMessageBox(text=message)
             win.setWindowTitle("Inference Results")

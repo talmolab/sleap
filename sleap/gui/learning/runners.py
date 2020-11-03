@@ -297,6 +297,24 @@ def write_pipeline_files(
     new_cfg_filenames = []
     train_script = "#!/bin/bash\n"
 
+    # Add head type to save path suffix to prevent overwriting.
+    for cfg_info in config_info_list:
+        if not cfg_info.dont_retrain:
+            if (
+                cfg_info.config.outputs.run_name_suffix is not None
+                and len(cfg_info.config.outputs.run_name_suffix) > 0
+            ):
+                # Keep existing suffix if defined.
+                suffix = "." + cfg_info.config.outputs.run_name_suffix
+            else:
+                suffix = ""
+
+            # Add head name.
+            suffix = "." + cfg_info.head_name + suffix
+
+            # Update config.
+            cfg_info.config.outputs.run_name_suffix = suffix
+
     for cfg_info in config_info_list:
         if cfg_info.dont_retrain:
             # Use full absolute path to already training model
@@ -322,7 +340,7 @@ def write_pipeline_files(
             cfg_info.config.save_json(new_cfg_filename)
 
             # Keep track of the path where we'll find the trained model
-            new_cfg_filenames.append(cfg_info.config.outputs.run_name)
+            new_cfg_filenames.append(cfg_info.config.outputs.run_path)
 
             # Add a line to the script for training this model
             train_script += f"sleap-train {new_cfg_filename} {labels_filename}\n"
