@@ -4,7 +4,7 @@ cattrs==1.0.0rc
 jsonpickle==1.2
 networkx
 tensorflow==2.1.2
-h5py
+h5py==2.10.0
 python-rapidjson
 opencv-python-headless==4.2.0.34
 pandas

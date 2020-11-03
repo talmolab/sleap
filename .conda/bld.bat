@@ -19,7 +19,7 @@ pip install cattrs==1.0.0rc
 pip install jsonpickle==1.2
 pip install networkx
 pip install tensorflow==2.1.2
-pip install h5py
+pip install h5py==2.10.0
 pip install python-rapidjson
 pip install opencv-python-headless==4.2.0.34
 pip install pandas
