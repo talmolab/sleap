@@ -16,7 +16,7 @@
             "pad_to_stride": null
         },
         "instance_cropping": {
-            "center_on_part": "thorax",
+            "center_on_part": null,
             "crop_size": null,
             "crop_size_detection_padding": 16
         }
@@ -40,7 +40,7 @@
         "heads": {
             "single_instance": null,
             "centroid": {
-                "anchor_part": "thorax",
+                "anchor_part": null,
                 "sigma": 5.0,
                 "output_stride": 2
             },
@@ -49,7 +49,7 @@
         }
     },
     "optimization": {
-        "preload_data": false,
+        "preload_data": true,
         "augmentation_config": {
             "rotate": true,
             "rotation_min_angle": -180,
@@ -122,7 +122,7 @@
             "final_model": false
         },
         "tensorboard": {
-            "write_logs": true,
+            "write_logs": false,
             "loss_frequency": "epoch",
             "architecture_graph": false,
             "profile_graph": false,
