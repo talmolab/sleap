@@ -230,10 +230,17 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             cfg = cfg_info.config
             filename = cfg_info.filename
 
-            display_name = f"{cfg.outputs.run_name_prefix or ''}{cfg.outputs.run_name}{cfg.outputs.run_name_suffix or ''} ({filename})"
+            display_name = ""
 
             if cfg_info.has_trained_model:
-                display_name += " *"
+                display_name += "[Trained] "
+
+            display_name += (
+                f"{cfg.outputs.run_name_prefix or ''}"
+                f"{cfg.outputs.run_name}"
+                f"{cfg.outputs.run_name_suffix or ''}"
+                f"({filename})"
+            )
 
             if select is not None:
                 if select.config == cfg_info.config:
@@ -383,6 +390,10 @@ class TrainingConfigsGetter:
     ) -> List[ConfigFileInfo]:
         """Returns filtered subset of loaded configs."""
 
+        base_config_dir = os.path.realpath(
+            sleap_utils.get_package_file("sleap/training_profiles")
+        )
+
         cfgs_to_return = []
         paths_included = []
 
@@ -400,9 +411,9 @@ class TrainingConfigsGetter:
                     # TODO: check filenames since timestamp sort could be off
                     #  if files were copied
 
-                    cfg_dir = os.path.dirname(cfg_info.path)
+                    cfg_dir = os.path.realpath(os.path.dirname(cfg_info.path))
 
-                    if cfg_dir not in paths_included:
+                    if cfg_dir == base_config_dir or cfg_dir not in paths_included:
                         paths_included.append(cfg_dir)
                         cfgs_to_return.append(cfg_info)
 
