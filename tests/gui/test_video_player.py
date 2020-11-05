@@ -1,4 +1,6 @@
-from sleap.gui.widgets.video import QtVideoPlayer
+import numpy as np
+from sleap import Instance, Skeleton
+from sleap.gui.widgets.video import QtVideoPlayer, GraphicsView, QtInstance, QtVideoPlayer
 
 import PySide2.QtCore as QtCore
 
@@ -77,3 +79,8 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     assert cb.args[0] == [inst_1, inst_0]
 
     assert vp.close()
+
+
+def test_getInstancesBoundingRect():
+    rect = GraphicsView.getInstancesBoundingRect([])
+    assert rect.isNull()

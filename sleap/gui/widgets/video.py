@@ -1041,6 +1041,30 @@ class GraphicsView(QGraphicsView):
         """
         self.zoomFactor = 1
 
+    @staticmethod
+    def getInstancesBoundingRect(
+        instances: List["QtInstance"], margin: float = 0.0
+    ) -> QRectF:
+        """Return a rectangle containing all instances.
+
+        Args:
+            instances: List of QtInstance objects.
+            margin: Margin for padding the rectangle. Padding is applied equally on all
+                sides.
+
+        Returns:
+            The `QRectF` which contains all of the instances.
+
+        Notes:
+            The returned rectangle will be null if the instance list is empty.
+        """
+        rect = QRectF()
+        for item in instances:
+            rect = rect.united(item.boundingRect())
+        if margin > 0 and not rect.isNull():
+            rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
+        return rect
+
     def instancesBoundingRect(self, margin: float = 0) -> QRectF:
         """
         Returns a rect which contains all displayed skeleton instances.
@@ -1050,12 +1074,7 @@ class GraphicsView(QGraphicsView):
         Returns:
             The `QRectF` which contains the skeleton instances.
         """
-        rect = QRectF()
-        for item in self.all_instances:
-            rect = rect.united(item.boundingRect())
-        if margin > 0 and not rect.isNull():
-            rect = rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
-        return rect
+        return GraphicsView.getInstancesBoundingRect(self.all_instances, margin=margin)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         """ Custom event handler, clears zoom.
