@@ -703,6 +703,66 @@ def test_save_labels_and_frames_hdf5(multi_skel_vid_labels, tmpdir):
     loaded_labels = Labels.load_hdf5(filename=filerename)
 
 
+def test_save_frame_data_hdf5(min_labels_slp, tmpdir):
+    labels = Labels(min_labels_slp.labeled_frames)
+    labels.append(LabeledFrame(video=labels.video, frame_idx=1))
+    labels.suggestions.append(SuggestionFrame(video=labels.video, frame_idx=2))
+
+    fn = os.path.join(tmpdir, "test_user_only.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=True, all_labeled=False, suggested=False,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0]
+
+    fn = os.path.join(tmpdir, "test_all_labeled.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=True, suggested=False,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0, 1]
+
+    fn = os.path.join(tmpdir, "test_suggested.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=False, suggested=True,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [2]
+
+    fn = os.path.join(tmpdir, "test_all.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=True, suggested=True,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0, 1, 2]
+
+
+def test_save_labels_with_images(min_labels_slp, tmpdir):
+    labels = Labels(min_labels_slp.labeled_frames)
+    labels.append(LabeledFrame(video=labels.video, frame_idx=1))
+    labels.suggestions.append(SuggestionFrame(video=labels.video, frame_idx=2))
+
+    fn = os.path.join(tmpdir, "test_user_only.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=False, embed_suggested=False,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0]
+
+    fn = os.path.join(tmpdir, "test_all_labeled.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=True, embed_suggested=False,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 1]
+
+    fn = os.path.join(tmpdir, "test_suggested.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=False, embed_suggested=True,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 2]
+
+    fn = os.path.join(tmpdir, "test_all.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=True, embed_suggested=True,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 1, 2]
+
+
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
     labels = multi_skel_vid_labels
     filename = os.path.join(tmpdir, "test.h5")

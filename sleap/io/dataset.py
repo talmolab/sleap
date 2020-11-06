@@ -1588,22 +1588,41 @@ class Labels(MutableSequence):
 
         write(filename, labels, *args, **kwargs)
 
-    def save(self, filename: Text, with_images: bool = False):
+    def save(
+        self,
+        filename: Text,
+        with_images: bool = False,
+        embed_all_labeled: bool = False,
+        embed_suggested: bool = False,
+    ):
         """Save the labels to a file.
 
         Args:
             filename: Path to save the labels to ending in `.slp`. If the filename does
                 not end in `.slp`, the extension will be automatically appended.
-            with_images: If True, the image data for frames with labels will be embedded
-                in the saved labels. This is useful for generating a single file to be
-                used when training remotely.
+            with_images: If `True`, the image data for frames with labels will be
+                embedded in the saved labels. This is useful for generating a single
+                file to be used when training remotely. Defaults to `False`.
+            embed_all_labeled: If `True`, save image data for labeled frames without
+                user-labeled instances (defaults to `False`). This is useful for
+                selecting arbitrary frames to save by adding empty `LabeledFrame`s to
+                the dataset. Labeled frame metadata will be saved regardless.
+            embed_suggested: If `True`, save image data for frames in the suggestions
+                (defaults to `False`). Useful for predicting on remaining suggestions
+                after training. Suggestions metadata will be saved regardless.
 
         Notes:
             This is an instance-level wrapper for the `Labels.save_file` class method.
         """
         if os.path.splitext(filename)[1].lower() != ".slp":
             filename = filename + ".slp"
-        Labels.save_file(self, filename, save_frame_data=with_images)
+        Labels.save_file(
+            self,
+            filename,
+            save_frame_data=with_images,
+            all_labeled=embed_all_labeled,
+            suggested=embed_suggested,
+        )
 
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
@@ -1706,7 +1725,12 @@ class Labels(MutableSequence):
         return imgstore_vids
 
     def save_frame_data_hdf5(
-        self, output_path: str, format: str = "png", all_labels: bool = False
+        self,
+        output_path: str,
+        format: str = "png",
+        user_labeled: bool = True,
+        all_labeled: bool = False,
+        suggested: bool = False,
     ) -> List[HDF5Video]:
         """Write images for labeled frames from all videos to hdf5 file.
 
@@ -1715,21 +1739,34 @@ class Labels(MutableSequence):
         Args:
             output_path: Path to HDF5 file.
             format: The image format to use for the data. Defaults to png.
-            all_labels: Include any labeled frames, not just the frames
-                we'll use for training (i.e., those with Instances).
+            user_labeled: Include labeled frames with user instances. Defaults to
+                `True`.
+            all_labeled: Include all labeled frames, including those with user-labeled
+                instances, predicted instances or labeled frames with no instances.
+                Defaults to `False`.
+            suggested: Include suggested frames even if they do not have instances.
+                Useful for inference after training. Defaults to `False`.
 
         Returns:
             A list of :class:`HDF5Video` objects with the stored frames.
         """
         new_vids = []
-        for v_idx, v in enumerate(self.videos):
+        for v_idx, video in enumerate(self.videos):
+            lfs_v = self.find(video)
             frame_nums = [
                 lf.frame_idx
-                for lf in self.labeled_frames
-                if v == lf.video and (all_labels or lf.has_user_instances)
+                for lf in lfs_v
+                if all_labeled or (user_labeled and lf.has_user_instances)
             ]
+            if suggested:
+                frame_nums += [
+                    suggestion.frame_idx
+                    for suggestion in self.suggestions
+                    if suggestion.video == video
+                ]
+            frame_nums = sorted(list(set(frame_nums)))
 
-            vid = v.to_hdf5(
+            vid = video.to_hdf5(
                 path=output_path,
                 dataset=f"video{v_idx}",
                 format=format,
