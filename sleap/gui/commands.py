@@ -955,8 +955,11 @@ class ExportLabeledClip(AppCommand):
 
 
 class ExportDatasetWithImages(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
+    all_labeled = False
+    suggested = False
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
         win = MessageDialog("Exporting dataset with frame images...", context.app)
 
         Labels.save_file(
@@ -964,8 +967,8 @@ class ExportDatasetWithImages(AppCommand):
             params["filename"],
             default_suffix="slp",
             save_frame_data=True,
-            all_labeled=params.get("all_labeled", False),
-            suggested=params.get("suggested", False),
+            all_labeled=cls.all_labeled,
+            suggested=cls.suggested,
         )
 
         win.hide()
@@ -997,27 +1000,18 @@ class ExportDatasetWithImages(AppCommand):
 
 
 class ExportUserLabelsPackage(ExportDatasetWithImages):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        params["all_labeled"] = False
-        params["suggested"] = False
-        super().do_action(context, params)
+    all_labeled = False
+    suggested = False
 
 
 class ExportTrainingPackage(ExportDatasetWithImages):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        params["all_labeled"] = False
-        params["suggested"] = True
-        super().do_action(context, params)
+    all_labeled = False
+    suggested = True
 
 
 class ExportFullPackage(ExportDatasetWithImages):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        params["all_labeled"] = True
-        params["suggested"] = True
-        super().do_action(context, params)
+    all_labeled = True
+    suggested = True
 
 
 # Navigation Commands
