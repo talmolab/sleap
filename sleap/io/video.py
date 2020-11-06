@@ -120,10 +120,16 @@ class HDF5Video:
 
         # File loaded and dataset name given, so load dataset
         elif isinstance(self.dataset, str) and (self.__file_h5 is not None):
-            self.__dataset_h5 = self.__file_h5[self.dataset]
+            # dataset = "video0" passed:
+            if self.dataset + "/video" in self.__file_h5:
+                self.__dataset_h5 = self.__file_h5[self.dataset + "/video"]
+                base_dataset_path = self.dataset
+            else:
+                # dataset = "video0/video" passed:
+                self.__dataset_h5 = self.__file_h5[self.dataset]
+                base_dataset_path = "/".join(self.dataset.split("/")[:-1])
 
             # Check for frame_numbers dataset corresponding to video
-            base_dataset_path = "/".join(self.dataset.split("/")[:-1])
             framenum_dataset = f"{base_dataset_path}/frame_numbers"
             if framenum_dataset in self.__file_h5:
                 original_idx_lists = self.__file_h5[framenum_dataset]
@@ -138,7 +144,7 @@ class HDF5Video:
                     self.__file_h5.require_group(source_video_group).attrs["json"]
                 )
 
-                self._source_video_ = Video.cattr().structure(d, Video)
+                self._source_video = Video.cattr().structure(d, Video)
 
     @property
     def __dataset_h5(self) -> h5.Dataset:
@@ -161,12 +167,43 @@ class HDF5Video:
         return self._test_frame_
 
     @property
-    def enable_source_video(self):
+    def enable_source_video(self) -> bool:
+        """If set to `True`, will attempt to read from original video for frames not
+        saved in the file."""
         return self._enable_source_video
 
     @enable_source_video.setter
-    def enable_source_video(self, val):
+    def enable_source_video(self, val: bool):
         self._enable_source_video = val
+
+    @property
+    def has_embedded_images(self) -> bool:
+        """Return `True` if the file was saved with cached frame images."""
+        self._load()
+        return len(self.__original_to_current_frame_idx) > 0
+
+    @property
+    def embedded_frame_inds(self) -> List[int]:
+        """Return list of frame indices with embedded images."""
+        self._load()
+        return list(self.__original_to_current_frame_idx.keys())
+
+    @property
+    def source_video_available(self) -> bool:
+        """Return `True` if the source file is available for reading uncached frames."""
+        self._load()
+        return (
+            self.enable_source_video
+            and hasattr(self, "_source_video")
+            and self._source_video
+        )
+
+    @property
+    def source_video(self) -> "Video":
+        """Return the source video if available, otherwise return `None`."""
+        if self.source_video_available:
+            return self._source_video
+        return None
 
     def matches(self, other: "HDF5Video") -> bool:
         """
@@ -199,19 +236,12 @@ class HDF5Video:
 
     def _try_frame_from_source_video(self, idx) -> np.ndarray:
         try:
-            return self._source_video.get_frame(idx)
+            return self.source_video.get_frame(idx)
         except:
             raise ValueError(f"Frame index {idx} not in original index.")
 
-    @property
-    def _source_video(self) -> "Video":
-        if self.enable_source_video:
-            if hasattr(self, "_source_video_") and self._source_video_:
-                return self._source_video_
-        return None
-
-    # The properties and methods below complete our contract with the
-    # higher level Video interface.
+    # The properties and methods below complete our contract with the higher level
+    # Video interface.
 
     @property
     def frames(self):
