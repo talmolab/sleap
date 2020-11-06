@@ -1,0 +1,13 @@
+name: sleap
+
+dependencies:
+- python=3.6
+- Pillow
+- Shapely
+- conda-build=3.17
+- anaconda-client
+- conda-verify
+- pip
+- pip:
+    - "--editable=./"
+    - "--requirement=./dev_requirements.txt"
