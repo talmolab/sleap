@@ -2,7 +2,7 @@
 name: CI (Conda)
 
 # Run on any push
-on: [push]
+on: push
 
 jobs:
   build:

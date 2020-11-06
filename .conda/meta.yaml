@@ -1,10 +1,14 @@
+# Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html
+
+# Jinja template: Process setup.py to obtain version and metadata
 {% set data = load_setup_py_data() %}
+
 
 package:
   # Repeating name because of the following issue:
   # https://github.com/conda/conda-build/issues/2475
   name: sleap
-  version: {{ GIT_DESCRIBE_TAG[1:] }}
+  version: {{ data.get('version') }}
 
 about:
   home: {{ data.get('url') }}
@@ -24,23 +28,15 @@ requirements:
 
   run:
     - python=3.6
-    - numpy>=1.18.1
-    - scipy<=1.4.1
-    - attrs=19.3
-    - jsonpickle=1.2
-    - networkx
     - cudatoolkit=10.1
     - cudnn=7.6
-    - scikit-learn
-    - h5py
-    - pandas
     - Pillow
     - Shapely
-    - psutil
-    - pyzmq
-    - pyyaml
-    - python-rapidjson
     - pip
 
   run_constrained:
     - pyqt ==9999999999
+
+test:
+  imports:
+    - sleap
