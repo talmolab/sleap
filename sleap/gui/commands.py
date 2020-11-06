@@ -37,7 +37,7 @@ from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
 
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets, QtGui
 
 from PySide2.QtWidgets import QMessageBox
 
@@ -287,9 +287,17 @@ class CommandContext:
         """Shows gui for exporting clip with visual annotations."""
         self.execute(ExportLabeledClip)
 
-    def exportDatasetWithImages(self):
-        """Gui for exporting the training dataset of labels/frame images."""
-        self.execute(ExportDatasetWithImages)
+    def exportUserLabelsPackage(self):
+        """Gui for exporting the dataset with user-labeled images."""
+        self.execute(ExportUserLabelsPackage)
+
+    def exportTrainingPackage(self):
+        """Gui for exporting the dataset with user-labeled images and suggestions."""
+        self.execute(ExportTrainingPackage)
+
+    def exportFullPackage(self):
+        """Gui for exporting the dataset with any labeled frames and suggestions."""
+        self.execute(ExportFullPackage)
 
     # Navigation Commands
 
@@ -493,6 +501,22 @@ class CommandContext:
     def generateSuggestions(self, params: Dict):
         """Generates suggestions using given params dictionary."""
         self.execute(GenerateSuggestions, **params)
+
+    def openWebsite(self, url):
+        """Open a website from URL using the native system browser."""
+        self.execute(OpenWebsite, url=url)
+
+    def checkForUpdates(self):
+        """Check for updates online."""
+        self.execute(CheckForUpdates)
+
+    def openStableVersion(self):
+        """Open the current stable version."""
+        self.execute(OpenStableVersion)
+
+    def openPrereleaseVersion(self):
+        """Open the current prerelease version."""
+        self.execute(OpenPrereleaseVersion)
 
 
 # File Commands
@@ -750,8 +774,11 @@ class SaveProjectAs(AppCommand):
             context.changestack_savepoint()
 
         except Exception as e:
-            message = f"An error occured when attempting to save:\n {e}\n\n"
-            message += "Try saving your project with a different filename or in a different format."
+            message = (
+                f"An error occured when attempting to save:\n {e}\n\n"
+                "Try saving your project with a different filename or in a different "
+                "format."
+            )
             QtWidgets.QMessageBox(text=message).exec_()
 
         # Redraw. Not sure why, but sometimes we need to do this.
@@ -937,6 +964,8 @@ class ExportDatasetWithImages(AppCommand):
             params["filename"],
             default_suffix="slp",
             save_frame_data=True,
+            all_labeled=params.get("all_labeled", False),
+            suggested=params.get("suggested", False),
         )
 
         win.hide()
@@ -965,6 +994,30 @@ class ExportDatasetWithImages(AppCommand):
 
         params["filename"] = filename
         return True
+
+
+class ExportUserLabelsPackage(ExportDatasetWithImages):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        params["all_labeled"] = False
+        params["suggested"] = False
+        super().do_action(context, params)
+
+
+class ExportTrainingPackage(ExportDatasetWithImages):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        params["all_labeled"] = False
+        params["suggested"] = True
+        super().do_action(context, params)
+
+
+class ExportFullPackage(ExportDatasetWithImages):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        params["all_labeled"] = True
+        params["suggested"] = True
+        super().do_action(context, params)
 
 
 # Navigation Commands
@@ -2153,3 +2206,41 @@ class AddUserInstancesFromPredictions(EditCommand):
         # Add the instances
         for new_instance in new_instances:
             context.labels.add_instance(context.state["labeled_frame"], new_instance)
+
+
+class OpenWebsite(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(params["url"]))
+
+
+class CheckForUpdates(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        success = context.app.release_checker.check_for_releases()
+        if success:
+            stable = context.app.release_checker.latest_stable
+            prerelease = context.app.release_checker.latest_prerelease
+            context.state["stable_version_menu"].setText(f"  Stable: {stable.version}")
+            context.state["stable_version_menu"].setEnabled(True)
+            context.state["prerelease_version_menu"].setText(
+                f"  Prerelease: {prerelease.version}"
+            )
+            context.state["prerelease_version_menu"].setEnabled(True)
+    # TODO: Provide GUI feedback about result.
+
+
+class OpenStableVersion(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        rls = context.app.release_checker.latest_stable
+        if rls is not None:
+            context.openWebsite(rls.url)
+
+
+class OpenPrereleaseVersion(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        rls = context.app.release_checker.latest_prerelease
+        if rls is not None:
+            context.openWebsite(rls.url)
