@@ -16,7 +16,8 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: {{ GIT_DESCRIBE_NUMBER }}
+  # number: {{ GIT_DESCRIBE_NUMBER }}
+  number: {{ data.get('version') }}
 
 source:
   path: ../
