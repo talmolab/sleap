@@ -81,10 +81,12 @@ jobs:
           conda build .conda --output-folder build
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-latest'
-        # shell: powershell
-        shell: bash -l {0}
+        shell: powershell
+        # shell: bash -l {0}
         run: |
+          which conda
           which python
+          conda activate sleap
           pytest tests/
           conda build .conda --output-folder build
 
