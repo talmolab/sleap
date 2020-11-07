@@ -1,12 +1,12 @@
 # Continuous integration using conda installation
-name: CI (Conda)
+name: CI
 
 # Run on any push
 on: push
 
 jobs:
   build:
-    name: Conda package test (${{ matrix.os }})
+    name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
