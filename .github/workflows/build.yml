@@ -20,7 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
+        # os: ["ubuntu-latest", "windows-latest"]
+        os: ["windows-latest"]
     steps:
       - uses: actions/checkout@v2
       - name: Cache conda
@@ -48,19 +49,19 @@ jobs:
       #   if: matrix.os != 'windows-latest'
       #   shell: pwsh
       #   run: conda list
-      - name: Test with pytest (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: bash -l {0}
-        run: |
-          pytest
-      - name: Test with pytest (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash -l {0}
-        run: |
-          sudo apt-get install xvfb libxkbcommon-x11-0
-          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-          export DISPLAY=":1"
-          xvfb-run pytest --cov=sleap --cov-report=xml tests/
+      # - name: Test with pytest (Windows)
+      #   if: matrix.os == 'windows-latest'
+      #   shell: bash -l {0}
+      #   run: |
+      #     pytest
+      # - name: Test with pytest (Ubuntu)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   shell: bash -l {0}
+      #   run: |
+      #     sudo apt-get install xvfb libxkbcommon-x11-0
+      #     sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+      #     export DISPLAY=":1"
+      #     xvfb-run pytest --cov=sleap --cov-report=xml tests/
 
       - name: Build pip wheel
         shell: bash -l {0}
@@ -80,9 +81,8 @@ jobs:
           conda build .conda --output-folder build
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-latest'
-        shell: cmd
+        shell: powershell
         run: |
-          conda activate sleap
           conda build .conda --output-folder build
 
       # - name: Upload conda package (Windows)

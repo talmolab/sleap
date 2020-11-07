@@ -2,7 +2,12 @@
 name: CI
 
 # Run on any push
-on: push
+# on: push
+on:
+  push:
+    branches:
+      - develop
+      # - tf23
 
 jobs:
   build:
