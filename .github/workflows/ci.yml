@@ -6,8 +6,8 @@ name: CI
 on:
   push:
     branches:
-      - develop
-      # - tf23
+      # - develop
+      - tf23
 
 jobs:
   build:

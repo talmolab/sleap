@@ -3,15 +3,14 @@ name: Build
 
 # Run on any push
 on:
-  push:
-    branches:
-      - tf23
+  # push:
+  #   branches:
+  #     - tf23
       # - develop
 
-  # release:
-  #   types:
-  # #     - created
-  #     - published
+  release:
+    types:
+      - published
 
 jobs:
   build:
@@ -20,8 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: ["ubuntu-latest", "windows-latest"]
-        os: ["windows-latest"]
+        os: ["ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
       - name: Cache conda
@@ -45,66 +43,47 @@ jobs:
         run: |
           which python
           conda info
-      # - name: Conda list
-      #   if: matrix.os != 'windows-latest'
-      #   shell: pwsh
-      #   run: conda list
-      # - name: Test with pytest (Windows)
-      #   if: matrix.os == 'windows-latest'
-      #   shell: bash -l {0}
-      #   run: |
-      #     pytest
-      # - name: Test with pytest (Ubuntu)
-      #   if: matrix.os == 'ubuntu-latest'
-      #   shell: bash -l {0}
-      #   run: |
-      #     sudo apt-get install xvfb libxkbcommon-x11-0
-      #     sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-      #     export DISPLAY=":1"
-      #     xvfb-run pytest --cov=sleap --cov-report=xml tests/
 
       - name: Build pip wheel
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
-      # - name: Upload pip wheel
-      #   env:
-      #     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      #   shell: bash -l {0}
-      #   run: |
-      #     twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
+      - name: Upload pip wheel
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        shell: bash -l {0}
+        run: |
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       - name: Build conda package (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         shell: bash -l {0}
         run: |
+          pytest tests/
           conda build .conda --output-folder build
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-latest'
         shell: powershell
-        # shell: bash -l {0}
         run: |
-          which conda
-          which python
           conda activate sleap
           pytest tests/
           conda build .conda --output-folder build
 
-      # - name: Upload conda package (Windows)
-      #   if: matrix.os == 'windows-latest'
-      #   env:
-      #     ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
-      #   shell: bash -l {0}
-      #   run: |
-      #     anaconda login --username sleap --password "$ANACONDA_LOGIN"
-      #     anaconda upload --force build\win-64\*.tar.bz2 --label dev
-      #     anaconda logout
-      # - name: Upload conda package (Ubuntu)
-      #   if: matrix.os == 'ubuntu-latest'
-      #   env:
-      #     ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
-      #   shell: bash -l {0}
-      #   run: |
-      #     anaconda login --username sleap --password "$ANACONDA_LOGIN"
-      #     anaconda upload --force build/linux-64/*.tar.bz2 --label dev
-      #     anaconda logout
+      - name: Upload conda package (Windows)
+        if: matrix.os == 'windows-latest'
+        env:
+          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+        shell: bash -l {0}
+        run: |
+          anaconda login --username sleap --password "$ANACONDA_LOGIN"
+          anaconda upload --force build\win-64\*.tar.bz2 --label dev
+          anaconda logout
+      - name: Upload conda package (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+        shell: bash -l {0}
+        run: |
+          anaconda login --username sleap --password "$ANACONDA_LOGIN"
+          anaconda upload --force build/linux-64/*.tar.bz2 --label dev
+          anaconda logout
