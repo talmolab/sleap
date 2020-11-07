@@ -26,6 +26,16 @@ The goal at this stage is to get accurate pose predictions on individual frames.
 
 After you have accurate frame-by-frame prediction, you’re ready to predict for entire video clips and to track animal identities. We use a variety of heuristic algorithms for tracking identities across time (see :ref:`tracking-method-details` for more details). SLEAP also includes a graphical proof-reading tool for quickly assessing the accuracy of tracking and correcting problems.
 
+.. _Learn more:
+
+Learn more about SLEAP
+----------------------
+
+Want to learn more about SLEAP and multi-animal pose tracking?
+
+Check out our `preprint on bioRxiv <https://doi.org/10.1101/2020.08.31.276246>`_ or watch our `tutorial on SLEAP <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_.
+
+
 .. _Contact:
 
 Contact

@@ -87,6 +87,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
+from sleap.gui.release_checker import ReleaseChecker
 
 from sleap.prefs import prefs
 
@@ -138,6 +139,8 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = "Line"
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+
+        self.release_checker = ReleaseChecker()
 
         self._initialize_gui()
 
@@ -259,6 +262,7 @@ class MainWindow(QMainWindow):
         def add_menu_item(menu, key: str, name: str, action: Callable):
             menu_item = menu.addAction(name, action, shortcuts[key])
             self._menu_actions[key] = menu_item
+            return menu_item
 
         # set menu checkmarks
         def connect_check(key):
@@ -419,10 +423,30 @@ class MainWindow(QMainWindow):
             goMenu, "select to frame", "Select to Frame...", self.commands.selectToFrame
         )
 
+        goMenu.addSeparator()
+
+        add_menu_item(
+            goMenu,
+            "select next",
+            "Select Next Instance",
+            lambda: self.state.increment_in_list(
+                "instance", self.state["labeled_frame"].instances_to_show
+            ),
+        )
+        add_menu_item(
+            goMenu,
+            "clear selection",
+            "Clear Selection",
+            lambda: self.state.set("instance", None),
+        )
+
         ### View Menu ###
 
         viewMenu = self.menuBar().addMenu("View")
         self.viewMenu = viewMenu  # store as attribute so docks can add items
+
+        viewMenu.addSeparator()
+        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
@@ -466,8 +490,12 @@ class MainWindow(QMainWindow):
         )
 
         viewMenu.addSeparator()
-
-        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
+        add_menu_item(
+            viewMenu,
+            "export clip",
+            "Render Video Clip with Instances...",
+            self.commands.exportLabeledClip,
+        )
 
         viewMenu.addSeparator()
 
@@ -537,6 +565,61 @@ class MainWindow(QMainWindow):
             self.commands.deleteSelectedInstance,
         )
 
+        add_menu_item(
+            labelMenu,
+            "custom delete",
+            "Custom Instance Delete...",
+            self.commands.deleteDialog,
+        )
+
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
+            "add instances from all frame predictions",
+            "Add Instances from All Predictions on Current Frame",
+            self.commands.addUserInstancesFromPredictions,
+        )
+
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
+            "delete frame predictions",
+            "Delete Predictions on Current Frame",
+            self.commands.deleteFramePredictions,
+        )
+        add_menu_item(
+            labelMenu,
+            "delete all predictions",
+            "Delete All Predictions...",
+            self.commands.deletePredictions,
+        )
+        add_menu_item(
+            labelMenu,
+            "delete clip predictions",
+            "Delete Predictions from Clip...",
+            self.commands.deleteClipPredictions,
+        )
+        add_menu_item(
+            labelMenu,
+            "delete area predictions",
+            "Delete Predictions from Area...",
+            self.commands.deleteAreaPredictions,
+        )
+        add_menu_item(
+            labelMenu,
+            "delete score predictions",
+            "Delete Predictions with Low Score...",
+            self.commands.deleteLowScorePredictions,
+        )
+        add_menu_item(
+            labelMenu,
+            "delete frame limit predictions",
+            "Delete Predictions beyond Frame Limit...",
+            self.commands.deleteFrameLimitPredictions,
+        )
+
         labelMenu.addSeparator()
 
         self.track_menu = labelMenu.addMenu("Set Instance Track")
@@ -553,36 +636,10 @@ class MainWindow(QMainWindow):
             self.commands.deleteSelectedInstanceTrack,
         )
 
-        labelMenu.addSeparator()
-
-        add_menu_item(
-            labelMenu,
-            "custom delete",
-            "Custom Instance Delete...",
-            self.commands.deleteDialog,
-        )
-        labelMenu.addSeparator()
-
-        add_menu_item(
-            labelMenu,
-            "select next",
-            "Select Next Instance",
-            lambda: self.state.increment_in_list(
-                "instance", self.state["labeled_frame"].instances_to_show
-            ),
-        )
-        add_menu_item(
-            labelMenu,
-            "clear selection",
-            "Clear Selection",
-            lambda: self.state.set("instance", None),
-        )
-
-        labelMenu.addSeparator()
-
         ### Predict Menu ###
 
         predictionMenu = self.menuBar().addMenu("Predict")
+        predictionMenu.setToolTipsVisible(True)
 
         add_menu_item(
             predictionMenu,
@@ -614,70 +671,70 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
-
         add_menu_item(
             predictionMenu,
-            "add instances from all frame predictions",
-            "Add Instances from All Predictions on Current Frame",
-            self.commands.addUserInstancesFromPredictions,
-        )
-
-        predictionMenu.addSeparator()
-
-        add_menu_item(
-            predictionMenu,
-            "delete frame predictions",
-            "Delete Predictions on Current Frame",
-            self.commands.deleteFramePredictions,
-        )
-        add_menu_item(
-            predictionMenu,
-            "delete all predictions",
-            "Delete All Predictions...",
-            self.commands.deletePredictions,
-        )
-        add_menu_item(
-            predictionMenu,
-            "delete clip predictions",
-            "Delete Predictions from Clip...",
-            self.commands.deleteClipPredictions,
-        )
-        add_menu_item(
-            predictionMenu,
-            "delete area predictions",
-            "Delete Predictions from Area...",
-            self.commands.deleteAreaPredictions,
-        )
-        add_menu_item(
-            predictionMenu,
-            "delete score predictions",
-            "Delete Predictions with Low Score...",
-            self.commands.deleteLowScorePredictions,
-        )
-        add_menu_item(
-            predictionMenu,
-            "delete frame limit predictions",
-            "Delete Predictions beyond Frame Limit...",
-            self.commands.deleteFrameLimitPredictions,
-        )
-
-        predictionMenu.addSeparator()
-        add_menu_item(
-            predictionMenu,
-            "export frames",
+            "export training package",
             "Export Training Package...",
-            self.commands.exportDatasetWithImages,
+            self.commands.exportTrainingPackage,
+        ).setToolTip(
+            "Export user-labeled frames and suggested frames with image data into a "
+            "single SLP file.\n\n"
+            "Use this for human-in-the-loop training to enable remote inference on "
+            "unlabeled frames."
         )
         add_menu_item(
             predictionMenu,
-            "export clip",
-            "Export Video with Visual Annotations...",
-            self.commands.exportLabeledClip,
+            "export user labels package",
+            "Export Package with User Labels Only...",
+            self.commands.exportUserLabelsPackage,
+        ).setToolTip(
+            "Export user-labeled frames with image data into a single SLP file.\n\n"
+            "Use this for archiving a dataset with labeled frames only."
+        )
+        add_menu_item(
+            predictionMenu,
+            "export full package",
+            "Export Package with All Labels...",
+            self.commands.exportFullPackage,
+        ).setToolTip(
+            "Export all frames (including predictions) and suggested frames with image "
+            "data into a single SLP file.\n\n"
+            "Use this when you need to store images for predicted frames, such as for "
+            "proofreading or reproducibility."
         )
 
         ############
 
         helpMenu = self.menuBar().addMenu("Help")
+
+        helpMenu.addAction(
+            "Documentation", lambda: self.commands.openWebsite("https://sleap.ai")
+        )
+        helpMenu.addAction(
+            "GitHub",
+            lambda: self.commands.openWebsite("https://github.com/murthylab/sleap"),
+        )
+        helpMenu.addAction(
+            "Releases",
+            lambda: self.commands.openWebsite(
+                "https://github.com/murthylab/sleap/releases"
+            ),
+        )
+
+        helpMenu.addSeparator()
+
+        helpMenu.addAction("Check for updates...", self.commands.checkForUpdates)
+        self.state["stable_version_menu"] = helpMenu.addAction(
+            "  Stable: N/A", self.commands.openStableVersion
+        )
+        self.state["stable_version_menu"].setEnabled(False)
+        self.state["prerelease_version_menu"] = helpMenu.addAction(
+            "  Prerelease: N/A", self.commands.openPrereleaseVersion
+        )
+        self.state["prerelease_version_menu"].setEnabled(False)
+        self.commands.checkForUpdates()
+
+        helpMenu.addSeparator()
         helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
 
     def process_events_then(self, action: Callable):
@@ -1352,7 +1409,10 @@ class MainWindow(QMainWindow):
 
         if not self.state["filename"] or self.state["has_changes"]:
             QMessageBox(
-                text="You have unsaved changes. Please save before running training or inference."
+                text=(
+                    "You have unsaved changes. Please save before running training or "
+                    "inference."
+                )
             ).exec_()
             return
 

@@ -307,7 +307,7 @@ class PredictedPointArray(PointArray):
         return v
 
 
-@attr.s(slots=True, cmp=False)
+@attr.s(slots=True, eq=False, order=False)
 class Track:
     """
     A track object is associated with a set of animal/object instances
@@ -341,7 +341,7 @@ class Track:
 # that are created in post init so they are not serialized.
 
 
-@attr.s(cmp=False, slots=True)
+@attr.s(eq=False, order=False, slots=True)
 class Instance:
     """
     The class :class:`Instance` represents a labelled instance of a skeleton.
@@ -391,8 +391,7 @@ class Instance:
         """
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
-                "Instance.from_predicted type must be PredictedInstance (not "
-                f"{type(from_predicted)})"
+                f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})"
             )
 
     @_points.validator
@@ -426,8 +425,7 @@ class Instance:
         elif isinstance(points, PointArray):
             if len(points) != len(self.skeleton.nodes):
                 raise ValueError(
-                    "PointArray does not have the same number of rows as skeleton "
-                    "nodes."
+                    "PointArray does not have the same number of rows as skeleton nodes."
                 )
 
     def __attrs_post_init__(self):
@@ -507,7 +505,7 @@ class Instance:
         if not is_string_dict and not is_node_dict:
             raise ValueError(
                 "points dictionary must be keyed by either strings "
-                "(node names) or Nodes."
+                + "(node names) or Nodes."
             )
 
         # Get rid of the points dict and replace with equivalent point array.
@@ -554,8 +552,8 @@ class Instance:
             to each node.
 
         """
-        # If the node is a list of nodes, use get item recursively and return a list of
-        # _points.
+
+        # If the node is a list of nodes, use get item recursively and return a list of _points.
         if type(node) is list:
             ret_list = []
             for n in node:
@@ -626,8 +624,8 @@ class Instance:
                 "Node list for indexing must be same length and value list."
             )
 
-        # If we are dealing with lists, do multiple assignment recursively, this should
-        # be ok because skeletons and instances are small.
+        # If we are dealing with lists, do multiple assignment recursively, this should be ok because
+        # skeletons and instances are small.
         if type(node) is list:
             for n, v in zip(node, value):
                 self.__setitem__(n, v)
@@ -898,7 +896,7 @@ class Instance:
         return cls(points=predicted_points, skeleton=skeleton, track=track)
 
 
-@attr.s(cmp=False, slots=True)
+@attr.s(eq=False, order=False, slots=True)
 class PredictedInstance(Instance):
     """
     A predicted instance is an output of the inference procedure.
@@ -1094,7 +1092,7 @@ def make_instance_cattr() -> cattr.Converter:
     return converter
 
 
-@attr.s(auto_attribs=True, repr=False, str=False)
+@attr.s(auto_attribs=True, eq=False)
 class LabeledFrame:
     """
     Holds labeled data for a single frame of a video.

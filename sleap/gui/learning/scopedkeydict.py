@@ -2,7 +2,7 @@
 Conversion between flat (form data) and hierarchical (config object) dicts.
 """
 
-from typing import Any, Dict, Optional, Text
+from typing import Any, Dict, Optional, Text, Tuple
 
 import attr
 import cattr
@@ -109,6 +109,56 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict: dict):
     if "model.backbone.resnet.upsampling.skip_connections" in key_val_dict:
         if key_val_dict["model.backbone.resnet.upsampling.skip_connections"] == "":
             key_val_dict["model.backbone.resnet.upsampling.skip_connections"] = None
+
+    # Overwrite backbone strides with stride from head.
+    backbone_name = find_backbone_name_from_key_val_dict(key_val_dict)
+    if backbone_name is not None:
+        max_stride, output_stride = resolve_strides_from_key_val_dict(
+            key_val_dict, backbone_name
+        )
+        key_val_dict[f"model.backbone.{backbone_name}.output_stride"] = output_stride
+        key_val_dict[f"model.backbone.{backbone_name}.max_stride"] = max_stride
+
+
+def find_backbone_name_from_key_val_dict(key_val_dict: dict):
+    """Find the backbone model name from the config dictionary."""
+    backbone_name = None
+    for key in key_val_dict:
+        if key.startswith("model.backbone."):
+            backbone_name = key.split(".")[2]
+
+    return backbone_name
+
+
+def resolve_strides_from_key_val_dict(
+    key_val_dict: dict, backbone_name: str
+) -> Tuple[int, int]:
+    """Find the valid max and output strides from the config dictionary."""
+    max_stride = key_val_dict.get(f"model.backbone.{backbone_name}.max_stride", None)
+    output_stride = key_val_dict.get(
+        f"model.backbone.{backbone_name}.output_stride", None
+    )
+
+    for key in [
+        "model.heads.centered_instance.output_stride",
+        "model.heads.centroid.output_stride",
+        "model.heads.multi_instance.confmaps.output_stride",
+        "model.heads.multi_instance.pafs.output_stride",
+    ]:
+        stride = key_val_dict.get(key, None)
+        if stride is not None:
+            stride = int(stride)
+            max_stride = (
+                max(int(max_stride), stride) if max_stride is not None else stride
+            )
+            output_stride = (
+                min(int(output_stride), stride) if output_stride is not None else stride
+            )
+
+    if output_stride is None:
+        output_stride = max_stride
+
+    return max_stride, output_stride
 
 
 def make_training_config_from_key_val_dict(key_val_dict: dict) -> TrainingJobConfig:

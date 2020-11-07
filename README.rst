@@ -32,7 +32,10 @@ supports active learning.
 
 SLEAP is released under a `Clear BSD License`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
 
-If you use **SLEAP** in your research, cite `Pereira et al. Nature Methods 2019`_ and `sleap.ai`_.
+If you use **SLEAP** in your research, please cite:
+
+Pereira, Talmo D., Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. “SLEAP: Multi-Animal Pose Tracking.” bioRxiv. https://doi.org/10.1101/2020.08.31.276246.
+
 
 .. _Clear BSD License: https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE
 .. _Pereira et al. Nature Methods 2019: https://www.nature.com/articles/s41592-018-0234-5

@@ -294,17 +294,23 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
     # We have to close file before we can add another video dataset.
     hdf5_vid.close()
 
-    # Now re-create the imgstore with frame number indexing, (the default)
+    # Now re-create the imgstore with frame number indexing (the default)
     hdf5_vid2 = small_robot_mp4_vid.to_hdf5(
         path, dataset="testvid3", frame_numbers=frame_indices
     )
 
     # Disable loading frames from the original source video
+    assert hdf5_vid2.has_embedded_images
+    assert hdf5_vid2.source_video_available
     hdf5_vid2.backend.enable_source_video = False
+    assert hdf5_vid2.has_embedded_images
+    assert not hdf5_vid2.source_video_available
 
     # Index by frame index in original video
     frames = hdf5_vid2.get_frames(frame_indices)
     assert frames.shape == (3, 320, 560, 3)
+
+    assert hdf5_vid2.embedded_frame_inds == frame_indices
 
     assert hdf5_vid2.last_frame_idx == max(frame_indices)
 

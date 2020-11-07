@@ -128,7 +128,8 @@ def test_eq():
     # wanted to test this just in case we add attributes to the nodes in the future.
     # UPDATE: Test is currently disabled.
     # Now that nodes are keyed to `Node`, we can't access by name.
-    # Also, we can't directly check graph identity, since we want identity modulo `Node` identity.
+    # Also, we can't directly check graph identity, since we want identity modulo `Node`
+    # identity.
     # s2 = copy.deepcopy(s1)
     # s2._graph.nodes['1']['test'] = 5
     # assert s1 != s2

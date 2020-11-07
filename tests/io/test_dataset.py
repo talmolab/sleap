@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-import sleap
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
@@ -214,9 +213,6 @@ def test_label_accessors(centered_pair_labels):
     assert labels[np.int64(61)] == labels[61]
     assert labels[np.array([0, 61])] == labels[[0, 61]]
 
-    assert labels[:3] == labels[[0, 1, 2]]
-    assert labels[1:6:2] == labels[[1, 3, 5]]
-
     assert len(labels.find(video, frame_idx=954)) == 1
     assert len(labels.find(video, 954)) == 1
     assert labels.find(video, 954)[0] == labels[61]
@@ -261,8 +257,16 @@ def test_scalar_properties():
     # More than one video
     dummy_skeleton = Skeleton()
     labels = Labels()
-    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
-    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
+    labels.append(
+        LabeledFrame(
+            Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]
+        )
+    )
+    labels.append(
+        LabeledFrame(
+            Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]
+        )
+    )
     assert labels.skeleton == dummy_skeleton
     with pytest.raises(ValueError):
         labels.video
@@ -270,8 +274,12 @@ def test_scalar_properties():
     # More than one skeleton
     dummy_video = Video(backend=MediaVideo)
     labels = Labels()
-    labels.append(LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())]))
-    labels.append(LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())]))
+    labels.append(
+        LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())])
+    )
+    labels.append(
+        LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())])
+    )
     assert labels.video == dummy_video
     with pytest.raises(ValueError):
         labels.skeleton
@@ -695,6 +703,66 @@ def test_save_labels_and_frames_hdf5(multi_skel_vid_labels, tmpdir):
     loaded_labels = Labels.load_hdf5(filename=filerename)
 
 
+def test_save_frame_data_hdf5(min_labels_slp, tmpdir):
+    labels = Labels(min_labels_slp.labeled_frames)
+    labels.append(LabeledFrame(video=labels.video, frame_idx=1))
+    labels.suggestions.append(SuggestionFrame(video=labels.video, frame_idx=2))
+
+    fn = os.path.join(tmpdir, "test_user_only.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=True, all_labeled=False, suggested=False,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0]
+
+    fn = os.path.join(tmpdir, "test_all_labeled.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=True, suggested=False,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0, 1]
+
+    fn = os.path.join(tmpdir, "test_suggested.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=False, suggested=True,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [2]
+
+    fn = os.path.join(tmpdir, "test_all.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=True, suggested=True,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0, 1, 2]
+
+
+def test_save_labels_with_images(min_labels_slp, tmpdir):
+    labels = Labels(min_labels_slp.labeled_frames)
+    labels.append(LabeledFrame(video=labels.video, frame_idx=1))
+    labels.suggestions.append(SuggestionFrame(video=labels.video, frame_idx=2))
+
+    fn = os.path.join(tmpdir, "test_user_only.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=False, embed_suggested=False,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0]
+
+    fn = os.path.join(tmpdir, "test_all_labeled.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=True, embed_suggested=False,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 1]
+
+    fn = os.path.join(tmpdir, "test_suggested.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=False, embed_suggested=True,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 2]
+
+    fn = os.path.join(tmpdir, "test_all.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=True, embed_suggested=True,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 1, 2]
+
+
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
     labels = multi_skel_vid_labels
     filename = os.path.join(tmpdir, "test.h5")
@@ -939,90 +1007,114 @@ def test_provenance(tmpdir):
     assert labels.provenance["source"] == "test_provenance"
 
 
-def test_save_no_images(tmpdir):
-    video = Video.from_filename("tests/data/videos/small_robot.mp4")
-    labels = Labels()
-    labels.append(
-        LabeledFrame(
-            video=video,
-            frame_idx=0,
-            instances=[Instance(skeleton=Skeleton())]
-        )
-    )
+def test_has_frame():
+    video = Video(backend=MediaVideo)
+    labels = Labels([LabeledFrame(video=video, frame_idx=0)])
 
-    labels.save(os.path.join(tmpdir, "labels_no_images.slp"), with_images=False)
-
-    labels_no_images = sleap.load_file(os.path.join(tmpdir, "labels_no_images.slp"))
-    assert len(labels_no_images) == 1
-    assert labels_no_images.video.filename == video.filename
-    assert labels_no_images[0].frame_idx == 0
-    assert len(labels_no_images[0].instances) == 1
-
-
-def test_save_with_images(tmpdir):
-    video = Video.from_filename("tests/data/videos/small_robot.mp4")
-    labels = Labels()
-    labels.append(
-        LabeledFrame(
-            video=video,
-            frame_idx=0,
-            instances=[Instance(skeleton=Skeleton())]
-        )
-    )
-
-    # Add an empty labeled frame.
-    labels.append(LabeledFrame(video=video, frame_idx=1))
-
-    labels.save(os.path.join(tmpdir, "labels_with_images.slp"), with_images=True)
-
-    labels_with_images = sleap.load_file(os.path.join(tmpdir, "labels_with_images.slp"))
-    assert len(labels_with_images) == 2
-    assert labels_with_images[0].frame_idx == 0
-    assert labels_with_images[1].frame_idx == 1
-
-    # Image data for labeled frame with instance should be stored:
-    assert (labels_with_images[0].image == video.get_frame(0)).all()
-
-    # Image data for labeled frame without instance should still be accessible if the
-    # source video is present:
-    assert (labels_with_images[1].image == video.get_frame(1)).all()
-
-    # Disabling source video access, the frame with user labeled instances should still
-    # be accessible:
-    labels_with_images.video.backend.enable_source_video = False
-    assert (labels_with_images[0].image == video.get_frame(0)).all()
-
-    # But the blank labeled frame should not have a stored image:
+    assert labels.has_frame(labels[0])
+    assert labels.has_frame(labels[0], use_cache=False)
+    assert labels.has_frame(LabeledFrame(video=video, frame_idx=0))
+    assert labels.has_frame(video=video, frame_idx=0)
+    assert labels.has_frame(video=video, frame_idx=0, use_cache=False)
+    assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1))
+    assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1), use_cache=False)
+    assert not labels.has_frame(video=video, frame_idx=1)
     with pytest.raises(ValueError):
-        labels_with_images[1].image
-
-    # Both should work if we save with all images:
-    labels.save(os.path.join(tmpdir, "labels_with_all.slp"), with_images="all")
-    labels_with_all = sleap.load_file(os.path.join(tmpdir, "labels_with_all.slp"))
-    assert (labels_with_all[0].image == video.get_frame(0)).all()
-    assert (labels_with_all[1].image == video.get_frame(1)).all()
+        labels.has_frame()
+    with pytest.raises(ValueError):
+        labels.has_frame(video=video)
+    with pytest.raises(ValueError):
+        labels.has_frame(frame_idx=1)
 
 
-def test_repr():
-    labels = Labels()
-    skel = Skeleton()
-    labels.append(
-        LabeledFrame(
-            video=Video(backend=sleap.io.video.DummyVideo("vid", 10, 20, 30, 3)),
-            frame_idx=0,
-            instances=[Instance(skeleton=skel, track=Track(spawned_on=0))]
-        )
+@pytest.fixture
+def removal_test_labels():
+    skeleton = Skeleton()
+    video = Video(backend=MediaVideo)
+    lf_user_only = LabeledFrame(
+        video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
     )
-    labels.append(LabeledFrame(video=Video(
-        backend=sleap.io.video.DummyVideo("foo", 10, 20, 30, 3)), frame_idx=0))
-    labels.videos.append(Video(backend=sleap.io.video.DummyVideo("bar", 10, 20, 30, 3)))
-
-    assert repr(labels) == (
-        "Labels("
-        "labeled_frames=2, "
-        "videos=3, "
-        "skeletons=1, "
-        "tracks=1"
-        ")"
+    lf_pred_only = LabeledFrame(
+        video=video, frame_idx=1, instances=[PredictedInstance(skeleton=skeleton)]
     )
-    assert repr(labels) == str(labels)
+    lf_both = LabeledFrame(
+        video=video,
+        frame_idx=2,
+        instances=[Instance(skeleton=skeleton), PredictedInstance(skeleton=skeleton)],
+    )
+    labels = Labels([lf_user_only, lf_pred_only, lf_both])
+    return labels
+
+
+def test_remove_user_instances(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    labels.remove_user_instances()
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 1
+    assert not labels[0].has_user_instances
+    assert labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert not labels[1].has_user_instances
+    assert labels[1].has_predicted_instances
+
+
+def test_remove_user_instances_with_new_labels(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    new_labels = Labels(
+        [
+            LabeledFrame(
+                video=labels.video,
+                frame_idx=0,
+                instances=[Instance(skeleton=labels.skeleton)],
+            )
+        ]
+    )
+    labels.remove_user_instances(new_labels=new_labels)
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 1
+    assert not labels[0].has_user_instances
+    assert labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert labels[1].has_predicted_instances
+
+
+def test_remove_predictions(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    labels.remove_predictions()
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 0
+    assert labels[0].has_user_instances
+    assert not labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert not labels[1].has_predicted_instances
+
+
+def test_remove_predictions_with_new_labels(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    new_labels = Labels(
+        [
+            LabeledFrame(
+                video=labels.video,
+                frame_idx=1,
+                instances=[PredictedInstance(skeleton=labels.skeleton)],
+            )
+        ]
+    )
+    labels.remove_predictions(new_labels=new_labels)
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 0
+    assert labels[0].has_user_instances
+    assert not labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert labels[1].has_predicted_instances

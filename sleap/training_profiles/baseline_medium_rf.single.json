@@ -26,7 +26,7 @@
             "leap": null,
             "unet": {
                 "stem_stride": null,
-                "max_stride": 32,
+                "max_stride": 16,
                 "output_stride": 4,
                 "filters": 16,
                 "filters_rate": 2,
@@ -81,7 +81,7 @@
         "min_batches_per_epoch": 200,
         "val_batches_per_epoch": null,
         "min_val_batches_per_epoch": 20,
-        "epochs": 75,
+        "epochs": 200,
         "optimizer": "adam",
         "initial_learning_rate": 0.0001,
         "learning_rate_schedule": {
@@ -107,7 +107,7 @@
     },
     "outputs": {
         "save_outputs": true,
-        "run_name": null,
+        "run_name": "baseline_medium_rf.single",
         "run_name_prefix": "",
         "run_name_suffix": null,
         "runs_folder": "models",
