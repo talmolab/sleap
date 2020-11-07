@@ -81,8 +81,11 @@ jobs:
           conda build .conda --output-folder build
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-latest'
-        shell: powershell
+        # shell: powershell
+        shell: bash -l {0}
         run: |
+          which python
+          pytest tests/
           conda build .conda --output-folder build
 
       # - name: Upload conda package (Windows)
