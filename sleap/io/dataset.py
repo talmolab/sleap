@@ -1607,7 +1607,7 @@ class Labels(MutableSequence):
 
         write(filename, labels, *args, **kwargs)
 
-        def save(
+    def save(
         self,
         filename: Text,
         with_images: bool = False,
