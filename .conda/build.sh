@@ -11,8 +11,30 @@ export PIP_NO_INDEX=False
 export PIP_NO_DEPENDENCIES=False
 export PIP_IGNORE_INSTALLED=False
 
-pip install scipy==1.4.1 cattrs==1.0.0rc0 opencv-python-headless==4.2.0.34 "PySide2>=5.12.0,<=5.14.1" imgaug==0.3.0 qimage2ndarray==1.8 imgstore==0.2.9 jsmin seaborn scikit-video pykalman==0.9.5
-#pip install tensorflow==2.1
+pip install "numpy>=1.18.1,<1.19.0"
+pip install attrs==19.3
+pip install cattrs==1.0.0rc
+pip install jsonpickle==1.2
+pip install networkx
+pip install tensorflow==2.1.2
+pip install h5py==2.10.0
+pip install python-rapidjson
+pip install opencv-python-headless==4.2.0.34
+pip install pandas
+pip install psutil
+pip install "PySide2>=5.12.0,<=5.14.1"
+pip install pyzmq
+pip install pyyaml
+pip install imgaug==0.3.0
+pip install "scipy<=1.4.1"
+pip install scikit-image
+pip install scikit-learn
+pip install scikit-video
+pip install imgstore==0.2.9
+pip install qimage2ndarray==1.8
+pip install jsmin
+pip install seaborn
+pip install pykalman==0.9.5
 
 pip install setuptools-scm
 
