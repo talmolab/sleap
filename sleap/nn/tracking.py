@@ -186,15 +186,15 @@ class FlowCandidateMaker:
         if hasattr(new_img, "numpy"):
             new_img = new_img.numpy()
 
+        # Ensure images are rank 2 in case there is a singleton channel dimension.
+        if ref_img.ndim > 3:
+            ref_img = np.squeeze(ref_img)
+            new_img = np.squeeze(new_img)
+
         # Convert RGB to grayscale.
         if ref_img.ndim > 2 and ref_img.shape[-1] == 3:
             ref_img = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
             new_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2GRAY)
-
-        # Ensure images are rank 2 in case there is a singleton channel dimension.
-        if ref_img.ndim > 2:
-            ref_img = np.squeeze(ref_img)
-            new_img = np.squeeze(new_img)
 
         # Input image scaling.
         if scale != 1:
