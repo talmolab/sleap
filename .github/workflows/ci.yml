@@ -29,7 +29,7 @@ jobs:
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
       - name: Setup Miniconda
         # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v1.7.0
+        uses: conda-incubator/setup-miniconda@v2.0.0
         with:
           python-version: 3.6
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
