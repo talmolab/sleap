@@ -1431,6 +1431,12 @@ class MainWindow(QMainWindow):
 
     def _handle_learning_finished(self, new_count: int):
         """Called when inference finishes."""
+        if (
+            len(self.labels.skeletons) > 0
+            and self.state["skeleton"] not in self.labels.skeletons
+        ):
+            # Update the GUI state skeleton if the labels skeleton changed after merge.
+            self.state["skeleton"] = self.labels.skeletons[-1]
         # we ran inference so update display/ui
         self.on_data_update([UpdateTopic.all])
         if new_count > 0:
