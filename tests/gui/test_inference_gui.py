@@ -11,7 +11,7 @@ def test_config_list_load():
         "centroid"
     )
 
-    assert 1 == len(configs)
+    assert 2 == len(configs)
 
 
 def test_scoped_key_dict():
