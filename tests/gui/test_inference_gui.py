@@ -14,6 +14,11 @@ def test_config_list_load():
     assert 2 == len(configs)
 
 
+def test_config_list_order():
+    configs = TrainingConfigsGetter.make_from_labels_filename("").get_filtered_configs()
+    config_names = [s.filename for s in configs]
+    assert sorted(config_names) == config_names
+
 def test_scoped_key_dict():
     d = {"foo": 1, "bar": {"cat": {"dog": 2}, "elephant": 3}}
 

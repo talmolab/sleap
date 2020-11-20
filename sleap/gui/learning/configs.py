@@ -383,6 +383,8 @@ class TrainingConfigsGetter:
                 configs_in_dir = self.find_configs_in_dir(dir, self.search_depth)
                 configs.extend(configs_in_dir)
 
+        configs.sort(key=lambda c: c.filename)
+
         return configs
 
     def get_filtered_configs(
@@ -459,9 +461,6 @@ class TrainingConfigsGetter:
         """Loads configs in specified directory."""
         # Find all json files in dir and subdirs to specified depth
         json_files = sleap_utils.find_files_by_suffix(dir, ".json", depth=depth)
-
-        # Sort files, starting with most recently modified
-        json_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
 
         # Get just the paths for the files we found
         json_paths = [file.path for file in json_files]
