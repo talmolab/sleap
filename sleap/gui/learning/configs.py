@@ -382,9 +382,9 @@ class TrainingConfigsGetter:
             if os.path.exists(dir):
                 configs_in_dir = self.find_configs_in_dir(dir, self.search_depth)
                 configs.extend(configs_in_dir)
-
+        
+        # Sort configs by filename
         configs.sort(key=lambda c: c.filename)
-
         return configs
 
     def get_filtered_configs(
