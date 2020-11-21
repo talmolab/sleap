@@ -19,8 +19,6 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
     video_idx = 0
     scale = 0.25
 
-    out_path = os.path.join(tmpdir, "clip.avi")
-
     video = centered_pair_predictions.videos[video_idx]
     frame_images = video.get_frames(frames)
 
@@ -44,10 +42,6 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
     # Make sure we can mark images
     marked_image_list = marker_thread._mark_images(
         frame_indices=frames, frame_images=small_images,
-    )
-
-    marked_point = (
-        centered_pair_predictions.find(video, frames[0])[0].instances[0].points[0]
     )
 
     # There's a point at 201, 186 (i.e. 50.25, 46.5), so make sure it got marked

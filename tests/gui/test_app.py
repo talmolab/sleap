@@ -54,7 +54,7 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     app.commands.setNodeSymmetry(app.state["skeleton"], "b", "c")
     assert app.state["skeleton"].get_symmetry_name("c") == "b"
     app.commands.setNodeSymmetry(app.state["skeleton"], "b", "")
-    assert app.state["skeleton"].get_symmetry("c") == None
+    assert app.state["skeleton"].get_symmetry("c") is None
 
     # Remove an edge
     app.skeletonEdgesTable.selectRowItem(dict(source="b", destination="c"))
