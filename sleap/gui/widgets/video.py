@@ -145,7 +145,7 @@ class LoadImageWorker(QtCore.QObject):
             avg_load_time = sum(self._recent_load_times) / len(self._recent_load_times)
             self._force_request_wait_time = avg_load_time
 
-        except Exception as e:
+        except Exception:
             frame = None
 
         # Release the lock so other threads can start processing frame requests
