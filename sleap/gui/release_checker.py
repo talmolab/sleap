@@ -32,6 +32,25 @@ class Release:
         )
 
 
+def filter_test_releases(releases: List[Release]) -> List[Release]:
+    """Filter test releases out of a list of `Release`s.
+
+    Args:
+        releases: A list of `Release`s.
+
+    Returns:
+        The filtered list of `Release`s. Any `Release` that has a description
+        containing the string `"Do not use this release. This is a test."` will be
+        excluded.
+    """
+    # Exclude releases tagged with test string.
+    return [
+        rls
+        for rls in releases
+        if "Do not use this release. This is a test." not in rls.description
+    ]
+
+
 @attr.s(auto_attribs=True)
 class ReleaseChecker:
     """Checker for new releases of SLEAP on GitHub.
@@ -46,7 +65,9 @@ class ReleaseChecker:
     """
 
     repo_id: str = REPO_ID
-    releases: List[Release] = attr.ib(factory=list)
+    releases: List[Release] = attr.ib(
+        factory=list, converter=filter_test_releases
+    )
     checked: bool = attr.ib(default=False, init=False)
 
     def check_for_releases(self) -> bool:
@@ -65,6 +86,7 @@ class ReleaseChecker:
             return False
 
         self.releases = [Release.from_json(r) for r in response.json()]
+
         return True
 
     @property

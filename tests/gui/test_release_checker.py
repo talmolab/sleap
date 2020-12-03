@@ -44,15 +44,29 @@ def test_release_checker():
             "body": "Body text",
         }
     )
+    rls_test = Release.from_json(
+        {
+            "html_url": "https://github.com/murthylab/sleap/releases/tag/v1.0.10a8",
+            "tag_name": "v1.0.10a8",
+            "name": "SLEAP v1.0.10a8",
+            "prerelease": True,
+            "published_at": "2020-11-06T19:14:57Z",
+            "body": "Do not use this release. This is a test.",
+        }
+    )
 
-    checker = ReleaseChecker(releases=[rls_stable, rls_pre])
+    checker = ReleaseChecker(releases=[rls_stable, rls_pre, rls_test])
     checker.checked = True  # TODO: Mock request?
 
-    checker.latest_release == rls_pre
-    checker.latest_prerelease == rls_pre
-    checker.latest_stable == rls_stable
+    assert checker.latest_release == rls_pre
+    assert checker.latest_prerelease == rls_pre
+    assert checker.latest_stable == rls_stable
 
-    checker.get_release("v1.0.9") == rls_stable
+    assert checker.get_release("v1.0.9") == rls_stable
 
     with pytest.raises(ValueError):
         checker.get_release("abc")
+
+    assert len(checker.releases) == 2
+    assert checker.releases[0] != rls_test
+    assert checker.releases[1] != rls_test
