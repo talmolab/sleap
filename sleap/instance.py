@@ -1092,7 +1092,7 @@ def make_instance_cattr() -> cattr.Converter:
     return converter
 
 
-@attr.s(auto_attribs=True, eq=False)
+@attr.s(auto_attribs=True, eq=False, repr=False, str=False)
 class LabeledFrame:
     """
     Holds labeled data for a single frame of a video.
@@ -1149,10 +1149,6 @@ class LabeledFrame:
             f"frame_idx={self.frame_idx}, "
             f"instances={len(self.instances)})"
         )
-
-    def __str__(self) -> str:
-        """Return a readable representation of the LabeledFrame."""
-        return self.__repr__()
 
     def insert(self, index: int, value: Instance):
         """
