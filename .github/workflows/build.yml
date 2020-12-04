@@ -2,16 +2,15 @@
 # TODO: Update branch conditionals below to use develop instead of tf23 when we switch CI systems.
 name: Build
 
-# Run on any push
 on:
-  # push:
-    # branches:
-      # - tf23
-      # - develop
+  push:
+    branches:
+      - tf23
+      - develop
 
-  release:
-    types:
-      - published
+  # release:
+  #   types:
+  #     - published
 
 jobs:
   build:
@@ -20,8 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: ["ubuntu-latest", "windows-latest"]
-        os: ["windows-latest"]
+        os: ["ubuntu-latest", "windows-latest"]
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -72,14 +70,14 @@ jobs:
           sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
           export DISPLAY=":1"
           xvfb-run pytest tests/
-          conda build .conda --output-folder build
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
           conda activate sleap
           pytest tests/
-          conda build .conda --output-folder build
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
 
       # Upload conda package
       - name: Login to Anaconda (Windows)
