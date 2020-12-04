@@ -10,25 +10,16 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       # Setup
-      - uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if environment_build.yml has not changed
-          CACHE_NUMBER: 0
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
-      - name: Setup Miniconda
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.0
-        with:
-          python-version: 3.6
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          
+          python-version: '3.x'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip setuptools wheel
+
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -37,6 +28,7 @@ jobs:
 
       - name: Build
         run: |
+
           pip install -r dev_requirements.txt
           cd docs
           python make_api_doctree.py
