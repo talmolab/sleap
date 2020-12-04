@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Setup
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Cache conda
         uses: actions/cache@v1
         env:
@@ -30,11 +32,6 @@ jobs:
           environment-file: environment_build.yml
           activate-environment: sleap
 
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-          fetch-depth: 0
 
       - name: Build
         run: |
