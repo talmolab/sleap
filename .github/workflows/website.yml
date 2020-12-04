@@ -43,12 +43,10 @@ jobs:
           cd docs
           python make_api_doctree.py
           make html
-          ls -lah ..
-          ls -lah build/html
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages-test
-          publish_dir: build/html
+          publish_dir: docs/build/html
