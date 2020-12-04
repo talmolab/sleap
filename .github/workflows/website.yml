@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build
-        run:
+        run: |
           pip install -r dev_requirements.txt
           cd docs
           python make_api_doctree.py
