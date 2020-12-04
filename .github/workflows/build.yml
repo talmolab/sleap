@@ -1,4 +1,5 @@
-# Continuous integration using conda installation
+# PyPI and conda package builds on release.
+# TODO: Update branch conditionals below to use develop instead of tf23 when we switch CI systems.
 name: Build
 
 # Run on any push
@@ -102,6 +103,7 @@ jobs:
           anaconda -v upload "build\win-64\*.tar.bz2"
           anaconda logout
       - name: Upload conda package (Windows/dev)
+        # if: matrix.os == 'windows-latest' && github.ref == 'refs/heads/develop'
         if: matrix.os == 'windows-latest' && github.ref == 'refs/heads/tf23'
         shell: powershell
         run: |
@@ -115,6 +117,7 @@ jobs:
           anaconda -v upload build/linux-64/*.tar.bz2
           anaconda logout
       - name: Upload conda package (Ubuntu/dev)
+        # if: matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/develop'
         if: matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/tf23'
         shell: bash -l {0}
         run: |

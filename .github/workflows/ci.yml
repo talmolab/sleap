@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - develop
-      # - tf23
+      - tf23
 
 jobs:
   build:
@@ -46,7 +46,7 @@ jobs:
         shell: pwsh
         run: conda list
       - name: Test with pytest (Windows)
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os == 'windows-latest'
         shell: bash -l {0}
         run: |
           pytest
