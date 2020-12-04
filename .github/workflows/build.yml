@@ -3,14 +3,14 @@ name: Build
 
 # Run on any push
 on:
-  # push:
-  #   branches:
-  #     - tf23
+  push:
+    branches:
+      - tf23
       # - develop
 
-  release:
-    types:
-      - published
+  # release:
+  #   types:
+  #     - published
 
 jobs:
   build:
@@ -19,7 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
+        # os: ["ubuntu-latest", "windows-latest"]
+        os: ["windows-latest"]
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -83,12 +84,12 @@ jobs:
       # anaconda upload --force build\win-64\*.tar.bz2 --label dev
       # anaconda upload --force build/linux-64/*.tar.bz2 --label dev
       - name: Upload conda package (Windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && github.ref == "refs/heads/tf23"
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: powershell
         run: |
-          anaconda login --username sleap --password "$ANACONDA_LOGIN"
+          anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
           anaconda upload "build\win-64\sleap-1.1.0a5-py36_0.tar.bz2" --label dev
           anaconda logout
       - name: Upload conda package (Ubuntu)
