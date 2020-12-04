@@ -45,16 +45,16 @@ jobs:
           which python
           conda info
 
-      # Build pip wheel (Windows)
-      - name: Build pip wheel
-        if: matrix.os == 'windows-latest'
+      # Build pip wheel (Ubuntu)
+      - name: Build pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
 
-      # Upload pip wheel
-      - name: Upload pip wheel (Windows)
-        if: matrix.os == 'windows-latest'
+      # Upload pip wheel (Ubuntu)
+      - name: Upload pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         shell: bash -l {0}
@@ -86,10 +86,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
-        shell: bash -l {0}
+        shell: powershell
         run: |
           anaconda login --username sleap --password "$ANACONDA_LOGIN"
-          anaconda upload "build\win-64\sleap-1.1.0a4-py36_0.tar.bz2" --label dev
+          anaconda upload "build\win-64\sleap-1.1.0a5-py36_0.tar.bz2" --label dev
           anaconda logout
       - name: Upload conda package (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -98,5 +98,5 @@ jobs:
         shell: bash -l {0}
         run: |
           anaconda login --username sleap --password "$ANACONDA_LOGIN"
-          anaconda upload build/linux-64/sleap-1.1.0a4-py36_0.tar.bz2 --label dev
+          anaconda upload build/linux-64/*.tar.bz2 --label dev
           anaconda logout
