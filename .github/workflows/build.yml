@@ -84,7 +84,7 @@ jobs:
       # anaconda upload --force build\win-64\*.tar.bz2 --label dev
       # anaconda upload --force build/linux-64/*.tar.bz2 --label dev
       - name: Upload conda package (Windows)
-        if: matrix.os == 'windows-latest' && github.ref == "refs/heads/tf23"
+        if: matrix.os == 'windows-latest' && github.ref == 'refs/heads/tf23'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: powershell
