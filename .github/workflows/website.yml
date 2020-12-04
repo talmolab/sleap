@@ -31,9 +31,14 @@ jobs:
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           environment-file: environment_build.yml
           activate-environment: sleap
-
+      - name: Print environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          conda info
 
       - name: Build
+        shell: bash -l {0}
         run: |
           cd docs
           python make_api_doctree.py
