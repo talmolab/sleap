@@ -18,7 +18,8 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Cache conda
         uses: actions/cache@v1
         env:
