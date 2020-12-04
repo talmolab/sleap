@@ -1,0 +1,33 @@
+# Builds static content for GitHub pages.
+
+name: Build GitHub pages content
+
+on:
+  push:
+    branches:
+      # - master  # Branch that triggers updates
+      - tf23  # Branch that triggers updates
+
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Build
+        run:
+          pip install -r dev_requirements.txt
+          cd docs
+          python make_api_doctree.py
+          sphinx build -m . build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages-test
+          publish_dir: ./build

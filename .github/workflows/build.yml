@@ -3,14 +3,14 @@ name: Build
 
 # Run on any push
 on:
-  push:
-    branches:
-      - tf23
+  # push:
+    # branches:
+      # - tf23
       # - develop
 
-  # release:
-  #   types:
-  #     - published
+  release:
+    types:
+      - published
 
 jobs:
   build:
