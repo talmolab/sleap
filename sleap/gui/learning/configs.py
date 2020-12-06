@@ -356,13 +356,25 @@ class TrainingConfigsGetter:
     def find_configs(self) -> List[ConfigFileInfo]:
         """Load configs from all saved paths."""
         configs = []
-        for dir in self.dir_paths:
-            if os.path.exists(dir):
-                configs_in_dir = self.find_configs_in_dir(dir, self.search_depth)
-                configs.extend(configs_in_dir)
 
-        # Sort configs by filename
-        configs.sort(key=lambda c: c.filename)
+        # Collect all configs from specified directories, sorted from most recently modified to least
+        for config_dir in filter(lambda d: os.path.exists(d), self.dir_paths):
+            # Find all json files in dir and subdirs to specified depth
+            json_files = sleap_utils.find_files_by_suffix(config_dir, ".json", depth=self.search_depth)
+
+            # Sort files, starting with most recently modified
+            json_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+            # Load the configs from files
+            for json_path in [file.path for file in json_files]:
+                cfg_info = self.try_loading_path(json_path)
+                if cfg_info:
+                    configs.append(cfg_info)
+
+        # Push old configs to the end of the list, while preserving the time-based order otherwise
+        configs = [c for c in configs if not c.filename.startswith('old.')] +\
+                  [c for c in configs if c.filename.startswith('old.')]
+
         return configs
 
     def get_filtered_configs(
@@ -428,22 +440,6 @@ class TrainingConfigsGetter:
                 )
 
         return None
-
-    def find_configs_in_dir(self, dir: Text, depth: int = 1) -> List[ConfigFileInfo]:
-        """Loads configs in specified directory."""
-        # Find all json files in dir and subdirs to specified depth
-        json_files = sleap_utils.find_files_by_suffix(dir, ".json", depth=depth)
-
-        # Get just the paths for the files we found
-        json_paths = [file.path for file in json_files]
-
-        configs = []
-        for json_path in json_paths:
-            cfg_info = self.try_loading_path(json_path)
-            if cfg_info:
-                configs.append(cfg_info)
-
-        return configs
 
     @classmethod
     def make_from_labels_filename(

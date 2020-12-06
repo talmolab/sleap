@@ -16,8 +16,11 @@ def test_config_list_load():
 
 def test_config_list_order():
     configs = TrainingConfigsGetter.make_from_labels_filename("").get_filtered_configs()
-    config_names = [s.filename for s in configs]
-    assert sorted(config_names) == config_names
+
+    # Check that all 'old' configs (if any) are last in the collected configs list
+    for i in range(len(configs) - 1):
+        # if current config is 'old', next must be 'old' as well
+        assert not configs[i].filename.startswith('old.') or configs[i + 1].filename.startswith('old.')
 
 def test_scoped_key_dict():
     d = {"foo": 1, "bar": {"cat": {"dog": 2}, "elephant": 3}}
