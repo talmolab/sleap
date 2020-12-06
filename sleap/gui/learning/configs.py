@@ -57,9 +57,7 @@ class ConfigFileInfo:
 
     @property
     def path_dir(self):
-        if self.path.endswith("json"):
-            return os.path.dirname(self.path)
-        return self.path
+        return os.path.dirname(self.path) if self.path.endswith("json") else self.path
 
     def _get_file_path(self, shortname) -> Optional[Text]:
         """
@@ -73,9 +71,7 @@ class ConfigFileInfo:
         if not self.config.outputs.run_name:
             return None
 
-        dirs_to_try = [self.config.outputs.run_path, self.path_dir]
-
-        for dir in dirs_to_try:
+        for dir in [self.config.outputs.run_path, self.path_dir]:
             full_path = os.path.join(dir, shortname)
             if os.path.exists(full_path):
                 return full_path
@@ -161,9 +157,7 @@ class ConfigFileInfo:
             return None
 
         with np.load(metrics_path, allow_pickle=True) as data:
-            metrics = data["metrics"].item()
-
-        return metrics
+            return data["metrics"].item()
 
     @classmethod
     def from_config_file(cls, path: Text) -> "ConfigFileInfo":
@@ -253,20 +247,9 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
         self.set_options(option_list, select_item=select_key)
 
-    # def selectByIdx(self, option_idx: int):
-    #     self.setCurrentIndex(option_idx)
-    #     self.onSelectionIdxChange(option_idx)
-    #
-    # def lastOptionIdx(self):
-    #     return self.count()
-
     @property
     def _menu_cfg_idx_offset(self):
-        if not hasattr(self, "options_list"):
-            return 0
-        if not self.options_list:
-            return 0
-        if self.options_list[0] == "":
+        if hasattr(self, "options_list") and self.options_list and self.options_list[0] == "":
             return 1
         return 0
 
@@ -279,8 +262,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         """
         Return currently selected `ConfigFileInfo` (if any, None otherwise).
         """
-        current_idx = self.currentIndex()
-        return self.getConfigInfoByMenuIdx(current_idx)
+        return self.getConfigInfoByMenuIdx(self.currentIndex())
 
     def onSelectionIdxChange(self, menu_idx: int):
         """
@@ -314,11 +296,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             caption="Select training configuration file...",
             filter="JSON (*.json)",
         )
-
-        if not filename:
-            return None
-
-        return self._cfg_getter.try_loading_path(filename)
+        return self._cfg_getter.try_loading_path(filename) if filename else None
 
     def _add_file_selection_to_menu(self, cfg_info: Optional[ConfigFileInfo] = None):
         if cfg_info:
@@ -423,17 +401,11 @@ class TrainingConfigsGetter:
 
     def get_first(self) -> Optional[ConfigFileInfo]:
         """Get first loaded config."""
-        if self._configs:
-            return self._configs[0]
-        return None
+        return self._configs[0] if self._configs else None
 
     def insert_first(self, cfg_info: ConfigFileInfo):
         """Insert config at beginning of list."""
         self._configs.insert(0, cfg_info)
-
-    def insert_last(self, cfg_info: ConfigFileInfo):
-        """Insert config at end of list."""
-        self._configs.append(cfg_info)
 
     def try_loading_path(self, path: Text) -> Optional[ConfigFileInfo]:
         """Attempts to load config file and wrap in `ConfigFileInfo` object."""
