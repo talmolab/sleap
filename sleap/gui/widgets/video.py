@@ -107,10 +107,10 @@ class LoadImageWorker(QtCore.QObject):
         # event to event queue from the request handler.
         self.process.connect(self.doProcessing)
 
-        # Start timer which will trigger processing events when we're free
+        # Start timer which will trigger processing events every 20 msec. when we're free
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.doProcessing)
-        self.timer.start(0)
+        self.timer.start(20)
 
     def doProcessing(self):
         self._last_process_time = time.time()
