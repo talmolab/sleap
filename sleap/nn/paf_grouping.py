@@ -16,6 +16,8 @@ instance-wise grouping of landmarks.
 This image space representation is particularly useful as it is amenable to neural
 network-based prediction from unlabeled images.
 
+A high-level API for grouping based on PAFs is provided through the `PAFScorer` class.
+
 References:
     .. [1] Zhe Cao, Tomas Simon, Shih-En Wei, Yaser Sheikh. Realtime Multi-Person 2D
        Pose Estimation using Part Affinity Fields. In _CVPR_, 2017.
@@ -76,6 +78,676 @@ class EdgeConnection:
     score: float
 
 
+def get_connection_candidates(
+    peak_channel_inds_sample: tf.Tensor, skeleton_edges: tf.Tensor, n_nodes: int
+) -> Tuple[tf.Tensor, tf.Tensor]:
+    """Find the indices of all the possible connections formed by the detected peaks.
+
+    Args:
+        peak_channel_inds_sample: The channel indices of the peaks found in a sample.
+            This is a `tf.Tensor` of shape `(n_peaks,)` and dtype `tf.int32` that is
+            used to represent a detected peak by its channel/node index in the skeleton.
+        skeleton_edges: The indices of the nodes that form the skeleton graph as a
+            `tf.Tensor` of shape `(n_edges, 2)` and dtype `tf.int32` where each row
+            corresponds to the source and destination node indices.
+        n_nodes: The total number of nodes in the skeleton as a scalar integer.
+
+    Returns:
+        A tuple of `(edge_inds, edge_peak_inds)`.
+
+        `edge_inds` is a `tf.Tensor` of shape `(n_candidates,)` indicating the indices
+        of the edge that each of the candidate connections belongs to.
+
+        `edge_peak_inds` is a `tf.Tensor` of shape `(n_candidates, 2)` with the indices
+        of the peaks that form the source and destination of each candidate connection.
+        This indexes into the input `peak_channel_inds_sample`.
+    """
+    peak_inds = tf.argsort(peak_channel_inds_sample)
+    node_inds = tf.gather(peak_channel_inds_sample, peak_inds)
+
+    node_grouped_peak_inds = tf.RaggedTensor.from_value_rowids(
+        peak_inds, node_inds, nrows=n_nodes
+    )  # (n_nodes, (n_peaks_k))
+    edge_grouped_peak_inds = tf.gather(
+        node_grouped_peak_inds, skeleton_edges
+    )  # (n_edges, (n_src_peaks), (n_dst_peaks))
+
+    n_skeleton_edges = tf.shape(skeleton_edges)[0]
+    edge_inds = tf.TensorArray(
+        tf.int32,
+        size=n_skeleton_edges,
+        infer_shape=False,
+        element_shape=tf.TensorShape([None]),
+    )  # (n_skeleton_edges, (n_src * n_dst))
+    edge_peak_inds = tf.TensorArray(
+        tf.int32,
+        size=n_skeleton_edges,
+        infer_shape=False,
+        element_shape=tf.TensorShape([None, 2]),
+    )  # (n_skeleton_edges, (n_src * n_dst), 2)
+
+    for k in range(n_skeleton_edges):
+        sd = edge_grouped_peak_inds[k]
+
+        s, d = tf.meshgrid(sd[0], sd[1], indexing="ij")
+        sd = tf.reshape(tf.stack([s, d], axis=2), [-1, 2])
+
+        edge_inds = edge_inds.write(k, tf.tile([k], [tf.shape(sd)[0]]))
+        edge_peak_inds = edge_peak_inds.write(k, sd)
+
+    edge_inds = edge_inds.concat()
+    edge_peak_inds = edge_peak_inds.concat()
+
+    return edge_inds, edge_peak_inds
+
+
+def make_line_subs(
+    peaks_sample: tf.Tensor,
+    edge_peak_inds: tf.Tensor,
+    edge_inds: tf.Tensor,
+    n_line_points: int,
+    pafs_stride: int,
+) -> tf.Tensor:
+    """Create the lines between candidate connections for evaluating the PAFs.
+
+    Args:
+        peaks_sample: The detected peaks in a sample as a `tf.Tensor` of shape
+            `(n_peaks, 2)` and dtype `tf.float32`. These should be `(x, y)` coordinates
+            of each peak in the image scale (they will be scaled by the `pafs_stride`).
+        edge_peak_inds: A `tf.Tensor` of shape `(n_candidates, 2)` and dtype `tf.int32`
+            with the indices of the peaks that form the source and destination of each
+            candidate connection. This indexes into the input `peaks_sample`. Can be
+            generated using `get_connection_candidates()`.
+        edge_inds: A `tf.Tensor` of shape `(n_candidates,)` and dtype `tf.int32`
+            indicating the indices of the edge that each of the candidate connections
+            belongs to. Can be generated using `get_connection_candidates()`.
+        n_line_points: The number of points to interpolate between source and
+            destination peaks in each connection candidate as a scalar integer. Values
+            ranging from 5 to 10 are pretty reasonable.
+        pafs_stride: The stride (1/scale) of the PAFs that these lines will need to
+            index into relative to the image. Coordinates in `peaks_sample` will be
+            divided by this value to adjust the indexing into the PAFs tensor.
+
+    Returns:
+        The line subscripts as a `tf.Tensor` of shape
+        `(n_candidates, n_line_points, 2, 3)` and dtype `tf.int32`. These subscripts can
+        be used directly with `tf.gather_nd` to pull out the PAF values at the lines.
+
+        The last dimension of the line subscripts correspond to the full
+        `[row, col, channel]` subscripts of each element of the lines. Axis -2 contains
+        the same `[row, col]` for each line but `channel` is adjusted to match the
+        channels in the PAFs tensor.
+
+    Notes:
+        The subscripts are interpolated via nearest neighbor, so multiple fractional
+        coordinates may map on to the same pixel if the line is short.
+
+    See also: get_connection_candidates
+    """
+    src_peaks = tf.gather(peaks_sample, edge_peak_inds[:, 0])
+    dst_peaks = tf.gather(peaks_sample, edge_peak_inds[:, 1])
+    n_candidates = tf.shape(src_peaks)[0]
+
+    XY = tf.linspace(src_peaks, dst_peaks, n_line_points, axis=2)
+    XY = tf.cast(
+        tf.round(XY / pafs_stride), tf.int32
+    )  # (n_candidates, 2, n_line_points)  # dim 1 is [x, y]
+    XY = tf.gather(XY, [1, 0], axis=1)  # dim 1 is [row, col]
+    # TODO: clip coords to size of pafs tensor?
+
+    line_subs = tf.concat(
+        [
+            XY,
+            tf.broadcast_to(
+                tf.reshape(edge_inds, [-1, 1, 1]), [n_candidates, 1, n_line_points]
+            ),
+        ],
+        axis=1,
+    )
+    line_subs = tf.transpose(
+        line_subs, [0, 2, 1]
+    )  # (n_candidates, n_line_points, 3) -- last dim is [row, col, edge_ind]
+
+    line_subs = tf.stack(
+        [
+            line_subs * tf.reshape([1, 1, 2], [1, 1, 3]),
+            line_subs * tf.reshape([1, 1, 2], [1, 1, 3])
+            + tf.reshape([0, 0, 1], [1, 1, 3]),
+        ],
+        axis=2,
+    )  # (n_candidates, n_line_points, 2, 3)
+    # The last dim is [row, col, edge_ind], but for both PAF (x and y) edge channels.
+
+    return line_subs
+
+
+def get_paf_lines(
+    pafs_sample: tf.Tensor,
+    peaks_sample: tf.Tensor,
+    edge_peak_inds: tf.Tensor,
+    edge_inds: tf.Tensor,
+    n_line_points: int,
+    pafs_stride: int,
+) -> tf.Tensor:
+    """Gets the PAF values at the lines formed between all detected peaks in a sample.
+
+    Args:
+        pafs_sample: The PAFs for the sample as a `tf.Tensor` of shape
+            `(height, width, 2 * n_edges)`.
+        peaks_sample: The detected peaks in a sample as a `tf.Tensor` of shape
+            `(n_peaks, 2)` and dtype `tf.float32`. These should be `(x, y)` coordinates
+            of each peak in the image scale (they will be scaled by the `pafs_stride`).
+        edge_peak_inds: A `tf.Tensor` of shape `(n_candidates, 2)` and dtype `tf.int32`
+            with the indices of the peaks that form the source and destination of each
+            candidate connection. This indexes into the input `peaks_sample`. Can be
+            generated using `get_connection_candidates()`.
+        edge_inds: A `tf.Tensor` of shape `(n_candidates,)` and dtype `tf.int32`
+            indicating the indices of the edge that each of the candidate connections
+            belongs to. Can be generated using `get_connection_candidates()`.
+        n_line_points: The number of points to interpolate between source and
+            destination peaks in each connection candidate as a scalar integer. Values
+            ranging from 5 to 10 are pretty reasonable.
+        pafs_stride: The stride (1/scale) of the PAFs that these lines will need to
+            index into relative to the image. Coordinates in `peaks_sample` will be
+            divided by this value to adjust the indexing into the PAFs tensor.
+
+    Returns:
+        The PAF vectors at all of the line points as a `tf.Tensor` of shape
+        `(n_candidates, n_line_points, 2, 3)` and dtype `tf.int32`. These subscripts can
+        be used directly with `tf.gather_nd` to pull out the PAF values at the lines.
+
+        The last dimension of the line subscripts correspond to the full
+        `[row, col, channel]` subscripts of each element of the lines. Axis -2 contains
+        the same `[row, col]` for each line but `channel` is adjusted to match the
+        channels in the PAFs tensor.
+
+    Notes:
+        If only the subscripts are needed, use `make_line_subs()` to generate the lines
+        without retrieving the PAF vector at the line points.
+
+    See also: get_connection_candidates, make_line_subs, score_paf_lines
+    """
+    line_subs = make_line_subs(
+        peaks_sample, edge_peak_inds, edge_inds, n_line_points, pafs_stride
+    )
+    lines = tf.gather_nd(pafs_sample, line_subs)
+    return lines
+
+
+def score_paf_lines(
+    paf_lines_sample: tf.Tensor,
+    peaks_sample: tf.Tensor,
+    edge_peak_inds_sample: tf.Tensor,
+    max_edge_length: float,
+) -> tf.Tensor:
+    """Compute the connectivity score for each PAF line in a sample.
+
+    Args:
+        paf_lines_sample: The PAF vectors evaluated at the lines formed between
+            candidate conncetions as a `tf.Tensor` of shape
+            `(n_candidates, n_line_points, 2, 3)` dtype `tf.int32`. This can be
+            generated by `get_paf_lines()`.
+        peaks_sample: The detected peaks in a sample as a `tf.Tensor` of shape
+            `(n_peaks, 2)` and dtype `tf.float32`. These should be `(x, y)` coordinates
+            of each peak in the image scale.
+        edge_peak_inds_sample: A `tf.Tensor` of shape `(n_candidates, 2)` and dtype
+            `tf.int32` with the indices of the peaks that form the source and
+            destination of each candidate connection. This indexes into the input
+            `peaks_sample`. Can be generated using `get_connection_candidates()`.
+        max_edge_length: Maximum length expected for any connection as a scalar `float`
+            in units of pixels (corresponding to `peaks_sample`. Scores of lines longer
+            than this will be penalized. Useful for ignoring spurious connections that
+            are far apart in space.
+
+    Returns:
+        The line scores as a `tf.Tensor` of shape `(n_candidates,)` and dtype
+        `tf.float32`. Each score value is the average dot product between the PAFs and
+        the normalized displacement vector between source and destination peaks.
+
+        Scores range from roughly -1.5 to 1.0, where larger values indicate a better
+        connectivity score for the candidate. Values can be larger or smaller due to
+        prediction error.
+
+    Notes:
+        This function operates on a single sample (frame). For batches of multiple
+        frames, use `score_paf_lines_batch()`.
+
+    See also: get_paf_lines, score_paf_lines_batch
+    """
+    # Pull out points.
+    src_peaks = tf.gather(
+        peaks_sample, edge_peak_inds_sample[:, 0], axis=0
+    )  # (n_candidates, 2)
+    dst_peaks = tf.gather(
+        peaks_sample, edge_peak_inds_sample[:, 1], axis=0
+    )  # (n_candidates, 2)
+
+    # Compute normalized spatial displacement vector
+    spatial_vecs = dst_peaks - src_peaks
+    spatial_vec_lengths = tf.norm(
+        spatial_vecs, axis=1, keepdims=True
+    )  # (n_candidates, 1)
+    spatial_vecs /= spatial_vec_lengths  # (n_candidates, 2)
+
+    # Compute similarity scores
+    line_scores = tf.squeeze(
+        paf_lines_sample @ tf.expand_dims(spatial_vecs, axis=2), axis=-1
+    )  # (n_candidates, n_line_points)
+
+    # Compute distance penalties
+    dist_penalties = tf.math.minimum(
+        (max_edge_length / tf.squeeze(spatial_vec_lengths, axis=1)) - 1, 0
+    )  # < 0 = longer than max
+
+    # Compute average line scores with distance penalty.
+    mean_line_scores = tf.reduce_mean(line_scores, axis=1)
+    penalized_line_scores = mean_line_scores + dist_penalties  # (n_candidates,)
+
+    return penalized_line_scores
+
+
+def score_paf_lines_batch(
+    pafs: tf.Tensor,
+    peaks: tf.Tensor,
+    peak_channel_inds: tf.RaggedTensor,
+    skeleton_edges: tf.Tensor,
+    n_line_points: int,
+    pafs_stride: int,
+    max_edge_length_ratio: float,
+    n_nodes: int,
+) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
+    """Create and score PAF lines formed between connection candidates.
+
+    Args:
+        pafs: The batch of part affinity fields as a `tf.Tensor` of shape
+            `(n_samples, height, width, 2 * n_edges)` and type `tf.float32`.
+        peaks: The coordinates of the peaks grouped by sample as a `tf.RaggedTensor` of
+            shape `(n_samples, (n_peaks), 2)`.
+        peak_channel_inds: The channel (node) that each peak in `peaks` corresponds to
+            as a `tf.RaggedTensor` of shape `(n_samples, (n_peaks))` and dtype
+            `tf.int32`.
+        skeleton_edges: The indices of the nodes that form the skeleton graph as a
+            `tf.Tensor` of shape `(n_edges, 2)` and dtype `tf.int32` where each row
+            corresponds to the source and destination node indices.
+        n_line_points: The number of points to interpolate between source and
+            destination peaks in each connection candidate as a scalar integer. Values
+            ranging from 5 to 10 are pretty reasonable.
+        pafs_stride: The stride (1/scale) of the PAFs that these lines will need to
+            index into relative to the image. Coordinates in `peaks` will be divided by
+            this value to adjust the indexing into the `pafs` tensor.
+        max_edge_length_ratio: The maximum expected length of a connected pair of points
+            in relative image units. Candidate connections above this length will be
+            penalized during matching.
+        n_nodes: The total number of nodes in the skeleton as a scalar integer.
+
+    Returns:
+        A tuple of `(edge_inds, edge_peak_inds, line_scores)` with the connections and
+        their scores based on the PAFs.
+
+        `edge_inds`: Sample-grouped indices of the edge in the skeleton that each
+        connection corresponds to as `tf.RaggedTensor` of shape
+        `(n_samples, (n_candidates))` and dtype `tf.int32`.
+
+        `edge_peak_inds`: Sample-grouped indices of the peaks that form each connection
+        as a `tf.RaggedTensor` of shape `(n_samples, (n_candidates), 2)` and dtype
+        `tf.int32`. The last axis corresponds to the `[source, destination]` peak
+        indices. These index into the input `peak_channel_inds`.
+
+        `line_scores`: Sample-grouped scores for each candidate connection as
+        `tf.RaggedTensor` of shape `(n_samples, (n_candidates))` and dtype `tf.float32`.
+
+    Notes:
+        This function handles the looping over samples in the batch and applies:
+
+        1. `get_connection_candidates()`: Find peaks that form connections.
+        2. `get_paf_lines()`: Retrieve PAF vectors for each line.
+        3. `score_paf_lines()`: Compute connectivity score for each candidate.
+
+    See also: get_connection_candidates, get_paf_lines, score_paf_lines
+    """
+    max_edge_length = (
+        max_edge_length_ratio
+        * tf.cast(tf.reduce_max(tf.shape(pafs[0])), tf.float32)
+        * pafs_stride
+    )
+
+    n_samples = tf.shape(pafs)[0]
+    edge_inds = tf.TensorArray(
+        size=n_samples,
+        infer_shape=False,
+        element_shape=tf.TensorShape([None]),
+        dtype=tf.int32,
+    )
+    edge_peak_inds = tf.TensorArray(
+        size=n_samples,
+        infer_shape=False,
+        element_shape=tf.TensorShape([None, 2]),
+        dtype=tf.int32,
+    )
+    line_scores = tf.TensorArray(
+        size=n_samples,
+        infer_shape=False,
+        element_shape=tf.TensorShape([None]),
+        dtype=tf.float32,
+    )
+    sample_inds = tf.TensorArray(
+        size=n_samples,
+        infer_shape=False,
+        element_shape=tf.TensorShape([None]),
+        dtype=tf.int32,
+    )
+
+    for sample in range(n_samples):
+        pafs_sample = pafs[sample]
+        peaks_sample = peaks[sample]
+        peak_channel_inds_sample = peak_channel_inds[sample]
+
+        edge_inds_sample, edge_peak_inds_sample = get_connection_candidates(
+            peak_channel_inds_sample, skeleton_edges, n_nodes
+        )
+        paf_lines_sample = get_paf_lines(
+            pafs_sample,
+            peaks_sample,
+            edge_peak_inds_sample,
+            edge_inds_sample,
+            n_line_points,
+            pafs_stride,
+        )
+        line_scores_sample = score_paf_lines(
+            paf_lines_sample, peaks_sample, edge_peak_inds_sample, max_edge_length
+        )
+        n_candidates = tf.shape(edge_peak_inds_sample)[0]
+
+        edge_inds = edge_inds.write(sample, edge_inds_sample)
+        edge_peak_inds = edge_peak_inds.write(sample, edge_peak_inds_sample)
+        line_scores = line_scores.write(sample, line_scores_sample)
+        sample_inds = sample_inds.write(sample, tf.repeat([sample], [n_candidates]))
+
+    edge_inds = edge_inds.concat()
+    edge_peak_inds = edge_peak_inds.concat()
+    line_scores = line_scores.concat()
+    sample_inds = sample_inds.concat()
+
+    edge_inds = tf.RaggedTensor.from_value_rowids(
+        edge_inds, sample_inds, nrows=n_samples
+    )
+    edge_peak_inds = tf.RaggedTensor.from_value_rowids(
+        edge_peak_inds, sample_inds, nrows=n_samples
+    )
+    line_scores = tf.RaggedTensor.from_value_rowids(
+        line_scores, sample_inds, nrows=n_samples
+    )
+
+    return (
+        edge_inds,
+        edge_peak_inds,
+        line_scores,
+    )
+
+
+@tf.function
+def tf_linear_sum_assignment(cost_matrix: tf.Tensor) -> tf.Tensor:
+    """Run `linear_sum_assignment` as a TensorFlow function.
+
+    Args:
+        cost_matrix: Cost matrix of shape `(n_src, n_dst)`. Make sure to replace `NaN`s
+            with `np.inf`.
+
+    Returns:
+        A tuple of `(row, col)` with the indices of the optimal assignments.
+    """
+
+    def _linear_sum_assignment(cost_matrix):
+        """Wrap `linear_sum_assignment` for type safety."""
+        row, col = linear_sum_assignment(cost_matrix)
+        return row.astype("int32"), col.astype("int32")
+
+    return tf.numpy_function(
+        func=_linear_sum_assignment, inp=[cost_matrix], Tout=[tf.int32, tf.int32]
+    )
+
+
+def match_candidates_sample(
+    edge_inds_sample: tf.Tensor,
+    edge_peak_inds_sample: tf.Tensor,
+    line_scores_sample: tf.Tensor,
+    n_edges: int,
+) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
+    """Match candidate connections for a sample based on PAF scores.
+
+    Args:
+        edge_inds_sample: A `tf.Tensor` of shape `(n_candidates,)` and dtype `tf.int32`
+            indicating the indices of the edge that each of the candidate connections
+            belongs to for the sample. Can be generated using
+            `get_connection_candidates()`.
+        edge_peak_inds_sample: A `tf.Tensor` of shape `(n_candidates, 2)` and dtype
+            `tf.int32` with the indices of the peaks that form the source and
+            destination of each candidate connection. Can be generated using
+            `get_connection_candidates()`.
+        line_scores_sample: Scores for each candidate connection in the sample as a
+            `tf.Tensor` of shape `(n_candidates,)` and dtype `tf.float32`. Can be
+            generated using `score_paf_lines()`.
+        n_edges: A scalar `int` denoting the number of edges in the skeleton.
+
+    Returns:
+        The connection peaks for each edge matched based on score as 4-tuple of:
+
+        `match_edge_inds`: Indices of the skeleton edge that each connection corresponds
+        to as a `tf.Tensor` of shape `(n_connections,)` and dtype `tf.int32`.
+
+        `match_src_peak_inds`: Indices of the source peaks that form each connection
+        as a `tf.Tensor` of shape `(n_connections,)` and dtype `tf.int32`. Important:
+        These indices correspond to the edge-grouped peaks, not the set of all peaks in
+        the sample.
+
+        `match_dst_peak_inds`: Indices of the destination peaks that form each
+        connection as a `tf.Tensor` of shape `(n_connections,)` and dtype `tf.int32`.
+        Important: These indices correspond to the edge-grouped peaks, not the set of
+        all peaks in the sample.
+
+        `match_line_scores`: PAF line scores of the matched connections as a `tf.Tensor`
+        of shape `(n_connections,)` and dtype `tf.float32`.
+
+    Notes:
+        The matching is performed using the Munkres algorithm implemented in
+        `scipy.optimize.linear_sum_assignment()` which is wrapped in
+        `tf_linear_sum_assignment()` for execution within a graph.
+
+    See also: match_candidates_batch
+    """
+    match_edge_inds = tf.TensorArray(
+        tf.int32, size=n_edges, infer_shape=False, element_shape=[None]
+    )
+    match_src_peak_inds = tf.TensorArray(
+        tf.int32, size=n_edges, infer_shape=False, element_shape=[None]
+    )
+    match_dst_peak_inds = tf.TensorArray(
+        tf.int32, size=n_edges, infer_shape=False, element_shape=[None]
+    )
+    match_line_scores = tf.TensorArray(
+        tf.float32, size=n_edges, infer_shape=False, element_shape=[None]
+    )
+
+    for k in range(n_edges):
+
+        is_edge_k = tf.squeeze(tf.where(edge_inds_sample == k), axis=1)
+        edge_peak_inds_k = tf.gather(edge_peak_inds_sample, is_edge_k, axis=0)
+        line_scores_k = tf.gather(line_scores_sample, is_edge_k, axis=0)
+
+        # Get the unique peak indices
+        src_peak_inds_k, _ = tf.unique(edge_peak_inds_k[:, 0])
+        dst_peak_inds_k, _ = tf.unique(edge_peak_inds_k[:, 1])
+
+        n_src = tf.shape(src_peak_inds_k)[0]
+        n_dst = tf.shape(dst_peak_inds_k)[0]
+
+        # Reshape line scores into cost matrix (n_src, n_dst)
+        scores_matrix = tf.reshape(line_scores_k, [n_src, n_dst])
+
+        # Replace NaNs with inf since linear_sum_assignment doesn't accept NaNs and flip sign
+        cost_matrix = tf.where(
+            condition=tf.math.is_nan(scores_matrix),
+            x=tf.constant([np.inf]),
+            y=-scores_matrix,
+        )
+
+        # Match
+        match_src_inds, match_dst_inds = tf_linear_sum_assignment(cost_matrix)
+
+        # Pull out matched scores.
+        match_subs = tf.stack([match_src_inds, match_dst_inds], axis=1)
+        match_line_scores_k = tf.gather_nd(scores_matrix, match_subs)
+
+        # Get the peak indices for the matched points (these index into peaks_sample)
+        # match_src_peak_inds_k = tf.gather(src_peak_inds_k, match_src_inds)
+        # match_dst_peak_inds_k = tf.gather(dst_peak_inds_k, match_dst_inds)
+        # These index into the edge-grouped peaks
+        match_src_peak_inds_k = match_src_inds
+        match_dst_peak_inds_k = match_dst_inds
+
+        # Save
+        match_edge_inds = match_edge_inds.write(
+            k, tf.repeat([k], [tf.shape(match_src_peak_inds_k)[0]])
+        )
+        match_src_peak_inds = match_src_peak_inds.write(k, match_src_peak_inds_k)
+        match_dst_peak_inds = match_dst_peak_inds.write(k, match_dst_peak_inds_k)
+        match_line_scores = match_line_scores.write(k, match_line_scores_k)
+
+    match_edge_inds = match_edge_inds.concat()
+    match_src_peak_inds = match_src_peak_inds.concat()
+    match_dst_peak_inds = match_dst_peak_inds.concat()
+    match_line_scores = match_line_scores.concat()
+
+    return (
+        match_edge_inds,
+        match_src_peak_inds,
+        match_dst_peak_inds,
+        match_line_scores,
+    )
+
+
+def match_candidates_batch(
+    edge_inds: tf.RaggedTensor,
+    edge_peak_inds: tf.RaggedTensor,
+    line_scores: tf.RaggedTensor,
+    n_edges: int,
+) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
+    """Match candidate connections for a batch based on PAF scores.
+
+    Args:
+        edge_inds: Sample-grouped edge indices as a `tf.RaggedTensor` of shape
+            `(n_samples, (n_candidates))` and dtype `tf.int32` indicating the indices
+            of the edge that each of the candidate connections belongs to. Can be
+            generated using `score_paf_lines_batch()`.
+        edge_peak_inds: Sample-grouped indices of the peaks that form the source and
+            destination of each candidate connection as a `tf.RaggedTensor` of shape
+            `(n_samples, (n_candidates), 2)` and dtype `tf.int32`. Can be generated
+            using `score_paf_lines_batch()`.
+        line_scores: Sample-grouped scores for each candidate connection as a
+            `tf.RaggedTensor` of shape `(n_samples, (n_candidates))` and dtype
+            `tf.float32`. Can be generated using `score_paf_lines_batch()`.
+        n_edges: A scalar `int` denoting the number of edges in the skeleton.
+
+    Returns:
+        The connection peaks for each edge matched based on score as 4-tuple of:
+
+        `match_edge_inds`: Sample-grouped indices of the skeleton edge for each
+        connection as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))` and
+        dtype `tf.int32`.
+
+        `match_src_peak_inds`: Sample-grouped indices of the source peaks that form each
+        connection as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))` and
+        dtype `tf.int32`. Important: These indices correspond to the edge-grouped peaks,
+        not the set of all peaks in the sample.
+
+        `match_dst_peak_inds`: Sample-grouped indices of the destination peaks that form
+        each connection as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))`
+        and dtype `tf.int32`. Important: These indices correspond to the edge-grouped
+        peaks, not the set of all peaks in the sample.
+
+        `match_line_scores`: Sample-grouped PAF line scores of the matched connections
+        as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))` and dtype
+        `tf.float32`.
+
+    Notes:
+        The matching is performed using the Munkres algorithm implemented in
+        `scipy.optimize.linear_sum_assignment()` which is wrapped in
+        `tf_linear_sum_assignment()` for execution within a graph.
+
+    See also: match_candidates_sample, score_paf_lines_batch, group_instances_batch
+    """
+    n_samples = edge_inds.nrows()
+
+    match_sample_inds = tf.TensorArray(
+        tf.int32, size=n_samples, infer_shape=False, element_shape=[None]
+    )
+    match_edge_inds = tf.TensorArray(
+        tf.int32, size=n_samples, infer_shape=False, element_shape=[None]
+    )
+    match_src_peak_inds = tf.TensorArray(
+        tf.int32, size=n_samples, infer_shape=False, element_shape=[None]
+    )
+    match_dst_peak_inds = tf.TensorArray(
+        tf.int32, size=n_samples, infer_shape=False, element_shape=[None]
+    )
+    match_line_scores = tf.TensorArray(
+        tf.float32, size=n_samples, infer_shape=False, element_shape=[None]
+    )
+
+    for sample in range(n_samples):
+        edge_inds_sample = edge_inds[sample]
+        edge_peak_inds_sample = edge_peak_inds[sample]
+        line_scores_sample = line_scores[sample]
+
+        (
+            match_edge_inds_sample,
+            match_src_peak_inds_sample,
+            match_dst_peak_inds_sample,
+            match_line_scores_sample,
+        ) = match_candidates_sample(
+            edge_inds_sample, edge_peak_inds_sample, line_scores_sample, n_edges
+        )
+
+        # Save
+        match_sample_inds = match_sample_inds.write(
+            sample, tf.repeat([sample], [tf.shape(match_edge_inds_sample)[0]])
+        )
+        match_edge_inds = match_edge_inds.write(sample, match_edge_inds_sample)
+        match_src_peak_inds = match_src_peak_inds.write(
+            sample, match_src_peak_inds_sample
+        )
+        match_dst_peak_inds = match_dst_peak_inds.write(
+            sample, match_dst_peak_inds_sample
+        )
+        match_line_scores = match_line_scores.write(sample, match_line_scores_sample)
+
+    match_sample_inds = match_sample_inds.concat()
+    match_edge_inds = match_edge_inds.concat()
+    match_src_peak_inds = match_src_peak_inds.concat()
+    match_dst_peak_inds = match_dst_peak_inds.concat()
+    match_line_scores = match_line_scores.concat()
+
+    match_edge_inds = tf.RaggedTensor.from_value_rowids(
+        match_edge_inds, match_sample_inds, nrows=n_samples
+    )
+    match_src_peak_inds = tf.RaggedTensor.from_value_rowids(
+        match_src_peak_inds, match_sample_inds, nrows=n_samples
+    )
+    match_dst_peak_inds = tf.RaggedTensor.from_value_rowids(
+        match_dst_peak_inds, match_sample_inds, nrows=n_samples
+    )
+    match_line_scores = tf.RaggedTensor.from_value_rowids(
+        match_line_scores, match_sample_inds, nrows=n_samples
+    )
+
+    return (
+        match_edge_inds,
+        match_src_peak_inds,
+        match_dst_peak_inds,
+        match_line_scores,
+    )
+
+
 def assign_connections_to_instances(
     connections: Dict[EdgeType, List[EdgeConnection]],
     min_instance_peaks: Union[int, float] = 0,
@@ -110,7 +782,6 @@ def assign_connections_to_instances(
 
         This function expects connections from a single sample/frame!
     """
-
     # Grouping table that maps PeakID(node_ind, peak_ind) to an instance_id.
     instance_assignments = dict()
 
@@ -198,7 +869,12 @@ def assign_connections_to_instances(
     return instance_assignments
 
 
-def make_predicted_instances(peaks, peak_scores, connections, instance_assignments):
+def make_predicted_instances(
+    peaks: np.array,
+    peak_scores: np.array,
+    connections: List[EdgeConnection],
+    instance_assignments: Dict[PeakID, int],
+) -> Tuple[np.array, np.array, np.array]:
     """Group peaks by assignments and accumulate scores.
 
     Args:
@@ -214,7 +890,6 @@ def make_predicted_instances(peaks, peak_scores, connections, instance_assignmen
         predicted_peak_scores: (n_instances, n_nodes) array
         predicted_instance_scores: (n_instances,) array
     """
-
     # Ensure instance IDs are contiguous.
     instance_ids, instance_inds = np.unique(
         list(instance_assignments.values()), return_inverse=True
@@ -261,11 +936,305 @@ def make_predicted_instances(peaks, peak_scores, connections, instance_assignmen
     return predicted_instances, predicted_peak_scores, predicted_instance_scores
 
 
+def group_instances_sample(
+    peaks_sample: tf.Tensor,
+    peak_scores_sample: tf.Tensor,
+    peak_channel_inds_sample: tf.Tensor,
+    match_edge_inds_sample: tf.Tensor,
+    match_src_peak_inds_sample: tf.Tensor,
+    match_dst_peak_inds_sample: tf.Tensor,
+    match_line_scores_sample: tf.Tensor,
+    n_nodes: int,
+    n_edges: int,
+    edge_types: List[EdgeType],
+    min_instance_peaks: int,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Group matched connections into full instances for a single sample.
+
+    Args:
+        peaks_sample: The detected peaks in a sample as a `tf.Tensor` of shape
+            `(n_peaks, 2)` and dtype `tf.float32`. These should be `(x, y)` coordinates
+            of each peak in the image scale.
+        peak_scores_sample: The scores of the detected peaks in a sample as a
+            `tf.Tensor` of shape `(n_peaks,)` and dtype `tf.float32`.
+        peak_channel_inds_sample: The indices of the channel (node) that each detected
+            peak is associated with as a `tf.Tensor` of shape `(n_peaks,)` and dtype
+            `tf.int32`.
+        match_edge_inds_sample: Indices of the skeleton edge that each connection
+            corresponds to as a `tf.Tensor` of shape `(n_connections,)` and dtype
+            `tf.int32`. This can be generated by `match_candidates_sample()`.
+        match_src_peak_inds_sample: Indices of the source peaks that form each
+            connection as a `tf.Tensor` of shape `(n_connections,)` and dtype
+            `tf.int32`. Important: These indices correspond to the edge-grouped peaks,
+            not the set of all peaks in the sample. This can be generated by
+            `match_candidates_sample()`.
+        match_dst_peak_inds_sample: Indices of the destination peaks that form each
+            connection as a `tf.Tensor` of shape `(n_connections,)` and dtype
+            `tf.int32`. Important: These indices correspond to the edge-grouped peaks,
+            not the set of all peaks in the sample. This can be generated by
+            `match_candidates_sample()`.
+        match_line_scores_sample: PAF line scores of the matched connections as a
+            `tf.Tensor` of shape `(n_connections,)` and dtype `tf.float32`. This can be
+            generated by `match_candidates_sample()`.
+        n_nodes: The total number of nodes in the skeleton as a scalar integer.
+        n_edges: A scalar `int` denoting the number of edges in the skeleton.
+        edge_types: A list of `EdgeType`s associated with the skeleton.
+        min_instance_peaks: If this is greater than 0, grouped instances with fewer
+            assigned peaks than this threshold will be excluded. If a `float` in the
+            range `(0., 1.]` is provided, this is interpreted as a fraction of the total
+            number of nodes in the skeleton. If an `int` is provided, this is the
+            absolute minimum number of peaks.
+
+    Returns:
+        A tuple of arrays with the grouped instances:
+
+        `predicted_instances`: The grouped coordinates for each instance as an array of
+        shape `(n_instances, n_nodes, 2)` and dtype `float32`. Missing peaks are
+        represented by `np.NaN`s.
+
+        `predicted_peak_scores`: The confidence map values for each peak as an array of
+        `(n_instances, n_nodes)` and dtype `float32`.
+
+        `predicted_instance_scores`: The grouping score for each instance as an array of
+        shape `(n_instances,)` and dtype `float32`.
+
+    Notes:
+        This function is meant to be run as a `tf.py_function` within a graph (see
+        `group_instances_batch()`).
+    """
+    if isinstance(peaks_sample, tf.Tensor):
+        # Convert all the data to numpy arrays.
+        peaks_sample = peaks_sample.numpy()
+        peak_scores_sample = peak_scores_sample.numpy()
+        peak_channel_inds_sample = peak_channel_inds_sample.numpy()
+        match_edge_inds_sample = match_edge_inds_sample.numpy()
+        match_src_peak_inds_sample = match_src_peak_inds_sample.numpy()
+        match_dst_peak_inds_sample = match_dst_peak_inds_sample.numpy()
+        match_line_scores_sample = match_line_scores_sample.numpy()
+
+    # Group peaks by channel.
+    peaks = []
+    peak_scores = []
+    for i in range(n_nodes):
+        in_channel = peak_channel_inds_sample == i
+        peaks.append(peaks_sample[in_channel])
+        peak_scores.append(peak_scores_sample[in_channel])
+
+    # Group connection data by edge.
+    src_peak_inds = []
+    dst_peak_inds = []
+    line_scores = []
+    for i in range(n_edges):
+        in_edge = match_edge_inds_sample == i
+        src_peak_inds.append(match_src_peak_inds_sample[in_edge])
+        dst_peak_inds.append(match_dst_peak_inds_sample[in_edge])
+        line_scores.append(match_line_scores_sample[in_edge])
+
+    # Form connections structure.
+    connections = dict()
+    for edge_ind, (src_peak_ind, dst_peak_ind, line_score) in enumerate(
+        zip(src_peak_inds, dst_peak_inds, line_scores)
+    ):
+        connections[edge_types[edge_ind]] = [
+            EdgeConnection(src, dst, score)
+            for src, dst, score in zip(src_peak_ind, dst_peak_ind, line_score)
+        ]
+
+    # Bipartite graph partitioning to group connections into instances.
+    instance_assignments = assign_connections_to_instances(
+        connections,
+        min_instance_peaks=min_instance_peaks,
+        n_nodes=n_nodes,
+    )
+
+    # Gather the data by instance.
+    (
+        predicted_instances,
+        predicted_peak_scores,
+        predicted_instance_scores,
+    ) = make_predicted_instances(peaks, peak_scores, connections, instance_assignments)
+
+    return predicted_instances, predicted_peak_scores, predicted_instance_scores
+
+
+def group_instances_batch(
+    peaks: tf.RaggedTensor,
+    peak_vals: tf.RaggedTensor,
+    peak_channel_inds: tf.RaggedTensor,
+    match_edge_inds: tf.RaggedTensor,
+    match_src_peak_inds: tf.RaggedTensor,
+    match_dst_peak_inds: tf.RaggedTensor,
+    match_line_scores: tf.RaggedTensor,
+    n_nodes: int,
+    n_edges: int,
+    edge_types: List[EdgeType],
+    min_instance_peaks: int,
+) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
+    """Group matched connections into full instances for a batch.
+
+    Args:
+        peaks: The sample-grouped detected peaks in a batch as a `tf.RaggedTensor` of
+            shape `(n_samples, (n_peaks), 2)` and dtype `tf.float32`. These should be
+            `(x, y)` coordinates of each peak in the image scale.
+        peak_vals: The sample-grouped scores of the detected peaks in a batch as a
+            `tf.RaggedTensor` of shape `(n_samples, (n_peaks))` and dtype `tf.float32`.
+        peak_channel_inds: The sample-grouped indices of the channel (node) that each
+            detected peak is associated with as a `tf.RaggedTensor` of shape
+            `(n_samples, (n_peaks))` and dtype `tf.int32`.
+        match_edge_inds: Sample-grouped indices of the skeleton edge that each
+            connection corresponds to as a `tf.RaggedTensor` of shape
+            `(n_samples, (n_connections))` and dtype `tf.int32`. This can be generated
+            by `match_candidates_batch()`.
+        match_src_peak_inds: Sample-grouped indices of the source peaks that form each
+            connection as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))`
+            and dtype `tf.int32`. Important: These indices correspond to the
+            edge-grouped peaks, not the set of all peaks in each sample. This can be
+            generated by `match_candidates_batch()`.
+        match_dst_peak_inds: Sample-grouped indices of the destination peaks that form
+            each connection as a `tf.RaggedTensor` of shape
+            `(n_samples, (n_connections))` and dtype `tf.int32`. Important: These
+            indices correspond to the edge-grouped peaks, not the set of all peaks in
+            the sample. This can be generated by `match_candidates_batch()`.
+        match_line_scores: Sample-grouped PAF line scores of the matched connections as
+            a `tf.RaggedTensor` of shape `(n_samples, (n_connections))` and dtype
+            `tf.float32`. This can be generated by `match_candidates_batch()`.
+        n_nodes: The total number of nodes in the skeleton as a scalar integer.
+        n_edges: A scalar `int` denoting the number of edges in the skeleton.
+        edge_types: A list of `EdgeType`s associated with the skeleton.
+        min_instance_peaks: If this is greater than 0, grouped instances with fewer
+            assigned peaks than this threshold will be excluded. If a `float` in the
+            range `(0., 1.]` is provided, this is interpreted as a fraction of the total
+            number of nodes in the skeleton. If an `int` is provided, this is the
+            absolute minimum number of peaks.
+
+    Returns:
+        A tuple of arrays with the grouped instances for the whole batch grouped by
+        sample:
+
+        `predicted_instances`: The sample- and instance-grouped coordinates for each
+        instance as `tf.RaggedTensor` of shape `(n_samples, (n_instances), n_nodes, 2)`
+        and dtype `tf.float32`. Missing peaks are represented by `NaN`s.
+
+        `predicted_peak_scores`: The sample- and instance-grouped confidence map values
+        for each peak as an array of `(n_samples, (n_instances), n_nodes)` and dtype
+        `tf.float32`.
+
+        `predicted_instance_scores`: The sample-grouped instance grouping score for each
+        instance as an array of shape `(n_samples, (n_instances))` and dtype
+        `tf.float32`.
+
+    See also: match_candidates_batch, group_instances_sample
+    """
+
+    def _group_instances_sample(
+        peaks_sample,
+        peak_scores_sample,
+        peak_channel_inds_sample,
+        match_edge_inds_sample,
+        match_src_peak_inds_sample,
+        match_dst_peak_inds_sample,
+        match_line_scores_sample,
+        n_nodes,
+        n_edges,
+        min_instance_peaks,
+    ):
+        """Helper to avoid passing `EdgeType`s to `tf.py_function`."""
+        return group_instances_sample(
+            peaks_sample,
+            peak_scores_sample,
+            peak_channel_inds_sample,
+            match_edge_inds_sample,
+            match_src_peak_inds_sample,
+            match_dst_peak_inds_sample,
+            match_line_scores_sample,
+            n_nodes,
+            n_edges,
+            edge_types,
+            min_instance_peaks,
+        )
+
+    n_samples = peaks.nrows()
+
+    sample_inds = tf.TensorArray(
+        tf.int32, size=n_samples, infer_shape=False, element_shape=[None]
+    )
+    predicted_instances = tf.TensorArray(
+        size=n_samples,
+        dtype=tf.float32,
+        infer_shape=False,
+        element_shape=[None, n_nodes, 2],
+    )
+    predicted_peak_scores = tf.TensorArray(
+        size=n_samples,
+        dtype=tf.float32,
+        infer_shape=False,
+        element_shape=[None, n_nodes],
+    )
+    predicted_instance_scores = tf.TensorArray(
+        size=n_samples, dtype=tf.float32, infer_shape=False, element_shape=[None]
+    )
+
+    for sample in range(n_samples):
+
+        # Call sample-wise function in Eager mode.
+        (
+            predicted_instances_sample,
+            predicted_peak_scores_sample,
+            predicted_instance_scores_sample,
+        ) = tf.py_function(
+            _group_instances_sample,
+            inp=[
+                peaks[sample],
+                peak_vals[sample],
+                peak_channel_inds[sample],
+                match_edge_inds[sample],
+                match_src_peak_inds[sample],
+                match_dst_peak_inds[sample],
+                match_line_scores[sample],
+                n_nodes,
+                n_edges,
+                # edge_types, # not serializable!
+                min_instance_peaks,
+            ],
+            Tout=[tf.float32, tf.float32, tf.float32],
+        )
+
+        sample_inds = sample_inds.write(
+            sample, tf.repeat([sample], [tf.shape(predicted_instances_sample)[0]])
+        )
+        predicted_instances = predicted_instances.write(
+            sample, predicted_instances_sample
+        )
+        predicted_peak_scores = predicted_peak_scores.write(
+            sample, predicted_peak_scores_sample
+        )
+        predicted_instance_scores = predicted_instance_scores.write(
+            sample, predicted_instance_scores_sample
+        )
+
+    sample_inds = sample_inds.concat()
+    predicted_instances = predicted_instances.concat()
+    predicted_peak_scores = predicted_peak_scores.concat()
+    predicted_instance_scores = predicted_instance_scores.concat()
+
+    predicted_instances = tf.RaggedTensor.from_value_rowids(
+        predicted_instances, sample_inds, nrows=n_samples
+    )
+    predicted_peak_scores = tf.RaggedTensor.from_value_rowids(
+        predicted_peak_scores, sample_inds, nrows=n_samples
+    )
+    predicted_instance_scores = tf.RaggedTensor.from_value_rowids(
+        predicted_instance_scores, sample_inds, nrows=n_samples
+    )
+
+    return predicted_instances, predicted_peak_scores, predicted_instance_scores
+
+
 @attr.s(auto_attribs=True)
 class PAFScorer:
     """Scoring pipeline based on part affinity fields.
 
-    This class enables grouping of predicted peaks based on PAFs. It holds a set of
+    This class facilitates grouping of predicted peaks based on PAFs. It holds a set of
     common parameters that are used across different steps of the pipeline.
 
     Attributes:
@@ -273,21 +1242,48 @@ class PAFScorer:
         edges: List of (src_node, dst_node) names in the skeleton.
         pafs_stride: Output stride of the part affinity fields. This will be used to
             adjust the peak coordinates from full image to PAF subscripts.
-        max_edge_length: The maximum expected length of a connected pair of points in
-            image coordinate units. Candidate connections above this length will be
+        max_edge_length_ratio: The maximum expected length of a connected pair of points
+            in relative image units. Candidate connections above this length will be
             penalized during matching.
-        min_edge_score: Minimum score required to classify a connection as correct.
         n_points: Number of points to sample along the line integral.
         min_instance_peaks: Minimum number of peaks the instance should have to be
             considered a real instance. Instances with fewer peaks than this will be
             discarded (useful for filtering spurious detections).
-        """
+        edge_inds: The edges of the skeleton defined as a list of (source, destination)
+            tuples of node indices. This is created automatically on initialization.
+        edge_types: A list of `EdgeType` instances representing the edges of the
+            skeleton. This is created automatically on initialization.
+        n_nodes: The number of nodes in the skeleton as a scalar `int`. This is created
+            automatically on initialization.
+        n_edges: The number of edges in the skeleton as a scalar `int`. This is created
+            automatically on initialization.
+
+    Notes:
+        This class provides high level APIs for grouping peaks into instances using
+        PAFs.
+
+        The algorithm has three steps:
+
+            1. Find all candidate connections between peaks and compute their matching
+            score based on the PAFs.
+
+            2. Match candidate connections using the connectivity score such that no
+            peak is used in two connections of the same type.
+
+            3. Group matched connections into complete instances.
+
+        In general, the output from a peak finder (such as multi-peak confidence map
+        prediction network) can be passed into `PAFScorer.predict()` to get back
+        complete instances.
+
+        For finer control over the grouping pipeline steps, use the instance methods in
+        this class or the lower level functions in `sleap.nn.paf_grouping`.
+    """
 
     part_names: List[Text]
     edges: List[Tuple[Text, Text]]
     pafs_stride: int
-    max_edge_length: float = 128
-    min_edge_score: float = 0.05
+    max_edge_length_ratio: float = 0.5
     n_points: int = 10
     min_instance_peaks: Union[int, float] = 0
 
@@ -297,6 +1293,7 @@ class PAFScorer:
     n_edges: int = attr.ib(init=False)
 
     def __attrs_post_init__(self):
+        """Cache some computed attributes on initialization."""
         self.edge_inds = [
             (self.part_names.index(src), self.part_names.index(dst))
             for (src, dst) in self.edges
@@ -312,8 +1309,7 @@ class PAFScorer:
     def from_config(
         cls,
         config: MultiInstanceConfig,
-        max_edge_length: float = 128,
-        min_edge_score: float = 0.05,
+        max_edge_length_ratio: float = 0.5,
         n_points: int = 10,
         min_instance_peaks: Union[int, float] = 0,
     ) -> "PAFScorer":
@@ -321,9 +1317,9 @@ class PAFScorer:
 
         Args:
             config: `MultiInstanceConfig` from `cfg.model.heads.multi_instance`.
-            max_edge_length: The maximum expected length of a connected pair of points
-                in image coordinate units. Candidate connections above this length will
-                be penalized during matching.
+            max_edge_length_ratio: The maximum expected length of a connected pair of
+                points relative image units. Candidate connections above this length
+                will be penalized during matching.
             min_edge_score: Minimum score required to classify a connection as correct.
             n_points: Number of points to sample along the line integral.
             min_instance_peaks: Minimum number of peaks the instance should have to be
@@ -337,709 +1333,255 @@ class PAFScorer:
             part_names=config.confmaps.part_names,
             edges=config.pafs.edges,
             pafs_stride=config.pafs.output_stride,
-            max_edge_length=max_edge_length,
-            min_edge_score=min_edge_score,
+            max_edge_length_ratio=max_edge_length_ratio,
             n_points=n_points,
             min_instance_peaks=min_instance_peaks,
         )
 
-    def sample_edge_line(self, paf, src_peak, dst_peak):
-        """Sample PAF along two points for computing the line integral.
+    def score_paf_lines(
+        self, pafs: tf.Tensor, peaks: tf.Tensor, peak_channel_inds: tf.Tensor
+    ) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
+        """Create and score PAF lines formed between connection candidates.
 
         Args:
-            paf: Single edge PAF of shape `(height, width, 2)`
-            src_peak: Single peak coordinate of shape `(2,)`
-            dst_peak: Single peak coordinate of shape `(2,)`
+            pafs: The batch of part affinity fields as a `tf.Tensor` of shape
+                `(n_samples, height, width, 2 * n_edges)` and type `tf.float32`.
+            peaks: The coordinates of the peaks grouped by sample as a `tf.RaggedTensor`
+                of shape `(n_samples, (n_peaks), 2)`.
+            peak_channel_inds: The channel (node) that each peak in `peaks` corresponds
+                to as a `tf.RaggedTensor` of shape `(n_samples, (n_peaks))` and dtype
+                `tf.int32`.
 
         Returns:
-            PAF values sampled along the line formed by the two points as a tensor of
-            shape `(n_points, 2)`
-        """
-        paf_x = tf.gather(paf, 0, axis=-1)
-        paf_y = tf.gather(paf, 1, axis=-1)
+            A tuple of `(edge_inds, edge_peak_inds, line_scores)` with the connections
+            and their scores based on the PAFs.
 
-        max_x = tf.cast(tf.shape(paf_x)[1] - 1, tf.float32)
-        max_y = tf.cast(tf.shape(paf_x)[0] - 1, tf.float32)
+            `edge_inds`: Sample-grouped indices of the edge in the skeleton that each
+            connection corresponds to as `tf.RaggedTensor` of shape
+            `(n_samples, (n_candidates))` and dtype `tf.int32`.
 
-        line_x = tf.linspace(src_peak[0], dst_peak[0], self.n_points)
-        line_y = tf.linspace(src_peak[1], dst_peak[1], self.n_points)
+            `edge_peak_inds`: Sample-grouped indices of the peaks that form each
+            connection as a `tf.RaggedTensor` of shape `(n_samples, (n_candidates), 2)`
+            and dtype `tf.int32`. The last axis corresponds to the
+            `[source, destination]` peak indices. These index into the input
+            `peak_channel_inds`.
 
-        line_x /= tf.cast(self.pafs_stride, tf.float32)
-        line_y /= tf.cast(self.pafs_stride, tf.float32)
-
-        line_x = tf.clip_by_value(tf.round(line_x), 0, max_x)
-        line_y = tf.clip_by_value(tf.round(line_y), 0, max_y)
-
-        line_x = tf.cast(line_x, tf.int32)
-        line_y = tf.cast(line_y, tf.int32)
-
-        line_subs = tf.stack([line_y, line_x], axis=1)
-
-        line_paf_x = tf.gather_nd(paf_x, line_subs)
-        line_paf_y = tf.gather_nd(paf_y, line_subs)
-
-        line_paf = tf.stack([line_paf_x, line_paf_y], axis=-1)  # (n_points, 2)
-
-        return line_paf
-
-    def score_pair(self, line_paf, src_peak, dst_peak):
-        """Compute the score for a pair of points.
-
-        Args:
-            line_paf: Line integral samples from `PAFScorer.sample_edge_line()` of shape
-                `(n_points, 2)`
-            src_peak: Single peak coordinate of shape `(2,)`
-            dst_peak: Single peak coordinate of shape `(2,)`
-
-        Returns:
-            A tuple of `(line_score_with_dist_penalty, fraction_correct)`.
-
-            `line_score_with_dist_penalty` is the line integral score with distance
-            penalty (`PAFScorer.max_edge_length`) applied.
-
-            `fraction_correct` is the fraction of the line integral points that were
-            classified as correct based on `PAFScorer.min_edge_score`.
-
-            Both are scalar `tf.float32`s.
-        """
-        # Normalized spatial vector
-        spatial_vec = dst_peak - src_peak
-        spatial_vec_length = tf.norm(spatial_vec)
-        spatial_vec /= spatial_vec_length
-
-        # Compute dot product scores
-        line_scores = tf.squeeze(
-            line_paf @ tf.expand_dims(spatial_vec, axis=-1), axis=-1
-        )  # (n_points,)
-
-        # Compute average line scores with distance penalty.
-        dist_penalty = (
-            tf.cast(self.max_edge_length, tf.float32) / spatial_vec_length
-        ) - 1
-
-        # Compute overall line score
-        line_score = tf.reduce_mean(line_scores)
-        line_score_with_dist_penalty = line_score + tf.minimum(dist_penalty, 0)
-
-        # Compute fraction of connections above threshold.
-        fraction_correct = tf.reduce_mean(
-            tf.cast(line_scores > self.min_edge_score, tf.float32)
-        )
-
-        return line_score_with_dist_penalty, fraction_correct
-
-    def score_edge(self, paf, src_peaks, dst_peaks):
-        """Compute scores for all candidates for an edge type.
-
-        Args:
-            paf: Single edge PAF of shape `(height, width, 2)`
-            src_peaks: Peak coordinates of shape `(n_src_peaks, 2)`
-            dst_peaks: Single peak coordinate of shape `(n_dst_peaks, 2)`
-
-        Returns:
-            A tuple of `(line_scores, fraction_correct)`.
-
-            `line_scores` is the line integral score with distance penalty
-            (`PAFScorer.max_edge_length`) applied.
-
-            `fraction_correct` is the fraction of the line integral points that were
-            classified as correct based on `PAFScorer.min_edge_score`.
-
-            Both are vector `tf.float32`s of length `n_src_peaks * n_dst_peaks`
-            containing the score for all combinations of source and destination peaks.
-        """
-        line_scores = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        fraction_correct = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-
-        # Iterate over source peaks.
-        for i in range(len(src_peaks)):
-
-            line_scores_i = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-            fraction_correct_i = tf.TensorArray(
-                dtype=tf.float32, size=0, dynamic_size=True
-            )
-
-            # Iterate over destination peaks.
-            for j in range(len(dst_peaks)):
-
-                # Pull out peaks.
-                src_peak = src_peaks[i]
-                dst_peak = dst_peaks[j]
-
-                # Get line integral from PAF tensor.
-                line_paf = self.sample_edge_line(paf, src_peak, dst_peak)
-
-                # Compute scores from line integral.
-                line_score_ij, fraction_correct_ij = self.score_pair(
-                    line_paf, src_peak, dst_peak
-                )
-
-                line_scores_i = line_scores_i.write(j, line_score_ij)
-                fraction_correct_i = fraction_correct_i.write(j, fraction_correct_ij)
-
-            line_scores_i = line_scores_i.stack()
-            fraction_correct_i = fraction_correct_i.stack()
-            line_scores = line_scores.write(i, line_scores_i)
-            fraction_correct = fraction_correct.write(i, fraction_correct_i)
-
-        line_scores = line_scores.stack()
-        fraction_correct = fraction_correct.stack()
-
-        return line_scores, fraction_correct
-
-    def score_and_match_edge(self, paf, src_peaks, dst_peaks):
-        """Score and match all peaks for a single edge type.
-
-        Args:
-            paf: Single edge PAF of shape `(height, width, 2)`
-            src_peaks: Peak coordinates of shape `(n_src_peaks, 2)`
-            dst_peaks: Single peak coordinate of shape `(n_dst_peaks, 2)`
-
-        Returns:
-            A tuple of `(src_inds, dst_inds, line_scores, fraction_correct)`.
-
-            `src_inds` and `dst_inds` are `tf.int32` vectors containing the indices to
-            the matched peaks within `src_peaks` and `dst_peaks`, respectively.
-
-            `line_scores` is the line integral score with distance penalty
-            (`PAFScorer.max_edge_length`) applied.
-
-            `fraction_correct` is the fraction of the line integral points that were
-            classified as correct based on `PAFScorer.min_edge_score`.
-
-            All of the returned vectors are of the same length, which is at most of
-            length `min(n_src_peaks, n_dst_peaks)`.
+            `line_scores`: Sample-grouped scores for each candidate connection as a
+            `tf.RaggedTensor` of shape `(n_samples, (n_candidates))` and dtype
+            `tf.float32`.
 
         Notes:
-            Matching is done via Hungarian algorithm via a `tf.py_function` call.
+            This is a convenience wrapper for the standalone `score_paf_lines_batch()`.
+
+        See also: score_paf_lines_batch
         """
-        # Compute scores from PAF line integrals.
-        line_scores, fraction_correct = self.score_edge(paf, src_peaks, dst_peaks)
-
-        # Replace NaNs with inf since linear_sum_assignment doesn't accept NaNs
-        line_costs = tf.where(
-            condition=tf.math.is_nan(line_scores),
-            x=tf.constant([np.inf]),
-            y=-line_scores,
+        return score_paf_lines_batch(
+            pafs,
+            peaks,
+            peak_channel_inds,
+            self.edge_inds,
+            self.n_points,
+            self.pafs_stride,
+            self.max_edge_length_ratio,
+            self.n_nodes,
         )
 
-        # Match edge candidates.
-        src_inds, dst_inds = tf.py_function(
-            linear_sum_assignment, inp=[line_costs], Tout=[tf.int32, tf.int32]
-        )
-
-        # Pull out matched scores.
-        match_subs = tf.stack([src_inds, dst_inds], axis=1)
-        line_scores = tf.gather_nd(line_scores, match_subs)
-        fraction_correct = tf.gather_nd(fraction_correct, match_subs)
-
-        return src_inds, dst_inds, line_scores, fraction_correct
-
-    def match_all_peaks(self, pafs, flat_peaks, flat_channel_inds):
-        """Score and match all peaks for all edge types.
-
-        Args:
-            pafs: Single frame PAFs of shape `(height, width, n_edges*2)`
-            flat_peaks: All detected peaks for the frame of shape `(n_peaks, 2)` with
-                rows as `[x, y]` coordinates in the full image (not PAF coordinates).
-            flat_channel_inds: Channel (node type) indices for the detected peaks as a
-                `tf.int32` vector of shape `(n_peaks,)`.
-
-        Returns:
-            A tuple of `(flat_edge_inds, flat_src_inds, flat_dst_inds, flat_line_scores,
-            flat_fraction_correct)`.
-
-            `flat_edge_inds` is the edge type index that each match corresponds to as a
-            `tf.int32` vector. This indexes into the skeleton's edge list
-            (`PAFScorer.edge_inds`).
-
-            `flat_src_inds` and `flat_dst_inds` are the indices of the source and
-            destination peaks, respectively, in the input list of `flat_peaks` as
-            `tf.int32` vectors.
-
-            `flat_line_scores` is the line integral score with distance penalty
-            (`PAFScorer.max_edge_length`) applied.
-
-            `flat_fraction_correct` is the fraction of the line integral points that
-            were classified as correct based on `PAFScorer.min_edge_score`.
-
-            All of the returned vectors are of the same length which is the total number
-            of matched pairs of peaks.
-        """
-
-        # Make sure PAFs are unflattened into (..., n_edges, 2).
-        pafs = tf.reshape(pafs, [tf.shape(pafs)[0], tf.shape(pafs)[1], -1, 2])
-
-        # Sort peaks by channel
-        sort_idx = tf.argsort(flat_channel_inds)
-        peaks = tf.gather(flat_peaks, sort_idx)
-        channel_inds = tf.gather(flat_channel_inds, sort_idx)
-
-        # Group peaks by channel
-        peaks = tf.RaggedTensor.from_value_rowids(
-            values=peaks, value_rowids=channel_inds, nrows=self.n_nodes
-        )
-
-        # Determine which edges to score by counting the number of candidate source and
-        # destination peaks.
-        edge_src_counts = tf.TensorArray(
-            dtype=tf.int32, size=self.n_edges, dynamic_size=False
-        )
-        edge_dst_counts = tf.TensorArray(
-            dtype=tf.int32, size=self.n_edges, dynamic_size=False
-        )
-        for edge_ind in range(self.n_edges):
-            src_peaks = tf.gather(peaks, self.edge_inds[edge_ind][0], axis=0)
-            dst_peaks = tf.gather(peaks, self.edge_inds[edge_ind][1], axis=0)
-            edge_src_counts = edge_src_counts.write(edge_ind, tf.shape(src_peaks)[0:1])
-            edge_dst_counts = edge_dst_counts.write(edge_ind, tf.shape(dst_peaks)[0:1])
-        edge_src_counts = edge_src_counts.concat()
-        edge_dst_counts = edge_dst_counts.concat()
-        valid_edge_inds = tf.cast(
-            tf.where((edge_src_counts > 0) & (edge_dst_counts > 0)), tf.int32
-        )
-        n_valid_edges = tf.shape(valid_edge_inds)[0]
-
-        # Initialize dynamically sized containers.
-        all_edge_inds = tf.TensorArray(
-            dtype=tf.int32,
-            size=n_valid_edges,
-            dynamic_size=False,
-            infer_shape=False,
-            element_shape=tf.TensorShape([None]),
-        )
-        all_src_inds = tf.TensorArray(
-            dtype=tf.int32,
-            size=n_valid_edges,
-            dynamic_size=False,
-            infer_shape=False,
-            element_shape=tf.TensorShape([None]),
-        )
-        all_dst_inds = tf.TensorArray(
-            dtype=tf.int32,
-            size=n_valid_edges,
-            dynamic_size=False,
-            infer_shape=False,
-            element_shape=tf.TensorShape([None]),
-        )
-        all_line_scores = tf.TensorArray(
-            dtype=tf.float32,
-            size=n_valid_edges,
-            dynamic_size=False,
-            infer_shape=False,
-            element_shape=tf.TensorShape([None]),
-        )
-        all_fraction_correct = tf.TensorArray(
-            dtype=tf.float32,
-            size=n_valid_edges,
-            dynamic_size=False,
-            infer_shape=False,
-            element_shape=tf.TensorShape([None]),
-        )
-
-        # Iterate over edges.
-        for i in range(n_valid_edges):
-            edge_ind = tf.squeeze(tf.gather(valid_edge_inds, i, axis=0))
-
-            # Pull out edge data.
-            paf = tf.gather(pafs, edge_ind, axis=-2)
-            src_dst_inds = tf.gather(self.edge_inds, edge_ind, axis=0)
-            src_peaks = tf.gather(peaks, src_dst_inds[0], axis=0)
-            dst_peaks = tf.gather(peaks, src_dst_inds[1], axis=0)
-
-            # Score the edge.
-            (
-                src_inds,
-                dst_inds,
-                line_scores,
-                fraction_correct,
-            ) = self.score_and_match_edge(paf, src_peaks, dst_peaks)
-
-            # Store edge results.
-            all_edge_inds = all_edge_inds.write(
-                i, tf.broadcast_to(edge_ind, tf.shape(src_inds))
-            )
-            all_src_inds = all_src_inds.write(i, src_inds)
-            all_dst_inds = all_dst_inds.write(i, dst_inds)
-            all_line_scores = all_line_scores.write(i, line_scores)
-            all_fraction_correct = all_fraction_correct.write(i, fraction_correct)
-
-        # Concatenate dynamic tensors into flat ones. These can be split again by using
-        # flat_edge_inds as a grouping vector.
-        flat_edge_inds = all_edge_inds.concat()
-        flat_src_inds = all_src_inds.concat()
-        flat_dst_inds = all_dst_inds.concat()
-        flat_line_scores = all_line_scores.concat()
-        flat_fraction_correct = all_fraction_correct.concat()
-
-        return (
-            flat_edge_inds,
-            flat_src_inds,
-            flat_dst_inds,
-            flat_line_scores,
-            flat_fraction_correct,
-        )
-
-    def match_instances(
+    def match_candidates(
         self,
-        flat_peaks,
-        flat_peak_scores,
-        flat_channel_inds,
-        flat_edge_inds,
-        flat_src_peak_inds,
-        flat_dst_peak_inds,
-        flat_line_scores,
-        flat_fraction_correct,
-    ):
-        """Group matched peaks for a single frame into instances.
-
-        This function performs the final grouping of matched edges into full graphs,
-        i.e., instances.
+        edge_inds: tf.RaggedTensor,
+        edge_peak_inds: tf.RaggedTensor,
+        line_scores: tf.RaggedTensor,
+    ) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
+        """Match candidate connections for a batch based on PAF scores.
 
         Args:
-            flat_peaks: All detected peaks for the frame of shape `(n_peaks, 2)` with
-                rows as `[x, y]` coordinates in the full image (not PAF coordinates).
-            flat_peak_scores: All detected peak scores for the frame of shape
-                `(n_peaks,)`.
-            flat_channel_inds: Channel (node type) indices for the detected peaks as an
-                `int32` vector of shape `(n_peaks,)`.
-            flat_edge_inds: The edge type index that each match corresponds to as a
-                `int32` vector. This indexes into the skeleton's edge list
-                (`PAFScorer.edge_inds`). From `PAFScorer.match_all_peaks()`.
-            flat_src_inds: The indices of the source peaks in the input list of
-                `flat_peaks` as a `int32` vector. From `PAFScorer.match_all_peaks()`.
-            flat_dst_inds: The indices of the destination peaks in the input list of
-                `flat_peaks` as a `int32` vector. From `PAFScorer.match_all_peaks()`.
-            flat_line_scores: The line integral score with distance penalty
-                (`PAFScorer.max_edge_length`) applied for all matches. From
-                `PAFScorer.match_all_peaks()`.
-            flat_fraction_correct: The fraction of the line integral points that were
-                classified as correct based on `PAFScorer.min_edge_score`. From
-                `PAFScorer.match_all_peaks()`.
+            edge_inds: Sample-grouped edge indices as a `tf.RaggedTensor` of shape
+                `(n_samples, (n_candidates))` and dtype `tf.int32` indicating the
+                indices of the edge that each of the candidate connections belongs to.
+                Can be generated using `PAFScorer.score_paf_lines()`.
+            edge_peak_inds: Sample-grouped indices of the peaks that form the source and
+                destination of each candidate connection as a `tf.RaggedTensor` of shape
+                `(n_samples, (n_candidates), 2)` and dtype `tf.int32`. Can be generated
+                using `PAFScorer.score_paf_lines()`.
+            line_scores: Sample-grouped scores for each candidate connection as a
+                `tf.RaggedTensor` of shape `(n_samples, (n_candidates))` and dtype
+                `tf.float32`. Can be generated using `PAFScorer.score_paf_lines()`.
 
         Returns:
-            A tuple of `(predicted_instances, predicted_peak_scores,
-            predicted_instance_scores)`.
+            The connection peaks for each edge matched based on score as 4-tuple of:
 
-            `predicted_instances` are the grouped instances as an array of shape
-            `(n_instances, n_nodes, 2)`.
+            `match_edge_inds`: Sample-grouped indices of the skeleton edge for each
+            connection as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))`
+            and dtype `tf.int32`.
 
-            `predicted_peak_scores` are the scores for the peaks within each instance as
-            an array of shape `(n_instances, n_nodes)`.
+            `match_src_peak_inds`: Sample-grouped indices of the source peaks that form
+            each connection as a `tf.RaggedTensor` of shape
+            `(n_samples, (n_connections))` and dtype `tf.int32`. Important: These
+            indices correspond to the edge-grouped peaks, not the set of all peaks in
+            the sample.
 
-            `predicted_instance_scores` are the scores of the instances as the sum of
-            the matched edge scores in an array of shape `(n_instances,)`.
+            `match_dst_peak_inds`: Sample-grouped indices of the destination peaks that
+            form each connection as a `tf.RaggedTensor` of shape
+            `(n_samples, (n_connections))` and dtype `tf.int32`. Important: These
+            indices correspond to the edge-grouped peaks, not the set of all peaks in
+            the sample.
+
+            `match_line_scores`: Sample-grouped PAF line scores of the matched
+            connections as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))`
+            and dtype `tf.float32`.
 
         Notes:
-            This is a Python/numpy function, not TensorFlow, so must be called using
-            `tf.py_function()`.
+            This is a convenience wrapper for the standalone `match_candidates_batch()`.
+
+        See also: PAFScorer.score_paf_lines, match_candidates_batch
         """
-        # Convert all the data to numpy arrays.
-        flat_peaks = flat_peaks.numpy()
-        flat_peak_scores = flat_peak_scores.numpy()
-        flat_channel_inds = flat_channel_inds.numpy()
-        flat_edge_inds = flat_edge_inds.numpy()
-        flat_src_peak_inds = flat_src_peak_inds.numpy()
-        flat_dst_peak_inds = flat_dst_peak_inds.numpy()
-        flat_line_scores = flat_line_scores.numpy()
-        flat_fraction_correct = flat_fraction_correct.numpy()
-
-        # Group peaks by channel.
-        peaks = []
-        peak_scores = []
-        for i in range(self.n_nodes):
-            in_channel = flat_channel_inds == i
-            peaks.append(flat_peaks[in_channel])
-            peak_scores.append(flat_peak_scores[in_channel])
-
-        # Group connection data by edge.
-        src_peak_inds = []
-        dst_peak_inds = []
-        line_scores = []
-        fraction_correct = []
-        for i in range(self.n_edges):
-            in_edge = flat_edge_inds == i
-            src_peak_inds.append(flat_src_peak_inds[in_edge])
-            dst_peak_inds.append(flat_dst_peak_inds[in_edge])
-            line_scores.append(flat_line_scores[in_edge])
-            fraction_correct.append(flat_fraction_correct[in_edge])
-
-        # Form connections structure.
-        connections = dict()
-        for edge_ind, (src_peak_ind, dst_peak_ind, line_score) in enumerate(
-            zip(src_peak_inds, dst_peak_inds, line_scores)
-        ):
-            connections[self.edge_types[edge_ind]] = [
-                EdgeConnection(src, dst, score)
-                for src, dst, score in zip(src_peak_ind, dst_peak_ind, line_score)
-            ]
-
-        # Bipartite graph partitioning to group connections into instances.
-        instance_assignments = assign_connections_to_instances(
-            connections,
-            min_instance_peaks=self.min_instance_peaks,
-            n_nodes=self.n_nodes,
+        return match_candidates_batch(
+            edge_inds, edge_peak_inds, line_scores, self.n_edges
         )
 
-        # Gather the data by instance.
-        (
-            predicted_instances,
-            predicted_peak_scores,
-            predicted_instance_scores,
-        ) = make_predicted_instances(
-            peaks, peak_scores, connections, instance_assignments
-        )
-
-        return predicted_instances, predicted_peak_scores, predicted_instance_scores
-
-    def match_with_pafs(self, pafs, flat_peaks, flat_peak_scores, flat_channel_inds):
-        """Group matched peaks for a single frame into instances.
+    def group_instances(
+        self,
+        peaks: tf.RaggedTensor,
+        peak_vals: tf.RaggedTensor,
+        peak_channel_inds: tf.RaggedTensor,
+        match_edge_inds: tf.RaggedTensor,
+        match_src_peak_inds: tf.RaggedTensor,
+        match_dst_peak_inds: tf.RaggedTensor,
+        match_line_scores: tf.RaggedTensor,
+    ) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
+        """Group matched connections into full instances for a batch.
 
         Args:
-            pafs: Single frame PAFs of shape `(height, width, n_edges*2)`
-            flat_peaks: All detected peaks for the frame of shape `(n_peaks, 2)` with
-                rows as `[x, y]` coordinates in the full image (not PAF coordinates).
-            flat_peak_scores: All detected peak scores for the frame of shape
-                `(n_peaks,)`.
-            flat_channel_inds: Channel (node type) indices for the detected peaks as a
-                `tf.int32` vector of shape `(n_peaks,)`.
+            peaks: The sample-grouped detected peaks in a batch as a `tf.RaggedTensor`
+                of shape `(n_samples, (n_peaks), 2)` and dtype `tf.float32`. These
+                should be `(x, y)` coordinates of each peak in the image scale.
+            peak_vals: The sample-grouped scores of the detected peaks in a batch as a
+                `tf.RaggedTensor` of shape `(n_samples, (n_peaks))` and dtype
+                `tf.float32`.
+            peak_channel_inds: The sample-grouped indices of the channel (node) that
+                each detected peak is associated with as a `tf.RaggedTensor` of shape
+                `(n_samples, (n_peaks))` and dtype `tf.int32`.
+            match_edge_inds: Sample-grouped indices of the skeleton edge that each
+                connection corresponds to as a `tf.RaggedTensor` of shape
+                `(n_samples, (n_connections))` and dtype `tf.int32`. This can be
+                generated by `PAFScorer.match_candidates()`.
+            match_src_peak_inds: Sample-grouped indices of the source peaks that form
+                each connection as a `tf.RaggedTensor` of shape
+                `(n_samples, (n_connections))` and dtype `tf.int32`. Important: These
+                indices correspond to the edge-grouped peaks, not the set of all peaks
+                in each sample. This can be generated by `PAFScorer.match_candidates()`.
+            match_dst_peak_inds: Sample-grouped indices of the destination peaks that
+                form each connection as a `tf.RaggedTensor` of shape
+                `(n_samples, (n_connections))` and dtype `tf.int32`. Important: These
+                indices correspond to the edge-grouped peaks, not the set of all peaks
+                in the sample. This can be generated by `PAFScorer.match_candidates()`.
+            match_line_scores: Sample-grouped PAF line scores of the matched connections
+                as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))` and dtype
+                `tf.float32`. This can be generated by `PAFScorer.match_candidates()`.
 
         Returns:
-            A tuple of `(predicted_instances, predicted_peak_scores,
-            predicted_instance_scores)`.
+            A tuple of arrays with the grouped instances for the whole batch grouped by
+            sample:
 
-            `predicted_instances` are the grouped instances as an array of shape
-            `(n_instances, n_nodes, 2)`.
+            `predicted_instances`: The sample- and instance-grouped coordinates for each
+            instance as `tf.RaggedTensor` of shape
+            `(n_samples, (n_instances), n_nodes, 2)` and dtype `tf.float32`. Missing
+            peaks are represented by `NaN`s.
 
-            `predicted_peak_scores` are the scores for the peaks within each instance as
-            an array of shape `(n_instances, n_nodes)`.
+            `predicted_peak_scores`: The sample- and instance-grouped confidence map
+            values for each peak as an array of `(n_samples, (n_instances), n_nodes)`
+            and dtype `tf.float32`.
 
-            `predicted_instance_scores` are the scores of the instances as the sum of
-            the matched edge scores in an array of shape `(n_instances,)`.
+            `predicted_instance_scores`: The sample-grouped instance grouping score for
+            each instance as an array of shape `(n_samples, (n_instances))` and dtype
+            `tf.float32`.
 
         Notes:
-            This is just a wrapper for jointly scoring, matching and grouping based on
-            `PAFScorer.match_all_peaks()` and `PAFScorer.match_instances()`.
-        """
-        # Match peaks within each edge using PAF scores.
-        (
-            flat_edge_inds,
-            flat_src_peak_inds,
-            flat_dst_peak_inds,
-            flat_line_scores,
-            flat_fraction_correct,
-        ) = self.match_all_peaks(pafs, flat_peaks, flat_channel_inds)
+            This is a convenience wrapper for the standalone `group_instances_batch()`.
 
-        # Given matched peaks, group them into instances.
-        (
-            predicted_instances,
-            predicted_peak_scores,
-            predicted_instance_scores,
-        ) = tf.py_function(
-            self.match_instances,
-            inp=[
-                flat_peaks,
-                flat_peak_scores,
-                flat_channel_inds,
-                flat_edge_inds,
-                flat_src_peak_inds,
-                flat_dst_peak_inds,
-                flat_line_scores,
-                flat_fraction_correct,
-            ],
-            Tout=[tf.float32, tf.float32, tf.float32],
+        See also: PAFScorer.match_candidates, group_instances_batch
+        """
+        return group_instances_batch(
+            peaks,
+            peak_vals,
+            peak_channel_inds,
+            match_edge_inds,
+            match_src_peak_inds,
+            match_dst_peak_inds,
+            match_line_scores,
+            self.n_nodes,
+            self.n_edges,
+            self.edge_types,
+            self.min_instance_peaks,
         )
 
-        return predicted_instances, predicted_peak_scores, predicted_instance_scores
-
-    def group_peaks(self, pafs, peaks, peak_vals, peak_channel_inds):
-        """Group matched peaks for a batch of frames into instances.
+    def predict(
+        self,
+        pafs: tf.Tensor,
+        peaks: tf.RaggedTensor,
+        peak_vals: tf.RaggedTensor,
+        peak_channel_inds: tf.RaggedTensor,
+    ) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
+        """Group a batch of predicted peaks into full instance predictions using PAFs.
 
         Args:
-            pafs: PAFs of shape `(samples, height, width, n_edges*2)`
-            peaks: All detected peaks for all frames as a sample grouped
-                `tf.RaggedTensor` of shape `(samples, (n_instances), 2)` with peaks as
-                `[x, y]` coordinates in the full image (not PAF coordinates).
-            peak_vals: All detected peak scores for all frames as a sample grouped
-                `tf.RaggedTensor` of shape `(samples, (n_instances))`.
-            peak_channel_inds: Channel (node type) indices for the detected peaks as a
-                `tf.int32` type `tf.RaggedTensor` of shape `(samples, (n_instances))`.
+            pafs: The batch of part affinity fields as a `tf.Tensor` of shape
+                `(n_samples, height, width, 2 * n_edges)` and type `tf.float32`.
+            peaks: The coordinates of the peaks grouped by sample as a `tf.RaggedTensor`
+                of shape `(n_samples, (n_peaks), 2)`.
+            peak_vals: The sample-grouped scores of the detected peaks in a batch as a
+                `tf.RaggedTensor` of shape `(n_samples, (n_peaks))` and dtype
+                `tf.float32`.
+            peak_channel_inds: The channel (node) that each peak in `peaks` corresponds
+                to as a `tf.RaggedTensor` of shape `(n_samples, (n_peaks))` and dtype
+                `tf.int32`.
 
         Returns:
-            A tuple of `(predicted_instances, predicted_peak_scores,
-            predicted_instance_scores, sample_inds)`.
+            A tuple of arrays with the grouped instances for the whole batch grouped by
+            sample:
 
-            `predicted_instances` are the grouped instances as an array of shape
-            `(n_instances, n_nodes, 2)`.
+            `predicted_instances`: The sample- and instance-grouped coordinates for each
+            instance as `tf.RaggedTensor` of shape
+            `(n_samples, (n_instances), n_nodes, 2)` and dtype `tf.float32`. Missing
+            peaks are represented by `NaN`s.
 
-            `predicted_peak_scores` are the scores for the peaks within each instance as
-            an array of shape `(n_instances, n_nodes)`.
+            `predicted_peak_scores`: The sample- and instance-grouped confidence map
+            values for each peak as an array of `(n_samples, (n_instances), n_nodes)`
+            and dtype `tf.float32`.
 
-            `predicted_instance_scores` are the scores of the instances as the sum of
-            the matched edge scores in an array of shape `(n_instances,)`.
+            `predicted_instance_scores`: The sample-grouped instance grouping score for
+            each instance as an array of shape `(n_samples, (n_instances))` and dtype
+            `tf.float32`.
 
-            `sample_inds` is a `tf.int32` vector of shape `(n_instances)` indicating the
-            sample that each instance corresponds to. This indexes into the first
-            dimension of the inputs and can be used to group the outputs back into
-            samples.
+        Notes:
+            This is a high level API for grouping peaks into instances using PAFs. 
+
+            See the `PAFScorer` class documentation for more details on the algorithm.
+
+        See also:
+            PAFScorer.score_paf_lines, PAFScorer.match_candidates,
+            PAFScorer.group_instances
         """
-        samples = tf.shape(pafs)[0]
-        predicted_instances = tf.TensorArray(
-            dtype=tf.float32,
-            size=samples,
-            dynamic_size=True,
-            element_shape=tf.TensorShape([None, self.n_nodes, 2]),
-            infer_shape=False,
+        edge_inds, edge_peak_inds, line_scores = self.score_paf_lines(
+            pafs, peaks, peak_channel_inds
         )
-        predicted_peak_scores = tf.TensorArray(
-            dtype=tf.float32,
-            size=samples,
-            dynamic_size=True,
-            element_shape=tf.TensorShape([None, self.n_nodes]),
-            infer_shape=False,
-        )
-        predicted_instance_scores = tf.TensorArray(
-            dtype=tf.float32,
-            size=samples,
-            dynamic_size=True,
-            element_shape=tf.TensorShape([None]),
-            infer_shape=False,
-        )
-        sample_inds = tf.TensorArray(
-            dtype=tf.int32,
-            size=samples,
-            dynamic_size=True,
-            element_shape=tf.TensorShape([None]),
-            infer_shape=False,
-        )
-        for i in range(samples):
-            pafs_i = tf.gather(pafs, i, axis=0)
-            peaks_i = tf.gather(peaks, i, axis=0)
-            peak_vals_i = tf.gather(peak_vals, i, axis=0)
-            peak_channel_inds_i = tf.gather(peak_channel_inds, i, axis=0)
-            (
-                predicted_instances_i,
-                predicted_peak_scores_i,
-                predicted_instance_scores_i,
-            ) = self.match_with_pafs(pafs_i, peaks_i, peak_vals_i, peak_channel_inds_i)
-            predicted_instances = predicted_instances.write(i, predicted_instances_i)
-            predicted_peak_scores = predicted_peak_scores.write(
-                i, predicted_peak_scores_i
-            )
-            predicted_instance_scores = predicted_instance_scores.write(
-                i, predicted_instance_scores_i
-            )
-            sample_inds = sample_inds.write(
-                i, tf.fill([tf.shape(predicted_instances_i)[0]], i)
-            )
-        predicted_instances = predicted_instances.concat()
-        predicted_peak_scores = predicted_peak_scores.concat()
-        predicted_instance_scores = predicted_instance_scores.concat()
-        sample_inds = sample_inds.concat()
-        return (
+        (
+            match_edge_inds,
+            match_src_peak_inds,
+            match_dst_peak_inds,
+            match_line_scores,
+        ) = self.match_candidates(edge_inds, edge_peak_inds, line_scores)
+        (
             predicted_instances,
             predicted_peak_scores,
             predicted_instance_scores,
-            sample_inds,
+        ) = self.group_instances(
+            peaks,
+            peak_vals,
+            peak_channel_inds,
+            match_edge_inds,
+            match_src_peak_inds,
+            match_dst_peak_inds,
+            match_line_scores,
         )
-
-
-@attr.s(auto_attribs=True)
-class PartAffinityFieldInstanceGrouper:
-    paf_scorer: PAFScorer
-
-    peaks_key: Text = "predicted_peaks"
-    peak_scores_key: Text = "predicted_peak_confidences"
-    channel_inds_key: Text = "predicted_peak_channel_inds"
-    pafs_key: Text = "predicted_part_affinity_fields"
-
-    predicted_instances_key: Text = "predicted_instances"
-    predicted_peak_scores_key: Text = "predicted_peak_scores"
-    predicted_instance_scores_key: Text = "predicted_instance_scores"
-
-    keep_pafs: bool = False
-
-    @classmethod
-    def from_config(
-        cls,
-        config: MultiInstanceConfig,
-        max_edge_length: float = 128,
-        min_edge_score: float = 0.05,
-        n_points: int = 10,
-        min_instance_peaks: Union[int, float] = 0,
-        peaks_key: Text = "predicted_peaks",
-        peak_scores_key: Text = "predicted_peak_confidences",
-        channel_inds_key: Text = "predicted_peak_channel_inds",
-        pafs_key: Text = "predicted_part_affinity_fields",
-        predicted_instances_key: Text = "predicted_instances",
-        predicted_peak_scores_key: Text = "predicted_peak_scores",
-        predicted_instance_scores_key: Text = "predicted_instance_scores",
-        keep_pafs: bool = False,
-    ) -> "PartAffinityFieldInstanceGrouper":
-        return cls(
-            paf_scorer=PAFScorer.from_config(
-                config,
-                max_edge_length=max_edge_length,
-                min_edge_score=min_edge_score,
-                n_points=n_points,
-                min_instance_peaks=min_instance_peaks,
-            ),
-            peaks_key=peaks_key,
-            peak_scores_key=peak_scores_key,
-            channel_inds_key=channel_inds_key,
-            pafs_key=pafs_key,
-            predicted_instances_key=predicted_instances_key,
-            predicted_peak_scores_key=predicted_peak_scores_key,
-            predicted_instance_scores_key=predicted_instance_scores_key,
-            keep_pafs=keep_pafs,
-        )
-
-    @property
-    def input_keys(self) -> List[Text]:
-        return [
-            self.peaks_key,
-            self.peak_scores_key,
-            self.channel_inds_key,
-            self.pafs_key,
-        ]
-
-    @property
-    def output_keys(self) -> List[Text]:
-        return self.input_keys + [
-            self.predicted_instances_key,
-            self.predicted_peak_scores_key,
-            self.predicted_instance_scores_key,
-        ]
-
-    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
-        def group_instances(example):
-            # Pull out example data.
-            pafs = example[self.pafs_key]
-            flat_peaks = example[self.peaks_key]
-            flat_peak_scores = example[self.peak_scores_key]
-            flat_channel_inds = example[self.channel_inds_key]
-
-            # Run matching.
-            (
-                predicted_instances,
-                predicted_peak_scores,
-                predicted_instance_scores,
-            ) = self.paf_scorer.match_with_pafs(
-                pafs, flat_peaks, flat_peak_scores, flat_channel_inds
-            )
-
-            # Update example.
-            example[self.predicted_instances_key] = predicted_instances
-            example[self.predicted_peak_scores_key] = predicted_peak_scores
-            example[self.predicted_instance_scores_key] = predicted_instance_scores
-
-            if not self.keep_pafs:
-                # Drop PAFs.
-                example.pop(self.pafs_key)
-
-            return example
-
-        output_ds = input_ds.map(
-            group_instances, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
-        return output_ds
+        return predicted_instances, predicted_peak_scores, predicted_instance_scores

@@ -38,7 +38,7 @@ from sleap.nn.data.pipelines import (
     KeyRenamer,
     KeyDeviceMover,
     PredictedCenterInstanceNormalizer,
-    PartAffinityFieldInstanceGrouper,
+    # PartAffinityFieldInstanceGrouper,
     PointsRescaler,
 )
 
@@ -1426,30 +1426,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         self.return_confmaps = return_confmaps
         self.return_pafs = return_pafs
 
-    def call(self, data):
-        """Predict instances for one batch of images.
-
-        Args:
-            example: This may be either a single batch of images as a 4-D tensor of
-                shape `(batch_size, height, width, channels)`, or a dictionary
-                containing the image batch in the `"images"` key.
-
-        Returns:
-            The predicted instances as a dictionary of tensors with keys:
-
-            `"instance_peaks": (batch_size, n_instances, n_nodes, 2)`: Instance skeleton
-                points.
-            `"instance_peak_vals": (batch_size, n_instances, n_nodes)`: Confidence
-                values for the instance skeleton points.
-            `"instance_scores": (batch_size, n_instances)`: PAF matching score for each
-                instance.
-
-            If `BottomUpInferenceLayer.return_confmaps` is `True`, the predicted
-            confidence maps will be returned in the `"confmaps"` key.
-
-            If `BottomUpInferenceLayer.return_pafs` is `True`, the predicted PAFs will
-            be returned in the `"part_affinity_fields"` key.
-        """
+    def forward_pass(self, data):
         if isinstance(data, dict):
             imgs = data["image"]
         else:
@@ -1466,6 +1443,9 @@ class BottomUpInferenceLayer(InferenceLayer):
         if isinstance(pafs, list):
             pafs = pafs[-1]
 
+        return cms, pafs
+
+    def find_peaks(self, cms):
         # Find local peaks.
         (
             peaks,
@@ -1483,48 +1463,65 @@ class BottomUpInferenceLayer(InferenceLayer):
         peaks = peaks * tf.cast(self.cm_output_stride, tf.float32)
 
         # Group peaks by sample.
-        samples = tf.shape(pafs)[0]
+        n_samples = tf.shape(cms)[0]
         peaks = tf.RaggedTensor.from_value_rowids(
-            peaks, peak_sample_inds, nrows=samples
+            peaks, peak_sample_inds, nrows=n_samples
         )
         peak_vals = tf.RaggedTensor.from_value_rowids(
-            peak_vals, peak_sample_inds, nrows=samples
+            peak_vals, peak_sample_inds, nrows=n_samples
         )
         peak_channel_inds = tf.RaggedTensor.from_value_rowids(
-            peak_channel_inds, peak_sample_inds, nrows=samples
+            peak_channel_inds, peak_sample_inds, nrows=n_samples
         )
 
-        # Group peaks into instances via PAF scoring.
+        return peaks, peak_vals, peak_channel_inds
+
+    def call(self, data):
+        """Predict instances for one batch of images.
+
+        Args:
+            data: This may be either a single batch of images as a 4-D tensor of shape
+            `(batch_size, height, width, channels)`, or a dictionary containing the
+            image batch in the `"images"` key.
+
+        Returns:
+            The predicted instances as a dictionary of tensors with keys:
+
+            `"instance_peaks": (batch_size, n_instances, n_nodes, 2)`: Instance skeleton
+            points.
+
+            `"instance_peak_vals": (batch_size, n_instances, n_nodes)`: Confidence
+            values for the instance skeleton points.
+
+            `"instance_scores": (batch_size, n_instances)`: PAF matching score for each
+            instance.
+
+            If `BottomUpInferenceLayer.return_confmaps` is `True`, the predicted
+            confidence maps will be returned in the `"confmaps"` key.
+
+            If `BottomUpInferenceLayer.return_pafs` is `True`, the predicted PAFs will
+            be returned in the `"part_affinity_fields"` key.
+        """
+        cms, pafs = self.forward_pass(data)
+        peaks, peak_vals, peak_channel_inds = self.find_peaks(cms)
         (
-            instance_peaks,
-            instance_peak_vals,
-            instance_scores,
-            instance_sample_inds,
-        ) = self.paf_scorer.group_peaks(pafs, peaks, peak_vals, peak_channel_inds)
+            predicted_instances,
+            predicted_peak_scores,
+            predicted_instance_scores,
+        ) = self.paf_scorer.predict(pafs, peaks, peak_vals, peak_channel_inds)
 
         # Adjust for input scaling.
         if self.input_scale != 1.0:
             # Note: We add 0.5 here to offset TensorFlow's weird image resizing. This
             # may not always(?) be the most correct approach.
             # See: https://github.com/tensorflow/tensorflow/issues/6720
-            instance_peaks = (instance_peaks / self.input_scale) + 0.5
-
-        # Group instances by sample.
-        instance_peaks = tf.RaggedTensor.from_value_rowids(
-            instance_peaks, instance_sample_inds, nrows=samples
-        )
-        instance_peak_vals = tf.RaggedTensor.from_value_rowids(
-            instance_peak_vals, instance_sample_inds, nrows=samples
-        )
-        instance_scores = tf.RaggedTensor.from_value_rowids(
-            instance_scores, instance_sample_inds, nrows=samples
-        )
+            predicted_instances = (predicted_instances / self.input_scale) + 0.5
 
         # Build outputs and return.
         out = {
-            "instance_peaks": instance_peaks,
-            "instance_peak_vals": instance_peak_vals,
-            "instance_scores": instance_scores,
+            "instance_peaks": predicted_instances,
+            "instance_peak_vals": predicted_peak_scores,
+            "instance_scores": predicted_instance_scores,
         }
         if self.return_confmaps:
             out["confmaps"] = cms
@@ -1548,6 +1545,10 @@ class BottomUpInferenceModel(InferenceModel):
     def __init__(self, bottomup_layer, **kwargs):
         super().__init__(**kwargs)
         self.bottomup_layer = bottomup_layer
+
+    @property
+    def inference_layer(self):
+        return self.bottomup_layer
 
     def call(self, example):
         """Predict instances for one batch of images.
@@ -1589,6 +1590,8 @@ class BottomupPredictor(Predictor):
     batch_size: int = 4
     integral_refinement: bool = False
     integral_patch_size: int = 5
+    max_edge_length_ratio: float = 0.5
+    paf_line_points: int = 10
 
     def _initialize_inference_model(self):
         self.inference_model = BottomUpInferenceModel(
@@ -1596,9 +1599,8 @@ class BottomupPredictor(Predictor):
                 keras_model=self.bottomup_model.keras_model,
                 paf_scorer=PAFScorer.from_config(
                     self.bottomup_config.model.heads.multi_instance,
-                    max_edge_length=128,
-                    min_edge_score=0.05,
-                    n_points=10,
+                    max_edge_length_ratio=self.max_edge_length_ratio,
+                    n_points=self.paf_line_points,
                     min_instance_peaks=0,
                 ),
                 input_scale=self.bottomup_config.data.preprocessing.input_scaling,
