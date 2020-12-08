@@ -42,7 +42,7 @@ from sleap.nn.data.dataset_ops import (
     LambdaFilter,
 )
 from sleap.nn.data.training import KeyMapper
-from sleap.nn.data.general import KeyFilter, KeyRenamer, KeyDeviceMover
+from sleap.nn.data.general import KeyFilter, KeyRenamer, KeyDeviceMover, LambdaMap
 from sleap.nn.data.inference import (
     KerasModelPredictor,
     GlobalPeakFinder,
@@ -92,6 +92,7 @@ TRANSFORMERS = (
     KeyRenamer,
     KeyDeviceMover,
     PointsRescaler,
+    LambdaMap,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)

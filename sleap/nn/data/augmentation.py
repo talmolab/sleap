@@ -39,7 +39,12 @@ class ImgaugAugmenter:
     instances_key: str = "instances"
 
     @classmethod
-    def from_config(cls, config: AugmentationConfig, image_key: Text = "image", instances_key: Text = "instances") -> "ImgaugAugmenter":
+    def from_config(
+        cls,
+        config: AugmentationConfig,
+        image_key: Text = "image",
+        instances_key: Text = "instances",
+    ) -> "ImgaugAugmenter":
         """Create an augmenter from a set of configuration parameters.
 
         Args:
@@ -94,7 +99,11 @@ class ImgaugAugmenter:
                 iaa.Add(value=(config.brightness_min_val, config.brightness_max_val))
             )
 
-        return cls(augmenter=iaa.Sequential(aug_stack), image_key=image_key, instances_key=instances_key)
+        return cls(
+            augmenter=iaa.Sequential(aug_stack),
+            image_key=image_key,
+            instances_key=instances_key,
+        )
 
     @property
     def input_keys(self) -> List[Text]:
@@ -182,6 +191,7 @@ class RandomCropper:
         crop_height: The height of the cropped region in pixels.
         crop_width: The width of the cropped region in pixels.
     """
+
     crop_height: int = 256
     crop_width: int = 256
 
@@ -207,6 +217,7 @@ class RandomCropper:
             Additionally, the `"crop_bbox"` key will contain the bounding box of the
             crop in the form `[y1, x1, y2, x2]`.
         """
+
         def random_crop(ex):
             """Apply random crop to an example."""
             # Generate random value for the top-left of the crop.

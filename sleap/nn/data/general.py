@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 import attr
-from typing import List, Text
+from typing import List, Text, Dict, Callable
 
 
 @attr.s(auto_attribs=True)
@@ -108,6 +108,43 @@ class KeyDeviceMover:
         # Map the main processing function to each example.
         output_ds = input_ds.map(
             move_keys, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+
+        return output_ds
+
+
+@attr.s(auto_attribs=True)
+class LambdaMap:
+    """Transformer for mapping an arbitrary function to the dataset.
+
+    Attributes:
+        func: A callable of the form `func(example) -> example`, where the input and
+            output are each a dictionary of tensors.
+        input_key_names: List of input key names that the function expects to find in
+            the example.
+        output_key_names: List of output key names that the function will return.
+    """
+
+    func: Callable[[Dict[str, tf.Tensor]], Dict[str, tf.Tensor]]
+    input_key_names: List[Text] = attr.ib(factory=list)
+    output_key_names: List[Text] = attr.ib(factory=list)
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return self.input_key_names
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return self.output_key_names
+
+    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains transformed data."""
+
+        # Map the main processing function to each example.
+        output_ds = input_ds.map(
+            self.func, num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
 
         return output_ds
