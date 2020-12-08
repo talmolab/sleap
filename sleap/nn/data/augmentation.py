@@ -28,19 +28,30 @@ class ImgaugAugmenter:
     Attributes:
         augmenter: An instance of `imgaug.augmenters.Sequential` that will be applied to
             each element of the input dataset.
+        image_key: Name of the example key where the image is stored. Defaults to
+            "image".
+        instances_key: Name of the example key where the instance points are stored.
+            Defaults to "instances".
     """
 
     augmenter: iaa.Sequential
+    image_key: str = "image"
+    instances_key: str = "instances"
 
     @classmethod
-    def from_config(cls, config: AugmentationConfig) -> "ImgaugAugmenter":
+    def from_config(cls, config: AugmentationConfig, image_key: Text = "image", instances_key: Text = "instances") -> "ImgaugAugmenter":
         """Create an augmenter from a set of configuration parameters.
 
         Args:
             config: An `AugmentationConfig` instance with the desired parameters.
+            image_key: Name of the example key where the image is stored. Defaults to
+                "image".
+            instances_key: Name of the example key where the instance points are stored.
+                Defaults to "instances".
 
         Returns:
-            An instance of this class with the specified augmentation configuration.
+            An instance of `ImgaugAugmenter` with the specified augmentation
+            configuration.
         """
         aug_stack = []
         if config.rotate:
@@ -83,12 +94,12 @@ class ImgaugAugmenter:
                 iaa.Add(value=(config.brightness_min_val, config.brightness_max_val))
             )
 
-        return cls(augmenter=iaa.Sequential(aug_stack))
+        return cls(augmenter=iaa.Sequential(aug_stack), image_key=image_key, instances_key=instances_key)
 
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return ["image", "instances"]
+        return [self.image_key, self.instances_key]
 
     @property
     def output_keys(self) -> List[Text]:
@@ -168,8 +179,8 @@ class RandomCropper:
     applied.
 
     Attributes:
-        augmenter: An instance of `imgaug.augmenters.Sequential` that will be applied to
-            each element of the input dataset.
+        crop_height: The height of the cropped region in pixels.
+        crop_width: The width of the cropped region in pixels.
     """
     crop_height: int = 256
     crop_width: int = 256
