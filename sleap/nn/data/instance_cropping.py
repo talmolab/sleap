@@ -386,7 +386,7 @@ class InstanceCropper:
             # Expand the instance points to (n_instances, n_instances, n_nodes, 2).
             n_instances = tf.shape(bboxes)[0]
             all_instances = tf.repeat(
-                tf.expand_dims(frame_data[self.instance_keys], axis=0),
+                tf.expand_dims(frame_data[self.instances_key], axis=0),
                 n_instances,
                 axis=0,
             )
