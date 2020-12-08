@@ -3,14 +3,14 @@
 name: Build
 
 on:
-  push:
-    branches:
-      - tf23
-      - develop
+  # push:
+  #   branches:
+  #     - tf23
+  #     - develop
 
-  # release:
-  #   types:
-  #     - published
+  release:
+    types:
+      - published
 
 jobs:
   build:
