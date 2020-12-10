@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.io.dataset &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -202,6 +202,12 @@ and value is list of <code class="xref py py-class docutils literal notranslate"
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.io.dataset.Labels.describe">
+<code class="sig-name descname">describe</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.describe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print basic statistics about the labels dataset.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.io.dataset.Labels.extend_from">
 <code class="sig-name descname">extend_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_frames</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">Labels</a><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">unify</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.extend_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.extend_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge data from another <cite>Labels</cite> object or <cite>LabeledFrame</cite> list.</p>
@@ -384,6 +390,35 @@ Defaults to the first frame of video.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.io.dataset.Labels.has_frame">
+<code class="sig-name descname">has_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lf</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_cache</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.has_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.has_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the labels contain a specified frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lf</strong> – <cite>LabeledFrame</cite> to search for. If not provided, the <cite>video</cite> and
+<cite>frame_idx</cite> must not be <cite>None</cite>.</p></li>
+<li><p><strong>video</strong> – <cite>Video</cite> of the frame. Not necessary if <cite>lf</cite> is given.</p></li>
+<li><p><strong>frame_idx</strong> – Integer frame index of the frame. Not necessary if <cite>lf</cite> is given.</p></li>
+<li><p><strong>use_cache</strong> – If <cite>True</cite> (the default), use label lookup cache for faster
+searching. If <cite>False</cite>, check every frame without the cache.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A <cite>bool</cite> indicating whether the specified <cite>LabeledFrame</cite> is contained in the
+labels.</p>
+<p>This will return <cite>True</cite> if there is a matching frame with the same video and
+frame index, even if they contain different instances.</p>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The <cite>Video</cite> instance must be the same as the ones in these labels, so if
+comparing to <cite>Video`s loaded from another file, be sure to load those labels
+with matching, i.e.: `sleap.Labels.load_file(…, match_to=labels)</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.io.dataset.Labels.has_missing_videos">
 <em class="property">property </em><code class="sig-name descname">has_missing_videos</code><a class="headerlink" href="#sleap.io.dataset.Labels.has_missing_videos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return True if any of the video files in the labels are missing.</p>
@@ -485,9 +520,77 @@ we’ll automatically try to find the missing videos.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.io.dataset.Labels.remove_frame">
+<code class="sig-name descname">remove_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lf</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">update_cache</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a given labeled frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lf</strong> – Labeled frame instance to remove.</p></li>
+<li><p><strong>update_cache</strong> – If True, update the internal frame cache. If False, cache
+update can be postponed (useful when removing many frames).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.dataset.Labels.remove_frames">
+<code class="sig-name descname">remove_frames</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lfs</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a list of frames from the labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lfs</strong> – A sequence of labeled frames to remove.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.io.dataset.Labels.remove_instance">
 <code class="sig-name descname">remove_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">in_transaction</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove instance from frame, updating track occupancy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.dataset.Labels.remove_predictions">
+<code class="sig-name descname">remove_predictions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_labels</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">Labels</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove_predictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_predictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear predicted instances from the labels.</p>
+<p>Useful prior to merging operations to prevent overlapping instances from new
+predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_labels</strong> – If not <cite>None</cite>, only predicted instances in frames that also
+contain predictions in the new labels will be removed. If not provided
+(the default), all predicted instances will be removed.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If providing <cite>new_labels</cite>, it must have been loaded using
+<cite>sleap.Labels.load_file(…, match_to=labels)</cite> to ensure that conflicting
+frames can be detected.</p>
+<p>Labeled frames without any instances after clearing will also be removed
+from the dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.dataset.Labels.remove_user_instances">
+<code class="sig-name descname">remove_user_instances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_labels</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">Labels</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.remove_user_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.remove_user_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear user instances from the labels.</p>
+<p>Useful prior to merging operations to prevent overlapping instances from new
+labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_labels</strong> – If not <cite>None</cite>, only user instances in frames that also contain
+user instances in the new labels will be removed. If not provided
+(the default), all user instances will be removed.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If providing <cite>new_labels</cite>, it must have been loaded using
+<cite>sleap.Labels.load_file(…, match_to=labels)</cite> to ensure that conflicting
+frames can be detected.</p>
+<p>Labeled frames without any instances after clearing will also be removed
+from the dataset.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -503,16 +606,23 @@ we’ll automatically try to find the missing videos.</p>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.save">
-<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">with_images</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">with_images</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">embed_all_labeled</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">embed_suggested</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the labels to a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – Path to save the labels to ending in <cite>.slp</cite>. If the filename does
 not end in <cite>.slp</cite>, the extension will be automatically appended.</p></li>
-<li><p><strong>with_images</strong> – If True, the image data for frames with labels will be embedded
-in the saved labels. This is useful for generating a single file to be
-used when training remotely.</p></li>
+<li><p><strong>with_images</strong> – If <cite>True</cite>, the image data for frames with labels will be
+embedded in the saved labels. This is useful for generating a single
+file to be used when training remotely. Defaults to <cite>False</cite>.</p></li>
+<li><p><strong>embed_all_labeled</strong> – If <cite>True</cite>, save image data for labeled frames without
+user-labeled instances (defaults to <cite>False</cite>). This is useful for
+selecting arbitrary frames to save by adding empty <a href="#id1"><span class="problematic" id="id2">`</span></a>LabeledFrame`s to
+the dataset. Labeled frame metadata will be saved regardless.</p></li>
+<li><p><strong>embed_suggested</strong> – If <cite>True</cite>, save image data for frames in the suggestions
+(defaults to <cite>False</cite>). Useful for predicting on remaining suggestions
+after training. Suggestions metadata will be saved regardless.</p></li>
 </ul>
 </dd>
 </dl>
@@ -543,7 +653,7 @@ format). Doesn’t need to have “.” before file extension.</p></li>
 
 <dl class="py method">
 <dt id="sleap.io.dataset.Labels.save_frame_data_hdf5">
-<code class="sig-name descname">save_frame_data_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">all_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.HDF5Video" title="sleap.io.video.HDF5Video">sleap.io.video.HDF5Video</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save_frame_data_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_hdf5" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_frame_data_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">user_labeled</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">all_labeled</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">suggested</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.HDF5Video" title="sleap.io.video.HDF5Video">sleap.io.video.HDF5Video</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/io/dataset.html#Labels.save_frame_data_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.dataset.Labels.save_frame_data_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write images for labeled frames from all videos to hdf5 file.</p>
 <p>Note that this will make an HDF5 video, not an HDF5 labels dataset.</p>
 <dl class="field-list simple">
@@ -551,8 +661,13 @@ format). Doesn’t need to have “.” before file extension.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>output_path</strong> – Path to HDF5 file.</p></li>
 <li><p><strong>format</strong> – The image format to use for the data. Defaults to png.</p></li>
-<li><p><strong>all_labels</strong> – Include any labeled frames, not just the frames
-we’ll use for training (i.e., those with Instances).</p></li>
+<li><p><strong>user_labeled</strong> – Include labeled frames with user instances. Defaults to
+<cite>True</cite>.</p></li>
+<li><p><strong>all_labeled</strong> – Include all labeled frames, including those with user-labeled
+instances, predicted instances or labeled frames with no instances.
+Defaults to <cite>False</cite>.</p></li>
+<li><p><strong>suggested</strong> – Include suggested frames even if they do not have instances.
+Useful for inference after training. Defaults to <cite>False</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -860,6 +975,7 @@ example, when only the predicted instances or user labels are required.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -1004,7 +1120,7 @@ example, when only the predicted instances or user labels are required.</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

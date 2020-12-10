@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.io.format.labels_json &#8212; SLEAP  documentation</title>
+    <title>sleap.gui.release_checker &#8212; SLEAP  documentation</title>
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -15,8 +15,8 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.io.format.leap_matlab" href="sleap.io.format.leap_matlab.html" />
-    <link rel="prev" title="sleap.io.format.hdf5" href="sleap.io.format.hdf5.html" />
+    <link rel="next" title="sleap.gui.shortcuts" href="sleap.gui.shortcuts.html" />
+    <link rel="prev" title="sleap.gui.dataviews" href="sleap.gui.dataviews.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -33,142 +33,93 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-sleap.io.format.labels_json">
-<span id="sleap-io-format-labels-json"></span><h1>sleap.io.format.labels_json<a class="headerlink" href="#module-sleap.io.format.labels_json" title="Permalink to this headline">¶</a></h1>
-<p>Adaptor for reading/writing old, JSON dataset format (kind of deprecated).</p>
-<p>This supports reading and writing both <cite>.json</cite> and <cite>.json.zip</cite>. The zip allows
-you to include image files, in imgstore videos. A better option now is to save
-a single HDF5 file which include both the SLEAP dataset (i.e., <cite>Labels</cite>) and
-also the videos/frames as HDF5 datasets.</p>
+  <div class="section" id="module-sleap.gui.release_checker">
+<span id="sleap-gui-release-checker"></span><h1>sleap.gui.release_checker<a class="headerlink" href="#module-sleap.gui.release_checker" title="Permalink to this headline">¶</a></h1>
+<p>Module for checking for new releases on GitHub.</p>
 <dl class="py class">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.labels_json.</code><code class="sig-name descname">LabelsJsonAdaptor</code><a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.all_exts">
-<em class="property">property </em><code class="sig-name descname">all_exts</code><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.all_exts" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of all file extensions supported by adaptor.</p>
+<dt id="sleap.gui.release_checker.ReleaseChecker">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.release_checker.</code><code class="sig-name descname">ReleaseChecker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">repo_id</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'murthylab/sleap'</span></em>, <em class="sig-param"><span class="n">releases</span><span class="o">=</span><span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/release_checker.html#ReleaseChecker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checker for new releases of SLEAP on GitHub.</p>
+<p>This uses the GitHub REST API:
+<a class="reference external" href="https://docs.github.com/en/free-pro-team&#64;latest/rest/reference/repos#releases">https://docs.github.com/en/free-pro-team&#64;latest/rest/reference/repos#releases</a></p>
+<dl class="py attribute">
+<dt id="sleap.gui.release_checker.ReleaseChecker.repo_id">
+<code class="sig-name descname">repo_id</code><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.repo_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the repository (defaults to: “murthylab/sleap”)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.release_checker.ReleaseChecker.releases">
+<code class="sig-name descname">releases</code><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.releases" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of <a href="#id1"><span class="problematic" id="id2">`</span></a>Release`s from querying GitHub.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.release_checker.ReleaseChecker.checked">
+<code class="sig-name descname">checked</code><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.checked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the releases page has been checked.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.can_read_file">
-<code class="sig-name descname">can_read_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle">sleap.io.format.filehandle.FileHandle</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor.can_read_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns whether this adaptor can read this file.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.can_write_filename">
-<code class="sig-name descname">can_write_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor.can_write_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns whether this adaptor can write format of this filename.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.default_ext">
-<em class="property">property </em><code class="sig-name descname">default_ext</code><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.default_ext" title="Permalink to this definition">¶</a></dt>
-<dd><p>The default file extension, e.g., ‘json’ (without ‘.’).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.does_read">
-<code class="sig-name descname">does_read</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor.does_read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.does_read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns whether this adaptor supports reading.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.does_write">
-<code class="sig-name descname">does_write</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor.does_write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.does_write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns whether this adaptor supports writing.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.from_json_data">
-<em class="property">classmethod </em><code class="sig-name descname">from_json_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>dict<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">match_to</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Labels<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor.from_json_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.from_json_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create instance of class from data in dictionary.</p>
-<p>Method is used by other methods that load from JSON.</p>
+<dt id="sleap.gui.release_checker.ReleaseChecker.check_for_releases">
+<code class="sig-name descname">check_for_releases</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/release_checker.html#ReleaseChecker.check_for_releases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.check_for_releases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check online for new releases.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Dictionary, deserialized from JSON.</p></li>
-<li><p><strong>match_to</strong> – If given, we’ll replace particular objects in the
-data dictionary with <em>matching</em> objects in the match_to
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> object. This ensures that the newly
-instantiated <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> can be merged without
-duplicate matching objects (e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> objects ).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A new <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> object.</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><cite>True</cite> if new releases were found, or <cite>False</cite> if no new releases or was not
+able to connect to the web.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.handles">
-<em class="property">property </em><code class="sig-name descname">handles</code><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.handles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the type of object that can be read/written.</p>
-<p>The Dispatch class calls this method on all registered adaptors to
-determine which to use for reading/writing.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.name">
-<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Human-reading name of the file format</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.read">
-<em class="property">classmethod </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle">sleap.io.format.filehandle.FileHandle</a></span></em>, <em class="sig-param"><span class="n">video_search</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>Callable<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">match_to</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads the file and returns the appropriate deserialized object.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.io.format.labels_json.LabelsJsonAdaptor.write">
-<em class="property">classmethod </em><code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">source_object</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">compress</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_frame_data</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">frame_data_format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'png'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/format/labels_json.html#LabelsJsonAdaptor.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.labels_json.LabelsJsonAdaptor.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save a Labels instance to a JSON format.</p>
+<dt id="sleap.gui.release_checker.ReleaseChecker.get_release">
+<code class="sig-name descname">get_release</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">version</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; sleap.gui.release_checker.Release<a class="reference internal" href="../_modules/sleap/gui/release_checker.html#ReleaseChecker.get_release"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.get_release" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a release by version tag string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – The filename to save the data to.</p></li>
-<li><p><strong>source_object</strong> – The labels dataset to save.</p></li>
-<li><p><strong>compress</strong> – Whether the data be zip compressed or not? If True,
-the JSON will be compressed using Python’s shutil.make_archive
-command into a PKZIP zip file. If compress is True then
-filename will have a .zip appended to it.</p></li>
-<li><p><strong>save_frame_data</strong> – Whether to save the image data for each frame.
-For each video in the dataset, all frames that have labels
-will be stored as an imgstore dataset.
-If save_frame_data is True then compress will be forced to True
-since the archive must contain both the JSON data and image
-data stored in ImgStores.</p></li>
-<li><p><strong>frame_data_format</strong> – <p>If save_frame_data is True, then this argument
-is used to set the data format to use when writing frame
-data to ImgStore objects. Supported formats should be:</p>
-<blockquote>
-<div><ul>
-<li><p>’pgm’,</p></li>
-<li><p>’bmp’,</p></li>
-<li><p>’ppm’,</p></li>
-<li><p>’tif’,</p></li>
-<li><p>’png’,</p></li>
-<li><p>’jpg’,</p></li>
-<li><p>’npy’,</p></li>
-<li><p>’mjpeg/avi’,</p></li>
-<li><p>’h264/mkv’,</p></li>
-<li><p>’avc1/mp4’</p></li>
-</ul>
-<p>Note: ‘h264/mkv’ and ‘avc1/mp4’ require separate installation
-of these codecs on your system. They are excluded from SLEAP
-because of their GPL license.</p>
-</div></blockquote>
-</p></li>
-</ul>
+<dd class="field-odd"><p><strong>version</strong> – Release version tag (e.g., “v1.0.9”)</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p>The <cite>Release</cite> object with the associated version number.</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="sleap.gui.release_checker.ReleaseChecker.latest_prerelease">
+<em class="property">property </em><code class="sig-name descname">latest_prerelease</code><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.latest_prerelease" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return latest prerelease.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.release_checker.ReleaseChecker.latest_release">
+<em class="property">property </em><code class="sig-name descname">latest_release</code><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.latest_release" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return latest release.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.release_checker.ReleaseChecker.latest_stable">
+<em class="property">property </em><code class="sig-name descname">latest_stable</code><a class="headerlink" href="#sleap.gui.release_checker.ReleaseChecker.latest_stable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return latest stable release.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.gui.release_checker.filter_test_releases">
+<code class="sig-prename descclassname">sleap.gui.release_checker.</code><code class="sig-name descname">filter_test_releases</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">releases</span><span class="p">:</span> <span class="n">List<span class="p">[</span>sleap.gui.release_checker.Release<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>sleap.gui.release_checker.Release<span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/release_checker.html#filter_test_releases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.release_checker.filter_test_releases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter test releases out of a list of <a href="#id3"><span class="problematic" id="id4">`</span></a>Release`s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>releases</strong> – A list of <a href="#id5"><span class="problematic" id="id6">`</span></a>Release`s.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The filtered list of <cite>Release`s. Any `Release</cite> that has a description
+containing the string <cite>“Do not use this release. This is a test.”</cite> will be
+excluded.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -208,7 +159,7 @@ because of their GPL license.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -262,7 +213,7 @@ because of their GPL license.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
@@ -321,8 +272,8 @@ because of their GPL license.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api.html">Developer API</a><ul>
-      <li>Previous: <a href="sleap.io.format.hdf5.html" title="previous chapter">sleap.io.format.hdf5</a></li>
-      <li>Next: <a href="sleap.io.format.leap_matlab.html" title="next chapter">sleap.io.format.leap_matlab</a></li>
+      <li>Previous: <a href="sleap.gui.dataviews.html" title="previous chapter">sleap.gui.dataviews</a></li>
+      <li>Next: <a href="sleap.gui.shortcuts.html" title="next chapter">sleap.gui.shortcuts</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -357,7 +308,7 @@ because of their GPL license.</p>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/_autosummary/sleap.io.format.labels_json.rst.txt"
+      <a href="../_sources/_autosummary/sleap.gui.release_checker.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

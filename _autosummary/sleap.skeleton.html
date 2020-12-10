@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.skeleton &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -476,7 +476,7 @@ specified, the resulting skeleton will have no edges.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>file</strong> – The file name or open h5.File</p></li>
+<li><p><strong>file</strong> – The file name or open h5py.File</p></li>
 <li><p><strong>return_dict</strong> – Whether the the return value should be a dict
 where the keys are skeleton names and values the
 corresponding skeleton. If False, then method will
@@ -497,7 +497,7 @@ Either in List or Dict form.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>file</strong> – The file name or open h5.File</p></li>
+<li><p><strong>file</strong> – The file name or open h5py.File</p></li>
 <li><p><strong>name</strong> – The name of the skeleton.</p></li>
 </ul>
 </dd>
@@ -696,7 +696,7 @@ file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>file</strong> – The filename or the open h5.File object.</p></li>
+<li><p><strong>file</strong> – The filename or the open h5py.File object.</p></li>
 <li><p><strong>skeletons</strong> – The list of skeletons to save.</p></li>
 </ul>
 </dd>
@@ -712,10 +712,10 @@ file.</p>
 <dl class="py method">
 <dt id="sleap.skeleton.Skeleton.save_hdf5">
 <code class="sig-name descname">save_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>h5py._hl.files.File<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/skeleton.html#Skeleton.save_hdf5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for HDF5 saving which takes either filename or h5.File.</p>
+<dd><p>Wrapper for HDF5 saving which takes either filename or h5py.File.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>file</strong> – can be filename (string) or <cite>h5.File</cite> object</p>
+<dd class="field-odd"><p><strong>file</strong> – can be filename (string) or <cite>h5py.File</cite> object</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
@@ -856,6 +856,7 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -1000,7 +1001,7 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

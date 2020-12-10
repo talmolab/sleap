@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.commands &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -209,6 +209,17 @@ execute. Commands will use this to access <cite>MainWindow</cite>,
 </dd></dl>
 
 <dl class="py class">
+<dt id="sleap.gui.commands.CheckForUpdates">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">CheckForUpdates</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#CheckForUpdates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CheckForUpdates" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.CheckForUpdates.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CheckForUpdates.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CheckForUpdates.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="sleap.gui.commands.CommandContext">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">CommandContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.gui.state.html#sleap.gui.state.GuiState" title="sleap.gui.state.GuiState">sleap.gui.state.GuiState</a></span></em>, <em class="sig-param"><span class="n">app</span><span class="p">:</span> <span class="n">MainWindow</span></em>, <em class="sig-param"><span class="n">update_callback</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Callable<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">change_stack</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext" title="Permalink to this definition">¶</a></dt>
 <dd><p>Context within in which commands are executed.</p>
@@ -263,6 +274,12 @@ This function should accept a list of <cite>UpdateTopic</cite> items.</p>
 <dt id="sleap.gui.commands.CommandContext.changestack_savepoint">
 <code class="sig-name descname">changestack_savepoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.changestack_savepoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.changestack_savepoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Marks that project was just saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.checkForUpdates">
+<code class="sig-name descname">checkForUpdates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.checkForUpdates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.checkForUpdates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for updates online.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -350,15 +367,27 @@ This function should accept a list of <cite>UpdateTopic</cite> items.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.commands.CommandContext.exportDatasetWithImages">
-<code class="sig-name descname">exportDatasetWithImages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportDatasetWithImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportDatasetWithImages" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gui for exporting the training dataset of labels/frame images.</p>
+<dt id="sleap.gui.commands.CommandContext.exportFullPackage">
+<code class="sig-name descname">exportFullPackage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportFullPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportFullPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for exporting the dataset with any labeled frames and suggestions.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="sleap.gui.commands.CommandContext.exportLabeledClip">
 <code class="sig-name descname">exportLabeledClip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportLabeledClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportLabeledClip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shows gui for exporting clip with visual annotations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.exportTrainingPackage">
+<code class="sig-name descname">exportTrainingPackage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportTrainingPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportTrainingPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for exporting the dataset with user-labeled images and suggestions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.exportUserLabelsPackage">
+<code class="sig-name descname">exportUserLabelsPackage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportUserLabelsPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportUserLabelsPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for exporting the dataset with user-labeled images.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -487,6 +516,12 @@ method supports custom location).</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openPrereleaseVersion">
+<code class="sig-name descname">openPrereleaseVersion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openPrereleaseVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openPrereleaseVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the current prerelease version.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.gui.commands.CommandContext.openProject">
 <code class="sig-name descname">openProject</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">first_open</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openProject" title="Permalink to this definition">¶</a></dt>
 <dd><p>Allows use to select and then open a saved project.</p>
@@ -506,6 +541,18 @@ rather than a new application window.</p>
 <dt id="sleap.gui.commands.CommandContext.openSkeleton">
 <code class="sig-name descname">openSkeleton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openSkeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openSkeleton" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shows gui for loading saved skeleton into project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openStableVersion">
+<code class="sig-name descname">openStableVersion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openStableVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openStableVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the current stable version.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openWebsite">
+<code class="sig-name descname">openWebsite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openWebsite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openWebsite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a website from URL using the native system browser.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -781,11 +828,16 @@ and they abort.</p>
 
 <dl class="py method">
 <dt id="sleap.gui.commands.ExportDatasetWithImages.do_action">
-<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages.do_action" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages.do_action" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for performing action.</p>
 </dd></dl>
 
 </dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportFullPackage">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportFullPackage</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportFullPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportFullPackage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py class">
 <dt id="sleap.gui.commands.ExportLabeledClip">
@@ -810,6 +862,16 @@ and they abort.</p>
 </dd></dl>
 
 </dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportTrainingPackage">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportTrainingPackage</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportTrainingPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportTrainingPackage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportUserLabelsPackage">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportUserLabelsPackage</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportUserLabelsPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportUserLabelsPackage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py class">
 <dt id="sleap.gui.commands.FakeApp">
@@ -1093,6 +1155,17 @@ and they abort.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt id="sleap.gui.commands.OpenPrereleaseVersion">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenPrereleaseVersion</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenPrereleaseVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenPrereleaseVersion" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenPrereleaseVersion.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenPrereleaseVersion.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenPrereleaseVersion.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="sleap.gui.commands.OpenProject">
 <em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenProject</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenProject" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
@@ -1135,6 +1208,28 @@ and they abort.</p>
 <dl class="py method">
 <dt id="sleap.gui.commands.OpenSkeleton.do_action">
 <em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenSkeleton.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenSkeleton.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.OpenStableVersion">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenStableVersion</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenStableVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenStableVersion" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenStableVersion.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenStableVersion.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenStableVersion.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.OpenWebsite">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenWebsite</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenWebsite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenWebsite" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenWebsite.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenWebsite.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenWebsite.do_action" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for performing action.</p>
 </dd></dl>
 
@@ -1412,6 +1507,7 @@ visible: Whether to set or clear visibility for node</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -1556,7 +1652,7 @@ visible: Whether to set or clear visibility for node</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.nn.model &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -149,9 +149,11 @@
             <span class="n">heads</span> <span class="o">=</span> <span class="n">SingleInstanceConfmapsHead</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
                 <span class="n">head_config</span><span class="p">,</span> <span class="n">part_names</span><span class="o">=</span><span class="n">part_names</span>
             <span class="p">)</span>
+            <span class="n">output_stride</span> <span class="o">=</span> <span class="n">heads</span><span class="o">.</span><span class="n">output_stride</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_config</span><span class="p">,</span> <span class="n">CentroidsHeadConfig</span><span class="p">):</span>
             <span class="n">heads</span> <span class="o">=</span> <span class="n">CentroidConfmapsHead</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">head_config</span><span class="p">)</span>
+            <span class="n">output_stride</span> <span class="o">=</span> <span class="n">heads</span><span class="o">.</span><span class="n">output_stride</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_config</span><span class="p">,</span> <span class="n">CenteredInstanceConfmapsHeadConfig</span><span class="p">):</span>
             <span class="n">part_names</span> <span class="o">=</span> <span class="n">head_config</span><span class="o">.</span><span class="n">part_names</span>
@@ -167,6 +169,7 @@
             <span class="n">heads</span> <span class="o">=</span> <span class="n">CenteredInstanceConfmapsHead</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
                 <span class="n">head_config</span><span class="p">,</span> <span class="n">part_names</span><span class="o">=</span><span class="n">part_names</span>
             <span class="p">)</span>
+            <span class="n">output_stride</span> <span class="o">=</span> <span class="n">heads</span><span class="o">.</span><span class="n">output_stride</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_config</span><span class="p">,</span> <span class="n">MultiInstanceConfig</span><span class="p">):</span>
             <span class="n">part_names</span> <span class="o">=</span> <span class="n">head_config</span><span class="o">.</span><span class="n">confmaps</span><span class="o">.</span><span class="n">part_names</span>
@@ -197,6 +200,9 @@
                 <span class="p">),</span>
                 <span class="n">PartAffinityFieldsHead</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">head_config</span><span class="o">.</span><span class="n">pafs</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">edges</span><span class="p">),</span>
             <span class="p">]</span>
+            <span class="n">output_stride</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">heads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span> <span class="n">heads</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output_stride</span><span class="p">)</span>
+
+        <span class="n">backbone_config</span><span class="o">.</span><span class="n">output_stride</span> <span class="o">=</span> <span class="n">output_stride</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">backbone</span><span class="o">=</span><span class="n">backbone_cls</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">backbone_config</span><span class="p">),</span> <span class="n">heads</span><span class="o">=</span><span class="n">heads</span><span class="p">)</span></div>
 
@@ -335,7 +341,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

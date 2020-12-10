@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.learning.configs &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -197,12 +197,6 @@ e.g., “centered_instance”.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.find_configs_in_dir">
-<code class="sig-name descname">find_configs_in_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">depth</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.find_configs_in_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.find_configs_in_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads configs in specified directory.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="sleap.gui.learning.configs.TrainingConfigsGetter.get_filtered_configs">
 <code class="sig-name descname">get_filtered_configs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">head_filter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">only_trained</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.get_filtered_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.get_filtered_configs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns filtered subset of loaded configs.</p>
@@ -218,12 +212,6 @@ e.g., “centered_instance”.</p>
 <dt id="sleap.gui.learning.configs.TrainingConfigsGetter.insert_first">
 <code class="sig-name descname">insert_first</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg_info</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.insert_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.insert_first" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert config at beginning of list.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sleap.gui.learning.configs.TrainingConfigsGetter.insert_last">
-<code class="sig-name descname">insert_last</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg_info</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.learning.configs.ConfigFileInfo" title="sleap.gui.learning.configs.ConfigFileInfo">sleap.gui.learning.configs.ConfigFileInfo</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/configs.html#TrainingConfigsGetter.insert_last"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.configs.TrainingConfigsGetter.insert_last" title="Permalink to this definition">¶</a></dt>
-<dd><p>Insert config at end of list.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -283,6 +271,7 @@ e.g., “centered_instance”.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -427,7 +416,7 @@ e.g., “centered_instance”.</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

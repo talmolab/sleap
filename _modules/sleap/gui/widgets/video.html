@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.widgets.video &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
     <script src="../../../../_static/jquery.js"></script>
     <script src="../../../../_static/underscore.js"></script>
@@ -141,10 +141,10 @@
         <span class="c1"># event to event queue from the request handler.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doProcessing</span><span class="p">)</span>
 
-        <span class="c1"># Start timer which will trigger processing events when we&#39;re free</span>
+        <span class="c1"># Start timer which will trigger processing events every 20 msec. when we&#39;re free</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doProcessing</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">doProcessing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_process_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -179,7 +179,7 @@
             <span class="n">avg_load_time</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recent_load_times</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recent_load_times</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_force_request_wait_time</span> <span class="o">=</span> <span class="n">avg_load_time</span>
 
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Release the lock so other threads can start processing frame requests</span>
@@ -1075,6 +1075,30 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zoomFactor</span> <span class="o">=</span> <span class="mi">1</span></div>
 
+<div class="viewcode-block" id="GraphicsView.getInstancesBoundingRect"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.video.html#sleap.gui.widgets.video.GraphicsView.getInstancesBoundingRect">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">getInstancesBoundingRect</span><span class="p">(</span>
+        <span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;QtInstance&quot;</span><span class="p">],</span> <span class="n">margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QRectF</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a rectangle containing all instances.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instances: List of QtInstance objects.</span>
+<span class="sd">            margin: Margin for padding the rectangle. Padding is applied equally on all</span>
+<span class="sd">                sides.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The `QRectF` which contains all of the instances.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            The returned rectangle will be null if the instance list is empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">united</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">margin</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rect</span><span class="o">.</span><span class="n">isNull</span><span class="p">():</span>
+            <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">marginsAdded</span><span class="p">(</span><span class="n">QMarginsF</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">rect</span></div>
+
 <div class="viewcode-block" id="GraphicsView.instancesBoundingRect"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.video.html#sleap.gui.widgets.video.GraphicsView.instancesBoundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">instancesBoundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QRectF</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a rect which contains all displayed skeleton instances.</span>
@@ -1084,12 +1108,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The `QRectF` which contains the skeleton instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">:</span>
-            <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">united</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">())</span>
-        <span class="k">if</span> <span class="n">margin</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">marginsAdded</span><span class="p">(</span><span class="n">QMarginsF</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">margin</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">rect</span></div>
+        <span class="k">return</span> <span class="n">GraphicsView</span><span class="o">.</span><span class="n">getInstancesBoundingRect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_instances</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="n">margin</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GraphicsView.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.video.html#sleap.gui.widgets.video.GraphicsView.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QMouseEvent</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Custom event handler, clears zoom.</span>
@@ -1119,9 +1138,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">updateViewer</span><span class="p">()</span>
 
         <span class="c1"># Trigger wheelEvent for all child elements. This is a bit of a hack.</span>
-        <span class="c1"># We can&#39;t use QGraphicsView.wheelEvent(self, event) since that will scroll view.</span>
+        <span class="c1"># We can&#39;t use QGraphicsView.wheelEvent(self, event) since that will scroll</span>
+        <span class="c1"># view.</span>
         <span class="c1"># We want to trigger for all children, since wheelEvent should continue rotating</span>
-        <span class="c1"># an skeleton even if the skeleton node/node label is no longer under the cursor.</span>
+        <span class="c1"># an skeleton even if the skeleton node/node label is no longer under the</span>
+        <span class="c1"># cursor.</span>
         <span class="c1"># Note that children expect a QGraphicsSceneWheelEvent event, which is why we&#39;re</span>
         <span class="c1"># explicitly ignoring TypeErrors. Everything seems to work fine since we don&#39;t</span>
         <span class="c1"># care about the mouse position; if we did, we&#39;d need to map pos to scene.</span>
@@ -2121,7 +2142,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

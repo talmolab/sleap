@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.io.video &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -95,6 +95,19 @@ This specifies whether the underlying video data is stored as:</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="sleap.io.video.HDF5Video.embedded_frame_inds">
+<em class="property">property </em><code class="sig-name descname">embedded_frame_inds</code><a class="headerlink" href="#sleap.io.video.HDF5Video.embedded_frame_inds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of frame indices with embedded images.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.video.HDF5Video.enable_source_video">
+<em class="property">property </em><code class="sig-name descname">enable_source_video</code><a class="headerlink" href="#sleap.io.video.HDF5Video.enable_source_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>If set to <cite>True</cite>, will attempt to read from original video for frames not
+saved in the file.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="sleap.io.video.HDF5Video.frames">
 <em class="property">property </em><code class="sig-name descname">frames</code><a class="headerlink" href="#sleap.io.video.HDF5Video.frames" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
@@ -112,6 +125,12 @@ This specifies whether the underlying video data is stored as:</p>
 <dd class="field-even"><p>The numpy.ndarray representing the video frame data.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.video.HDF5Video.has_embedded_images">
+<em class="property">property </em><code class="sig-name descname">has_embedded_images</code><a class="headerlink" href="#sleap.io.video.HDF5Video.has_embedded_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <cite>True</cite> if the file was saved with cached frame images.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -147,6 +166,18 @@ frame index here will not match the number of frames in video.</p>
 <dt id="sleap.io.video.HDF5Video.reset">
 <code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/io/video.html#HDF5Video.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reloads the video.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.video.HDF5Video.source_video">
+<em class="property">property </em><code class="sig-name descname">source_video</code><a class="headerlink" href="#sleap.io.video.HDF5Video.source_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the source video if available, otherwise return <cite>None</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.io.video.HDF5Video.source_video_available">
+<em class="property">property </em><code class="sig-name descname">source_video_available</code><a class="headerlink" href="#sleap.io.video.HDF5Video.source_video_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <cite>True</cite> if the source file is available for reading uncached frames.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -875,6 +906,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -1019,7 +1051,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

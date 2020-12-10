@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.commands &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -71,7 +71,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span>
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span>
 
 <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="n">QMessageBox</span>
 
@@ -321,9 +321,17 @@
         <span class="sd">&quot;&quot;&quot;Shows gui for exporting clip with visual annotations.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportLabeledClip</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandContext.exportDatasetWithImages"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.exportDatasetWithImages">[docs]</a>    <span class="k">def</span> <span class="nf">exportDatasetWithImages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Gui for exporting the training dataset of labels/frame images.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportDatasetWithImages</span><span class="p">)</span></div>
+<div class="viewcode-block" id="CommandContext.exportUserLabelsPackage"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.exportUserLabelsPackage">[docs]</a>    <span class="k">def</span> <span class="nf">exportUserLabelsPackage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gui for exporting the dataset with user-labeled images.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportUserLabelsPackage</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CommandContext.exportTrainingPackage"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.exportTrainingPackage">[docs]</a>    <span class="k">def</span> <span class="nf">exportTrainingPackage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gui for exporting the dataset with user-labeled images and suggestions.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportTrainingPackage</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CommandContext.exportFullPackage"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.exportFullPackage">[docs]</a>    <span class="k">def</span> <span class="nf">exportFullPackage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gui for exporting the dataset with any labeled frames and suggestions.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ExportFullPackage</span><span class="p">)</span></div>
 
     <span class="c1"># Navigation Commands</span>
 
@@ -526,7 +534,23 @@
 
 <div class="viewcode-block" id="CommandContext.generateSuggestions"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.generateSuggestions">[docs]</a>    <span class="k">def</span> <span class="nf">generateSuggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generates suggestions using given params dictionary.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">GenerateSuggestions</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">GenerateSuggestions</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CommandContext.openWebsite"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.openWebsite">[docs]</a>    <span class="k">def</span> <span class="nf">openWebsite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open a website from URL using the native system browser.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">OpenWebsite</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CommandContext.checkForUpdates"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.checkForUpdates">[docs]</a>    <span class="k">def</span> <span class="nf">checkForUpdates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check for updates online.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">CheckForUpdates</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CommandContext.openStableVersion"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.openStableVersion">[docs]</a>    <span class="k">def</span> <span class="nf">openStableVersion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open the current stable version.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">OpenStableVersion</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CommandContext.openPrereleaseVersion"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CommandContext.openPrereleaseVersion">[docs]</a>    <span class="k">def</span> <span class="nf">openPrereleaseVersion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open the current prerelease version.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">OpenPrereleaseVersion</span><span class="p">)</span></div></div>
 
 
 <span class="c1"># File Commands</span>
@@ -784,8 +808,11 @@
             <span class="n">context</span><span class="o">.</span><span class="n">changestack_savepoint</span><span class="p">()</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;An error occured when attempting to save:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-            <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;Try saving your project with a different filename or in a different format.&quot;</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;An error occured when attempting to save:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Try saving your project with a different filename or in a different &quot;</span>
+                <span class="s2">&quot;format.&quot;</span>
+            <span class="p">)</span>
             <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">message</span><span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
 
         <span class="c1"># Redraw. Not sure why, but sometimes we need to do this.</span>
@@ -962,8 +989,11 @@
 
 
 <div class="viewcode-block" id="ExportDatasetWithImages"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportDatasetWithImages">[docs]</a><span class="k">class</span> <span class="nc">ExportDatasetWithImages</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>
-<div class="viewcode-block" id="ExportDatasetWithImages.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportDatasetWithImages.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="n">all_labeled</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">suggested</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ExportDatasetWithImages.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportDatasetWithImages.do_action">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">win</span> <span class="o">=</span> <span class="n">MessageDialog</span><span class="p">(</span><span class="s2">&quot;Exporting dataset with frame images...&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
 
         <span class="n">Labels</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span>
@@ -971,6 +1001,8 @@
             <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">],</span>
             <span class="n">default_suffix</span><span class="o">=</span><span class="s2">&quot;slp&quot;</span><span class="p">,</span>
             <span class="n">save_frame_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">all_labeled</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">all_labeled</span><span class="p">,</span>
+            <span class="n">suggested</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">suggested</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">win</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span></div>
@@ -999,6 +1031,21 @@
 
         <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span>
         <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<div class="viewcode-block" id="ExportUserLabelsPackage"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportUserLabelsPackage">[docs]</a><span class="k">class</span> <span class="nc">ExportUserLabelsPackage</span><span class="p">(</span><span class="n">ExportDatasetWithImages</span><span class="p">):</span>
+    <span class="n">all_labeled</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">suggested</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ExportTrainingPackage"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportTrainingPackage">[docs]</a><span class="k">class</span> <span class="nc">ExportTrainingPackage</span><span class="p">(</span><span class="n">ExportDatasetWithImages</span><span class="p">):</span>
+    <span class="n">all_labeled</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">suggested</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ExportFullPackage"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.ExportFullPackage">[docs]</a><span class="k">class</span> <span class="nc">ExportFullPackage</span><span class="p">(</span><span class="n">ExportDatasetWithImages</span><span class="p">):</span>
+    <span class="n">all_labeled</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">suggested</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 
 <span class="c1"># Navigation Commands</span>
@@ -1447,10 +1494,13 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_do_deletion</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">lf_inst_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
         <span class="c1"># Delete the instances</span>
+        <span class="n">lfs_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">lf</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">lf_inst_list</span><span class="p">:</span>
             <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove_instance</span><span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">inst</span><span class="p">,</span> <span class="n">in_transaction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
-                <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">lf</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lfs_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lf</span><span class="p">)</span>
+
+        <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove_frames</span><span class="p">(</span><span class="n">lfs_to_remove</span><span class="p">)</span>
 
         <span class="c1"># Update caches since we skipped doing this after each deletion</span>
         <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">update_cache</span><span class="p">()</span>
@@ -2184,6 +2234,44 @@
         <span class="c1"># Add the instances</span>
         <span class="k">for</span> <span class="n">new_instance</span> <span class="ow">in</span> <span class="n">new_instances</span><span class="p">:</span>
             <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">add_instance</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">],</span> <span class="n">new_instance</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OpenWebsite"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.OpenWebsite">[docs]</a><span class="k">class</span> <span class="nc">OpenWebsite</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenWebsite.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.OpenWebsite.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QDesktopServices</span><span class="o">.</span><span class="n">openUrl</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QUrl</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="CheckForUpdates"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CheckForUpdates">[docs]</a><span class="k">class</span> <span class="nc">CheckForUpdates</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>
+<div class="viewcode-block" id="CheckForUpdates.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.CheckForUpdates.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">release_checker</span><span class="o">.</span><span class="n">check_for_releases</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+            <span class="n">stable</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">release_checker</span><span class="o">.</span><span class="n">latest_stable</span>
+            <span class="n">prerelease</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">release_checker</span><span class="o">.</span><span class="n">latest_prerelease</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;stable_version_menu&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Stable: </span><span class="si">{</span><span class="n">stable</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;stable_version_menu&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;prerelease_version_menu&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;  Prerelease: </span><span class="si">{</span><span class="n">prerelease</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;prerelease_version_menu&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div></div>
+    <span class="c1"># TODO: Provide GUI feedback about result.</span>
+
+
+<div class="viewcode-block" id="OpenStableVersion"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.OpenStableVersion">[docs]</a><span class="k">class</span> <span class="nc">OpenStableVersion</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenStableVersion.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.OpenStableVersion.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">rls</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">release_checker</span><span class="o">.</span><span class="n">latest_stable</span>
+        <span class="k">if</span> <span class="n">rls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">openWebsite</span><span class="p">(</span><span class="n">rls</span><span class="o">.</span><span class="n">url</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OpenPrereleaseVersion"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.OpenPrereleaseVersion">[docs]</a><span class="k">class</span> <span class="nc">OpenPrereleaseVersion</span><span class="p">(</span><span class="n">AppCommand</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenPrereleaseVersion.do_action"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.commands.html#sleap.gui.commands.OpenPrereleaseVersion.do_action">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">do_action</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">rls</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">release_checker</span><span class="o">.</span><span class="n">latest_prerelease</span>
+        <span class="k">if</span> <span class="n">rls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">openWebsite</span><span class="p">(</span><span class="n">rls</span><span class="o">.</span><span class="n">url</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>
@@ -2245,7 +2333,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

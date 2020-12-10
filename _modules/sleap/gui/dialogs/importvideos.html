@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.dialogs.importvideos &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
     <script src="../../../../_static/jquery.js"></script>
     <script src="../../../../_static/underscore.js"></script>
@@ -417,8 +417,7 @@
 <span class="sd">            even though it&#39;s not a user-selectable param.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">param_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span>
-        <span class="n">param_values</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">param_values</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span>
+        <span class="n">param_values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">}</span>
         <span class="k">for</span> <span class="n">param_item</span> <span class="ow">in</span> <span class="n">param_list</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">param_item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
             <span class="nb">type</span> <span class="o">=</span> <span class="n">param_item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
@@ -638,7 +637,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

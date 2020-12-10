@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.learning.scopedkeydict &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
     <script src="../../../../_static/jquery.js"></script>
     <script src="../../../../_static/underscore.js"></script>
@@ -36,7 +36,7 @@
 <span class="sd">Conversion between flat (form data) and hierarchical (config object) dicts.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">attr</span>
 <span class="kn">import</span> <span class="nn">cattr</span>
@@ -142,7 +142,57 @@
 
     <span class="k">if</span> <span class="s2">&quot;model.backbone.resnet.upsampling.skip_connections&quot;</span> <span class="ow">in</span> <span class="n">key_val_dict</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;model.backbone.resnet.upsampling.skip_connections&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-            <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;model.backbone.resnet.upsampling.skip_connections&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+            <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;model.backbone.resnet.upsampling.skip_connections&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Overwrite backbone strides with stride from head.</span>
+    <span class="n">backbone_name</span> <span class="o">=</span> <span class="n">find_backbone_name_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backbone_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_stride</span><span class="p">,</span> <span class="n">output_stride</span> <span class="o">=</span> <span class="n">resolve_strides_from_key_val_dict</span><span class="p">(</span>
+            <span class="n">key_val_dict</span><span class="p">,</span> <span class="n">backbone_name</span>
+        <span class="p">)</span>
+        <span class="n">key_val_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.output_stride&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_stride</span>
+        <span class="n">key_val_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.max_stride&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_stride</span></div>
+
+
+<div class="viewcode-block" id="find_backbone_name_from_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.find_backbone_name_from_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">find_backbone_name_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the backbone model name from the config dictionary.&quot;&quot;&quot;</span>
+    <span class="n">backbone_name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_val_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;model.backbone.&quot;</span><span class="p">):</span>
+            <span class="n">backbone_name</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">backbone_name</span></div>
+
+
+<div class="viewcode-block" id="resolve_strides_from_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.resolve_strides_from_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">resolve_strides_from_key_val_dict</span><span class="p">(</span>
+    <span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">backbone_name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Find the valid max and output strides from the config dictionary.&quot;&quot;&quot;</span>
+    <span class="n">max_stride</span> <span class="o">=</span> <span class="n">key_val_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.max_stride&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_stride</span> <span class="o">=</span> <span class="n">key_val_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.output_stride&quot;</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s2">&quot;model.heads.centered_instance.output_stride&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model.heads.centroid.output_stride&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model.heads.multi_instance.confmaps.output_stride&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model.heads.multi_instance.pafs.output_stride&quot;</span><span class="p">,</span>
+    <span class="p">]:</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="n">key_val_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stride</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">stride</span><span class="p">)</span>
+            <span class="n">max_stride</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_stride</span><span class="p">),</span> <span class="n">stride</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stride</span>
+            <span class="p">)</span>
+            <span class="n">output_stride</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">output_stride</span><span class="p">),</span> <span class="n">stride</span><span class="p">)</span> <span class="k">if</span> <span class="n">output_stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stride</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output_stride</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_stride</span> <span class="o">=</span> <span class="n">max_stride</span>
+
+    <span class="k">return</span> <span class="n">max_stride</span><span class="p">,</span> <span class="n">output_stride</span></div>
 
 
 <div class="viewcode-block" id="make_training_config_from_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.make_training_config_from_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">make_training_config_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingJobConfig</span><span class="p">:</span>
@@ -240,7 +290,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

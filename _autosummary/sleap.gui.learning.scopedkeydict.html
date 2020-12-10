@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.learning.scopedkeydict &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -86,6 +86,12 @@ and deserializing objects.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt id="sleap.gui.learning.scopedkeydict.find_backbone_name_from_key_val_dict">
+<code class="sig-prename descclassname">sleap.gui.learning.scopedkeydict.</code><code class="sig-name descname">find_backbone_name_from_key_val_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key_val_dict</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/learning/scopedkeydict.html#find_backbone_name_from_key_val_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.scopedkeydict.find_backbone_name_from_key_val_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the backbone model name from the config dictionary.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="sleap.gui.learning.scopedkeydict.make_model_config_from_key_val_dict">
 <code class="sig-prename descclassname">sleap.gui.learning.scopedkeydict.</code><code class="sig-name descname">make_model_config_from_key_val_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key_val_dict</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig" title="sleap.nn.config.model.ModelConfig">sleap.nn.config.model.ModelConfig</a><a class="reference internal" href="../_modules/sleap/gui/learning/scopedkeydict.html#make_model_config_from_key_val_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.scopedkeydict.make_model_config_from_key_val_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelConfig</span></code> object from flat dictionary.</p>
@@ -111,6 +117,12 @@ and deserializing objects.</p>
 <dd class="field-even"><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> object.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.gui.learning.scopedkeydict.resolve_strides_from_key_val_dict">
+<code class="sig-prename descclassname">sleap.gui.learning.scopedkeydict.</code><code class="sig-name descname">resolve_strides_from_key_val_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key_val_dict</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">backbone_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/learning/scopedkeydict.html#resolve_strides_from_key_val_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.learning.scopedkeydict.resolve_strides_from_key_val_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the valid max and output strides from the config dictionary.</p>
 </dd></dl>
 
 </div>
@@ -150,6 +162,7 @@ and deserializing objects.</p>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -294,7 +307,7 @@ and deserializing objects.</p>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

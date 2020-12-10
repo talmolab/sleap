@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.gui.app &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -121,6 +121,7 @@
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.tracks</span> <span class="kn">import</span> <span class="n">TrackTrailOverlay</span><span class="p">,</span> <span class="n">TrackListOverlay</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.color</span> <span class="kn">import</span> <span class="n">ColorManager</span>
 <span class="kn">from</span> <span class="nn">sleap.gui.overlays.instance</span> <span class="kn">import</span> <span class="n">InstanceOverlay</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.release_checker</span> <span class="kn">import</span> <span class="n">ReleaseChecker</span>
 
 <span class="kn">from</span> <span class="nn">sleap.prefs</span> <span class="kn">import</span> <span class="n">prefs</span>
 
@@ -172,6 +173,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;edge style&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Line&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;fit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;color predicted&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;color predicted&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_checker</span> <span class="o">=</span> <span class="n">ReleaseChecker</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_gui</span><span class="p">()</span>
 
@@ -251,10 +254,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_overlays</span><span class="p">()</span>
 
-        <span class="c1"># Create timer to update state of gui at regular intervals</span>
+        <span class="c1"># Create timer to update state of gui at 20 millisec. intervals</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_gui_timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_gui_timer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_gui_state</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_gui_timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_gui_timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_create_video_player</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates and connects :class:`QtVideoPlayer` for gui.&quot;&quot;&quot;</span>
@@ -293,6 +296,7 @@
         <span class="k">def</span> <span class="nf">add_menu_item</span><span class="p">(</span><span class="n">menu</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
             <span class="n">menu_item</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">shortcuts</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_menu_actions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">menu_item</span>
+            <span class="k">return</span> <span class="n">menu_item</span>
 
         <span class="c1"># set menu checkmarks</span>
         <span class="k">def</span> <span class="nf">connect_check</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
@@ -453,10 +457,30 @@
             <span class="n">goMenu</span><span class="p">,</span> <span class="s2">&quot;select to frame&quot;</span><span class="p">,</span> <span class="s2">&quot;Select to Frame...&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">selectToFrame</span>
         <span class="p">)</span>
 
+        <span class="n">goMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">goMenu</span><span class="p">,</span>
+            <span class="s2">&quot;select next&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Select Next Instance&quot;</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment_in_list</span><span class="p">(</span>
+                <span class="s2">&quot;instance&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">instances_to_show</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">goMenu</span><span class="p">,</span>
+            <span class="s2">&quot;clear selection&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Clear Selection&quot;</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;instance&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">)</span>
+
         <span class="c1">### View Menu ###</span>
 
         <span class="n">viewMenu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menuBar</span><span class="p">()</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s2">&quot;View&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">viewMenu</span> <span class="o">=</span> <span class="n">viewMenu</span>  <span class="c1"># store as attribute so docks can add items</span>
+
+        <span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+        <span class="n">add_menu_check_item</span><span class="p">(</span><span class="n">viewMenu</span><span class="p">,</span> <span class="s2">&quot;fit&quot;</span><span class="p">,</span> <span class="s2">&quot;Fit Instances to View&quot;</span><span class="p">)</span>
 
         <span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
         <span class="n">add_menu_check_item</span><span class="p">(</span><span class="n">viewMenu</span><span class="p">,</span> <span class="s2">&quot;color predicted&quot;</span><span class="p">,</span> <span class="s2">&quot;Color Predicted Instances&quot;</span><span class="p">)</span>
@@ -500,8 +524,12 @@
         <span class="p">)</span>
 
         <span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-
-        <span class="n">add_menu_check_item</span><span class="p">(</span><span class="n">viewMenu</span><span class="p">,</span> <span class="s2">&quot;fit&quot;</span><span class="p">,</span> <span class="s2">&quot;Fit Instances to View&quot;</span><span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">viewMenu</span><span class="p">,</span>
+            <span class="s2">&quot;export clip&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Render Video Clip with Instances...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportLabeledClip</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
 
@@ -571,6 +599,61 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteSelectedInstance</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;custom delete&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Custom Instance Delete...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteDialog</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">labelMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;add instances from all frame predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Add Instances from All Predictions on Current Frame&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">addUserInstancesFromPredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">labelMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;delete frame predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Delete Predictions on Current Frame&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteFramePredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;delete all predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Delete All Predictions...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deletePredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;delete clip predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Delete Predictions from Clip...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteClipPredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;delete area predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Delete Predictions from Area...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteAreaPredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;delete score predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Delete Predictions with Low Score...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteLowScorePredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">labelMenu</span><span class="p">,</span>
+            <span class="s2">&quot;delete frame limit predictions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Delete Predictions beyond Frame Limit...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteFrameLimitPredictions</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="n">labelMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">track_menu</span> <span class="o">=</span> <span class="n">labelMenu</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s2">&quot;Set Instance Track&quot;</span><span class="p">)</span>
@@ -587,36 +670,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteSelectedInstanceTrack</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">labelMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">labelMenu</span><span class="p">,</span>
-            <span class="s2">&quot;custom delete&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Custom Instance Delete...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteDialog</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">labelMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">labelMenu</span><span class="p">,</span>
-            <span class="s2">&quot;select next&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Select Next Instance&quot;</span><span class="p">,</span>
-            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">increment_in_list</span><span class="p">(</span>
-                <span class="s2">&quot;instance&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">instances_to_show</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">labelMenu</span><span class="p">,</span>
-            <span class="s2">&quot;clear selection&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Clear Selection&quot;</span><span class="p">,</span>
-            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;instance&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-        <span class="p">)</span>
-
-        <span class="n">labelMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-
         <span class="c1">### Predict Menu ###</span>
 
         <span class="n">predictionMenu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menuBar</span><span class="p">()</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s2">&quot;Predict&quot;</span><span class="p">)</span>
+        <span class="n">predictionMenu</span><span class="o">.</span><span class="n">setToolTipsVisible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">predictionMenu</span><span class="p">,</span>
@@ -648,70 +705,70 @@
         <span class="p">)</span>
 
         <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;add instances from all frame predictions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Add Instances from All Predictions on Current Frame&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">addUserInstancesFromPredictions</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;delete frame predictions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Delete Predictions on Current Frame&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteFramePredictions</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;delete all predictions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Delete All Predictions...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deletePredictions</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;delete clip predictions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Delete Predictions from Clip...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteClipPredictions</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;delete area predictions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Delete Predictions from Area...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteAreaPredictions</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;delete score predictions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Delete Predictions with Low Score...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteLowScorePredictions</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;delete frame limit predictions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Delete Predictions beyond Frame Limit...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">deleteFrameLimitPredictions</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">predictionMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-        <span class="n">add_menu_item</span><span class="p">(</span>
-            <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;export frames&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;export training package&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Export Training Package...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportDatasetWithImages</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportTrainingPackage</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span>
+            <span class="s2">&quot;Export user-labeled frames and suggested frames with image data into a &quot;</span>
+            <span class="s2">&quot;single SLP file.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Use this for human-in-the-loop training to enable remote inference on &quot;</span>
+            <span class="s2">&quot;unlabeled frames.&quot;</span>
         <span class="p">)</span>
         <span class="n">add_menu_item</span><span class="p">(</span>
             <span class="n">predictionMenu</span><span class="p">,</span>
-            <span class="s2">&quot;export clip&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Export Video with Visual Annotations...&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportLabeledClip</span><span class="p">,</span>
+            <span class="s2">&quot;export user labels package&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Export Package with User Labels Only...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportUserLabelsPackage</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span>
+            <span class="s2">&quot;Export user-labeled frames with image data into a single SLP file.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Use this for archiving a dataset with labeled frames only.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">add_menu_item</span><span class="p">(</span>
+            <span class="n">predictionMenu</span><span class="p">,</span>
+            <span class="s2">&quot;export full package&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Export Package with All Labels...&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">exportFullPackage</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span>
+            <span class="s2">&quot;Export all frames (including predictions) and suggested frames with image &quot;</span>
+            <span class="s2">&quot;data into a single SLP file.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Use this when you need to store images for predicted frames, such as for &quot;</span>
+            <span class="s2">&quot;proofreading or reproducibility.&quot;</span>
         <span class="p">)</span>
 
         <span class="c1">############</span>
 
         <span class="n">helpMenu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menuBar</span><span class="p">()</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s2">&quot;Help&quot;</span><span class="p">)</span>
+
+        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
+            <span class="s2">&quot;Documentation&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">openWebsite</span><span class="p">(</span><span class="s2">&quot;https://sleap.ai&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
+            <span class="s2">&quot;GitHub&quot;</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">openWebsite</span><span class="p">(</span><span class="s2">&quot;https://github.com/murthylab/sleap&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
+            <span class="s2">&quot;Releases&quot;</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">openWebsite</span><span class="p">(</span>
+                <span class="s2">&quot;https://github.com/murthylab/sleap/releases&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+
+        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Check for updates...&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">checkForUpdates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;stable_version_menu&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
+            <span class="s2">&quot;  Stable: N/A&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">openStableVersion</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;stable_version_menu&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;prerelease_version_menu&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span>
+            <span class="s2">&quot;  Prerelease: N/A&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">openPrereleaseVersion</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;prerelease_version_menu&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">checkForUpdates</span><span class="p">()</span>
+
+        <span class="n">helpMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
         <span class="n">helpMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Keyboard Shortcuts&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_keyboard_shortcuts_window</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MainWindow.process_events_then"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.app.html#sleap.gui.app.MainWindow.process_events_then">[docs]</a>    <span class="k">def</span> <span class="nf">process_events_then</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
@@ -1386,7 +1443,10 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;has_changes&quot;</span><span class="p">]:</span>
             <span class="n">QMessageBox</span><span class="p">(</span>
-                <span class="n">text</span><span class="o">=</span><span class="s2">&quot;You have unsaved changes. Please save before running training or inference.&quot;</span>
+                <span class="n">text</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot;You have unsaved changes. Please save before running training or &quot;</span>
+                    <span class="s2">&quot;inference.&quot;</span>
+                <span class="p">)</span>
             <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
             <span class="k">return</span>
 
@@ -1405,6 +1465,12 @@
 
     <span class="k">def</span> <span class="nf">_handle_learning_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Called when inference finishes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span>
+        <span class="p">):</span>
+            <span class="c1"># Update the GUI state skeleton if the labels skeleton changed after merge.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="c1"># we ran inference so update display/ui</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_data_update</span><span class="p">([</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">all</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">new_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1513,6 +1579,13 @@
         <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--profiling&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Enable performance profiling&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_const&quot;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
@@ -1528,7 +1601,11 @@
     <span class="c1"># if not args.labels_path:</span>
     <span class="c1">#     window.commands.openProject(first_open=True)</span>
 
-    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">profiling</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">cProfile</span>
+        <span class="n">cProfile</span><span class="o">.</span><span class="n">runctx</span><span class="p">(</span><span class="s1">&#39;app.exec_()&#39;</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
@@ -1594,7 +1671,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

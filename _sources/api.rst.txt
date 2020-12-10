@@ -21,6 +21,7 @@ Developer API
    sleap.gui.color
    sleap.gui.commands
    sleap.gui.dataviews
+   sleap.gui.release_checker
    sleap.gui.shortcuts
    sleap.gui.state
    sleap.gui.suggestions

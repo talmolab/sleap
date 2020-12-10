@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.io.format.hdf5 &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
     <script src="../../../../_static/jquery.js"></script>
     <script src="../../../../_static/underscore.js"></script>
@@ -112,22 +112,22 @@
     <span class="p">):</span>
         <span class="n">f</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">file</span>
 
-        <span class="c1"># Extract the Labels JSON metadata and create Labels object with just</span>
-        <span class="c1"># this metadata.</span>
+        <span class="c1"># Extract the Labels JSON metadata and create Labels object with just this</span>
+        <span class="c1"># metadata.</span>
         <span class="n">dicts</span> <span class="o">=</span> <span class="n">json_loads</span><span class="p">(</span>
             <span class="n">f</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tostring</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
         <span class="p">)</span>
 
-        <span class="c1"># These items are stored in separate lists because the metadata group</span>
-        <span class="c1"># got to be too big.</span>
+        <span class="c1"># These items are stored in separate lists because the metadata group got to be</span>
+        <span class="c1"># too big.</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;videos&quot;</span><span class="p">,</span> <span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="s2">&quot;suggestions&quot;</span><span class="p">):</span>
             <span class="n">hdf5_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_json&quot;</span>
             <span class="k">if</span> <span class="n">hdf5_key</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">json_loads</span><span class="p">(</span><span class="n">item_json</span><span class="p">)</span> <span class="k">for</span> <span class="n">item_json</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="n">hdf5_key</span><span class="p">]]</span>
                 <span class="n">dicts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span>
 
-        <span class="c1"># Video path &quot;.&quot; means the video is saved in same file as labels,</span>
-        <span class="c1"># so replace these paths.</span>
+        <span class="c1"># Video path &quot;.&quot; means the video is saved in same file as labels, so replace</span>
+        <span class="c1"># these paths.</span>
         <span class="k">for</span> <span class="n">video_item</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">[</span><span class="s2">&quot;videos&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span>
                 <span class="n">video_item</span><span class="p">[</span><span class="s2">&quot;backend&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">filename</span>
@@ -140,9 +140,8 @@
 
         <span class="c1"># 2. Accept list of strings as video search paths</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video_search</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
-            <span class="c1"># If the callback is an iterable, then we&#39;ll expect it to be a</span>
-            <span class="c1"># list of strings and build a non-gui callback with those as</span>
-            <span class="c1"># the search paths.</span>
+            <span class="c1"># If the callback is an iterable, then we&#39;ll expect it to be a list of</span>
+            <span class="c1"># strings and build a non-gui callback with those as the search paths.</span>
             <span class="n">search_paths</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="c1"># os.path.dirname(path) if os.path.isfile(path) else path</span>
                 <span class="n">path</span>
@@ -179,28 +178,28 @@
         <span class="n">points_dset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">][:]</span>
         <span class="n">pred_points_dset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;pred_points&quot;</span><span class="p">][:]</span>
 
-        <span class="c1"># Shift the *non-predicted* points since these used to be saved with</span>
-        <span class="c1"># a gridline coordinate system.</span>
+        <span class="c1"># Shift the *non-predicted* points since these used to be saved with a gridline</span>
+        <span class="c1"># coordinate system.</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">format_id</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.1</span><span class="p">:</span>
             <span class="n">points_dset</span><span class="p">[:][</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">0.5</span>
             <span class="n">points_dset</span><span class="p">[:][</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">0.5</span>
 
-        <span class="c1"># Rather than instantiate a bunch of Point\PredictedPoint objects, we will</span>
-        <span class="c1"># use inplace numpy recarrays. This will save a lot of time and memory</span>
-        <span class="c1"># when reading things in.</span>
+        <span class="c1"># Rather than instantiate a bunch of Point\PredictedPoint objects, we will use</span>
+        <span class="c1"># inplace numpy recarrays. This will save a lot of time and memory when reading</span>
+        <span class="c1"># things in.</span>
         <span class="n">points</span> <span class="o">=</span> <span class="n">PointArray</span><span class="p">(</span><span class="n">buf</span><span class="o">=</span><span class="n">points_dset</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">points_dset</span><span class="p">))</span>
 
         <span class="n">pred_points</span> <span class="o">=</span> <span class="n">PredictedPointArray</span><span class="p">(</span>
             <span class="n">buf</span><span class="o">=</span><span class="n">pred_points_dset</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">pred_points_dset</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="c1"># Extend the tracks list with a None track. We will signify this with a -1 in the</span>
-        <span class="c1"># data which will map to last element of tracks</span>
+        <span class="c1"># Extend the tracks list with a None track. We will signify this with a -1 in</span>
+        <span class="c1"># the data which will map to last element of tracks</span>
         <span class="n">tracks</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">tracks</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="kc">None</span><span class="p">])</span>
 
-        <span class="c1"># A dict to keep track of instances that have a from_predicted link. The key is the</span>
-        <span class="c1"># instance and the value is the index of the instance.</span>
+        <span class="c1"># A dict to keep track of instances that have a from_predicted link. The key is</span>
+        <span class="c1"># the instance and the value is the index of the instance.</span>
         <span class="n">from_predicted_lookup</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># Create the instances</span>
@@ -258,6 +257,8 @@
         <span class="n">append</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">save_frame_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">frame_data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span>
+        <span class="n">all_labeled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">suggested</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="n">source_object</span>
@@ -272,7 +273,13 @@
         <span class="n">d</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">skip_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">save_frame_data</span><span class="p">:</span>
-            <span class="n">new_videos</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">save_frame_data_hdf5</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">frame_data_format</span><span class="p">)</span>
+            <span class="n">new_videos</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">save_frame_data_hdf5</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="n">frame_data_format</span><span class="p">,</span>
+                <span class="n">user_labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">all_labeled</span><span class="o">=</span><span class="n">all_labeled</span><span class="p">,</span>
+                <span class="n">suggested</span><span class="o">=</span><span class="n">suggested</span><span class="p">,</span>
+            <span class="p">)</span>
 
             <span class="c1"># Replace path to video file with &quot;.&quot; (which indicates that the</span>
             <span class="c1"># video is in the same file as the HDF5 labels dataset).</span>
@@ -312,9 +319,10 @@
                         <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                             <span class="n">unique</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
                         <span class="k">else</span><span class="p">:</span>
-                            <span class="c1"># If we have an object that matches, replace the instance with</span>
-                            <span class="c1"># the one from the new list. This will will make sure objects</span>
-                            <span class="c1"># on the Instances are the same as those in the Labels lists.</span>
+                            <span class="c1"># If we have an object that matches, replace the instance</span>
+                            <span class="c1"># with the one from the new list. This will will make sure</span>
+                            <span class="c1"># objects on the Instances are the same as those in the</span>
+                            <span class="c1"># Labels lists.</span>
                             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">match</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">matches</span><span class="p">):</span>
                                 <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
                                     <span class="n">old</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
@@ -408,8 +416,8 @@
             <span class="n">instances_with_from_predicted</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">instances_from_predicted</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="c1"># If we are appending, we need look inside to see what frame, instance, and point</span>
-            <span class="c1"># ids we need to start from. This gives us offsets to use.</span>
+            <span class="c1"># If we are appending, we need look inside to see what frame, instance, and</span>
+            <span class="c1"># point ids we need to start from. This gives us offsets to use.</span>
             <span class="k">if</span> <span class="n">append</span> <span class="ow">and</span> <span class="s2">&quot;points&quot;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">point_id_offset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">pred_point_id_offset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;pred_points&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -435,14 +443,15 @@
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">label</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
 
-                    <span class="c1"># Add this instance to our lookup structure we will need for from_predicted</span>
-                    <span class="c1"># links</span>
+                    <span class="c1"># Add this instance to our lookup structure we will need for</span>
+                    <span class="c1"># from_predicted links</span>
                     <span class="n">instance_to_idx</span><span class="p">[</span><span class="n">instance</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance_id</span>
 
                     <span class="n">parray</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_points_array</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                     <span class="n">instance_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
 
-                    <span class="c1"># Check whether we are working with a PredictedInstance or an Instance.</span>
+                    <span class="c1"># Check whether we are working with a PredictedInstance or an</span>
+                    <span class="c1"># Instance.</span>
                     <span class="k">if</span> <span class="n">instance_type</span> <span class="ow">is</span> <span class="n">PredictedInstance</span><span class="p">:</span>
                         <span class="n">score</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">score</span>
                         <span class="n">pid</span> <span class="o">=</span> <span class="n">pred_point_id</span> <span class="o">+</span> <span class="n">pred_point_id_offset</span>
@@ -450,8 +459,9 @@
                         <span class="n">score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
                         <span class="n">pid</span> <span class="o">=</span> <span class="n">point_id</span> <span class="o">+</span> <span class="n">point_id_offset</span>
 
-                        <span class="c1"># Keep track of any from_predicted instance links, we will insert the</span>
-                        <span class="c1"># correct instance_id in the dataset after we are done.</span>
+                        <span class="c1"># Keep track of any from_predicted instance links, we will</span>
+                        <span class="c1"># insert the correct instance_id in the dataset after we are</span>
+                        <span class="c1"># done.</span>
                         <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">from_predicted</span><span class="p">:</span>
                             <span class="n">instances_with_from_predicted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instance_id</span><span class="p">)</span>
                             <span class="n">instances_from_predicted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">from_predicted</span><span class="p">)</span>
@@ -469,15 +479,15 @@
                         <span class="n">pid</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parray</span><span class="p">),</span>
                     <span class="p">)</span>
 
-                    <span class="c1"># If these are predicted points, copy them to the predicted point array</span>
-                    <span class="c1"># otherwise, use the normal point array</span>
+                    <span class="c1"># If these are predicted points, copy them to the predicted point</span>
+                    <span class="c1"># array otherwise, use the normal point array</span>
                     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">parray</span><span class="p">)</span> <span class="ow">is</span> <span class="n">PredictedPointArray</span><span class="p">:</span>
                         <span class="n">pred_points</span><span class="p">[</span>
-                            <span class="n">pred_point_id</span> <span class="p">:</span> <span class="n">pred_point_id</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parray</span><span class="p">)</span>
+                            <span class="n">pred_point_id</span> <span class="p">:</span> <span class="p">(</span><span class="n">pred_point_id</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parray</span><span class="p">))</span>
                         <span class="p">]</span> <span class="o">=</span> <span class="n">parray</span>
                         <span class="n">pred_point_id</span> <span class="o">=</span> <span class="n">pred_point_id</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parray</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">points</span><span class="p">[</span><span class="n">point_id</span> <span class="p">:</span> <span class="n">point_id</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parray</span><span class="p">)]</span> <span class="o">=</span> <span class="n">parray</span>
+                        <span class="n">points</span><span class="p">[</span><span class="n">point_id</span> <span class="p">:</span> <span class="p">(</span><span class="n">point_id</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parray</span><span class="p">))]</span> <span class="o">=</span> <span class="n">parray</span>
                         <span class="n">point_id</span> <span class="o">=</span> <span class="n">point_id</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parray</span><span class="p">)</span>
 
                     <span class="n">instance_id</span> <span class="o">=</span> <span class="n">instance_id</span> <span class="o">+</span> <span class="mi">1</span>
@@ -491,14 +501,16 @@
                         <span class="n">from_predicted</span>
                     <span class="p">]</span>
                 <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                    <span class="c1"># If we haven&#39;t encountered the from_predicted instance yet then don&#39;t save the link.</span>
-                    <span class="c1"># It’s possible for a user to create a regular instance from a predicted instance and then</span>
-                    <span class="c1"># delete all predicted instances from the file, but in this case I don’t think there’s any reason</span>
-                    <span class="c1"># to remember which predicted instance the regular instance came from.</span>
+                    <span class="c1"># If we haven&#39;t encountered the from_predicted instance yet then</span>
+                    <span class="c1"># don&#39;t save the link. It&#39;s possible for a user to create a regular</span>
+                    <span class="c1"># instance from a predicted instance and then delete all predicted</span>
+                    <span class="c1"># instances from the file, but in this case I don’t think there&#39;s</span>
+                    <span class="c1"># any reason to remember which predicted instance the regular</span>
+                    <span class="c1"># instance came from.</span>
                     <span class="k">pass</span>
 
-            <span class="c1"># We pre-allocated our points array with max possible size considering the max</span>
-            <span class="c1"># skeleton size, drop any unused points.</span>
+            <span class="c1"># We pre-allocated our points array with max possible size considering the</span>
+            <span class="c1"># max skeleton size, drop any unused points.</span>
             <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">point_id</span><span class="p">]</span>
             <span class="n">pred_points</span> <span class="o">=</span> <span class="n">pred_points</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">pred_point_id</span><span class="p">]</span>
 
@@ -593,7 +605,7 @@
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

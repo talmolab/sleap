@@ -6,8 +6,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sleap.nn.tracker.components &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -100,7 +100,7 @@ since without cache this method is significantly slower than others.</p>
 
 <dl class="py function">
 <dt id="sleap.nn.tracker.components.connect_single_track_breaks">
-<code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">connect_single_track_breaks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>LabeledFrame<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">instance_count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/tracker/components.html#connect_single_track_breaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.connect_single_track_breaks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">connect_single_track_breaks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span>LabeledFrame<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">instance_count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>LabeledFrame<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/tracker/components.html#connect_single_track_breaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.connect_single_track_breaks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merges breaks in tracks by connecting single lost with single new track.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -117,7 +117,7 @@ since without cache this method is significantly slower than others.</p>
 
 <dl class="py function">
 <dt id="sleap.nn.tracker.components.cull_frame_instances">
-<code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">cull_frame_instances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instances_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">instance_count</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">iou_threshold</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/tracker/components.html#cull_frame_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.cull_frame_instances" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">cull_frame_instances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instances_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">instance_count</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">iou_threshold</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>LabeledFrame<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/tracker/components.html#cull_frame_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.cull_frame_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes instances (for single frame) over instance per frame threshold.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -229,6 +229,7 @@ only use score to determine which instances to remove.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
@@ -373,7 +374,7 @@ only use score to determine which instances to remove.</p></li>
       &copy;2019–2020, Murthy Lab @ Princeton.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
