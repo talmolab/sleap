@@ -837,7 +837,7 @@ class SingleImageVideo:
     def get_idx_from_filename(self, filename: str) -> int:
         try:
             return self.filenames.index(filename)
-        except IndexError as e:
+        except IndexError:
             return None
 
     # The properties and methods below complete our contract with the

@@ -572,7 +572,6 @@ class Trainer(ABC):
 
         # Determine output type to create type-specific model trainer.
         head_config = config.model.heads.which_oneof()
-        trainer_cls = None
         if isinstance(head_config, CentroidsHeadConfig):
             trainer_cls = CentroidConfmapsModelTrainer
         elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
@@ -805,7 +804,7 @@ class Trainer(ABC):
 
         logger.info(f"Starting training loop...")
         t0 = time()
-        history = self.keras_model.fit(
+        self.keras_model.fit(
             training_ds,
             epochs=self.config.optimization.epochs,
             validation_data=validation_ds,

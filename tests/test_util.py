@@ -80,7 +80,7 @@ def test_scoped_dict():
     assert "bar" in scoped_dict
     assert scoped_dict["foo"]["x"] == 3
     assert scoped_dict["foo"]["y"] == 5
-    assert scoped_dict["foo"]["z"] == None
+    assert scoped_dict["foo"]["z"] is None
     assert scoped_dict["bar"]["z"] == 7
 
     scoped_dict = make_scoped_dictionary(d, exclude_nones=True)

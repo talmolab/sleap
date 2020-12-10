@@ -281,7 +281,7 @@ def get_config_file(
         # config file.
         try:
             os.makedirs(os.path.expanduser("~/.sleap"))
-        except FileExistsError as e:
+        except FileExistsError:
             pass
 
         # If we don't care whether the file exists, just return the path

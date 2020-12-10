@@ -237,10 +237,10 @@ class LossViewer(QtWidgets.QMainWindow):
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
             self.zmq_ctrl.bind("tcp://127.0.0.1:9000")
 
-        # Set timer to poll for messages
+        # Set timer to poll for messages every 20 milliseconds
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.check_messages)
-        self.timer.start(0)
+        self.timer.start(20)
 
     def stop(self):
         """Action to stop training."""
@@ -424,7 +424,7 @@ if __name__ == "__main__":
 
     t = QtCore.QTimer()
     t.timeout.connect(test_point)
-    t.start(0)
+    t.start(20)
 
     win.set_message("Waiting for 3 seconds...")
     t2 = QtCore.QTimer()
