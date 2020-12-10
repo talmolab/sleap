@@ -1087,7 +1087,7 @@ class TopdownPredictor(Predictor):
     centroid_model: Optional[Model] = attr.ib(default=None)
     confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     confmap_model: Optional[Model] = attr.ib(default=None)
-    topdown_model: Optional[TopDownModel] = attr.ib(default=None)
+    inference_model: Optional[TopDownModel] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
     batch_size: int = 4
@@ -1095,7 +1095,7 @@ class TopdownPredictor(Predictor):
     integral_refinement: bool = True
     integral_patch_size: int = 5
 
-    def _initialize_topdown_model(self):
+    def _initialize_inference_model(self):
         """Build the `TopDownModel` for this class from the config/models available."""
         use_gt_centroid = self.centroid_config is None
         use_gt_confmap = self.confmap_config is None
@@ -1134,7 +1134,7 @@ class TopdownPredictor(Predictor):
                 return_confmaps=False,
             )
 
-        self.topdown_model = TopDownModel(
+        self.inference_model = TopDownModel(
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
         )
 
@@ -1199,7 +1199,7 @@ class TopdownPredictor(Predictor):
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
         )
-        obj._initialize_topdown_model()
+        obj._initialize_inference_model()
         return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
@@ -1238,11 +1238,11 @@ class TopdownPredictor(Predictor):
 
         self.pipeline.providers = [data_provider]
 
-        if self.topdown_model is None:
-            self._initialize_topdown_model()
+        if self.inference_model is None:
+            self._initialize_inference_model()
 
         for ex in self.pipeline.make_dataset():
-            preds = self.topdown_model.predict(ex)
+            preds = self.inference_model.predict(ex)
 
             ex["instance_peaks"] = [
                 x[:n] for x, n in zip(preds["instance_peaks"], preds["n_valid"])
@@ -1320,8 +1320,6 @@ class TopdownPredictor(Predictor):
         make_instances: bool = True,
         make_labels: bool = False,
     ):
-        t0_gen = time.time()
-
         if isinstance(data_provider, sleap.Labels):
             data_provider = LabelsReader(data_provider)
         elif isinstance(data_provider, sleap.Video):
@@ -1331,10 +1329,6 @@ class TopdownPredictor(Predictor):
 
         if make_instances or make_labels:
             lfs = self.make_labeled_frames_from_generator(generator, data_provider)
-            elapsed = time.time() - t0_gen
-            logger.info(
-                f"Predicted {len(lfs)} labeled frames in {elapsed:.3f} secs [{len(lfs)/elapsed:.1f} FPS]"
-            )
 
             if make_labels:
                 return sleap.Labels(lfs)
@@ -1343,10 +1337,6 @@ class TopdownPredictor(Predictor):
 
         else:
             examples = list(generator)
-            elapsed = time.time() - t0_gen
-            logger.info(
-                f"Predicted {len(examples)} examples in {elapsed:.3f} secs [{len(examples)/elapsed:.1f} examples/s]"
-            )
 
             return examples
 
@@ -1588,7 +1578,7 @@ class BottomupPredictor(Predictor):
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
     peak_threshold: float = 0.2
     batch_size: int = 4
-    integral_refinement: bool = False
+    integral_refinement: bool = True
     integral_patch_size: int = 5
     max_edge_length_ratio: float = 0.5
     paf_line_points: int = 10
@@ -1616,7 +1606,7 @@ class BottomupPredictor(Predictor):
         bottomup_model_path: Text,
         batch_size: int = 4,
         peak_threshold: float = 0.2,
-        integral_refinement: bool = False,
+        integral_refinement: bool = True,
         integral_patch_size: int = 5,
     ) -> "BottomupPredictor":
         """Create predictor from saved models."""
@@ -2198,14 +2188,13 @@ def make_video_readers_from_cli(args) -> List[VideoReader]:
     raise ValueError("You must specify either video_path or labels dataset path.")
 
 
-def make_predictor_from_paths(paths) -> Predictor:
-    """Builds predictor object from a list of model paths."""
-    return make_predictor_from_models(find_heads_for_model_paths(paths))
+def make_predictor_from_paths(paths, **kwargs) -> Predictor:
+    """Build predictor object from a list of model paths."""
+    return make_predictor_from_models(find_heads_for_model_paths(paths), **kwargs)
 
 
 def find_heads_for_model_paths(paths) -> Dict[str, str]:
     """Given list of models paths, returns dict with path keyed by head name."""
-
     trained_model_paths = dict()
 
     if paths is None:
@@ -2231,6 +2220,7 @@ def make_predictor_from_models(
     trained_model_paths: Dict[str, str],
     labels_path: Optional[str] = None,
     policy_args: Optional[dict] = None,
+    **kwargs,
 ) -> Predictor:
     """Given dict of paths keyed by head name, returns appropriate predictor."""
 
@@ -2241,12 +2231,15 @@ def make_predictor_from_models(
 
     if "multi_instance" in trained_model_paths:
         predictor = BottomupPredictor.from_trained_models(
-            trained_model_paths["multi_instance"], **get_relevant_args("bottomup")
+            trained_model_paths["multi_instance"],
+            **get_relevant_args("bottomup"),
+            **kwargs,
         )
     elif "single_instance" in trained_model_paths:
         predictor = SingleInstancePredictor.from_trained_models(
             confmap_model_path=trained_model_paths["single_instance"],
             **get_relevant_args("single"),
+            **kwargs,
         )
     elif (
         "centroid" in trained_model_paths and "centered_instance" in trained_model_paths
@@ -2255,6 +2248,7 @@ def make_predictor_from_models(
             centroid_model_path=trained_model_paths["centroid"],
             confmap_model_path=trained_model_paths["centered_instance"],
             **get_relevant_args("topdown"),
+            **kwargs,
         )
     elif len(trained_model_paths) == 0 and labels_path:
         predictor = MockPredictor.from_trained_models(labels_path=labels_path)
@@ -2297,9 +2291,67 @@ def save_predictions_from_cli(args, predicted_frames, prediction_metadata=None):
     Labels.save_file(labels, output_path)
 
 
+def load_model(
+    model_path: Union[str, List[str]],
+    batch_size: int = 4,
+    refinement: str = "integral",
+    tracker: Optional[str] = None,
+    tracker_window: int = 5,
+    tracker_max_instances: Optional[int] = None,
+) -> Predictor:
+    """Load a trained SLEAP model.
+
+    Args:
+        model_path: Path to model or list of path to models that were trained by SLEAP.
+            These should be the directories that contain `training_job.json` and
+            `best_model.h5`.
+        batch_size: Number of frames to predict at a time. Larger values result in
+            faster inference speeds, but require more memory.
+        refinement: If `"integral"`, peak locations will be refined with integral
+            regression. If `"local"`, peaks will be refined with quarter pixel local
+            gradient offset.
+        tracker: Name of the tracker to use with the inference model. Must be one of
+            `"simple"` or `"flow"`. If `None`, no identity tracking across frames will
+            be performed.
+        tracker_window: Number of frames of history to use when tracking. No effect when
+            `tracker` is `None`.
+        tracker_max_instances: If not `None`, discard instances beyond this count when
+            tracking. No effect when `tracker` is `None`.
+
+    Returns:
+        An instance of a `Predictor` based on which model type was detected.
+
+        If this is a top-down model, paths to the centroids model as well as the
+        centered instance model must be provided. A `TopdownPredictor` instance will be
+        returned.
+
+        If this is a bottom-up model, a `BottomupPredictor` will be returned.
+
+        If this is a single-instance model, a `SingleInstancePredictor` will be
+        returned.
+
+        If a `tracker` is specified, the predictor will also run identity tracking over
+        time.
+
+    See also: TopdownPredictor, BottomupPredictor, SingleInstancePredictor
+    """
+    if isinstance(model_path, str):
+        model_path = [model_path]
+    predictor = make_predictor_from_paths(
+        model_path, batch_size=batch_size, integral_refinement=refinement == "integral"
+    )
+    if tracker is not None:
+        predictor.tracker = Tracker.make_tracker_by_name(
+            tracker=tracker,
+            track_window=tracker_window,
+            post_connect_single_breaks=True,
+            clean_instance_count=tracker_max_instances,
+        )
+    return predictor
+
+
 def main():
     """CLI for running inference."""
-
     parser = make_cli_parser()
     args, _ = parser.parse_known_args()
     print(args)
@@ -2361,7 +2413,7 @@ def main():
     predicted_frames = []
 
     for video_reader in video_readers:
-        video_predicted_frames = predictor.predict(video_reader)
+        video_predicted_frames = predictor.predict(video_reader, make_labels=False, make_instances=True)
         predicted_frames.extend(video_predicted_frames)
 
     # Create dictionary of metadata we want to save with predictions
