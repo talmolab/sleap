@@ -220,10 +220,10 @@ class MainWindow(QMainWindow):
 
         self._load_overlays()
 
-        # Create timer to update state of gui at regular intervals
+        # Create timer to update state of gui at 20 millisec. intervals
         self.update_gui_timer = QtCore.QTimer()
         self.update_gui_timer.timeout.connect(self._update_gui_state)
-        self.update_gui_timer.start(1)
+        self.update_gui_timer.start(20)
 
     def _create_video_player(self):
         """Creates and connects :class:`QtVideoPlayer` for gui."""
@@ -1545,6 +1545,13 @@ def main():
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "--profiling",
+        help="Enable performance profiling",
+        action="store_const",
+        const=True,
+        default=False,
+    )
 
     args = parser.parse_args()
 
@@ -1560,7 +1567,11 @@ def main():
     # if not args.labels_path:
     #     window.commands.openProject(first_open=True)
 
-    app.exec_()
+    if args.profiling:
+        import cProfile
+        cProfile.runctx('app.exec_()', globals=globals(), locals=locals())
+    else:
+        app.exec_()
 
 
 if __name__ == "__main__":
