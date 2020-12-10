@@ -24,7 +24,7 @@ pip install python-rapidjson
 rem pip install opencv-python-headless==4.2.0.34
 pip install pandas
 pip install psutil
-pip install "PySide2>=5.12.0,<=5.14.1"
+rem pip install "PySide2>=5.12.0,<=5.14.1"
 pip install pyzmq
 pip install pyyaml
 pip install imgaug==0.3.0

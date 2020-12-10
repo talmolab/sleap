@@ -19,7 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
+        # os: ["ubuntu-latest", "windows-latest"]
+        os: ["ubuntu-18.04", "windows-2019"]
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -47,14 +48,14 @@ jobs:
 
       # Build pip wheel (Ubuntu)
       - name: Build pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
 
       # Upload pip wheel (Ubuntu)
       - name: Upload pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-18.04'
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         shell: bash -l {0}
@@ -63,7 +64,7 @@ jobs:
 
       # Build conda package
       - name: Build conda package (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
         run: |
           sudo apt-get install xvfb libxkbcommon-x11-0
@@ -72,7 +73,7 @@ jobs:
           xvfb-run pytest tests/
           conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
       - name: Build conda package (Windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         shell: powershell
         run: |
           conda activate sleap
@@ -81,42 +82,42 @@ jobs:
 
       # Upload conda package
       - name: Login to Anaconda (Windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: powershell
         run: |
           anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
       - name: Login to Anaconda (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-18.04'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: bash -l {0}
         run: |
           anaconda login --username sleap --password "$ANACONDA_LOGIN"
       - name: Upload conda package (Windows/main)
-        if: matrix.os == 'windows-latest' && github.ref == 'refs/heads/master'
+        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/master'
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2"
           anaconda logout
       - name: Upload conda package (Windows/dev)
-        # if: matrix.os == 'windows-latest' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'windows-latest' && github.ref == 'refs/heads/tf23'
+        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
+        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/tf23'
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
           anaconda logout
 
       - name: Upload conda package (Ubuntu/main)
-        if: matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/master'
+        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/master'
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2
           anaconda logout
       - name: Upload conda package (Ubuntu/dev)
-        # if: matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/tf23'
+        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
+        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/tf23'
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
