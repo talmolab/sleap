@@ -1092,7 +1092,7 @@ def make_instance_cattr() -> cattr.Converter:
     return converter
 
 
-@attr.s(auto_attribs=True, eq=False)
+@attr.s(auto_attribs=True, eq=False, repr=False, str=False)
 class LabeledFrame:
     """
     Holds labeled data for a single frame of a video.
@@ -1140,6 +1140,15 @@ class LabeledFrame:
 
         # Modify the instance to remove reference to this frame
         value.frame = None
+
+    def __repr__(self) -> str:
+        """Return a readable representation of the LabeledFrame."""
+        return (
+            f"LabeledFrame(video={type(self.video.backend).__name__}"
+            f"('{self.video.filename}'), "
+            f"frame_idx={self.frame_idx}, "
+            f"instances={len(self.instances)})"
+        )
 
     def insert(self, index: int, value: Instance):
         """
@@ -1550,4 +1559,8 @@ class LabeledFrame:
         """
         if image:
             sleap.nn.viz.plot_img(self.image)
-        sleap.nn.viz.plot_instances(self.predicted_instances)
+        sleap.nn.viz.plot_instances(
+            self.predicted_instances,
+            color_by_track=(len(self.predicted_instances) > 0)
+            and (self.predicted_instances[0].track is not None),
+        )

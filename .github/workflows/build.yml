@@ -1,0 +1,124 @@
+# PyPI and conda package builds on release.
+# TODO: Update branch conditionals below to use develop instead of tf23 when we switch CI systems.
+name: Build
+
+on:
+  # push:
+  #   branches:
+  #     - tf23
+  #     - develop
+
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    name: Build package from release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # os: ["ubuntu-latest", "windows-latest"]
+        os: ["ubuntu-18.04", "windows-2019"]
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+      - name: Cache conda
+        uses: actions/cache@v1
+        env:
+          # Increase this value to reset cache if environment_build.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+      - name: Setup Miniconda
+        # https://github.com/conda-incubator/setup-miniconda
+        uses: conda-incubator/setup-miniconda@v2.0.0
+        with:
+          python-version: 3.6
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          environment-file: environment_build.yml
+          activate-environment: sleap
+      - name: Print environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          conda info
+
+      # Build pip wheel (Ubuntu)
+      - name: Build pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        shell: bash -l {0}
+        run: |
+          python setup.py bdist_wheel
+
+      # Upload pip wheel (Ubuntu)
+      - name: Upload pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        shell: bash -l {0}
+        run: |
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
+
+      # Build conda package
+      - name: Build conda package (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        shell: bash -l {0}
+        run: |
+          sudo apt-get install xvfb libxkbcommon-x11-0
+          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+          export DISPLAY=":1"
+          xvfb-run pytest tests/
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
+      - name: Build conda package (Windows)
+        if: matrix.os == 'windows-2019'
+        shell: powershell
+        run: |
+          conda activate sleap
+          pytest tests/
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
+
+      # Upload conda package
+      - name: Login to Anaconda (Windows)
+        if: matrix.os == 'windows-2019'
+        env:
+          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+        shell: powershell
+        run: |
+          anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
+      - name: Login to Anaconda (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        env:
+          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+        shell: bash -l {0}
+        run: |
+          anaconda login --username sleap --password "$ANACONDA_LOGIN"
+      - name: Upload conda package (Windows/main)
+        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/master'
+        shell: powershell
+        run: |
+          anaconda -v upload "build\win-64\*.tar.bz2"
+          anaconda logout
+      - name: Upload conda package (Windows/dev)
+        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
+        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/tf23'
+        shell: powershell
+        run: |
+          anaconda -v upload "build\win-64\*.tar.bz2" --label dev
+          anaconda logout
+
+      - name: Upload conda package (Ubuntu/main)
+        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/master'
+        shell: bash -l {0}
+        run: |
+          anaconda -v upload build/linux-64/*.tar.bz2
+          anaconda logout
+      - name: Upload conda package (Ubuntu/dev)
+        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
+        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/tf23'
+        shell: bash -l {0}
+        run: |
+          anaconda -v upload build/linux-64/*.tar.bz2 --label dev
+          anaconda logout

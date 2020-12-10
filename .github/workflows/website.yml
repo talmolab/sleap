@@ -1,0 +1,64 @@
+# Builds static content for GitHub pages.
+
+name: Build website
+
+on:
+  push:
+    branches:
+      - master  # Branch that triggers updates to sleap.ai
+      - tf23
+    paths:
+      - 'docs/**'
+      - 'README.rst'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Setup
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cache conda
+        uses: actions/cache@v1
+        env:
+          # Increase this value to reset cache if environment_build.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+      - name: Setup Miniconda
+        # https://github.com/conda-incubator/setup-miniconda
+        uses: conda-incubator/setup-miniconda@v2.0.0
+        with:
+          python-version: 3.6
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          environment-file: environment_build.yml
+          activate-environment: sleap
+      - name: Print environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          conda info
+
+      - name: Build
+        shell: bash -l {0}
+        run: |
+          cd docs
+          python make_api_doctree.py
+          make html
+
+      - name: Deploy (sleap.ai)
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/master'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: docs/build/html
+
+      - name: Deploy (test)
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref != 'refs/heads/master'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages-test
+          publish_dir: docs/build/html

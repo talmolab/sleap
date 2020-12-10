@@ -81,6 +81,7 @@ class LossViewer(QtWidgets.QMainWindow):
         for s in self.series:
             self.series[s].pen().setColor(self.color[s])
         self.series["batch"].setMarkerSize(8.0)
+        self.series["batch"].setBorderColor(QtGui.QColor(255, 255, 255, 25))
 
         self.chart.addSeries(self.series["batch"])
         self.chart.addSeries(self.series["epoch_loss"])
@@ -395,9 +396,9 @@ class LossViewer(QtWidgets.QMainWindow):
                         )
                     self.on_epoch.emit()
                 elif msg["event"] == "batch_end":
-                    self.last_batch_number = msg["logs"]["batch"]
+                    self.last_batch_number = msg["batch"]
                     self.add_datapoint(
-                        (self.epoch * self.epoch_size) + msg["logs"]["batch"],
+                        (self.epoch * self.epoch_size) + msg["batch"],
                         msg["logs"]["loss"],
                     )
 

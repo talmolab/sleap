@@ -14,6 +14,7 @@ from typing import List, Text
 import imgaug as ia
 import imgaug.augmenters as iaa
 from sleap.nn.config import AugmentationConfig
+from sleap.nn.data.instance_cropping import crop_bboxes
 
 
 @attr.s(auto_attribs=True)
@@ -27,19 +28,35 @@ class ImgaugAugmenter:
     Attributes:
         augmenter: An instance of `imgaug.augmenters.Sequential` that will be applied to
             each element of the input dataset.
+        image_key: Name of the example key where the image is stored. Defaults to
+            "image".
+        instances_key: Name of the example key where the instance points are stored.
+            Defaults to "instances".
     """
 
     augmenter: iaa.Sequential
+    image_key: str = "image"
+    instances_key: str = "instances"
 
     @classmethod
-    def from_config(cls, config: AugmentationConfig) -> "ImgaugAugmenter":
+    def from_config(
+        cls,
+        config: AugmentationConfig,
+        image_key: Text = "image",
+        instances_key: Text = "instances",
+    ) -> "ImgaugAugmenter":
         """Create an augmenter from a set of configuration parameters.
 
         Args:
             config: An `AugmentationConfig` instance with the desired parameters.
+            image_key: Name of the example key where the image is stored. Defaults to
+                "image".
+            instances_key: Name of the example key where the instance points are stored.
+                Defaults to "instances".
 
         Returns:
-            An instance of this class with the specified augmentation configuration.
+            An instance of `ImgaugAugmenter` with the specified augmentation
+            configuration.
         """
         aug_stack = []
         if config.rotate:
@@ -82,12 +99,16 @@ class ImgaugAugmenter:
                 iaa.Add(value=(config.brightness_min_val, config.brightness_max_val))
             )
 
-        return cls(augmenter=iaa.Sequential(aug_stack))
+        return cls(
+            augmenter=iaa.Sequential(aug_stack),
+            image_key=image_key,
+            instances_key=instances_key,
+        )
 
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return ["image", "instances"]
+        return [self.image_key, self.instances_key]
 
     @property
     def output_keys(self) -> List[Text]:
@@ -156,3 +177,75 @@ class ImgaugAugmenter:
         output_ds = input_ds.map(augment)
 
         return output_ds
+
+
+@attr.s(auto_attribs=True)
+class RandomCropper:
+    """Data transformer for applying random crops to input images.
+
+    This class can generate a `tf.data.Dataset` from an existing one that generates
+    image and instance data. Element of the output dataset will have random crops
+    applied.
+
+    Attributes:
+        crop_height: The height of the cropped region in pixels.
+        crop_width: The width of the cropped region in pixels.
+    """
+
+    crop_height: int = 256
+    crop_width: int = 256
+
+    @property
+    def input_keys(self):
+        return ["image", "instances"]
+
+    @property
+    def output_keys(self):
+        return ["image", "instances", "crop_bbox"]
+
+    def transform_dataset(self, input_ds: tf.data.Dataset):
+        """Create a `tf.data.Dataset` with elements containing augmented data.
+
+        Args:
+            input_ds: A dataset with elements that contain the keys "image" and
+                "instances". This is typically raw data from a data provider.
+
+        Returns:
+            A `tf.data.Dataset` with the same keys as the input, but with images and
+            instance points updated with the applied random crop.
+
+            Additionally, the `"crop_bbox"` key will contain the bounding box of the
+            crop in the form `[y1, x1, y2, x2]`.
+        """
+
+        def random_crop(ex):
+            """Apply random crop to an example."""
+            # Generate random value for the top-left of the crop.
+            img_width = tf.shape(ex["image"])[1]
+            img_height = tf.shape(ex["image"])[0]
+            dx = tf.random.uniform(
+                (), minval=0, maxval=tf.cast(img_width - self.crop_width, tf.float32)
+            )
+            dy = tf.random.uniform(
+                (), minval=0, maxval=tf.cast(img_height - self.crop_height, tf.float32)
+            )
+            ex["instances"] = ex["instances"] - tf.reshape(
+                tf.stack([dx, dy], axis=0), [1, 1, 2]
+            )
+            bbox = tf.expand_dims(
+                tf.stack(
+                    [
+                        dy,
+                        dx,
+                        dy + tf.cast(self.crop_height, tf.float32) - 1,
+                        dx + tf.cast(self.crop_width, tf.float32) - 1,
+                    ],
+                    axis=0,
+                ),
+                axis=0,
+            )
+            ex["crop_bbox"] = bbox
+            ex["image"] = tf.squeeze(crop_bboxes(ex["image"], bbox), axis=0)
+            return ex
+
+        return input_ds.map(random_crop)

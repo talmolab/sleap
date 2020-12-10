@@ -1381,6 +1381,40 @@ class Video:
             )
         )
 
+    def to_pipeline(
+        self,
+        batch_size: Optional[int] = None,
+        prefetch: bool = True,
+        frame_indices: Optional[List[int]] = None,
+    ) -> "sleap.pipelines.Pipeline":
+        """Create a pipeline for reading the video.
+
+        Args:
+            batch_size: If not `None`, the video frames will be batched into rank-4
+                tensors. Otherwise, single rank-3 images will be returned.
+            prefetch: If `True`, pipeline will include prefetching.
+            frame_indices: Frame indices to limit the pipeline reader to. If not
+                specified (default), pipeline will read the entire video.
+
+        Returns:
+            A `sleap.pipelines.Pipeline` that builds `tf.data.Dataset` for high
+            throughput I/O during inference.
+
+        See also: sleap.pipelines.VideoReader
+        """
+        from sleap.nn.data import pipelines
+
+        pipeline = pipelines.Pipeline(
+            pipelines.VideoReader(self, example_indices=frame_indices)
+        )
+        if batch_size is not None:
+            pipeline += pipelines.Batcher(
+                batch_size=batch_size, drop_remainder=False, unrag=False
+            )
+
+        pipeline += pipelines.Prefetcher()
+        return pipeline
+
     @staticmethod
     def make_specific_backend(backend_class, kwargs):
         # Only pass through the kwargs that match attributes for the backend

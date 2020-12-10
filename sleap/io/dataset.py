@@ -380,7 +380,7 @@ class LabelsDataCache:
                 self._frame_count_cache[None][type_key].discard(idx_pair)
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
     """
     The :class:`Labels` class collects the data for a SLEAP project.
@@ -585,6 +585,21 @@ class Labels(MutableSequence):
         """Return index of labeled frame in list of labeled frames."""
         return self.labeled_frames.index(value)
 
+    def __repr__(self) -> str:
+        """Return a readable representation of the labels."""
+        return (
+            "Labels("
+            f"labeled_frames={len(self.labeled_frames)}, "
+            f"videos={len(self.videos)}, "
+            f"skeletons={len(self.skeletons)}, "
+            f"tracks={len(self.tracks)}"
+            ")"
+        )
+
+    def __str__(self) -> str:
+        """Return a readable representation of the labels."""
+        return self.__repr__()
+
     def __contains__(self, item) -> bool:
         """Check if object contains the given item.
 
@@ -656,6 +671,10 @@ class Labels(MutableSequence):
                 return self.find(video=key[0], frame_idx=key[1])
             else:
                 raise KeyError("Invalid label indexing arguments.")
+
+        elif isinstance(key, slice):
+            start, stop, step = key.indices(len(self))
+            return self.__getitem__(range(start, stop, step))
 
         elif isinstance(key, (list, range)):
             return [self.__getitem__(i) for i in key]
@@ -1776,6 +1795,47 @@ class Labels(MutableSequence):
             new_vids.append(vid)
 
         return new_vids
+
+    def to_pipeline(
+        self,
+        batch_size: Optional[int] = None,
+        prefetch: bool = True,
+        frame_indices: Optional[List[int]] = None,
+        user_labeled_only: bool = True,
+    ) -> "sleap.pipelines.Pipeline":
+        """Create a pipeline for reading the dataset.
+
+        Args:
+            batch_size: If not `None`, the video frames will be batched into rank-4
+                tensors. Otherwise, single rank-3 images will be returned.
+            prefetch: If `True`, pipeline will include prefetching.
+            frame_indices: Labeled frame indices to limit the pipeline reader to. If not
+                specified (default), pipeline will read all the labeled frames in the
+                dataset.
+            user_labeled_only: If `True` (default), will only read frames with user
+                labeled instances.
+
+        Returns:
+            A `sleap.pipelines.Pipeline` that builds `tf.data.Dataset` for high
+            throughput I/O during inference.
+
+        See also: sleap.pipelines.LabelsReader
+        """
+        from sleap.nn.data import pipelines
+
+        if user_labeled_only:
+            reader = pipelines.LabelsReader.from_user_instances(self)
+            reader.example_indices = frame_indices
+        else:
+            reader = pipelines.LabelsReader(self, example_indices=frame_indices)
+        pipeline = pipelines.Pipeline(reader)
+        if batch_size is not None:
+            pipeline += pipelines.Batcher(
+                batch_size=batch_size, drop_remainder=False, unrag=False
+            )
+
+        pipeline += pipelines.Prefetcher()
+        return pipeline
 
     @classmethod
     def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:

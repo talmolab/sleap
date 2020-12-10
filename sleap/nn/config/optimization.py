@@ -46,6 +46,12 @@ class AugmentationConfig:
             illumination change. See `imgaug.augmenters.arithmetic.Add`.
         brightness_min_val: Minimum value to add to all pixels.
         brightness_max_val: Maximum value to add to all pixels.
+        random_crop: If `True`, performs random crops on the image. This is useful for
+            training efficiently on large resolution images, but may fail to learn
+            global structure beyond the crop size. Random cropping will be applied after
+            the augmentations above.
+        random_crop_width: Width of random crops.
+        random_crop_height: Height of random crops.
     """
 
     rotate: bool = False
@@ -69,6 +75,9 @@ class AugmentationConfig:
     brightness: bool = False
     brightness_min_val: float = 0.0
     brightness_max_val: float = 10.0
+    random_crop: bool = False
+    random_crop_height: int = 256
+    random_crop_width: int = 256
 
 
 @attr.s(auto_attribs=True)

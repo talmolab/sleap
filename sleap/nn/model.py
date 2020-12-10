@@ -240,7 +240,7 @@ class Model:
                     f"Could not find a feature activation for output at stride "
                     f"{output.output_stride}."
                 )
-            x_outs.append(x_head)
+            x_outs.extend(x_head)
         # TODO: Warn/error if x_main was not connected to any heads?
 
         # Create model.

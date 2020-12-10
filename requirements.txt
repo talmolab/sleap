@@ -3,13 +3,13 @@ attrs==19.3
 cattrs==1.0.0rc
 jsonpickle==1.2
 networkx
-tensorflow==2.1.2
+tensorflow==2.3.1
 h5py==2.10.0
 python-rapidjson
 opencv-python-headless==4.2.0.34
 pandas
 psutil
-PySide2>=5.12.0,<=5.14.1
+PySide2==5.14.1
 pyzmq
 pyyaml
 imgaug==0.3.0
