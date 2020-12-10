@@ -489,13 +489,13 @@ class Tracker(BaseTracker):
     def final_pass(self, frames: List[LabeledFrame]):
         """Called after tracking has run on all frames to do any post-processing."""
         if self.cleaner:
-            print(
-                "DEPRECATION WARNING: "
-                "--clean_instance_count is deprecated (but still applied to "
-                "clean results *after* tracking). Use --target_instance_count "
-                "and --pre_cull_to_target instead to cull instances *before* "
-                "tracking."
-            )
+        #     print(
+        #         "DEPRECATION WARNING: "
+        #         "--clean_instance_count is deprecated (but still applied to "
+        #         "clean results *after* tracking). Use --target_instance_count "
+        #         "and --pre_cull_to_target instead to cull instances *before* "
+        #         "tracking."
+        #     )
             self.cleaner.run(frames)
         elif self.target_instance_count and self.post_connect_single_breaks:
             connect_single_track_breaks(frames, self.target_instance_count)
@@ -649,14 +649,14 @@ class Tracker(BaseTracker):
         option["type"] = int
         option[
             "help"
-        ] = "DEPRECATED: Target number of instances to clean *after* tracking."
+        ] = "Target number of instances to clean *after* tracking."
         options.append(option)
 
         option = dict(name="clean_iou_threshold", default=0)
         option["type"] = float
         option[
             "help"
-        ] = "DEPRECATED: IOU to use when culling instances *after* tracking."
+        ] = "IOU to use when culling instances *after* tracking."
         options.append(option)
 
         option = dict(name="similarity", default="instance")
