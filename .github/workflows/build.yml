@@ -1,11 +1,10 @@
 # PyPI and conda package builds on release.
-# TODO: Update branch conditionals below to use develop instead of tf23 when we switch CI systems.
 name: Build
 
 on:
   # push:
-  #   branches:
-  #     - tf23
+  #   branches:  # Use this to trigger a build if the release build failed
+  #     - master
   #     - develop
 
   release:
@@ -102,8 +101,7 @@ jobs:
           anaconda -v upload "build\win-64\*.tar.bz2"
           anaconda logout
       - name: Upload conda package (Windows/dev)
-        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/tf23'
+        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
@@ -116,8 +114,7 @@ jobs:
           anaconda -v upload build/linux-64/*.tar.bz2
           anaconda logout
       - name: Upload conda package (Ubuntu/dev)
-        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/tf23'
+        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
