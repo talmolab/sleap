@@ -2,7 +2,7 @@
 name: Build
 
 on:
-  push:
+  # push:
     # branches:  # Use this to trigger a build if the release build failed
     #   - master
     #   - develop
