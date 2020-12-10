@@ -11,7 +11,7 @@ import cattr
 import numpy as np
 import jsonpickle
 import json
-import h5py as h5
+import h5py
 import copy
 
 from enum import Enum
@@ -23,7 +23,7 @@ from networkx.readwrite import json_graph
 from scipy.io import loadmat
 
 NodeRef = Union[str, "Node"]
-H5FileRef = Union[str, h5.File]
+H5FileRef = Union[str, h5py.File]
 
 
 class EdgeType(Enum):
@@ -42,7 +42,7 @@ class EdgeType(Enum):
     SYMMETRY = 2
 
 
-@attr.s(auto_attribs=True, slots=True, cmp=False)
+@attr.s(auto_attribs=True, slots=True, eq=False, order=False)
 class Node:
     """
     The class :class:`Node` represents a potential skeleton node.
@@ -255,9 +255,9 @@ class Skeleton:
         """
         raise NotImplementedError(
             "Cannot change Skeleton name, it is immutable since "
-            + "it is used for hashing. Create a copy of the skeleton "
-            + "with new name using "
-            + f"new_skeleton = Skeleton.rename(skeleton, '{name}'))"
+            "it is used for hashing. Create a copy of the skeleton "
+            "with new name using "
+            f"new_skeleton = Skeleton.rename(skeleton, '{name}'))"
         )
 
     @classmethod
@@ -1031,14 +1031,14 @@ class Skeleton:
         Load a specific skeleton (by name) from the HDF5 file.
 
         Args:
-            file: The file name or open h5.File
+            file: The file name or open h5py.File
             name: The name of the skeleton.
 
         Returns:
             The specified `Skeleton` instance stored in the HDF5 file.
         """
         if isinstance(file, str):
-            with h5.File(file) as _file:
+            with h5py.File(file, "r") as _file:
                 skeletons = cls._load_hdf5(_file)  # Load all skeletons
         else:
             skeletons = cls._load_hdf5(file)
@@ -1053,7 +1053,7 @@ class Skeleton:
         Load all skeletons found in the HDF5 file.
 
         Args:
-            file: The file name or open h5.File
+            file: The file name or open h5py.File
             return_dict: Whether the the return value should be a dict
                 where the keys are skeleton names and values the
                 corresponding skeleton. If False, then method will
@@ -1064,7 +1064,7 @@ class Skeleton:
             Either in List or Dict form.
         """
         if isinstance(file, str):
-            with h5.File(file) as _file:
+            with h5py.File(file, "r") as _file:
                 skeletons = cls._load_hdf5(_file)  # Load all skeletons
         else:
             skeletons = cls._load_hdf5(file)
@@ -1075,7 +1075,7 @@ class Skeleton:
         return list(skeletons.values())
 
     @classmethod
-    def _load_hdf5(cls, file: h5.File):
+    def _load_hdf5(cls, file: h5py.File):
 
         skeletons = {}
         for name, json_str in file["skeleton"].attrs.items():
@@ -1092,7 +1092,7 @@ class Skeleton:
         file.
 
         Args:
-            file: The filename or the open h5.File object.
+            file: The filename or the open h5py.File object.
             skeletons: The list of skeletons to save.
 
         Raises:
@@ -1113,27 +1113,27 @@ class Skeleton:
 
     def save_hdf5(self, file: H5FileRef):
         """
-        Wrapper for HDF5 saving which takes either filename or h5.File.
+        Wrapper for HDF5 saving which takes either filename or h5py.File.
 
         Args:
-            file: can be filename (string) or `h5.File` object
+            file: can be filename (string) or `h5py.File` object
 
         Returns:
             None
         """
 
         if isinstance(file, str):
-            with h5.File(file) as _file:
+            with h5py.File(file, "a") as _file:
                 self._save_hdf5(_file)
         else:
             self._save_hdf5(file)
 
-    def _save_hdf5(self, file: h5.File):
+    def _save_hdf5(self, file: h5py.File):
         """
         Actual implementation of HDF5 saving.
 
         Args:
-            file: The open h5.File to write the skeleton data to.
+            file: The open h5py.File to write the skeleton data to.
 
         Returns:
             None

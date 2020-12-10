@@ -40,7 +40,18 @@ default extension to use if none is provided in the filename.
 import itertools
 import os
 from collections import MutableSequence
-from typing import Callable, List, Union, Dict, Optional, Tuple, Text, Iterable, Any, Set
+from typing import (
+    Callable,
+    List,
+    Union,
+    Dict,
+    Optional,
+    Tuple,
+    Text,
+    Iterable,
+    Any,
+    Set,
+)
 
 import attr
 import cattr
@@ -280,7 +291,9 @@ class LabelsDataCache:
 
         return len(self._frame_count_cache[video][filter])
 
-    def get_filtered_frame_idxs(self, video: Optional[Video] = None, filter: Text = "") -> Set[Tuple[int, int]]:
+    def get_filtered_frame_idxs(
+        self, video: Optional[Video] = None, filter: Text = ""
+    ) -> Set[Tuple[int, int]]:
         """Return list of (video_idx, frame_idx) tuples matching video/filter."""
         if filter == "":
             filter_func = lambda lf: video is None or lf.video == video
@@ -544,7 +557,7 @@ class Labels(MutableSequence):
             raise ValueError(
                 "Labels.skeleton can only be used when there is only a single skeleton "
                 "saved in the labels. Use Labels.skeletons instead."
-                )
+            )
 
     @property
     def video(self) -> Video:
@@ -557,7 +570,7 @@ class Labels(MutableSequence):
             raise ValueError(
                 "Labels.video can only be used when there is only a single video saved "
                 "in the labels. Use Labels.videos instead."
-                )
+            )
 
     @property
     def has_missing_videos(self) -> bool:
@@ -592,11 +605,7 @@ class Labels(MutableSequence):
             return item in self.skeletons
         elif isinstance(item, Node):
             return item in self.nodes
-        elif (
-            isinstance(item, tuple)
-            and len(item) == 2
-            and isinstance(item[0], Video)
-        ):
+        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], Video):
             if isinstance(item[1], int):
                 return self.find_first(*item) is not None
             elif isinstance(item[1], np.integer):
@@ -630,18 +639,16 @@ class Labels(MutableSequence):
                 raise KeyError("Video not found in labels.")
             return self.find(video=key)
 
-        elif (
-            isinstance(key, tuple)
-            and len(key) == 2
-            and isinstance(key[0], Video)
-        ):
+        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
             if key[0] not in self.videos:
                 raise KeyError("Video not found in labels.")
 
             if isinstance(key[1], int):
                 _hit = self.find_first(video=key[0], frame_idx=key[1])
                 if _hit is None:
-                    raise KeyError(f"No label found for specified video at frame {key[1]}.")
+                    raise KeyError(
+                        f"No label found for specified video at frame {key[1]}."
+                    )
                 return _hit
             elif isinstance(key[1], (np.integer, np.ndarray)):
                 return self.__getitem__((key[0], key[1].tolist()))
@@ -683,8 +690,29 @@ class Labels(MutableSequence):
 
     def remove(self, value: LabeledFrame):
         """Remove given labeled frame."""
-        self.labeled_frames.remove(value)
-        self._cache.remove_frame(value)
+        self.remove_frame(value)
+
+    def remove_frame(self, lf: LabeledFrame, update_cache: bool = True):
+        """Remove a given labeled frame.
+
+        Args:
+            lf: Labeled frame instance to remove.
+            update_cache: If True, update the internal frame cache. If False, cache
+                update can be postponed (useful when removing many frames).
+        """
+        self.labeled_frames.remove(lf)
+        if update_cache:
+            self._cache.remove_frame(lf)
+
+    def remove_frames(self, lfs: List[LabeledFrame]):
+        """Remove a list of frames from the labels.
+
+        Args:
+            lfs: A sequence of labeled frames to remove.
+        """
+        to_remove = set(lfs)
+        self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
+        self.update_cache()
 
     def find(
         self,
@@ -813,7 +841,39 @@ class Labels(MutableSequence):
     @property
     def predicted_instances(self) -> List[PredictedInstance]:
         """Return list of all predicted instances."""
-        return [inst for inst in self.all_instances if isinstance(inst, PredictedInstance)]
+        return [
+            inst for inst in self.all_instances if isinstance(inst, PredictedInstance)
+        ]
+
+    def describe(self):
+        """Print basic statistics about the labels dataset."""
+        print(f"Videos: {len(self.videos)}")
+        n_user_inst = len(self.user_instances)
+        n_predicted_inst = len(self.predicted_instances)
+        print(
+            f"Instances: {n_user_inst:,} (user-labeled), "
+            f"{n_predicted_inst:,} (predicted), "
+            f"{n_user_inst + n_predicted_inst:,} (total)"
+        )
+        n_user_only = 0
+        n_pred_only = 0
+        n_both = 0
+        for lf in self.labeled_frames:
+            has_user = lf.has_user_instances
+            has_pred = lf.has_predicted_instances
+            if has_user and not has_pred:
+                n_user_only += 1
+            elif not has_user and has_pred:
+                n_pred_only += 1
+            elif has_user and has_pred:
+                n_both += 1
+        n_total = len(self.labeled_frames)
+        print(
+            f"Frames: {n_user_only:,} (user-labeled), "
+            f"{n_pred_only:,} (predicted), "
+            f"{n_both:,} (both), "
+            f"{n_total:,} (total)"
+        )
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):
         """Iterate over instances in the labels, optionally with filters.
@@ -1177,6 +1237,124 @@ class Labels(MutableSequence):
 
         return True
 
+    def has_frame(
+        self,
+        lf: Optional[LabeledFrame] = None,
+        video: Optional[Video] = None,
+        frame_idx: Optional[int] = None,
+        use_cache: bool = True,
+    ) -> bool:
+        """Check if the labels contain a specified frame.
+
+        Args:
+            lf: `LabeledFrame` to search for. If not provided, the `video` and
+                `frame_idx` must not be `None`.
+            video: `Video` of the frame. Not necessary if `lf` is given.
+            frame_idx: Integer frame index of the frame. Not necessary if `lf` is given.
+            use_cache: If `True` (the default), use label lookup cache for faster
+                searching. If `False`, check every frame without the cache.
+
+        Returns:
+            A `bool` indicating whether the specified `LabeledFrame` is contained in the
+            labels.
+
+            This will return `True` if there is a matching frame with the same video and
+            frame index, even if they contain different instances.
+
+        Notes:
+            The `Video` instance must be the same as the ones in these labels, so if
+            comparing to `Video`s loaded from another file, be sure to load those labels
+            with matching, i.e.: `sleap.Labels.load_file(..., match_to=labels)`.
+        """
+        if lf is not None:
+            video = lf.video
+            frame_idx = lf.frame_idx
+        if video is None or frame_idx is None:
+            raise ValueError("Either lf or video and frame_idx must be provided.")
+
+        if use_cache:
+            return len(self.find(video, frame_idx=frame_idx, return_new=False)) > 0
+
+        else:
+            if video not in self.videos:
+                return False
+            for lf in self.labeled_frames:
+                if lf.video == video and lf.frame_idx == frame_idx:
+                    return True
+            return False
+
+    def remove_user_instances(self, new_labels: Optional["Labels"] = None):
+        """Clear user instances from the labels.
+
+        Useful prior to merging operations to prevent overlapping instances from new
+        labels.
+
+        Args:
+            new_labels: If not `None`, only user instances in frames that also contain
+                user instances in the new labels will be removed. If not provided
+                (the default), all user instances will be removed.
+
+        Notes:
+            If providing `new_labels`, it must have been loaded using
+            `sleap.Labels.load_file(..., match_to=labels)` to ensure that conflicting
+            frames can be detected.
+
+            Labeled frames without any instances after clearing will also be removed
+            from the dataset.
+        """
+        keep_lfs = []
+        for lf in self.labeled_frames:
+            if new_labels is not None:
+                if not new_labels.has_frame(lf):
+                    # Base frame is not in new labels, so just keep it without
+                    # modification.
+                    keep_lfs.append(lf)
+                    continue
+
+            if lf.has_predicted_instances:
+                # Remove predictions from base frame.
+                lf.instances = lf.predicted_instances
+                keep_lfs.append(lf)
+
+        # Keep only labeled frames with no conflicting predictions.
+        self.labeled_frames = keep_lfs
+
+    def remove_predictions(self, new_labels: Optional["Labels"] = None):
+        """Clear predicted instances from the labels.
+
+        Useful prior to merging operations to prevent overlapping instances from new
+        predictions.
+
+        Args:
+            new_labels: If not `None`, only predicted instances in frames that also
+                contain predictions in the new labels will be removed. If not provided
+                (the default), all predicted instances will be removed.
+
+        Notes:
+            If providing `new_labels`, it must have been loaded using
+            `sleap.Labels.load_file(..., match_to=labels)` to ensure that conflicting
+            frames can be detected.
+
+            Labeled frames without any instances after clearing will also be removed
+            from the dataset.
+        """
+        keep_lfs = []
+        for lf in self.labeled_frames:
+            if new_labels is not None:
+                if not new_labels.has_frame(lf):
+                    # Base frame is not in new labels, so just keep it without
+                    # modification.
+                    keep_lfs.append(lf)
+                    continue
+
+            if lf.has_user_instances:
+                # Remove predictions from base frame.
+                lf.instances = lf.user_instances
+                keep_lfs.append(lf)
+
+        # Keep only labeled frames with no conflicting predictions.
+        self.labeled_frames = keep_lfs
+
     @classmethod
     def complex_merge_between(
         cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
@@ -1410,22 +1588,41 @@ class Labels(MutableSequence):
 
         write(filename, labels, *args, **kwargs)
 
-    def save(self, filename: Text, with_images: bool = False):
+    def save(
+        self,
+        filename: Text,
+        with_images: bool = False,
+        embed_all_labeled: bool = False,
+        embed_suggested: bool = False,
+    ):
         """Save the labels to a file.
 
         Args:
             filename: Path to save the labels to ending in `.slp`. If the filename does
                 not end in `.slp`, the extension will be automatically appended.
-            with_images: If True, the image data for frames with labels will be embedded
-                in the saved labels. This is useful for generating a single file to be
-                used when training remotely.
+            with_images: If `True`, the image data for frames with labels will be
+                embedded in the saved labels. This is useful for generating a single
+                file to be used when training remotely. Defaults to `False`.
+            embed_all_labeled: If `True`, save image data for labeled frames without
+                user-labeled instances (defaults to `False`). This is useful for
+                selecting arbitrary frames to save by adding empty `LabeledFrame`s to
+                the dataset. Labeled frame metadata will be saved regardless.
+            embed_suggested: If `True`, save image data for frames in the suggestions
+                (defaults to `False`). Useful for predicting on remaining suggestions
+                after training. Suggestions metadata will be saved regardless.
 
         Notes:
             This is an instance-level wrapper for the `Labels.save_file` class method.
         """
         if os.path.splitext(filename)[1].lower() != ".slp":
             filename = filename + ".slp"
-        Labels.save_file(self, filename, save_frame_data=with_images)
+        Labels.save_file(
+            self,
+            filename,
+            save_frame_data=with_images,
+            all_labeled=embed_all_labeled,
+            suggested=embed_suggested,
+        )
 
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
@@ -1528,7 +1725,12 @@ class Labels(MutableSequence):
         return imgstore_vids
 
     def save_frame_data_hdf5(
-        self, output_path: str, format: str = "png", all_labels: bool = False
+        self,
+        output_path: str,
+        format: str = "png",
+        user_labeled: bool = True,
+        all_labeled: bool = False,
+        suggested: bool = False,
     ) -> List[HDF5Video]:
         """Write images for labeled frames from all videos to hdf5 file.
 
@@ -1537,21 +1739,34 @@ class Labels(MutableSequence):
         Args:
             output_path: Path to HDF5 file.
             format: The image format to use for the data. Defaults to png.
-            all_labels: Include any labeled frames, not just the frames
-                we'll use for training (i.e., those with Instances).
+            user_labeled: Include labeled frames with user instances. Defaults to
+                `True`.
+            all_labeled: Include all labeled frames, including those with user-labeled
+                instances, predicted instances or labeled frames with no instances.
+                Defaults to `False`.
+            suggested: Include suggested frames even if they do not have instances.
+                Useful for inference after training. Defaults to `False`.
 
         Returns:
             A list of :class:`HDF5Video` objects with the stored frames.
         """
         new_vids = []
-        for v_idx, v in enumerate(self.videos):
+        for v_idx, video in enumerate(self.videos):
+            lfs_v = self.find(video)
             frame_nums = [
                 lf.frame_idx
-                for lf in self.labeled_frames
-                if v == lf.video and (all_labels or lf.has_user_instances)
+                for lf in lfs_v
+                if all_labeled or (user_labeled and lf.has_user_instances)
             ]
+            if suggested:
+                frame_nums += [
+                    suggestion.frame_idx
+                    for suggestion in self.suggestions
+                    if suggestion.video == video
+                ]
+            frame_nums = sorted(list(set(frame_nums)))
 
-            vid = v.to_hdf5(
+            vid = video.to_hdf5(
                 path=output_path,
                 dataset=f"video{v_idx}",
                 format=format,

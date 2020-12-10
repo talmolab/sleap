@@ -307,7 +307,7 @@ class PredictedPointArray(PointArray):
         return v
 
 
-@attr.s(slots=True, cmp=False)
+@attr.s(slots=True, eq=False, order=False)
 class Track:
     """
     A track object is associated with a set of animal/object instances
@@ -341,7 +341,7 @@ class Track:
 # that are created in post init so they are not serialized.
 
 
-@attr.s(cmp=False, slots=True)
+@attr.s(eq=False, order=False, slots=True)
 class Instance:
     """
     The class :class:`Instance` represents a labelled instance of a skeleton.
@@ -896,7 +896,7 @@ class Instance:
         return cls(points=predicted_points, skeleton=skeleton, track=track)
 
 
-@attr.s(cmp=False, slots=True)
+@attr.s(eq=False, order=False, slots=True)
 class PredictedInstance(Instance):
     """
     A predicted instance is an output of the inference procedure.
@@ -1092,7 +1092,7 @@ def make_instance_cattr() -> cattr.Converter:
     return converter
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False)
 class LabeledFrame:
     """
     Holds labeled data for a single frame of a video.

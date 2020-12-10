@@ -16,6 +16,7 @@ import os
 import re
 import yaml
 
+import numpy as np
 import pandas as pd
 
 from typing import List, Optional
@@ -97,18 +98,37 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
     ) -> List[LabeledFrame]:
         filename = file.filename
 
+        # Read CSV file.
         data = pd.read_csv(filename, header=[1, 2])
 
-        # Create the skeleton from the list of nodes in the csv file.
-        # Note that DeepLabCut doesn't have edges, so these will need to be
-        # added by user later.
-        node_names = [n[0] for n in list(data)[1::2]]
+        # Check if this is in the new multi-animal format.
+        is_multianimal = data.columns[0][0] == "individuals"
+
+        if is_multianimal:
+            # Reload with additional header rows if using new format.
+            data = pd.read_csv(filename, header=[1, 2, 3])
+
+            # Pull out animal and node names from the columns.
+            animal_names = []
+            node_names = []
+            for animal_name, node_name, _ in data.columns[1:][::2]:
+                if animal_name not in animal_names:
+                    animal_names.append(animal_name)
+                if node_name not in node_names:
+                    node_names.append(node_name)
+
+        else:
+            # Create the skeleton from the list of nodes in the csv file.
+            # Note that DeepLabCut doesn't have edges, so these will need to be
+            # added by user later.
+            node_names = [n[0] for n in list(data)[1::2]]
 
         if skeleton is None:
             skeleton = Skeleton()
             skeleton.add_nodes(node_names)
 
-        img_files = data.iloc[:, 0]  # get list of all images
+        # Get list of all images filenames.
+        img_files = data.iloc[:, 0]
 
         if full_video:
             video = full_video
@@ -122,21 +142,13 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             # rather than having their index from the original source video.
             index_frames_by_original_index = False
 
-        frames = []
+        lfs = []
         for i in range(len(data)):
-            # get points for each node
-            instance_points = dict()
-            for node in node_names:
-                x, y = data[(node, "x")][i], data[(node, "y")][i]
-                instance_points[node] = Point(x, y)
 
-            # Create instance with points.
-            # For DeepLabCut we're assuming there's a single instance per frame.
-            instance = Instance(skeleton=skeleton, points=instance_points)
-
+            # Figure out frame index to use.
             if index_frames_by_original_index:
-                # extract "0123" from "path/img0123.png" as original frame index
-                frame_idx_match = re.search("(?<=img)(\\d+)(?=\.png)", img_files[i])
+                # Extract "0123" from "path/img0123.png" as original frame index.
+                frame_idx_match = re.search("(?<=img)(\\d+)(?=\\.png)", img_files[i])
 
                 if frame_idx_match is not None:
                     frame_idx = int(frame_idx_match.group(0))
@@ -144,16 +156,46 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                     raise ValueError(
                         f"Unable to determine frame index for image {img_files[i]}"
                     )
-
             else:
                 frame_idx = i
 
-            # create labeledframe and add it to list
-            frames.append(
-                LabeledFrame(video=video, frame_idx=frame_idx, instances=[instance])
+            instances = []
+            if is_multianimal:
+                for animal_name in animal_names:
+                    any_not_missing = False
+                    # Get points for each node.
+                    instance_points = dict()
+                    for node in node_names:
+                        x, y = (
+                            data[(animal_name, node, "x")][i],
+                            data[(animal_name, node, "y")][i],
+                        )
+                        instance_points[node] = Point(x, y)
+                        if ~(np.isnan(x) and np.isnan(y)):
+                            any_not_missing = True
+
+                    if any_not_missing:
+                        # Create instance with points.
+                        instances.append(
+                            Instance(skeleton=skeleton, points=instance_points)
+                        )
+            else:
+                # Get points for each node.
+                instance_points = dict()
+                for node in node_names:
+                    x, y = data[(node, "x")][i], data[(node, "y")][i]
+                    instance_points[node] = Point(x, y)
+
+                # Create instance with points assuming there's a single instance per
+                # frame.
+                instances.append(Instance(skeleton=skeleton, points=instance_points))
+
+            # Create LabeledFrame and add it to list.
+            lfs.append(
+                LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
             )
 
-        return frames
+        return lfs
 
 
 class LabelsDeepLabCutYamlAdaptor(Adaptor):

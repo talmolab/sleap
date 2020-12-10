@@ -383,8 +383,7 @@ class ImportParamWidget(QWidget):
             even though it's not a user-selectable param.
         """
         param_list = self.import_type["params"]
-        param_values = {}
-        param_values["filename"] = self.file_path
+        param_values = {"filename": self.file_path}
         for param_item in param_list:
             name = param_item["name"]
             type = param_item["type"]

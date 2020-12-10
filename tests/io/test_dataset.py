@@ -257,8 +257,16 @@ def test_scalar_properties():
     # More than one video
     dummy_skeleton = Skeleton()
     labels = Labels()
-    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
-    labels.append(LabeledFrame(Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]))
+    labels.append(
+        LabeledFrame(
+            Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]
+        )
+    )
+    labels.append(
+        LabeledFrame(
+            Video(backend=MediaVideo), frame_idx=0, instances=[Instance(dummy_skeleton)]
+        )
+    )
     assert labels.skeleton == dummy_skeleton
     with pytest.raises(ValueError):
         labels.video
@@ -266,8 +274,12 @@ def test_scalar_properties():
     # More than one skeleton
     dummy_video = Video(backend=MediaVideo)
     labels = Labels()
-    labels.append(LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())]))
-    labels.append(LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())]))
+    labels.append(
+        LabeledFrame(dummy_video, frame_idx=0, instances=[Instance(Skeleton())])
+    )
+    labels.append(
+        LabeledFrame(dummy_video, frame_idx=1, instances=[Instance(Skeleton())])
+    )
     assert labels.video == dummy_video
     with pytest.raises(ValueError):
         labels.skeleton
@@ -691,6 +703,66 @@ def test_save_labels_and_frames_hdf5(multi_skel_vid_labels, tmpdir):
     loaded_labels = Labels.load_hdf5(filename=filerename)
 
 
+def test_save_frame_data_hdf5(min_labels_slp, tmpdir):
+    labels = Labels(min_labels_slp.labeled_frames)
+    labels.append(LabeledFrame(video=labels.video, frame_idx=1))
+    labels.suggestions.append(SuggestionFrame(video=labels.video, frame_idx=2))
+
+    fn = os.path.join(tmpdir, "test_user_only.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=True, all_labeled=False, suggested=False,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0]
+
+    fn = os.path.join(tmpdir, "test_all_labeled.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=True, suggested=False,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0, 1]
+
+    fn = os.path.join(tmpdir, "test_suggested.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=False, suggested=True,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [2]
+
+    fn = os.path.join(tmpdir, "test_all.slp")
+    labels.save_frame_data_hdf5(
+        fn, format="png", user_labeled=False, all_labeled=True, suggested=True,
+    )
+    assert Video.from_filename(fn, dataset="video0").embedded_frame_inds == [0, 1, 2]
+
+
+def test_save_labels_with_images(min_labels_slp, tmpdir):
+    labels = Labels(min_labels_slp.labeled_frames)
+    labels.append(LabeledFrame(video=labels.video, frame_idx=1))
+    labels.suggestions.append(SuggestionFrame(video=labels.video, frame_idx=2))
+
+    fn = os.path.join(tmpdir, "test_user_only.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=False, embed_suggested=False,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0]
+
+    fn = os.path.join(tmpdir, "test_all_labeled.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=True, embed_suggested=False,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 1]
+
+    fn = os.path.join(tmpdir, "test_suggested.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=False, embed_suggested=True,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 2]
+
+    fn = os.path.join(tmpdir, "test_all.slp")
+    labels.save(
+        fn, with_images=True, embed_all_labeled=True, embed_suggested=True,
+    )
+    assert Labels.load_file(fn).video.embedded_frame_inds == [0, 1, 2]
+
+
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
     labels = multi_skel_vid_labels
     filename = os.path.join(tmpdir, "test.h5")
@@ -933,3 +1005,116 @@ def test_provenance(tmpdir):
     labels = Labels.load_file(filename)
     print(labels.provenance)
     assert labels.provenance["source"] == "test_provenance"
+
+
+def test_has_frame():
+    video = Video(backend=MediaVideo)
+    labels = Labels([LabeledFrame(video=video, frame_idx=0)])
+
+    assert labels.has_frame(labels[0])
+    assert labels.has_frame(labels[0], use_cache=False)
+    assert labels.has_frame(LabeledFrame(video=video, frame_idx=0))
+    assert labels.has_frame(video=video, frame_idx=0)
+    assert labels.has_frame(video=video, frame_idx=0, use_cache=False)
+    assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1))
+    assert not labels.has_frame(LabeledFrame(video=video, frame_idx=1), use_cache=False)
+    assert not labels.has_frame(video=video, frame_idx=1)
+    with pytest.raises(ValueError):
+        labels.has_frame()
+    with pytest.raises(ValueError):
+        labels.has_frame(video=video)
+    with pytest.raises(ValueError):
+        labels.has_frame(frame_idx=1)
+
+
+@pytest.fixture
+def removal_test_labels():
+    skeleton = Skeleton()
+    video = Video(backend=MediaVideo)
+    lf_user_only = LabeledFrame(
+        video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
+    )
+    lf_pred_only = LabeledFrame(
+        video=video, frame_idx=1, instances=[PredictedInstance(skeleton=skeleton)]
+    )
+    lf_both = LabeledFrame(
+        video=video,
+        frame_idx=2,
+        instances=[Instance(skeleton=skeleton), PredictedInstance(skeleton=skeleton)],
+    )
+    labels = Labels([lf_user_only, lf_pred_only, lf_both])
+    return labels
+
+
+def test_remove_user_instances(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    labels.remove_user_instances()
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 1
+    assert not labels[0].has_user_instances
+    assert labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert not labels[1].has_user_instances
+    assert labels[1].has_predicted_instances
+
+
+def test_remove_user_instances_with_new_labels(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    new_labels = Labels(
+        [
+            LabeledFrame(
+                video=labels.video,
+                frame_idx=0,
+                instances=[Instance(skeleton=labels.skeleton)],
+            )
+        ]
+    )
+    labels.remove_user_instances(new_labels=new_labels)
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 1
+    assert not labels[0].has_user_instances
+    assert labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert labels[1].has_predicted_instances
+
+
+def test_remove_predictions(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    labels.remove_predictions()
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 0
+    assert labels[0].has_user_instances
+    assert not labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert not labels[1].has_predicted_instances
+
+
+def test_remove_predictions_with_new_labels(removal_test_labels):
+    labels = removal_test_labels
+    assert len(labels) == 3
+
+    new_labels = Labels(
+        [
+            LabeledFrame(
+                video=labels.video,
+                frame_idx=1,
+                instances=[PredictedInstance(skeleton=labels.skeleton)],
+            )
+        ]
+    )
+    labels.remove_predictions(new_labels=new_labels)
+    assert len(labels) == 2
+    assert labels[0].frame_idx == 0
+    assert labels[0].has_user_instances
+    assert not labels[0].has_predicted_instances
+    assert labels[1].frame_idx == 2
+    assert labels[1].has_user_instances
+    assert labels[1].has_predicted_instances

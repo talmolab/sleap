@@ -115,9 +115,11 @@ class Model:
             heads = SingleInstanceConfmapsHead.from_config(
                 head_config, part_names=part_names
             )
+            output_stride = heads.output_stride
 
         elif isinstance(head_config, CentroidsHeadConfig):
             heads = CentroidConfmapsHead.from_config(head_config)
+            output_stride = heads.output_stride
 
         elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
             part_names = head_config.part_names
@@ -133,6 +135,7 @@ class Model:
             heads = CenteredInstanceConfmapsHead.from_config(
                 head_config, part_names=part_names
             )
+            output_stride = heads.output_stride
 
         elif isinstance(head_config, MultiInstanceConfig):
             part_names = head_config.confmaps.part_names
@@ -163,6 +166,9 @@ class Model:
                 ),
                 PartAffinityFieldsHead.from_config(head_config.pafs, edges=edges),
             ]
+            output_stride = min(heads[0].output_stride, heads[1].output_stride)
+
+        backbone_config.output_stride = output_stride
 
         return cls(backbone=backbone_cls.from_config(backbone_config), heads=heads)
 

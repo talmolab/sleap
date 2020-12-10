@@ -78,22 +78,22 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
     ):
         f = file.file
 
-        # Extract the Labels JSON metadata and create Labels object with just
-        # this metadata.
+        # Extract the Labels JSON metadata and create Labels object with just this
+        # metadata.
         dicts = json_loads(
             f.require_group("metadata").attrs["json"].tostring().decode()
         )
 
-        # These items are stored in separate lists because the metadata group
-        # got to be too big.
+        # These items are stored in separate lists because the metadata group got to be
+        # too big.
         for key in ("videos", "tracks", "suggestions"):
             hdf5_key = f"{key}_json"
             if hdf5_key in f:
                 items = [json_loads(item_json) for item_json in f[hdf5_key]]
                 dicts[key] = items
 
-        # Video path "." means the video is saved in same file as labels,
-        # so replace these paths.
+        # Video path "." means the video is saved in same file as labels, so replace
+        # these paths.
         for video_item in dicts["videos"]:
             if video_item["backend"]["filename"] == ".":
                 video_item["backend"]["filename"] = file.filename
@@ -106,9 +106,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
         # 2. Accept list of strings as video search paths
         if hasattr(video_search, "__iter__"):
-            # If the callback is an iterable, then we'll expect it to be a
-            # list of strings and build a non-gui callback with those as
-            # the search paths.
+            # If the callback is an iterable, then we'll expect it to be a list of
+            # strings and build a non-gui callback with those as the search paths.
             search_paths = [
                 # os.path.dirname(path) if os.path.isfile(path) else path
                 path
@@ -145,28 +144,28 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         points_dset = f["points"][:]
         pred_points_dset = f["pred_points"][:]
 
-        # Shift the *non-predicted* points since these used to be saved with
-        # a gridline coordinate system.
+        # Shift the *non-predicted* points since these used to be saved with a gridline
+        # coordinate system.
         if (file.format_id or 0) < 1.1:
             points_dset[:]["x"] -= 0.5
             points_dset[:]["y"] -= 0.5
 
-        # Rather than instantiate a bunch of Point\PredictedPoint objects, we will
-        # use inplace numpy recarrays. This will save a lot of time and memory
-        # when reading things in.
+        # Rather than instantiate a bunch of Point\PredictedPoint objects, we will use
+        # inplace numpy recarrays. This will save a lot of time and memory when reading
+        # things in.
         points = PointArray(buf=points_dset, shape=len(points_dset))
 
         pred_points = PredictedPointArray(
             buf=pred_points_dset, shape=len(pred_points_dset)
         )
 
-        # Extend the tracks list with a None track. We will signify this with a -1 in the
-        # data which will map to last element of tracks
+        # Extend the tracks list with a None track. We will signify this with a -1 in
+        # the data which will map to last element of tracks
         tracks = labels.tracks.copy()
         tracks.extend([None])
 
-        # A dict to keep track of instances that have a from_predicted link. The key is the
-        # instance and the value is the index of the instance.
+        # A dict to keep track of instances that have a from_predicted link. The key is
+        # the instance and the value is the index of the instance.
         from_predicted_lookup = {}
 
         # Create the instances
@@ -224,6 +223,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         append: bool = False,
         save_frame_data: bool = False,
         frame_data_format: str = "png",
+        all_labeled: bool = False,
+        suggested: bool = False,
     ):
 
         labels = source_object
@@ -238,7 +239,13 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         d = labels.to_dict(skip_labels=True)
 
         if save_frame_data:
-            new_videos = labels.save_frame_data_hdf5(filename, frame_data_format)
+            new_videos = labels.save_frame_data_hdf5(
+                filename,
+                format=frame_data_format,
+                user_labeled=True,
+                all_labeled=all_labeled,
+                suggested=suggested,
+            )
 
             # Replace path to video file with "." (which indicates that the
             # video is in the same file as the HDF5 labels dataset).
@@ -278,9 +285,10 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                         if sum(matches) == 0:
                             unique.append(x)
                         else:
-                            # If we have an object that matches, replace the instance with
-                            # the one from the new list. This will will make sure objects
-                            # on the Instances are the same as those in the Labels lists.
+                            # If we have an object that matches, replace the instance
+                            # with the one from the new list. This will will make sure
+                            # objects on the Instances are the same as those in the
+                            # Labels lists.
                             for i, match in enumerate(matches):
                                 if match:
                                     old[i] = x
@@ -374,8 +382,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             instances_with_from_predicted = []
             instances_from_predicted = []
 
-            # If we are appending, we need look inside to see what frame, instance, and point
-            # ids we need to start from. This gives us offsets to use.
+            # If we are appending, we need look inside to see what frame, instance, and
+            # point ids we need to start from. This gives us offsets to use.
             if append and "points" in f:
                 point_id_offset = f["points"].shape[0]
                 pred_point_id_offset = f["pred_points"].shape[0]
@@ -401,14 +409,15 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                 )
                 for instance in label.instances:
 
-                    # Add this instance to our lookup structure we will need for from_predicted
-                    # links
+                    # Add this instance to our lookup structure we will need for
+                    # from_predicted links
                     instance_to_idx[instance] = instance_id
 
                     parray = instance.get_points_array(copy=False, full=True)
                     instance_type = type(instance)
 
-                    # Check whether we are working with a PredictedInstance or an Instance.
+                    # Check whether we are working with a PredictedInstance or an
+                    # Instance.
                     if instance_type is PredictedInstance:
                         score = instance.score
                         pid = pred_point_id + pred_point_id_offset
@@ -416,8 +425,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                         score = np.nan
                         pid = point_id + point_id_offset
 
-                        # Keep track of any from_predicted instance links, we will insert the
-                        # correct instance_id in the dataset after we are done.
+                        # Keep track of any from_predicted instance links, we will
+                        # insert the correct instance_id in the dataset after we are
+                        # done.
                         if instance.from_predicted:
                             instances_with_from_predicted.append(instance_id)
                             instances_from_predicted.append(instance.from_predicted)
@@ -435,15 +445,15 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                         pid + len(parray),
                     )
 
-                    # If these are predicted points, copy them to the predicted point array
-                    # otherwise, use the normal point array
+                    # If these are predicted points, copy them to the predicted point
+                    # array otherwise, use the normal point array
                     if type(parray) is PredictedPointArray:
                         pred_points[
-                            pred_point_id : pred_point_id + len(parray)
+                            pred_point_id : (pred_point_id + len(parray))
                         ] = parray
                         pred_point_id = pred_point_id + len(parray)
                     else:
-                        points[point_id : point_id + len(parray)] = parray
+                        points[point_id : (point_id + len(parray))] = parray
                         point_id = point_id + len(parray)
 
                     instance_id = instance_id + 1
@@ -457,14 +467,16 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                         from_predicted
                     ]
                 except KeyError:
-                    # If we haven't encountered the from_predicted instance yet then don't save the link.
-                    # It’s possible for a user to create a regular instance from a predicted instance and then
-                    # delete all predicted instances from the file, but in this case I don’t think there’s any reason
-                    # to remember which predicted instance the regular instance came from.
+                    # If we haven't encountered the from_predicted instance yet then
+                    # don't save the link. It's possible for a user to create a regular
+                    # instance from a predicted instance and then delete all predicted
+                    # instances from the file, but in this case I don’t think there's
+                    # any reason to remember which predicted instance the regular
+                    # instance came from.
                     pass
 
-            # We pre-allocated our points array with max possible size considering the max
-            # skeleton size, drop any unused points.
+            # We pre-allocated our points array with max possible size considering the
+            # max skeleton size, drop any unused points.
             points = points[0:point_id]
             pred_points = pred_points[0:pred_point_id]
 

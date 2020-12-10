@@ -2,8 +2,6 @@ name: sleap
 
 dependencies:
 - python=3.6
-- cudatoolkit=10.1
-- cudnn=7.6
 - Pillow
 - Shapely
 - pip

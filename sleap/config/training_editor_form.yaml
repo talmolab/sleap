@@ -1,4 +1,9 @@
 data:
+- default: 0.1
+  help: Fraction of labeled frames to use as a validation set.
+  label: Validation fraction
+  name: data.labels.validation_fraction
+  type: double
 - default: 1.0
   help: ''
   label: Input Scaling
@@ -33,12 +38,12 @@ model:
     name: model.backbone.hourglass.max_stride
     type: list
     options: 1,2,4,8,16,32,64
-  - default: 4
-    help: Determines the number of upsampling blocks in the network.
-    label: Output Stride
-    name: model.backbone.hourglass.output_stride
-    type: list
-    options: 1,2,4,8,16,32,64
+  # - default: 4
+  #   help: Determines the number of upsampling blocks in the network.
+  #   label: Output Stride
+  #   name: model.backbone.hourglass.output_stride
+  #   type: list
+  #   options: 1,2,4,8,16,32,64
   - default: 128
     help: ''
     label: Stem Filters
@@ -68,12 +73,12 @@ model:
     name: model.backbone.leap.max_stride
     type: list
     options: 2,4,8,16,32,64
-  - default: 1
-    help: Determines the number of upsampling blocks in the network.
-    label: Output Stride
-    name: model.backbone.leap.output_stride
-    type: list
-    options: 1,2,4,8,16,32,64
+  # - default: 1
+  #   help: Determines the number of upsampling blocks in the network.
+  #   label: Output Stride
+  #   name: model.backbone.leap.output_stride
+  #   type: list
+  #   options: 1,2,4,8,16,32,64
   - default: 64
     help: Base number of filters in the network.
     label: Filters
@@ -90,11 +95,11 @@ model:
     label: Up Interpolate
     name: model.backbone.leap.up_interpolate
     type: bool
-  - default: 1
-    help: Number of repeated stacks of the network (excluding the stem).
-    label: Stacks
-    name: model.backbone.leap.stacks
-    type: int
+  # - default: 1
+  #   help: Number of repeated stacks of the network (excluding the stem).
+  #   label: Stacks
+  #   name: model.backbone.leap.stacks
+  #   type: int
   name: _backbone_name
   options: leap,unet,hourglass,resnet
   resnet:
@@ -176,14 +181,14 @@ model:
     name: model.backbone.resnet.max_stride
     type: list
     options: 2,4,8,16,32,64
-  - default: 4
-    help: Stride of the final output. If the upsampling branch is not defined, the
-      output stride is controlled via dilated convolutions or reduced pooling in the
-      backbone.
-    label: Output Stride
-    name: model.backbone.resnet.output_stride
-    type: list
-    options: 1,2,4,8,16,32,64
+  # - default: 4
+  #   help: Stride of the final output. If the upsampling branch is not defined, the
+  #     output stride is controlled via dilated convolutions or reduced pooling in the
+  #     backbone.
+  #   label: Output Stride
+  #   name: model.backbone.resnet.output_stride
+  #   type: list
+  #   options: 1,2,4,8,16,32,64
   type: stacked
   unet:
   - default: null
@@ -200,12 +205,12 @@ model:
     name: model.backbone.unet.max_stride
     type: list
     options: 2,4,8,16,32,64
-  - default: 1
-    help: Determines the number of upsampling blocks in the network.
-    label: Output Stride
-    name: model.backbone.unet.output_stride
-    type: list
-    options: 1,2,4,8,16,32,64
+  # - default: 1
+  #   help: Determines the number of upsampling blocks in the network.
+  #   label: Output Stride
+  #   name: model.backbone.unet.output_stride
+  #   type: list
+  #   options: 1,2,4,8,16,32,64
   - default: 64
     help: Base number of filters in the network.
     label: Filters
@@ -229,11 +234,11 @@ model:
     label: Up Interpolate
     name: model.backbone.unet.up_interpolate
     type: bool
-  - default: 1
-    help: Number of repeated stacks of the network (excluding the stem).
-    label: Stacks
-    name: model.backbone.unet.stacks
-    type: int
+  # - default: 1
+  #   help: Number of repeated stacks of the network (excluding the stem).
+  #   label: Stacks
+  #   name: model.backbone.unet.stacks
+  #   type: int
 - centered_instance:
   - default: null
     help: Text name of a body part (node) to use as the anchor point. If None, the
@@ -523,7 +528,7 @@ optimization:
   label: Plateau Patience
   name: optimization.early_stopping.plateau_patience
   type: int
-- default: true
+- default: false
   help: If True, online hard keypoint mining (OHKM) will be enabled. When this is
     enabled, the loss is computed per keypoint (or edge for PAFs) and sorted from
     lowest (easy) to highest (hard). The hard keypoint loss will be scaled to have

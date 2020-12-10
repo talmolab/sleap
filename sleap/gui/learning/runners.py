@@ -185,7 +185,8 @@ class InferenceTask:
             timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
             output_path = os.path.join(
                 predictions_dir,
-                f"{os.path.basename(item_for_inference.path)}.{timestamp}.predictions.slp",
+                f"{os.path.basename(item_for_inference.path)}.{timestamp}."
+                "predictions.slp",
             )
 
         for job_path in self.trained_job_paths:
@@ -258,13 +259,17 @@ class InferenceTask:
 
     def merge_results(self):
         """Merges result frames into labels dataset."""
-        # Remove any frames without instances
+        # Remove any frames without instances.
         new_lfs = list(filter(lambda lf: len(lf.instances), self.results))
+        new_labels = Labels(new_lfs)
 
-        # Merge predictions into current labels dataset
+        # Remove potentially conflicting predictions from the base dataset.
+        self.labels.remove_predictions(new_labels=new_labels)
+
+        # Merge predictions into current labels dataset.
         _, _, new_conflicts = Labels.complex_merge_between(
             self.labels,
-            new_labels=Labels(new_lfs),
+            new_labels=new_labels,
             unify=False,  # since we used match_to when loading predictions file
         )
 
@@ -292,6 +297,24 @@ def write_pipeline_files(
     new_cfg_filenames = []
     train_script = "#!/bin/bash\n"
 
+    # Add head type to save path suffix to prevent overwriting.
+    for cfg_info in config_info_list:
+        if not cfg_info.dont_retrain:
+            if (
+                cfg_info.config.outputs.run_name_suffix is not None
+                and len(cfg_info.config.outputs.run_name_suffix) > 0
+            ):
+                # Keep existing suffix if defined.
+                suffix = "." + cfg_info.config.outputs.run_name_suffix
+            else:
+                suffix = ""
+
+            # Add head name.
+            suffix = "." + cfg_info.head_name + suffix
+
+            # Update config.
+            cfg_info.config.outputs.run_name_suffix = suffix
+
     for cfg_info in config_info_list:
         if cfg_info.dont_retrain:
             # Use full absolute path to already training model
@@ -317,7 +340,7 @@ def write_pipeline_files(
             cfg_info.config.save_json(new_cfg_filename)
 
             # Keep track of the path where we'll find the trained model
-            new_cfg_filenames.append(cfg_info.config.outputs.run_name)
+            new_cfg_filenames.append(cfg_info.config.outputs.run_path)
 
             # Add a line to the script for training this model
             train_script += f"sleap-train {new_cfg_filename} {labels_filename}\n"
@@ -446,11 +469,13 @@ def run_gui_training(
 
             if not config_info.has_trained_model:
                 raise ValueError(
-                    f"Config is set to not retrain but no trained model found: {config_info.path}"
+                    "Config is set to not retrain but no trained model found: "
+                    f"{config_info.path}"
                 )
 
             print(
-                f"Using already trained model for {config_info.head_name}: {config_info.path}"
+                f"Using already trained model for {config_info.head_name}: "
+                f"{config_info.path}"
             )
 
             trained_job_paths[config_info.head_name] = config_info.path
@@ -510,7 +535,9 @@ def run_gui_training(
                 if gui:
                     win.close()
                     QtWidgets.QMessageBox(
-                        text=f"An error occurred while training {str(model_type)}. Your command line terminal may have more information about the error."
+                        text=f"An error occurred while training {str(model_type)}. "
+                        "Your command line terminal may have more information about "
+                        "the error."
                     ).exec_()
                 trained_job_paths[model_type] = None
 
@@ -568,7 +595,8 @@ def run_gui_inference(
             if gui:
                 progress.close()
                 QtWidgets.QMessageBox(
-                    text=f"An error occcured during inference. Your command line terminal may have more information about the error."
+                    text="An error occcured during inference. Your command line "
+                    "terminal may have more information about the error."
                 ).exec_()
             return -1
 
