@@ -2,14 +2,14 @@
 name: Build
 
 on:
-  push:
-    branches:  # Use this to trigger a build if the release build failed
-      - master
-      - develop
+  # push:
+  #   branches:  # Use this to trigger a build if the release build failed
+  #     - master
+  #     - develop
 
-  # release:
-  #   types:
-  #     - published
+  release:
+    types:
+      - published
 
 jobs:
   build:
@@ -19,8 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         # os: ["ubuntu-latest", "windows-latest"]
-        # os: ["ubuntu-18.04", "windows-2019"]
-        os: ["ubuntu-18.04"]
+        os: ["ubuntu-18.04", "windows-2019"]
+        # os: ["ubuntu-18.04"]
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -45,14 +45,6 @@ jobs:
         run: |
           which python
           conda info
-
-      - name: Login to Anaconda (Ubuntu)
-        if: matrix.os == 'ubuntu-18.04'
-        env:
-          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
-        shell: bash -l {0}
-        run: |
-          yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
 
       # Build pip wheel (Ubuntu)
       - name: Build pip wheel (Ubuntu)
@@ -89,6 +81,13 @@ jobs:
           conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
 
       # Upload conda package
+      - name: Login to Anaconda (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        env:
+          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+        shell: bash -l {0}
+        run: |
+          yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
       - name: Login to Anaconda (Windows)
         if: matrix.os == 'windows-2019'
         env:
@@ -97,26 +96,26 @@ jobs:
         run: |
           echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
       - name: Upload conda package (Windows/main)
-        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/master'
-        # if: matrix.os == 'windows-2019' && !github.event.release.prerelease
+        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/master'
+        if: matrix.os == 'windows-2019' && !github.event.release.prerelease
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2"
       - name: Upload conda package (Windows/dev)
-        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
-        # if: matrix.os == 'windows-2019' && github.event.release.prerelease
+        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
+        if: matrix.os == 'windows-2019' && github.event.release.prerelease
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
       - name: Upload conda package (Ubuntu/main)
-        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/master'
-        # if: matrix.os == 'ubuntu-18.04' && !github.event.release.prerelease
+        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/master'
+        if: matrix.os == 'ubuntu-18.04' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2
       - name: Upload conda package (Ubuntu/dev)
-        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
-        # if: matrix.os == 'ubuntu-18.04' && github.event.release.prerelease
+        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
+        if: matrix.os == 'ubuntu-18.04' && github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
