@@ -46,6 +46,14 @@ jobs:
           which python
           conda info
 
+      - name: Login to Anaconda (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        env:
+          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+        shell: bash -l {0}
+        run: |
+          yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
+
       # Build pip wheel (Ubuntu)
       - name: Build pip wheel (Ubuntu)
         if: matrix.os == 'ubuntu-18.04'
@@ -88,13 +96,6 @@ jobs:
         shell: powershell
         run: |
           echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
-      - name: Login to Anaconda (Ubuntu)
-        if: matrix.os == 'ubuntu-18.04'
-        env:
-          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
-        shell: bash -l {0}
-        run: |
-          yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN"
       - name: Upload conda package (Windows/main)
         if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/master'
         # if: matrix.os == 'windows-2019' && !github.event.release.prerelease
