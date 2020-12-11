@@ -19,7 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         # os: ["ubuntu-latest", "windows-latest"]
-        os: ["ubuntu-18.04", "windows-2019"]
+        # os: ["ubuntu-18.04", "windows-2019"]
+        os: ["ubuntu-18.04"]
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -93,7 +94,7 @@ jobs:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: bash -l {0}
         run: |
-          yes | anaconda login --username sleap --password "$ANACONDA_LOGIN"
+          yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN"
       - name: Upload conda package (Windows/main)
         if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/master'
         # if: matrix.os == 'windows-2019' && !github.event.release.prerelease
