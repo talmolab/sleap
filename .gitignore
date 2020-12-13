@@ -113,3 +113,6 @@ venv.bak/
 
 # VSCode files
 .vscode/
+
+# OS generated files
+.DS_Store
