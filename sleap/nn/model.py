@@ -18,6 +18,7 @@ from sleap.nn.architectures import (
     ResNet50,
     ResNet101,
     ResNet152,
+    UnetPretrainedEncoder,
     IntermediateFeature,
 )
 from sleap.nn.heads import (
@@ -32,6 +33,7 @@ from sleap.nn.config import (
     UNetConfig,
     HourglassConfig,
     ResNetConfig,
+    UnetPretrainedEncoderConfig,
     SingleInstanceConfmapsHeadConfig,
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
@@ -43,7 +45,16 @@ from sleap.nn.config import (
 from sleap.nn.data.utils import ensure_list
 
 
-ARCHITECTURES = [LeapCNN, UNet, Hourglass, ResNetv1, ResNet50, ResNet101, ResNet152]
+ARCHITECTURES = [
+    LeapCNN,
+    UNet,
+    Hourglass,
+    ResNetv1,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    UnetPretrainedEncoder,
+]
 ARCHITECTURE_NAMES = [cls.__name__ for cls in ARCHITECTURES]
 Architecture = TypeVar("Architecture", *ARCHITECTURES)
 
@@ -52,6 +63,7 @@ BACKBONE_CONFIG_TO_CLS = {
     UNetConfig: UNet,
     HourglassConfig: Hourglass,
     ResNetConfig: ResNetv1,
+    UnetPretrainedEncoderConfig: UnetPretrainedEncoder,
 }
 
 HEADS = [

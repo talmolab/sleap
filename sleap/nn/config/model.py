@@ -422,6 +422,27 @@ class ResNetConfig:
     output_stride: int = 4
 
 
+@attr.s(auto_attribs=True)
+class UnetPretrainedEncoderConfig:
+    """Configuration for UNet backbone with pretrained encoder.
+
+    Attributes:
+        encoder: Name of the network architecture to use as the encoder.
+        pretrained: If `True`, use initialized with weights pretrained on ImageNet.
+        decoder_filters: Base number of filters for the upsampling blocks in the
+            decoder.
+        decoder_filters_rate: Factor to scale the number of filters by at each
+            consecutive upsampling block in the decoder.
+        output_stride: Stride of the final output.
+    """
+
+    encoder: Text = attr.ib(default="mobilenetv2")
+    pretrained: bool = True
+    decoder_filters: int = 256
+    decoder_filters_rate: float = 1.0
+    output_stride: int = 2
+
+
 @oneof
 @attr.s(auto_attribs=True)
 class BackboneConfig:
