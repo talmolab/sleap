@@ -32,7 +32,7 @@
                 "pretrained": true,
                 "decoder_filters": 256,
                 "decoder_filters_rate": 1.0,
-                "output_stride": 2,
+                "output_stride": 2
             }
         },
         "heads": {
