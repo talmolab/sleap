@@ -423,7 +423,7 @@ class ResNetConfig:
 
 
 @attr.s(auto_attribs=True)
-class UnetPretrainedEncoderConfig:
+class PretrainedEncoderConfig:
     """Configuration for UNet backbone with pretrained encoder.
 
     Attributes:
@@ -461,6 +461,7 @@ class BackboneConfig:
     unet: Optional[UNetConfig] = None
     hourglass: Optional[HourglassConfig] = None
     resnet: Optional[ResNetConfig] = None
+    pretrained_encoder: Optional[PretrainedEncoderConfig] = None
 
 
 @attr.s(auto_attribs=True)

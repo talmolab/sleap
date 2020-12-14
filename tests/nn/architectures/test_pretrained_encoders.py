@@ -3,7 +3,7 @@ import tensorflow as tf
 from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.architectures import UnetPretrainedEncoder
-from sleap.nn.config import UnetPretrainedEncoderConfig
+from sleap.nn.config import PretrainedEncoderConfig
 
 
 def test_unet_pretrained_backbone():
@@ -27,7 +27,7 @@ def test_unet_pretrained_backbone():
 
 def test_unet_pretrained_backbone_from_config():
     backbone = UnetPretrainedEncoder.from_config(
-        UnetPretrainedEncoderConfig(
+        PretrainedEncoderConfig(
             encoder="resnet18",
             pretrained=False,
             decoder_filters=256,

@@ -45,7 +45,7 @@ from typing import Tuple, List
 
 from sleap.nn.architectures.upsampling import IntermediateFeature
 from sleap.nn.data.normalization import ensure_rgb
-from sleap.nn.config import UnetPretrainedEncoderConfig
+from sleap.nn.config import PretrainedEncoderConfig
 
 import os
 
@@ -139,12 +139,12 @@ class UnetPretrainedEncoder:
 
     @classmethod
     def from_config(
-        cls, config: UnetPretrainedEncoderConfig
+        cls, config: PretrainedEncoderConfig
     ) -> "UnetPretrainedEncoder":
         """Create the backbone from a configuration.
 
         Args:
-            config: A `UnetPretrainedEncoderConfig` instance specifying the
+            config: A `PretrainedEncoderConfig` instance specifying the
                 configuration of the backbone.
 
         Returns:

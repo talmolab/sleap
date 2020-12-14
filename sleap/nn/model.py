@@ -33,7 +33,7 @@ from sleap.nn.config import (
     UNetConfig,
     HourglassConfig,
     ResNetConfig,
-    UnetPretrainedEncoderConfig,
+    PretrainedEncoderConfig,
     SingleInstanceConfmapsHeadConfig,
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
@@ -63,7 +63,7 @@ BACKBONE_CONFIG_TO_CLS = {
     UNetConfig: UNet,
     HourglassConfig: Hourglass,
     ResNetConfig: ResNetv1,
-    UnetPretrainedEncoderConfig: UnetPretrainedEncoder,
+    PretrainedEncoderConfig: UnetPretrainedEncoder,
 }
 
 HEADS = [
