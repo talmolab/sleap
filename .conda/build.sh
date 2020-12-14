@@ -35,6 +35,7 @@ pip install qimage2ndarray==1.8
 pip install jsmin
 pip install seaborn
 pip install pykalman==0.9.5
+pip install segmentation-models==1.0.1
 
 pip install setuptools-scm
 
