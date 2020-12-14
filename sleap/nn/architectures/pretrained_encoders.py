@@ -133,14 +133,14 @@ class UnetPretrainedEncoder:
             weights will be randomly initialized.
     """
 
-    encoder: str = attr.ib(default="mobilenetv2", validator=attr.validators.in_(AVAILABLE_ENCODERS))
+    encoder: str = attr.ib(
+        default="efficientnetb0", validator=attr.validators.in_(AVAILABLE_ENCODERS)
+    )
     decoder_filters: Tuple[int] = (256, 256, 128, 128)
     pretrained: bool = True
 
     @classmethod
-    def from_config(
-        cls, config: PretrainedEncoderConfig
-    ) -> "UnetPretrainedEncoder":
+    def from_config(cls, config: PretrainedEncoderConfig) -> "UnetPretrainedEncoder":
         """Create the backbone from a configuration.
 
         Args:
@@ -225,18 +225,29 @@ class UnetPretrainedEncoder:
             backend=tf.keras.backend,
             utils=tf.keras.utils,
         )
-        backbone_model = base_model(x_in)
 
         # Collect intermediate features from the decoder.
+        x_outs = []
+        for i in range(self.up_blocks):
+            x_outs.append(base_model.get_layer(f"decoder_stage{i}b_relu").output)
+
+        # Build a model that outputs all decoder block activations.
+        features_model = tf.keras.Model(inputs=base_model.inputs, outputs=x_outs)
+
+        # Connect the inputs to the model graph.
+        backbone_model = tf.keras.Model(
+            tf.keras.utils.get_source_inputs(x_in)[0], features_model(x_in)
+        )
+
+        # Collect output tensors.
         intermediate_features = []
         for i in range(self.up_blocks):
             intermediate_features.append(
                 IntermediateFeature(
-                    tensor=base_model.get_layer(f"decoder_stage{i}b_relu").output,
+                    tensor=backbone_model.outputs[i],
                     stride=2 ** (4 - i),
                 )
             )
-
         output = intermediate_features[-1].tensor
 
         return output, intermediate_features

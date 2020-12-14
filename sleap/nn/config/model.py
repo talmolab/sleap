@@ -436,7 +436,7 @@ class PretrainedEncoderConfig:
         output_stride: Stride of the final output.
     """
 
-    encoder: Text = attr.ib(default="mobilenetv2")
+    encoder: Text = attr.ib(default="efficientnetb0")
     pretrained: bool = True
     decoder_filters: int = 256
     decoder_filters_rate: float = 1.0
