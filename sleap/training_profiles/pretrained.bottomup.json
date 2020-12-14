@@ -28,23 +28,31 @@
             "hourglass": null,
             "resnet": null,
             "pretrained_encoder": {
-                "encoder": "mobilenetv2",
+                "encoder": "efficientnetb0",
                 "pretrained": true,
                 "decoder_filters": 256,
                 "decoder_filters_rate": 1.0,
-                "output_stride": 2
+                "output_stride": 4
             }
         },
         "heads": {
             "single_instance": null,
             "centroid": null,
-            "centered_instance": {
-                "anchor_part": null,
-                "part_names": null,
-                "sigma": 1.5,
-                "output_stride": 2
-            },
-            "multi_instance": null
+            "centered_instance": null,
+            "multi_instance": {
+                "confmaps": {
+                    "part_names": null,
+                    "sigma": 5.0,
+                    "output_stride": 4,
+                    "loss_weight": 1.0
+                },
+                "pafs": {
+                    "edges": null,
+                    "sigma": 75.0,
+                    "output_stride": 8,
+                    "loss_weight": 1.0
+                }
+            }
         }
     },
     "optimization": {
@@ -86,8 +94,8 @@
         "learning_rate_schedule": {
             "reduce_on_plateau": true,
             "reduction_factor": 0.5,
-            "plateau_min_delta": 1e-08,
-            "plateau_patience": 5,
+            "plateau_min_delta": 1e-06,
+            "plateau_patience": 8,
             "plateau_cooldown": 3,
             "min_learning_rate": 1e-08
         },
@@ -100,13 +108,13 @@
         },
         "early_stopping": {
             "stop_training_on_plateau": true,
-            "plateau_min_delta": 1e-08,
+            "plateau_min_delta": 1e-06,
             "plateau_patience": 10
         }
     },
     "outputs": {
         "save_outputs": true,
-        "run_name": "pretrained_mobilenetv2.topdown",
+        "run_name": "pretrained.bottomup",
         "run_name_prefix": "",
         "run_name_suffix": null,
         "runs_folder": "models",
@@ -123,7 +131,7 @@
         "tensorboard": {
             "write_logs": false,
             "loss_frequency": "epoch",
-            "architecture_graph": true,
+            "architecture_graph": false,
             "profile_graph": false,
             "visualizations": true
         },

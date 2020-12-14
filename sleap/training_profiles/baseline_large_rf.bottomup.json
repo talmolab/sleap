@@ -35,7 +35,8 @@
                 "stacks": 1
             },
             "hourglass": null,
-            "resnet": null
+            "resnet": null,
+            "pretrained_encoder": null
         },
         "heads": {
             "single_instance": null,
@@ -44,13 +45,13 @@
             "multi_instance": {
                 "confmaps": {
                     "part_names": null,
-                    "sigma": 5.0,
+                    "sigma": 2.5,
                     "output_stride": 4,
-                    "loss_weight": 5.0
+                    "loss_weight": 1.0
                 },
                 "pafs": {
                     "edges": null,
-                    "sigma": 50.0,
+                    "sigma": 75.0,
                     "output_stride": 8,
                     "loss_weight": 1.0
                 }
