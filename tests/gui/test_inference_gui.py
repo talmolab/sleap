@@ -11,7 +11,9 @@ def test_config_list_load():
         "centroid"
     )
 
-    assert 2 == len(configs)
+    assert len(configs) > 0
+    for cfg in configs:
+        assert cfg.config.model.heads.which_oneof_attrib_name() == "centroid"
 
 
 def test_config_list_order():
