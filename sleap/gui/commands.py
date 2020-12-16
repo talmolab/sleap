@@ -27,6 +27,7 @@ for now it's at least easy to see where this separation is violated.
 """
 
 import attr
+import glob
 import operator
 import os
 
@@ -270,6 +271,10 @@ class CommandContext:
     def importAnalysisFile(self):
         """Imports SLEAP analysis hdf5 files."""
         self.execute(ImportAnalysisFile)
+
+    def convertDLC(self):
+        """Converts multiple DeepLabCut datasets into SLP file."""
+        self.execute(ConvertDeepLabCut)
 
     def saveProject(self):
         """Show gui to save project (or save as if not yet saved)."""
@@ -758,6 +763,46 @@ class ImportAnalysisFile(AppCommand):
 
         params["filename"] = filename
         params["video"] = ImportVideos.create_video(video_param_list[0])
+
+        return True
+
+
+class ConvertDeepLabCut(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        csv_files = glob("{}/*/*.csv".format(params["dirname"]))
+        merged_labels = None
+        for csv_file in csv_files:
+            labels = Labels.load_file(csv_file, as_format="deeplabcut")
+            if merged_labels is None:
+                merged_labels = labels
+            else:
+                merged_labels.extend_from(labels, unify=True)
+
+        print("Merged labels:")
+        merged_labels.describe()
+
+        merged_labels.save("{}.slp".format(params["filename"]))
+        merged_labels.save("{}.pkg.slp".format(params["filename"]),
+                           with_images=True)  # comment this out to skip saving with embedded images
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=merged_labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        dirname = FileDialog.openDir(
+            context.app,
+            dir=None,
+            caption="Select a folder with DeepLabCut datasets...",
+        )
+
+        if len(dirname) == 0:
+            return False
+        params["dirname"] = dirname
+        params["filename"] = "converted_dlc_dataset"
 
         return True
 

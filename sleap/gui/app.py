@@ -344,6 +344,15 @@ class MainWindow(QMainWindow):
         )
 
         fileMenu.addSeparator()
+        utils_menu = fileMenu.addMenu("Utils...")
+        add_menu_item(
+            utils_menu,
+            "convert_dlc_folder",
+            "Convert DeepLabCut datasets to SLP file...",
+            self.commands.convertDLC,
+        )
+
+        fileMenu.addSeparator()
         add_menu_item(fileMenu, "add videos", "Add Videos...", self.commands.addVideo)
         add_menu_item(
             fileMenu, "replace videos", "Replace Videos...", self.commands.replaceVideo
