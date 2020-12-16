@@ -140,6 +140,7 @@ def resolve_strides_from_key_val_dict(
     )
 
     for key in [
+        "model.heads.single_instance.output_stride",
         "model.heads.centered_instance.output_stride",
         "model.heads.centroid.output_stride",
         "model.heads.multi_instance.confmaps.output_stride",

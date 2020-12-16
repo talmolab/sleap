@@ -35,7 +35,8 @@
                 "stacks": 1
             },
             "hourglass": null,
-            "resnet": null
+            "resnet": null,
+            "pretrained_encoder": null
         },
         "heads": {
             "single_instance": null,

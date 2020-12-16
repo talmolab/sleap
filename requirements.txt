@@ -22,3 +22,4 @@ qimage2ndarray==1.8
 jsmin
 seaborn
 pykalman==0.9.5
+segmentation-models==1.0.1
