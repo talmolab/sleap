@@ -319,6 +319,12 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
+            "import_dlc_folder",
+            "Multiple DeepLabCut datasets from folder...",
+            self.commands.importDLCFolder,
+        )
+        add_menu_item(
+            import_types_menu,
             "import_dpk",
             "DeepPoseKit dataset...",
             self.commands.importDPK,
@@ -335,21 +341,11 @@ class MainWindow(QMainWindow):
             "SLEAP Analysis HDF5...",
             self.commands.importAnalysisFile,
         )
-
         add_menu_item(
             fileMenu,
             "import predictions",
             "Merge into Project...",
             self.commands.importPredictions,
-        )
-
-        fileMenu.addSeparator()
-        utils_menu = fileMenu.addMenu("Utils...")
-        add_menu_item(
-            utils_menu,
-            "convert_dlc_folder",
-            "Convert DeepLabCut datasets to SLP file...",
-            self.commands.convertDLC,
         )
 
         fileMenu.addSeparator()
