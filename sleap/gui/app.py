@@ -341,6 +341,7 @@ class MainWindow(QMainWindow):
             "SLEAP Analysis HDF5...",
             self.commands.importAnalysisFile,
         )
+
         add_menu_item(
             fileMenu,
             "import predictions",
