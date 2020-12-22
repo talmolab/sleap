@@ -134,3 +134,46 @@ def test_video_reader_hdf5():
 
     assert example["raw_image_size"].dtype == tf.int32
     np.testing.assert_array_equal(example["raw_image_size"], (512, 512, 1))
+
+
+def test_labels_reader_multi_size():
+    # Create some fake data using two different size videos.
+    skeleton = sleap.Skeleton.from_names_and_edge_inds(["A"])
+    labels = sleap.Labels(
+        [
+            sleap.LabeledFrame(
+                frame_idx=0,
+                video=sleap.Video.from_filename(
+                    TEST_SMALL_ROBOT_MP4_FILE, grayscale=True
+                ),
+                instances=[
+                    sleap.Instance.from_pointsarray(
+                        np.array([[128, 128]]), skeleton=skeleton
+                    )
+                ],
+            ),
+            sleap.LabeledFrame(
+                frame_idx=0,
+                video=sleap.Video.from_filename(
+                    TEST_H5_FILE, dataset="/box", input_format="channels_first"
+                ),
+                instances=[
+                    sleap.Instance.from_pointsarray(
+                        np.array([[128, 128]]), skeleton=skeleton
+                    )
+                ],
+            ),
+        ]
+    )
+
+    # Create a loader for those labels.
+    labels_reader = providers.LabelsReader(labels)
+    ds = labels_reader.make_dataset()
+    ds_iter = iter(ds)
+
+    # Check shapes of individual samples.
+    example = next(ds_iter)
+    assert example["image"].shape == (320, 560, 1)
+
+    example = next(ds_iter)
+    assert example["image"].shape == (512, 512, 1)
