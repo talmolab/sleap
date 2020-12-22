@@ -732,19 +732,12 @@ class ImportDeepLabCutFolder(AppCommand):
         csv_files = glob(f"{params['folder_name']}/*/*.csv")
         if csv_files:
             win = MessageDialog(f"Importing {len(csv_files)} DeepLabCut datasets...", context.app)
-            merged_labels = None
-            for csv_file in csv_files:
-                labels = Labels.load_file(csv_file, as_format="deeplabcut")
-                if merged_labels is None:
-                    merged_labels = labels
-                else:
-                    merged_labels.extend_from(labels, unify=True)
+            merged_labels = ImportDeepLabCutFolder.import_labels_from_files(csv_files)
             win.hide()
 
             new_window = context.app.__class__()
             new_window.showMaximized()
             new_window.loadLabelsObject(labels=merged_labels)
-
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -758,6 +751,17 @@ class ImportDeepLabCutFolder(AppCommand):
             return False
         params["folder_name"] = folder_name
         return True
+
+    @staticmethod
+    def import_labels_from_files(csv_files: List[str]) -> Labels:
+        merged_labels = None
+        for csv_file in csv_files:
+            labels = Labels.load_file(csv_file, as_format="deeplabcut")
+            if merged_labels is None:
+                merged_labels = labels
+            else:
+                merged_labels.extend_from(labels, unify=True)
+        return merged_labels
 
 
 class ImportAnalysisFile(AppCommand):
