@@ -69,7 +69,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
     def read(
         cls, file: FileHandle, full_video: Optional[Video] = None, *args, **kwargs,
     ) -> Labels:
-        return Labels(labeled_frames=cls.read_frames(file=file, full_video=full_video))
+        return Labels(labeled_frames=cls.read_frames(file=file, full_video=full_video, *args, **kwargs))
 
     @classmethod
     def make_video_for_image_list(cls, image_dir, filenames) -> Video:
@@ -93,6 +93,8 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
         file: FileHandle,
         skeleton: Optional[Skeleton] = None,
         full_video: Optional[Video] = None,
+        *args,
+        **kwargs,
     ) -> List[LabeledFrame]:
         filename = file.filename
 
