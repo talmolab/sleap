@@ -729,10 +729,10 @@ class ImportDeepLabCut(AppCommand):
 class ImportDeepLabCutFolder(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-        csv_files = glob(f"{params['folder_name']}/*/*.csv")
+        csv_files = ImportDeepLabCutFolder.find_dlc_files_in_folder(params['folder_name'])
         if csv_files:
             win = MessageDialog(f"Importing {len(csv_files)} DeepLabCut datasets...", context.app)
-            merged_labels = ImportDeepLabCutFolder.import_labels_from_files(csv_files)
+            merged_labels = ImportDeepLabCutFolder.import_labels_from_dlc_files(csv_files)
             win.hide()
 
             new_window = context.app.__class__()
@@ -753,7 +753,11 @@ class ImportDeepLabCutFolder(AppCommand):
         return True
 
     @staticmethod
-    def import_labels_from_files(csv_files: List[str]) -> Labels:
+    def find_dlc_files_in_folder(folder_name: str) -> List[str]:
+        return glob(f"{folder_name}/*/*.csv")
+
+    @staticmethod
+    def import_labels_from_dlc_files(csv_files: List[str]) -> Labels:
         merged_labels = None
         for csv_file in csv_files:
             labels = Labels.load_file(csv_file, as_format="deeplabcut")
