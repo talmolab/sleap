@@ -26,19 +26,16 @@ def test_import_labels_from_dlc_folder():
 
     labels = ImportDeepLabCutFolder.import_labels_from_dlc_files(csv_files)
 
-    assert len(labels) == 6
+    assert len(labels) == 3
     assert len(labels.videos) == 2
     assert len(labels.skeletons) == 1
     assert len(labels.nodes) == 3
     assert len(labels.tracks) == 0
 
     assert [l.video.backend.filename for l in labels.labeled_frames] == [
-        'tests/data/dlc_multiple_datasets/video2/img000.png',
-        'tests/data/dlc_multiple_datasets/video2/img000.png',
-        'tests/data/dlc_multiple_datasets/video2/img000.png',
-        'tests/data/dlc_multiple_datasets/video1/img000.png',
-        'tests/data/dlc_multiple_datasets/video1/img000.png',
-        'tests/data/dlc_multiple_datasets/video1/img000.png',
+        'tests/data/dlc_multiple_datasets/video2/img002.jpg',
+        'tests/data/dlc_multiple_datasets/video1/img000.jpg',
+        'tests/data/dlc_multiple_datasets/video1/img000.jpg',
     ]
 
-    assert [l.frame_idx for l in labels.labeled_frames] == [0, 1, 2, 0, 1, 2]
+    assert [l.frame_idx for l in labels.labeled_frames] == [0, 0, 1]
