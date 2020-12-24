@@ -319,6 +319,12 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
+            "import_dlc_folder",
+            "Multiple DeepLabCut datasets from folder...",
+            self.commands.importDLCFolder,
+        )
+        add_menu_item(
+            import_types_menu,
             "import_dpk",
             "DeepPoseKit dataset...",
             self.commands.importDPK,
