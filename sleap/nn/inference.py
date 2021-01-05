@@ -664,12 +664,12 @@ class CentroidCrop(InferenceLayer):
 
             # Reshape to (n_peaks, crop_height, crop_width, channels)
             crops = tf.reshape(
-                crops, [n_peaks, self.crop_size, self.crop_size, tf.shape(full_imgs)[3]]
+                crops, [n_peaks, self.crop_size, self.crop_size, full_imgs.shape[3]]
             )
         else:
             # No peaks found, so just create a placeholder stack.
             crops = tf.zeros(
-                [n_peaks, self.crop_size, self.crop_size, tf.shape(full_imgs)[3]],
+                [n_peaks, self.crop_size, self.crop_size, full_imgs.shape[3]],
                 dtype=full_imgs.dtype,
             )
 
