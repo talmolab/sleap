@@ -14,13 +14,13 @@ from sleap.nn.inference import (
     CentroidCropGroundTruth,
     FindInstancePeaksGroundTruth,
     FindInstancePeaks,
-    TopDownModel,
+    TopDownInferenceModel,
     InferenceLayer,
     InferenceModel,
     CentroidCrop,
     get_model_output_stride,
     SingleInstanceInferenceLayer,
-    SingleInstanceInferenceModel
+    SingleInstanceInferenceModel,
 )
 
 sleap.nn.system.use_cpu_only()
@@ -136,9 +136,15 @@ def test_centroid_crop_layer():
     model = tf.keras.Model(inputs=x_in, outputs=x_out)
 
     layer = CentroidCrop(
-        keras_model=model, input_scale=1.0, crop_size=3, pad_to_stride=1,
-        output_stride=None, refinement="local", integral_patch_size=5,
-        peak_threshold=0.2, return_confmaps=False
+        keras_model=model,
+        input_scale=1.0,
+        crop_size=3,
+        pad_to_stride=1,
+        output_stride=None,
+        refinement="local",
+        integral_patch_size=5,
+        peak_threshold=0.2,
+        return_confmaps=False,
     )
 
     out = layer(cms)
@@ -172,8 +178,11 @@ def test_instance_peaks_layer():
     model = tf.keras.Model(inputs=x_in, outputs=x_out)
 
     instance_peaks_layer = FindInstancePeaks(
-        keras_model=model, input_scale=1.0, peak_threshold=0.2, return_confmaps=False,
-        refinement="integral"
+        keras_model=model,
+        input_scale=1.0,
+        peak_threshold=0.2,
+        return_confmaps=False,
+        refinement="integral",
     )
 
     # Raw tensor
@@ -213,8 +222,11 @@ def test_instance_peaks_layer():
 
     # Offset adjustment and pass through centroids
     instance_peaks_layer = FindInstancePeaks(
-        keras_model=model, input_scale=1.0, peak_threshold=0.2, return_confmaps=True,
-        refinement="integral"
+        keras_model=model,
+        input_scale=1.0,
+        peak_threshold=0.2,
+        return_confmaps=True,
+        refinement="integral",
     )
     # (samples, h, w, c) -> (samples, ?, h, w, c)
     crops = tf.RaggedTensor.from_tensor(tf.expand_dims(cms, axis=1), lengths=[1, 1])
@@ -246,8 +258,11 @@ def test_instance_peaks_layer():
     # Input scaling
     scale = 0.5
     instance_peaks_layer = FindInstancePeaks(
-        keras_model=model, input_scale=scale, peak_threshold=0.2, return_confmaps=False,
-        refinement="integral"
+        keras_model=model,
+        input_scale=scale,
+        peak_threshold=0.2,
+        return_confmaps=False,
+        refinement="integral",
     )
     xv, yv = make_grid_vectors(
         image_height=12 / scale, image_width=12 / scale, output_stride=1
@@ -271,7 +286,7 @@ def test_instance_peaks_layer():
 
 
 def test_topdown_model(test_pipeline):
-    model = TopDownModel(
+    model = TopDownInferenceModel(
         centroid_crop=CentroidCropGroundTruth(crop_size=4),
         instance_peaks=FindInstancePeaksGroundTruth(),
     )
@@ -293,10 +308,7 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model,
-        input_scale=1.0,
-        pad_to_stride=1,
-        ensure_grayscale=None
+        keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
     out = layer(data)
@@ -309,10 +321,7 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model,
-        input_scale=1.0,
-        pad_to_stride=1,
-        ensure_grayscale=None
+        keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 4, 4, 3], 255), tf.uint8)
     out = layer(data)
@@ -326,10 +335,7 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model,
-        input_scale=1.0,
-        pad_to_stride=1,
-        ensure_grayscale=None
+        keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
     out = layer(data)
@@ -343,10 +349,7 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model,
-        input_scale=0.5,
-        pad_to_stride=1,
-        ensure_grayscale=None
+        keras_model=keras_model, input_scale=0.5, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 8, 8, 1], 255), tf.uint8)
     out = layer(data)
@@ -359,10 +362,7 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model,
-        input_scale=1,
-        pad_to_stride=2,
-        ensure_grayscale=None
+        keras_model=keras_model, input_scale=1, pad_to_stride=2, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 3, 3, 1], 255), tf.uint8)
     out = layer(data)
@@ -374,10 +374,7 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model,
-        input_scale=0.5,
-        pad_to_stride=2,
-        ensure_grayscale=None
+        keras_model=keras_model, input_scale=0.5, pad_to_stride=2, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 6, 6, 1], 255), tf.uint8)
     out = layer(data)
@@ -445,8 +442,9 @@ def test_single_instance_inference():
     out = layer({"image": cms})
     assert_array_equal(out["peaks"], points)
 
-    layer = SingleInstanceInferenceLayer(keras_model=keras_model, refinement="local",
-        return_confmaps=True)
+    layer = SingleInstanceInferenceLayer(
+        keras_model=keras_model, refinement="local", return_confmaps=True
+    )
     out = layer(cms)
     assert "confmaps" in out
     assert_array_equal(out["confmaps"], cms)
