@@ -1288,9 +1288,9 @@ class TopdownPredictor(Predictor):
 
             # Convert to numpy arrays if not already.
             if isinstance(ex["video_ind"], tf.Tensor):
-                ex["video_ind"] = ex["video_ind"].numpy().squeeze()
-            if isinstance(preds["frame_ind"], tf.Tensor):
-                ex["frame_ind"] = ex["frame_ind"].numpy().squeeze()
+                ex["video_ind"] = ex["video_ind"].numpy().flatten()
+            if isinstance(ex["frame_ind"], tf.Tensor):
+                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
             yield ex
 
@@ -1820,9 +1820,9 @@ class BottomupPredictor(Predictor):
 
             # Convert to numpy arrays if not already.
             if isinstance(ex["video_ind"], tf.Tensor):
-                ex["video_ind"] = ex["video_ind"].numpy().squeeze()
-            if isinstance(preds["frame_ind"], tf.Tensor):
-                ex["frame_ind"] = ex["frame_ind"].numpy().squeeze()
+                ex["video_ind"] = ex["video_ind"].numpy().flatten()
+            if isinstance(ex["frame_ind"], tf.Tensor):
+                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
             yield ex
 
@@ -2225,9 +2225,9 @@ class SingleInstancePredictor(Predictor):
 
             # Convert to numpy arrays if not already.
             if isinstance(preds["video_ind"], tf.Tensor):
-                preds["video_ind"] = preds["video_ind"].numpy().squeeze()
+                preds["video_ind"] = preds["video_ind"].numpy().flatten()
             if isinstance(preds["frame_ind"], tf.Tensor):
-                preds["frame_ind"] = preds["frame_ind"].numpy().squeeze()
+                preds["frame_ind"] = preds["frame_ind"].numpy().flatten()
 
             yield preds
 
