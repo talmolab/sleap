@@ -1,4 +1,25 @@
-"""Inference pipelines and utilities."""
+"""Inference pipelines and utilities.
+
+This module contains the classes and high level APIs for predicting instances on new
+data using trained models.
+
+The inference logic is implemented at two levels:
+
+- Low-level `InferenceModel`s which subclass `tf.keras.Model` and implement the core
+  TensorFlow operations surrounding inference. These should only be used when
+  implementing custom inference routines, such as real-time or performance-critical
+  applications. They do not implement tracking (identity association).
+
+- High-level `Predictor`s which handle data loading, preprocessing, inference, tracking
+  and postprocessing, including converting raw array results into SLEAP-specific data
+  structures. These should be used for general-purpose prediction, including interactive
+  inference and applications that require tracking (identity association).
+
+For more information on tracking, see the `sleap.nn.tracking` module.
+
+The recommended high-level API for loading saved models is the `sleap.load_models`
+function which provides a simplified interface for creating `Predictor`s.
+"""
 
 import attr
 import logging
@@ -6,7 +27,7 @@ import warnings
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Text, Optional, List, Dict, Union
+from typing import Text, Optional, List, Dict, Union, Iterator
 
 import tensorflow as tf
 import numpy as np
@@ -38,7 +59,6 @@ from sleap.nn.data.pipelines import (
     KeyRenamer,
     KeyDeviceMover,
     PredictedCenterInstanceNormalizer,
-    # PartAffinityFieldInstanceGrouper,
     PointsRescaler,
 )
 
@@ -47,7 +67,6 @@ logger = logging.getLogger(__name__)
 
 def safely_generate(ds: tf.data.Dataset, progress: bool = True):
     """Yields examples from dataset, catching and logging exceptions."""
-
     # Unsafe generating:
     # for example in ds:
     #     yield example
@@ -76,84 +95,11 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
                 if (i and i % 1000 == 0) or done:
                     elapsed_time = time.time() - wall_t0
                     logger.info(
-                        f"Finished {i} examples in {elapsed_time:.2f} seconds (inference + postprocessing)"
+                        f"Finished {i} examples in {elapsed_time:.2f} seconds "
+                        "(inference + postprocessing)"
                     )
                     if elapsed_time:
                         logger.info(f"examples/s = {i/elapsed_time}")
-
-
-def make_grouped_labeled_frame(
-    video_ind: int,
-    frame_ind: int,
-    frame_examples: List[Dict[Text, tf.Tensor]],
-    videos: List[sleap.Video],
-    skeleton: "Skeleton",
-    points_key: Text,
-    point_confidences_key: Text,
-    image_key: Optional[Text] = None,
-    instance_score_key: Optional[Text] = None,
-    tracker: Optional[Tracker] = None,
-) -> List[sleap.LabeledFrame]:
-
-    predicted_frames = []
-
-    # Create predicted instances from examples in the current frame.
-    predicted_instances = []
-    img = None
-    for example in frame_examples:
-        if instance_score_key is None:
-            instance_scores = np.nansum(example[point_confidences_key].numpy(), axis=-1)
-        else:
-            instance_scores = example[instance_score_key]
-
-        if example[points_key].ndim == 3:
-            for points, confidences, instance_score in zip(
-                example[points_key], example[point_confidences_key], instance_scores
-            ):
-                if not np.isnan(points).all():
-                    predicted_instances.append(
-                        sleap.PredictedInstance.from_arrays(
-                            points=points,
-                            point_confidences=confidences,
-                            instance_score=instance_score,
-                            skeleton=skeleton,
-                        )
-                    )
-        else:
-            points = example[points_key]
-            confidences = example[point_confidences_key]
-            instance_score = instance_scores
-
-            if not np.isnan(points).all():
-                predicted_instances.append(
-                    sleap.PredictedInstance.from_arrays(
-                        points=points,
-                        point_confidences=confidences,
-                        instance_score=instance_score,
-                        skeleton=skeleton,
-                    )
-                )
-
-        if image_key is not None and image_key in example:
-            img = example[image_key]
-        else:
-            img = None
-
-    if len(predicted_instances) > 0:
-        if tracker:
-            # Set tracks for predicted instances in this frame.
-            predicted_instances = tracker.track(
-                untracked_instances=predicted_instances, img=img, t=frame_ind
-            )
-
-        # Create labeled frame from predicted instances.
-        labeled_frame = sleap.LabeledFrame(
-            video=videos[video_ind], frame_idx=frame_ind, instances=predicted_instances
-        )
-
-        predicted_frames.append(labeled_frame)
-
-    return predicted_frames
 
 
 def get_keras_model_path(path: Text) -> Text:
@@ -738,12 +684,12 @@ class CentroidCrop(InferenceLayer):
 
             # Reshape to (n_peaks, crop_height, crop_width, channels)
             crops = tf.reshape(
-                crops, [n_peaks, self.crop_size, self.crop_size, tf.shape(full_imgs)[3]]
+                crops, [n_peaks, self.crop_size, self.crop_size, full_imgs.shape[3]]
             )
         else:
             # No peaks found, so just create a placeholder stack.
             crops = tf.zeros(
-                [n_peaks, self.crop_size, self.crop_size, tf.shape(full_imgs)[3]],
+                [n_peaks, self.crop_size, self.crop_size, full_imgs.shape[3]],
                 dtype=full_imgs.dtype,
             )
 
@@ -1019,7 +965,7 @@ class InferenceModel(tf.keras.Model):
         return outs
 
 
-class TopDownModel(InferenceModel):
+class TopDownInferenceModel(InferenceModel):
     """Top-down instance prediction model.
 
     This model encapsulates the top-down approach where instances are first detected by
@@ -1083,11 +1029,50 @@ class TopDownModel(InferenceModel):
 
 @attr.s(auto_attribs=True)
 class TopdownPredictor(Predictor):
+    """Top-down multi-instance predictor.
+
+    This high-level class handles initialization, preprocessing and tracking using a
+    trained top-down multi-instance SLEAP model.
+
+    This should be initialized using the `from_trained_models()` constructor or the
+    high-level API (`sleap.load_model`).
+
+    Attributes:
+        centroid_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained centroid model. If `None`, ground truth centroids will be
+            used if available from the data source.
+        centroid_model: A `sleap.nn.model.Model` instance created from the trained
+            centroid model. If `None`, ground truth centroids will be used if available
+            from the data source.
+        confmap_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained centered instance model. If `None`, ground truth instances
+            will be used if available from the data source.
+        confmap_model: A `sleap.nn.model.Model` instance created from the trained
+            centered-instance model. If `None`, ground truth instances will be used if
+            available from the data source.
+        inference_model: A `sleap.nn.inference.TopDownInferenceModel` that wraps a
+            trained `tf.keras.Model` to implement preprocessing, centroid detection,
+            cropping and peak finding.
+        pipeline: A `sleap.nn.data.Pipeline` that loads the data and batches input data.
+            This will be updated dynamically if new data sources are used.
+        tracker: A `sleap.nn.tracking.Tracker` that will be called to associate
+            detections over time. Predicted instances will not be assigned to tracks if
+            if this is `None`.
+        batch_size: The default batch size to use when loading data for inference.
+            Higher values increase inference speed at the cost of higher memory usage.
+        peak_threshold: Minimum confidence map value to consider a local peak as valid.
+        integral_refinement: If `True`, peaks will be refined with integral regression.
+            If `False`, `"local"`, peaks will be refined with quarter pixel local
+            gradient offset.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+    """
+
     centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     centroid_model: Optional[Model] = attr.ib(default=None)
     confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
     confmap_model: Optional[Model] = attr.ib(default=None)
-    inference_model: Optional[TopDownModel] = attr.ib(default=None)
+    inference_model: Optional[TopDownInferenceModel] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
     tracker: Optional[Tracker] = attr.ib(default=None, init=False)
     batch_size: int = 4
@@ -1096,7 +1081,7 @@ class TopdownPredictor(Predictor):
     integral_patch_size: int = 5
 
     def _initialize_inference_model(self):
-        """Build the `TopDownModel` for this class from the config/models available."""
+        """Initialize the inference model from the trained models and configuration."""
         use_gt_centroid = self.centroid_config is None
         use_gt_confmap = self.confmap_config is None
 
@@ -1124,17 +1109,18 @@ class TopdownPredictor(Predictor):
         if use_gt_confmap:
             instance_peaks_layer = FindInstancePeaksGroundTruth()
         else:
+            cfg = self.confmap_config
             instance_peaks_layer = FindInstancePeaks(
                 keras_model=self.confmap_model.keras_model,
-                input_scale=self.confmap_config.data.preprocessing.input_scaling,
+                input_scale=cfg.data.preprocessing.input_scaling,
                 peak_threshold=self.peak_threshold,
-                output_stride=self.confmap_config.model.heads.centered_instance.output_stride,
+                output_stride=cfg.model.heads.centered_instance.output_stride,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
                 return_confmaps=False,
             )
 
-        self.inference_model = TopDownModel(
+        self.inference_model = TopDownInferenceModel(
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
         )
 
@@ -1151,14 +1137,28 @@ class TopdownPredictor(Predictor):
         """Create predictor from saved models.
 
         Args:
-            centroid_model_path: Path to centroid model folder.
-            confmap_model_path: Path to topdown confidence map model folder.
+            centroid_model_path: Path to a centroid model folder or training job JSON
+                file inside a model folder. This folder should contain
+                `training_config.json` and `best_model.h5` files for a trained model.
+            confmap_model_path: Path to a centered instance model folder or training job
+                JSON file inside a model folder. This folder should contain
+                `training_config.json` and `best_model.h5` files for a trained model.
+            batch_size: The default batch size to use when loading data for inference.
+                Higher values increase inference speed at the cost of higher memory
+                usage.
+            peak_threshold: Minimum confidence map value to consider a local peak as
+                valid.
+            integral_refinement: If `True`, peaks will be refined with integral
+                regression. If `False`, `"local"`, peaks will be refined with quarter
+                pixel local gradient offset.
+            integral_patch_size: Size of patches to crop around each rough peak for
+                integral refinement as an integer scalar.
 
         Returns:
-            An instance of TopdownPredictor with the loaded models.
+            An instance of `TopdownPredictor` with the loaded models.
 
-            One of the two models can be left as None to perform inference with ground
-            truth data. This will only work with LabelsReader as the provider.
+            One of the two models can be left as `None` to perform inference with ground
+            truth data. This will only work with `LabelsReader` as the provider.
         """
         if centroid_model_path is None and confmap_model_path is None:
             raise ValueError(
@@ -1203,18 +1203,28 @@ class TopdownPredictor(Predictor):
         return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+        """Make a data loading pipeline.
 
-        keep_original_image = self.tracker and self.tracker.uses_image
+        Args:
+            data_provider: If not `None`, the pipeline will be created with an instance
+                of a `sleap.pipelines.Provider`.
 
+        Returns:
+            The created `sleap.pipelines.Pipeline` with batching and prefetching.
+
+        Notes:
+            This method also updates the class attribute for the pipeline and will be
+            called automatically when predicting on data from a new source.
+        """
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
         if self.centroid_model is None:
+            anchor_part = self.confmap_config.data.instance_cropping.center_on_part
             pipeline += sleap.nn.data.pipelines.InstanceCentroidFinder(
-                center_on_anchor_part=self.confmap_config.data.instance_cropping.center_on_part
-                is not None,
-                anchor_part_names=self.confmap_config.data.instance_cropping.center_on_part,
+                center_on_anchor_part=anchor_part is not None,
+                anchor_part_names=anchor_part,
                 skeletons=self.confmap_config.data.labels.skeletons,
             )
 
@@ -1228,22 +1238,41 @@ class TopdownPredictor(Predictor):
 
         return pipeline
 
-    def predict_generator(self, data_provider: Provider):
+    def _predict_generator(
+        self, data_provider: Provider
+    ) -> Iterator[Dict[str, np.ndarray]]:
+        """Create a generator that yields batches of inference results.
+
+        This method handles creating or updating the input `sleap.pipelines.Pipeline`
+        for loading the data, as well as looping over the batches and running inference.
+
+        Args:
+            data_provider: The `sleap.pipelines.Provider` that contains data that should
+                be used for inference.
+
+        Returns:
+            A generator yielding batches predicted results as dictionaries of numpy
+            arrays.
+        """
+        # Initialize data pipeline and inference model if needed.
         if self.pipeline is None:
             if self.centroid_config is not None and self.confmap_config is not None:
                 self.make_pipeline()
             else:
                 # Pass in data provider when mocking one of the models.
                 self.make_pipeline(data_provider=data_provider)
-
-        self.pipeline.providers = [data_provider]
-
         if self.inference_model is None:
             self._initialize_inference_model()
 
+        # Update the data provider source.
+        self.pipeline.providers = [data_provider]
+
+        # Loop over data batches.
         for ex in self.pipeline.make_dataset():
+            # Run inference on current batch.
             preds = self.inference_model.predict(ex)
 
+            # Crop possibly variable length results.
             ex["instance_peaks"] = [
                 x[:n] for x, n in zip(preds["instance_peaks"], preds["n_valid"])
             ]
@@ -1257,10 +1286,36 @@ class TopdownPredictor(Predictor):
                 x[:n] for x, n in zip(preds["centroid_vals"], preds["n_valid"])
             ]
 
+            # Convert to numpy arrays if not already.
+            if isinstance(ex["video_ind"], tf.Tensor):
+                ex["video_ind"] = ex["video_ind"].numpy().flatten()
+            if isinstance(ex["frame_ind"], tf.Tensor):
+                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+
             yield ex
 
-    def make_labeled_frames_from_generator(self, generator, data_provider):
+    def _make_labeled_frames_from_generator(
+        self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
+    ) -> List[sleap.LabeledFrame]:
+        """Create labeled frames from a generator that yields inference results.
 
+        This method converts pure arrays into SLEAP-specific data structures and runs
+        them through the tracker if it is specified.
+
+        Args:
+            generator: A generator that returns dictionaries with inference results.
+                This should return dictionaries with keys `"image"`, `"video_ind"`,
+                `"frame_ind"`, `"instance_peaks"`, `"instance_peak_vals"`, and
+                `"centroid_vals"`. This can be created using the `_predict_generator()`
+                method.
+            data_provider: The `sleap.pipelines.Provider` that the predictions are being
+                created from. This is used to retrieve the `sleap.Video` instance
+                associated with each inference result.
+
+        Returns:
+            A list of `sleap.LabeledFrame`s with `sleap.PredictedInstance`s created from
+            arrays returned from the inference result generator.
+        """
         if self.confmap_config is not None:
             skeleton = self.confmap_config.data.labels.skeletons[0]
         else:
@@ -1279,9 +1334,6 @@ class TopdownPredictor(Predictor):
                 ex["instance_peak_vals"],
                 ex["centroid_vals"],
             ):
-
-                frame_ind = frame_ind.numpy().squeeze()
-                video_ind = video_ind.numpy().squeeze()
 
                 # Loop over instances.
                 predicted_instances = []
@@ -1316,29 +1368,40 @@ class TopdownPredictor(Predictor):
 
     def predict(
         self,
-        data_provider: Provider,
-        make_instances: bool = True,
-        make_labels: bool = False,
-    ):
-        if isinstance(data_provider, sleap.Labels):
-            data_provider = LabelsReader(data_provider)
-        elif isinstance(data_provider, sleap.Video):
-            data_provider = VideoReader(data_provider)
+        data: Union[Provider, sleap.Labels, sleap.Video],
+        make_labels: bool = True,
+    ) -> Union[List[Dict[str, np.ndarray]], sleap.Labels]:
+        """Run inference and tracking on a data source.
 
-        generator = self.predict_generator(data_provider)
+        Args:
+            data: A `sleap.pipelines.Provider`, `sleap.Labels` or `sleap.Video` to
+                run inference over.
+            make_labels: If `True` (the default), returns a `sleap.Labels` instance with
+                `sleap.PredictedInstance`s. If `False`, just return a list of
+                dictionaries containing the raw arrays returned by the inference model.
 
-        if make_instances or make_labels:
-            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
+        Returns:
+            A `sleap.Labels` with `sleap.PredictedInstance`s if `make_labels` is `True`,
+            otherwise a list of dictionaries containing batches of numpy arrays with the
+            raw results.
+        """
+        # Create provider if necessary.
+        if isinstance(data, sleap.Labels):
+            data = LabelsReader(data)
+        elif isinstance(data, sleap.Video):
+            data = VideoReader(data)
 
-            if make_labels:
-                return sleap.Labels(lfs)
-            else:
-                return lfs
+        # Initialize inference loop generator.
+        generator = self._predict_generator(data)
 
+        if make_labels:
+            # Create SLEAP data structures while consuming results.
+            return sleap.Labels(
+                self._make_labeled_frames_from_generator(generator, data)
+            )
         else:
-            examples = list(generator)
-
-            return examples
+            # Just return the raw results.
+            return list(generator)
 
 
 class BottomUpInferenceLayer(InferenceLayer):
@@ -1417,6 +1480,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         self.return_pafs = return_pafs
 
     def forward_pass(self, data):
+        """Run preprocessing and model inference on a batch."""
         if isinstance(data, dict):
             imgs = data["image"]
         else:
@@ -1436,6 +1500,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         return cms, pafs
 
     def find_peaks(self, cms):
+        """Run peak finding on predicted confidence maps."""
         # Find local peaks.
         (
             peaks,
@@ -1571,6 +1636,42 @@ class BottomUpInferenceModel(InferenceModel):
 
 @attr.s(auto_attribs=True)
 class BottomupPredictor(Predictor):
+    """Bottom-up multi-instance predictor.
+
+    This high-level class handles initialization, preprocessing and tracking using a
+    trained bottom-up multi-instance SLEAP model.
+
+    This should be initialized using the `from_trained_models()` constructor or the
+    high-level API (`sleap.load_model`).
+
+    Attributes:
+        bottomup_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained bottomup model.
+        bottomup_model: A `sleap.nn.model.Model` instance created from the trained
+            bottomup model. If `None`, ground truth centroids will be used if available
+            from the data source.
+        inference_model: A `sleap.nn.inference.BottomUpInferenceModel` that wraps a
+            trained `tf.keras.Model` to implement preprocessing, centroid detection,
+            cropping and peak finding.
+        pipeline: A `sleap.nn.data.Pipeline` that loads the data and batches input data.
+            This will be updated dynamically if new data sources are used.
+        tracker: A `sleap.nn.tracking.Tracker` that will be called to associate
+            detections over time. Predicted instances will not be assigned to tracks if
+            if this is `None`.
+        batch_size: The default batch size to use when loading data for inference.
+            Higher values increase inference speed at the cost of higher memory usage.
+        peak_threshold: Minimum confidence map value to consider a local peak as valid.
+        integral_refinement: If `True`, peaks will be refined with integral regression.
+            If `False`, `"local"`, peaks will be refined with quarter pixel local
+            gradient offset.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        max_edge_length_ratio: The maximum expected length of a connected pair of points
+            in relative image units. Candidate connections above this length will be
+            penalized during matching.
+        paf_line_points: Number of points to sample along the line integral.
+    """
+
     bottomup_config: TrainingJobConfig
     bottomup_model: Model
     inference_model: Optional[BottomUpInferenceModel] = attr.ib(default=None)
@@ -1584,6 +1685,7 @@ class BottomupPredictor(Predictor):
     paf_line_points: int = 10
 
     def _initialize_inference_model(self):
+        """Initialize the inference model from the trained model and configuration."""
         self.inference_model = BottomUpInferenceModel(
             BottomUpInferenceLayer(
                 keras_model=self.bottomup_model.keras_model,
@@ -1603,16 +1705,35 @@ class BottomupPredictor(Predictor):
     @classmethod
     def from_trained_models(
         cls,
-        bottomup_model_path: Text,
+        model_path: Text,
         batch_size: int = 4,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
     ) -> "BottomupPredictor":
-        """Create predictor from saved models."""
+        """Create predictor from a saved model.
+
+        Args:
+            model_path: Path to a bottom-up model folder or training job JSON file
+                inside a model folder. This folder should contain `training_config.json`
+                and `best_model.h5` files for a trained model.
+            batch_size: The default batch size to use when loading data for inference.
+                Higher values increase inference speed at the cost of higher memory
+                usage.
+            peak_threshold: Minimum confidence map value to consider a local peak as
+                valid.
+            integral_refinement: If `True`, peaks will be refined with integral
+                regression. If `False`, `"local"`, peaks will be refined with quarter
+                pixel local gradient offset.
+            integral_patch_size: Size of patches to crop around each rough peak for
+                integral refinement as an integer scalar.
+
+        Returns:
+            An instance of `BottomupPredictor` with the loaded model.
+        """
         # Load bottomup model.
-        bottomup_config = TrainingJobConfig.load_json(bottomup_model_path)
-        bottomup_keras_model_path = get_keras_model_path(bottomup_model_path)
+        bottomup_config = TrainingJobConfig.load_json(model_path)
+        bottomup_keras_model_path = get_keras_model_path(model_path)
         bottomup_model = Model.from_config(bottomup_config.model)
         bottomup_model.keras_model = tf.keras.models.load_model(
             bottomup_keras_model_path, compile=False
@@ -1629,6 +1750,19 @@ class BottomupPredictor(Predictor):
         return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+        """Make a data loading pipeline.
+
+        Args:
+            data_provider: If not `None`, the pipeline will be created with an instance
+                of a `sleap.pipelines.Provider`.
+
+        Returns:
+            The created `sleap.pipelines.Pipeline` with batching and prefetching.
+
+        Notes:
+            This method also updates the class attribute for the pipeline and will be
+            called automatically when predicting on data from a new source.
+        """
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
@@ -1643,8 +1777,77 @@ class BottomupPredictor(Predictor):
 
         return pipeline
 
-    def make_labeled_frames_from_generator(self, generator, data_provider):
+    def _predict_generator(
+        self, data_provider: Provider
+    ) -> Iterator[Dict[str, np.ndarray]]:
+        """Create a generator that yields batches of inference results.
 
+        This method handles creating or updating the input `sleap.pipelines.Pipeline`
+        for loading the data, as well as looping over the batches and running inference.
+
+        Args:
+            data_provider: The `sleap.pipelines.Provider` that contains data that should
+                be used for inference.
+
+        Returns:
+            A generator yielding batches predicted results as dictionaries of numpy
+            arrays.
+        """
+        # Initialize data pipeline and inference model if needed.
+        if self.pipeline is None:
+            self.make_pipeline()
+        if self.inference_model is None:
+            self._initialize_inference_model()
+
+        # Update the data provider source.
+        self.pipeline.providers = [data_provider]
+
+        # Loop over data batches.
+        for ex in self.pipeline.make_dataset():
+            # Run inference on current batch.
+            preds = self.inference_model.predict(ex)
+
+            # Crop possibly variable length results.
+            ex["instance_peaks"] = [
+                x[:n] for x, n in zip(preds["instance_peaks"], preds["n_valid"])
+            ]
+            ex["instance_peak_vals"] = [
+                x[:n] for x, n in zip(preds["instance_peak_vals"], preds["n_valid"])
+            ]
+            ex["instance_scores"] = [
+                x[:n] for x, n in zip(preds["instance_scores"], preds["n_valid"])
+            ]
+
+            # Convert to numpy arrays if not already.
+            if isinstance(ex["video_ind"], tf.Tensor):
+                ex["video_ind"] = ex["video_ind"].numpy().flatten()
+            if isinstance(ex["frame_ind"], tf.Tensor):
+                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+
+            yield ex
+
+    def _make_labeled_frames_from_generator(
+        self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
+    ) -> List[sleap.LabeledFrame]:
+        """Create labeled frames from a generator that yields inference results.
+
+        This method converts pure arrays into SLEAP-specific data structures and runs
+        them through the tracker if it is specified.
+
+        Args:
+            generator: A generator that returns dictionaries with inference results.
+                This should return dictionaries with keys `"image"`, `"video_ind"`,
+                `"frame_ind"`, `"instance_peaks"`, `"instance_peak_vals"`, and
+                `"instance_scores"`. This can be created using the
+                `_predict_generator()` method.
+            data_provider: The `sleap.pipelines.Provider` that the predictions are being
+                created from. This is used to retrieve the `sleap.Video` instance
+                associated with each inference result.
+
+        Returns:
+            A list of `sleap.LabeledFrame`s with `sleap.PredictedInstance`s created from
+            arrays returned from the inference result generator.
+        """
         skeleton = self.bottomup_config.data.labels.skeletons[0]
 
         # Loop over batches.
@@ -1660,9 +1863,6 @@ class BottomupPredictor(Predictor):
                 ex["instance_peak_vals"],
                 ex["instance_scores"],
             ):
-
-                frame_ind = frame_ind.numpy().squeeze()
-                video_ind = video_ind.numpy().squeeze()
 
                 # Loop over instances.
                 predicted_instances = []
@@ -1695,49 +1895,42 @@ class BottomupPredictor(Predictor):
 
         return predicted_frames
 
-    def predict_generator(self, data_provider: Provider):
-
-        if self.pipeline is None:
-            self.make_pipeline()
-        if self.inference_model is None:
-            self._initialize_inference_model()
-
-        self.pipeline.providers = [data_provider]
-
-        for ex in self.pipeline.make_dataset():
-            preds = self.inference_model.predict(ex)
-
-            ex["instance_peaks"] = [
-                x[:n] for x, n in zip(preds["instance_peaks"], preds["n_valid"])
-            ]
-            ex["instance_peak_vals"] = [
-                x[:n] for x, n in zip(preds["instance_peak_vals"], preds["n_valid"])
-            ]
-            ex["instance_scores"] = [
-                x[:n] for x, n in zip(preds["instance_scores"], preds["n_valid"])
-            ]
-            yield ex
-
     def predict(
         self,
-        data_provider: Provider,
-        make_instances: bool = True,
-        make_labels: bool = False,
-    ):
-        if isinstance(data_provider, sleap.Labels):
-            data_provider = LabelsReader(data_provider)
-        elif isinstance(data_provider, sleap.Video):
-            data_provider = VideoReader(data_provider)
-        generator = self.predict_generator(data_provider)
+        data: Union[Provider, sleap.Labels, sleap.Video],
+        make_labels: bool = True,
+    ) -> Union[List[Dict[str, np.ndarray]], sleap.Labels]:
+        """Run inference and tracking on a data source.
 
-        if make_instances or make_labels:
-            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
-            if make_labels:
-                return sleap.Labels(lfs)
-            else:
-                return lfs
+        Args:
+            data: A `sleap.pipelines.Provider`, `sleap.Labels` or `sleap.Video` to
+                run inference over.
+            make_labels: If `True` (the default), returns a `sleap.Labels` instance with
+                `sleap.PredictedInstance`s. If `False`, just return a list of
+                dictionaries containing the raw arrays returned by the inference model.
 
-        return list(generator)
+        Returns:
+            A `sleap.Labels` with `sleap.PredictedInstance`s if `make_labels` is `True`,
+            otherwise a list of dictionaries containing batches of numpy arrays with the
+            raw results.
+        """
+        # Create provider if necessary.
+        if isinstance(data, sleap.Labels):
+            data = LabelsReader(data)
+        elif isinstance(data, sleap.Video):
+            data = VideoReader(data)
+
+        # Initialize inference loop generator.
+        generator = self._predict_generator(data)
+
+        if make_labels:
+            # Create SLEAP data structures while consuming results.
+            return sleap.Labels(
+                self._make_labeled_frames_from_generator(generator, data)
+            )
+        else:
+            # Just return the raw results.
+            return list(generator)
 
 
 class SingleInstanceInferenceLayer(InferenceLayer):
@@ -1878,6 +2071,32 @@ class SingleInstanceInferenceModel(InferenceModel):
 
 @attr.s(auto_attribs=True)
 class SingleInstancePredictor(Predictor):
+    """Single instance predictor.
+
+    This high-level class handles initialization, preprocessing and tracking using a
+    trained single instance SLEAP model.
+
+    This should be initialized using the `from_trained_models()` constructor or the
+    high-level API (`sleap.load_model`).
+
+    Attributes:
+        confmap_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained model.
+        confmap_model: A `sleap.nn.model.Model` instance created from the trained model.
+        inference_model: A `sleap.nn.inference.SingleInstanceInferenceModel` that wraps
+            a trained `tf.keras.Model` to implement preprocessing and peak finding.
+        pipeline: A `sleap.nn.data.Pipeline` that loads the data and batches input data.
+            This will be updated dynamically if new data sources are used.
+        peak_threshold: Minimum confidence map value to consider a global peak as valid.
+        integral_refinement: If `True`, peaks will be refined with integral regression.
+            If `False`, `"local"`, peaks will be refined with quarter pixel local
+            gradient offset.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        batch_size: The default batch size to use when loading data for inference.
+            Higher values increase inference speed at the cost of higher memory usage.
+    """
+
     confmap_config: TrainingJobConfig
     confmap_model: Model
     inference_model: Optional[SingleInstanceInferenceModel] = attr.ib(default=None)
@@ -1888,6 +2107,7 @@ class SingleInstancePredictor(Predictor):
     batch_size: int = 4
 
     def _initialize_inference_model(self):
+        """Initialize the inference model from the trained model and configuration."""
         self.inference_model = SingleInstanceInferenceModel(
             SingleInstanceInferenceLayer(
                 keras_model=self.confmap_model.keras_model,
@@ -1901,16 +2121,35 @@ class SingleInstancePredictor(Predictor):
     @classmethod
     def from_trained_models(
         cls,
-        confmap_model_path: Text,
+        model_path: Text,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
         batch_size: int = 4,
     ) -> "SingleInstancePredictor":
-        """Create predictor from saved models."""
+        """Create the predictor from a saved model.
+
+        Args:
+            model_path: Path to a model folder or training job JSON file inside a model
+                folder. This folder should contain `training_config.json` and
+                `best_model.h5` files for a trained model.
+            peak_threshold: Minimum confidence map value to consider a global peak as
+                valid.
+            integral_refinement: If `True`, peaks will be refined with integral
+                regression. If `False`, `"local"`, peaks will be refined with quarter
+                pixel local gradient offset.
+            integral_patch_size: Size of patches to crop around each rough peak for
+                integral refinement as an integer scalar.
+            batch_size: The default batch size to use when loading data for inference.
+                Higher values increase inference speed at the cost of higher memory
+                usage.
+
+        Returns:
+            An instance of`SingleInstancePredictor` with the models loaded.
+        """
         # Load confmap model.
-        confmap_config = TrainingJobConfig.load_json(confmap_model_path)
-        confmap_keras_model_path = get_keras_model_path(confmap_model_path)
+        confmap_config = TrainingJobConfig.load_json(model_path)
+        confmap_keras_model_path = get_keras_model_path(model_path)
         confmap_model = Model.from_config(confmap_config.model)
         confmap_model.keras_model = tf.keras.models.load_model(
             confmap_keras_model_path, compile=False
@@ -1927,7 +2166,19 @@ class SingleInstancePredictor(Predictor):
         return obj
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+        """Make a data loading pipeline.
 
+        Args:
+            data_provider: If not `None`, the pipeline will be created with an instance
+                of a `sleap.pipelines.Provider`.
+
+        Returns:
+            The created `sleap.pipelines.Pipeline` with batching and prefetching.
+
+        Notes:
+            This method also updates the class attribute for the pipeline and will be
+            called automatically when predicting on data from a new source.
+        """
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
@@ -1942,8 +2193,64 @@ class SingleInstancePredictor(Predictor):
 
         return pipeline
 
-    def make_labeled_frames_from_generator(self, generator, data_provider):
+    def _predict_generator(
+        self, data_provider: Provider
+    ) -> Iterator[Dict[str, np.ndarray]]:
+        """Create a generator that yields batches of inference results.
 
+        This method handles creating or updating the input `sleap.pipelines.Pipeline`
+        for loading the data, as well as looping over the batches and running inference.
+
+        Args:
+            data_provider: The `sleap.pipelines.Provider` that contains data that should
+                be used for inference.
+
+        Returns:
+            A generator yielding batches predicted results as dictionaries of numpy
+            arrays.
+        """
+        # Initialize data pipeline and inference model if needed.
+        if self.pipeline is None:
+            self.make_pipeline()
+        if self.inference_model is None:
+            self._initialize_inference_model()
+
+        # Update the data provider source.
+        self.pipeline.providers = [data_provider]
+
+        # Loop over data batches.
+        for ex in self.pipeline.make_dataset():
+            # Run inference on current batch.
+            preds = self.inference_model.predict(ex)
+
+            # Convert to numpy arrays if not already.
+            if isinstance(preds["video_ind"], tf.Tensor):
+                preds["video_ind"] = preds["video_ind"].numpy().flatten()
+            if isinstance(preds["frame_ind"], tf.Tensor):
+                preds["frame_ind"] = preds["frame_ind"].numpy().flatten()
+
+            yield preds
+
+    def _make_labeled_frames_from_generator(
+        self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
+    ) -> List[sleap.LabeledFrame]:
+        """Create labeled frames from a generator that yields inference results.
+
+        This method converts pure arrays into SLEAP-specific data structures.
+
+        Args:
+            generator: A generator that returns dictionaries with inference results.
+                This should return dictionaries with keys `"video_ind"`, `"frame_ind"`,
+                `"peaks"`, and `"peak_vals"`. This can be created using the
+                `_predict_generator()` method.
+            data_provider: The `sleap.pipelines.Provider` that the predictions are being
+                created from. This is used to retrieve the `sleap.Video` instance
+                associated with each inference result.
+
+        Returns:
+            A list of `sleap.LabeledFrame`s with `sleap.PredictedInstance`s created from
+            arrays returned from the inference result generator.
+        """
         skeleton = self.confmap_config.data.labels.skeletons[0]
 
         # Loop over batches.
@@ -1954,10 +2261,6 @@ class SingleInstancePredictor(Predictor):
             for video_ind, frame_ind, points, confidences in zip(
                 ex["video_ind"], ex["frame_ind"], ex["peaks"], ex["peak_vals"]
             ):
-
-                frame_ind = frame_ind.numpy().squeeze()
-                video_ind = video_ind.numpy().squeeze()
-
                 # Loop over instances.
                 predicted_instances = [
                     sleap.instance.PredictedInstance.from_arrays(
@@ -1978,41 +2281,42 @@ class SingleInstancePredictor(Predictor):
 
         return predicted_frames
 
-    def predict_generator(self, data_provider: Provider):
-        if self.pipeline is None:
-            self.make_pipeline()
-
-        if self.inference_model is None:
-            self._initialize_inference_model()
-
-        self.pipeline.providers = [data_provider]
-
-        for ex in self.pipeline.make_dataset():
-            preds = self.inference_model.predict(ex)
-            preds["video_ind"] = ex["video_ind"]
-            preds["frame_ind"] = ex["frame_ind"]
-            yield preds
-
     def predict(
         self,
-        data_provider: Provider,
-        make_instances: bool = True,
-        make_labels: bool = False,
-    ):
-        if isinstance(data_provider, sleap.Labels):
-            data_provider = LabelsReader(data_provider)
-        elif isinstance(data_provider, sleap.Video):
-            data_provider = VideoReader(data_provider)
-        generator = self.predict_generator(data_provider)
+        data: Union[Provider, sleap.Labels, sleap.Video],
+        make_labels: bool = True,
+    ) -> Union[List[Dict[str, np.ndarray]], sleap.Labels]:
+        """Run inference on a data source.
 
-        if make_instances or make_labels:
-            lfs = self.make_labeled_frames_from_generator(generator, data_provider)
-            if make_labels:
-                return sleap.Labels(lfs)
-            else:
-                return lfs
+        Args:
+            data: A `sleap.pipelines.Provider`, `sleap.Labels` or `sleap.Video` to
+                run inference over.
+            make_labels: If `True` (the default), returns a `sleap.Labels` instance with
+                `sleap.PredictedInstance`s. If `False`, just return a list of
+                dictionaries containing the raw arrays returned by the inference model.
 
-        return list(generator)
+        Returns:
+            A `sleap.Labels` with `sleap.PredictedInstance`s if `make_labels` is `True`,
+            otherwise a list of dictionaries containing batches of numpy arrays with the
+            raw results.
+        """
+        # Create provider if necessary.
+        if isinstance(data, sleap.Labels):
+            data = LabelsReader(data)
+        elif isinstance(data, sleap.Video):
+            data = VideoReader(data)
+
+        # Initialize inference loop generator.
+        generator = self._predict_generator(data)
+
+        if make_labels:
+            # Create SLEAP data structures while consuming results.
+            return sleap.Labels(
+                self._make_labeled_frames_from_generator(generator, data)
+            )
+        else:
+            # Just return the raw results.
+            return list(generator)
 
 
 CLI_PREDICTORS = {
@@ -2159,6 +2463,7 @@ def make_video_readers_from_cli(args) -> List[VideoReader]:
         return [video_reader]
 
     if args.labels:
+        # TODO: Replace with LabelsReader.
         labels = sleap.Labels.load_file(args.labels)
 
         readers = []
@@ -2413,7 +2718,7 @@ def main():
     predicted_frames = []
 
     for video_reader in video_readers:
-        video_predicted_frames = predictor.predict(video_reader, make_labels=False, make_instances=True)
+        video_predicted_frames = predictor.predict(video_reader).labeled_frames
         predicted_frames.extend(video_predicted_frames)
 
     # Create dictionary of metadata we want to save with predictions
