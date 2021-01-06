@@ -20,3 +20,15 @@ def test_make_offsets():
     np.testing.assert_allclose(XX + off[..., 1, 0], 0.4, atol=1e-6)
     np.testing.assert_allclose(YY + off[..., 1, 1], 3.1, atol=1e-6)
     np.testing.assert_array_equal(off[..., 2, :], 0)
+
+
+def test_mask_offsets():
+    points = np.array([[1., 1.]], "float32")
+    xv, yv = sleap.nn.data.confidence_maps.make_grid_vectors(4, 4, output_stride=1)
+    off = offset_regression.make_offsets(points, xv, yv)
+    cm = sleap.nn.data.confidence_maps.make_confmaps(points, xv, yv, sigma=1)
+    off_mask = offset_regression.mask_offsets(off, cm, threshold=0.2)
+
+    np.testing.assert_array_equal(off_mask[:3, :3], off[:3, :3])
+    np.testing.assert_array_equal(off_mask[3:, :], 0.)
+    np.testing.assert_array_equal(off_mask[:, 3:], 0.)
