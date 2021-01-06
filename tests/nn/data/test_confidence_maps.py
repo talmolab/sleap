@@ -9,6 +9,7 @@ from sleap.nn.data.utils import make_grid_vectors
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_multi_confmaps,
+    make_multi_confmaps_with_offsets,
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
 )
@@ -94,6 +95,19 @@ def test_make_multi_confmaps():
     )
 
 
+def test_make_multi_confmaps_with_offsets():
+    xv, yv = make_grid_vectors(image_height=4, image_width=5, output_stride=1)
+    instances = tf.cast([
+        [[0.5, 1.], [2., 2.]],
+        [[1.5, 1.], [2., 3.]],
+        [[np.nan, np.nan], [-1., 5.]],
+        ], tf.float32)
+    cms, offsets = make_multi_confmaps_with_offsets(
+        instances, xv, yv, sigma=1., offsets_threshold=0.2
+    )
+    assert offsets.shape == (4, 5, 2, 2)
+
+
 def test_multi_confidence_map_generator(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
     multi_confmap_generator = MultiConfidenceMapGenerator(
@@ -123,6 +137,12 @@ def test_multi_confidence_map_generator(min_labels):
         cms[int(instances[1, 1, 1]), int(instances[1, 1, 0]), :], [0.0, 0.8815618]
     )
 
+    multi_confmap_generator.with_offsets = True
+    ds = labels_reader.make_dataset()
+    ds = multi_confmap_generator.transform_dataset(ds)
+    example = next(iter(ds))
+    assert "offsets" in example
+
 
 def test_multi_confidence_map_generator_centroids(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
@@ -151,6 +171,13 @@ def test_multi_confidence_map_generator_centroids(min_labels):
     np.testing.assert_allclose(
         centroid_cms[int(centroids[1, 1]), int(centroids[1, 0]), :], [0.8642299]
     )
+
+    multi_confmap_generator.with_offsets = True
+    ds = labels_reader.make_dataset()
+    ds = instance_centroid_finder.transform_dataset(ds)
+    ds = multi_confmap_generator.transform_dataset(ds)
+    example = next(iter(ds))
+    assert "offsets" in example
 
 
 def test_instance_confidence_map_generator(min_labels):
@@ -185,6 +212,14 @@ def test_instance_confidence_map_generator(min_labels):
         cms[(points[:, 1]).astype(int), (points[:, 0]).astype(int), :],
         [[0.9139312, 0.0], [0.0, 0.94459903]],
     )
+
+    instance_confmap_generator.with_offsets = True
+    ds = labels_reader.make_dataset()
+    ds = instance_centroid_finder.transform_dataset(ds)
+    ds = instance_cropper.transform_dataset(ds)
+    ds = instance_confmap_generator.transform_dataset(ds)
+    example = next(iter(ds))
+    assert "offsets" in example
 
 
 def test_instance_confidence_map_generator_with_all_instances(min_labels):
@@ -228,3 +263,12 @@ def test_instance_confidence_map_generator_with_all_instances(min_labels):
           [0., 0.]]],
         atol=1e-6
     )
+
+    instance_confmap_generator.with_offsets = True
+    ds = labels_reader.make_dataset()
+    ds = instance_centroid_finder.transform_dataset(ds)
+    ds = instance_cropper.transform_dataset(ds)
+    ds = instance_confmap_generator.transform_dataset(ds)
+    example = next(iter(ds))
+    assert "offsets" in example
+    assert "all_instance_offsets" in example
