@@ -43,5 +43,8 @@ def make_offsets(points, xv, yv):
         tf.broadcast_to(dy, shape)
     ], axis=-1)
     
+    # Replace NaNs with 0.
+    offsets = tf.where(tf.math.is_finite(offsets), offsets, 0.)
+
     return offsets
 
