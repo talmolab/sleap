@@ -1319,7 +1319,7 @@ class MainWindow(QMainWindow):
         else:
             if graph_name in header_functions:
                 kwargs = dict(video=self.state["video"])
-                reduction_name = re.search("\((sum|max|min)\)", graph_name)
+                reduction_name = re.search("\\((sum|max|min)\\)", graph_name)
                 if reduction_name is not None:
                     kwargs["reduction"] = reduction_name.group(1)
                 series = header_functions[graph_name](**kwargs)
