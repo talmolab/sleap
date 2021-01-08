@@ -1,7 +1,7 @@
 """Model head definitions for defining model output types."""
 
 import attr
-from typing import Optional, Text, List, Sequence, Tuple
+from typing import Optional, Text, List, Sequence, Tuple, Union
 
 from sleap.nn.config import (
     CentroidsHeadConfig,
@@ -109,7 +109,7 @@ class CenteredInstanceConfmapsHead:
         """Create this head from a set of configurations.
 
         Attributes:
-            config: A `CenteredInstanceConfmapsHead` instance specifying the head
+            config: A `CenteredInstanceConfmapsHeadConfig` instance specifying the head
                 parameters.
             part_names: Text name of the body parts (nodes) that the head will be
                 configured to produce. The number of parts determines the number of
@@ -211,4 +211,59 @@ class PartAffinityFieldsHead:
             sigma=config.sigma,
             output_stride=config.output_stride,
             loss_weight=config.loss_weight,
+        )
+
+
+ConfmapConfig = Union[
+    CentroidsHeadConfig,
+    SingleInstanceConfmapsHeadConfig,
+    CenteredInstanceConfmapsHeadConfig,
+    MultiInstanceConfmapsHeadConfig,
+]
+
+
+@attr.s(auto_attribs=True)
+class OffsetRefinementHead:
+    """Head for specifying offset refinement maps."""
+
+    part_names: List[Text]
+    output_stride: int = 1
+    sigma_threshold: float = 0.2
+    loss_weight: float = 1.0
+
+    @property
+    def channels(self) -> int:
+        """Return the number of channels in the tensor output by this head."""
+        return int(len(self.part_names) * 2)
+
+    @classmethod
+    def from_config(
+        cls,
+        config: ConfmapConfig,
+        part_names: Optional[List[Text]] = None,
+        sigma_threshold: float = 0.2,
+        loss_weight: float = 1.0,
+    ) -> "OffsetRefinementHead":
+        """Create this head from a set of configurations.
+
+        Attributes:
+            config: A `ConfmapConfig` instance specifying the head parameters.
+            part_names: Text name of the body parts (nodes) that the head will be
+                configured to produce. The number of parts determines the number of
+                channels in the output. This must be provided if the `part_names`
+                attribute of the configuration is not set.
+            sigma_threshold: Minimum confidence map value below which offsets will be
+                replaced with zeros.
+            loss_weight: Weight of the loss associated with this head.
+
+        Returns:
+            The instantiated head with the specified configuration options.
+        """
+        if config.part_names is not None:
+            part_names = config.part_names
+        return cls(
+            part_names=part_names,
+            output_stride=config.output_stride,
+            sigma_threshold=sigma_threshold,
+            loss_weight=loss_weight,
         )
