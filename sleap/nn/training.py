@@ -690,7 +690,7 @@ class Trainer(ABC):
 
         # TODO: Implement general part loss reporting.
         part_names = None
-        if isinstance(self.pipeline_builder, TopdownConfmapsPipeline):
+        if isinstance(self.pipeline_builder, TopdownConfmapsPipeline) and self.pipeline_builder.offsets_head is None:
             part_names = [
                 sanitize_scope_name(name) for name in self.model.heads[0].part_names
             ]
@@ -842,105 +842,15 @@ class Trainer(ABC):
 
 
 @attr.s(auto_attribs=True)
-class CentroidConfmapsModelTrainer(Trainer):
-    """Trainer for models that output centroid confidence maps."""
-
-    pipeline_builder: CentroidConfmapsPipeline = attr.ib(init=False)
-
-    def _update_config(self):
-        """Update the configuration with inferred values."""
-        if self.config.data.preprocessing.pad_to_stride is None:
-            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
-
-        if self.config.optimization.batches_per_epoch is None:
-            n_training_examples = len(self.data_readers.training_labels)
-            n_training_batches = (
-                n_training_examples // self.config.optimization.batch_size
-            )
-            self.config.optimization.batches_per_epoch = max(
-                self.config.optimization.min_batches_per_epoch, n_training_batches
-            )
-
-        if self.config.optimization.val_batches_per_epoch is None:
-            n_validation_examples = len(self.data_readers.validation_labels)
-            n_validation_batches = (
-                n_validation_examples // self.config.optimization.batch_size
-            )
-            self.config.optimization.val_batches_per_epoch = max(
-                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
-            )
-
-    def _setup_pipeline_builder(self):
-        """Initialize pipeline builder."""
-        self.pipeline_builder = CentroidConfmapsPipeline(
-            data_config=self.config.data,
-            optimization_config=self.config.optimization,
-            centroid_confmap_head=self.model.heads[0],
-        )
-
-    @property
-    def input_keys(self) -> List[Text]:
-        """Return example keys to be mapped to model inputs."""
-        return ["image"]
-
-    @property
-    def output_keys(self) -> List[Text]:
-        """Return example keys to be mapped to model outputs."""
-        return ["centroid_confidence_maps"]
-
-    def _setup_visualization(self):
-        """Set up visualization pipelines and callbacks."""
-        # Create visualization/inference pipelines.
-        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
-            self.data_readers.training_labels_reader, self.keras_model
-        )
-        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
-            self.data_readers.validation_labels_reader, self.keras_model
-        )
-
-        # Create static iterators.
-        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
-        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
-
-        def visualize_example(example):
-            img = example["image"].numpy()
-            cms = example["predicted_centroid_confidence_maps"].numpy()
-            pts_gt = example["centroids"].numpy()
-            pts_pr = example["predicted_centroids"].numpy()
-
-            scale = 1.0
-            if img.shape[0] < 512:
-                scale = 2.0
-            if img.shape[0] < 256:
-                scale = 4.0
-            fig = plot_img(img, dpi=72 * scale, scale=scale)
-            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
-            plot_peaks(pts_gt, pts_pr, paired=False)
-            return fig
-
-        self.visualization_callbacks.extend(
-            setup_visualization(
-                self.config.outputs,
-                run_path=self.run_path,
-                viz_fn=lambda: visualize_example(next(training_viz_ds_iter)),
-                name=f"train",
-            )
-        )
-        self.visualization_callbacks.extend(
-            setup_visualization(
-                self.config.outputs,
-                run_path=self.run_path,
-                viz_fn=lambda: visualize_example(next(validation_viz_ds_iter)),
-                name=f"validation",
-            )
-        )
-
-
-@attr.s(auto_attribs=True)
 class SingleInstanceModelTrainer(Trainer):
     """Trainer for models that output single-instance confidence maps."""
 
     pipeline_builder: SingleInstanceConfmapsPipeline = attr.ib(init=False)
+
+    @property
+    def has_offsets(self) -> bool:
+        """Whether model is configured to output refinement offsets."""
+        return self.config.model.heads.single_instance.offset_refinement
 
     def _update_config(self):
         """Update the configuration with inferred values."""
@@ -970,11 +880,12 @@ class SingleInstanceModelTrainer(Trainer):
             )
 
     def _setup_pipeline_builder(self):
-        # Initialize pipeline builder.
+        """Initialize pipeline builder."""
         self.pipeline_builder = SingleInstanceConfmapsPipeline(
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             single_instance_confmap_head=self.model.heads[0],
+            offsets_head=self.model.heads[1] if self.has_offsets else None
         )
 
     @property
@@ -985,7 +896,10 @@ class SingleInstanceModelTrainer(Trainer):
     @property
     def output_keys(self) -> List[Text]:
         """Return example keys to be mapped to model outputs."""
-        return ["confidence_maps"]
+        outputs = ["confidence_maps"]
+        if self.has_offsets:
+            outputs.append("offsets")
+        return outputs
 
     def _setup_visualization(self):
         """Set up visualization pipelines and callbacks."""
@@ -1036,10 +950,119 @@ class SingleInstanceModelTrainer(Trainer):
 
 
 @attr.s(auto_attribs=True)
+class CentroidConfmapsModelTrainer(Trainer):
+    """Trainer for models that output centroid confidence maps."""
+
+    pipeline_builder: CentroidConfmapsPipeline = attr.ib(init=False)
+
+    @property
+    def has_offsets(self) -> bool:
+        """Whether model is configured to output refinement offsets."""
+        return self.config.model.heads.centroid.offset_refinement
+
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
+
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(self.data_readers.training_labels)
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
+
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(self.data_readers.validation_labels)
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
+
+    def _setup_pipeline_builder(self):
+        """Initialize pipeline builder."""
+        self.pipeline_builder = CentroidConfmapsPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            centroid_confmap_head=self.model.heads[0],
+            offsets_head=self.model.heads[1] if self.has_offsets else None
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        outputs = ["centroid_confidence_maps"]
+        if self.has_offsets:
+            outputs.append("offsets")
+        return outputs
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader, self.keras_model
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader, self.keras_model
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        def visualize_example(example):
+            img = example["image"].numpy()
+            cms = example["predicted_centroid_confidence_maps"].numpy()
+            pts_gt = example["centroids"].numpy()
+            pts_pr = example["predicted_centroids"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plot_peaks(pts_gt, pts_pr, paired=False)
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(training_viz_ds_iter)),
+                name=f"train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(validation_viz_ds_iter)),
+                name=f"validation",
+            )
+        )
+
+
+@attr.s(auto_attribs=True)
 class TopdownConfmapsModelTrainer(Trainer):
     """Trainer for models that output instance centered confidence maps."""
 
     pipeline_builder: TopdownConfmapsPipeline = attr.ib(init=False)
+
+    @property
+    def has_offsets(self) -> bool:
+        """Whether model is configured to output refinement offsets."""
+        return self.config.model.heads.centered_instance.offset_refinement
 
     def _update_config(self):
         """Update the configuration with inferred values."""
@@ -1082,6 +1105,7 @@ class TopdownConfmapsModelTrainer(Trainer):
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             instance_confmap_head=self.model.heads[0],
+            offsets_head=self.model.heads[1] if self.has_offsets else None
         )
 
     @property
@@ -1092,7 +1116,10 @@ class TopdownConfmapsModelTrainer(Trainer):
     @property
     def output_keys(self) -> List[Text]:
         """Return example keys to be mapped to model outputs."""
-        return ["instance_confidence_maps"]
+        outputs = ["instance_confidence_maps"]
+        if self.has_offsets:
+            outputs.append("offsets")
+        return outputs
 
     def _setup_visualization(self):
         """Set up visualization pipelines and callbacks."""
@@ -1159,6 +1186,11 @@ class BottomUpModelTrainer(Trainer):
 
     pipeline_builder: BottomUpPipeline = attr.ib(init=False)
 
+    @property
+    def has_offsets(self) -> bool:
+        """Whether model is configured to output refinement offsets."""
+        return self.config.model.heads.multi_instance.confmaps.offset_refinement
+
     def _update_config(self):
         """Update the configuration with inferred values."""
         if self.config.data.preprocessing.pad_to_stride is None:
@@ -1183,12 +1215,13 @@ class BottomUpModelTrainer(Trainer):
             )
 
     def _setup_pipeline_builder(self):
-        # Initialize pipeline builder.
+        """Initialize pipeline builder."""
         self.pipeline_builder = BottomUpPipeline(
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             confmaps_head=self.model.heads[0],
             pafs_head=self.model.heads[1],
+            offsets_head=self.model.heads[2] if self.has_offsets else None
         )
 
     @property
@@ -1199,7 +1232,10 @@ class BottomUpModelTrainer(Trainer):
     @property
     def output_keys(self) -> List[Text]:
         """Return example keys to be mapped to model outputs."""
-        return ["confidence_maps", "part_affinity_fields"]
+        output_keys = ["confidence_maps", "part_affinity_fields"]
+        if self.has_offsets:
+            output_keys.append("offsets")
+        return output_keys
 
     def _setup_visualization(self):
         """Set up visualization pipelines and callbacks."""
