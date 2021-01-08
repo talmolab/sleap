@@ -132,7 +132,7 @@ def test_centroid_crop_layer():
     cms = tf.expand_dims(make_multi_confmaps(points, xv, yv, sigma=1.5), axis=0)
 
     x_in = tf.keras.layers.Input([12, 12, 1])
-    x_out = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    x_out = tf.keras.layers.Lambda(lambda x: x, name="CentroidConfmapsHead")(x_in)
     model = tf.keras.Model(inputs=x_in, outputs=x_out)
 
     layer = CentroidCrop(
@@ -174,7 +174,7 @@ def test_instance_peaks_layer():
     )
 
     x_in = tf.keras.layers.Input([12, 12, 3])
-    x_out = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    x_out = tf.keras.layers.Lambda(lambda x: x, name="CenteredInstanceConfmapsHead")(x_in)
     model = tf.keras.Model(inputs=x_in, outputs=x_out)
 
     instance_peaks_layer = FindInstancePeaks(
@@ -428,7 +428,7 @@ def test_single_instance_inference():
     )
 
     x_in = tf.keras.layers.Input([12, 12, 3])
-    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    x = tf.keras.layers.Lambda(lambda x: x, name="SingleInstanceConfmapsHead")(x_in)
     keras_model = tf.keras.Model(x_in, x)
 
     layer = SingleInstanceInferenceLayer(keras_model=keras_model, refinement="local")
