@@ -30,6 +30,38 @@ def cfg():
     return cfg
 
 
+def test_train_centroids(training_labels, cfg):
+    cfg.model.heads.centroid = (
+        sleap.nn.config.CentroidsHeadConfig(
+            sigma=1.5, output_stride=1, offset_refinement=False
+        )
+    )
+    trainer = sleap.nn.training.CentroidConfmapsModelTrainer.from_config(
+        cfg, training_labels=training_labels
+    )
+    trainer.setup()
+    trainer.train()
+    assert trainer.keras_model.output_names[0] == "CentroidConfmapsHead_0"
+    assert tuple(trainer.keras_model.outputs[0].shape) == (None, 384, 384, 1)
+
+
+def test_train_centroids_with_offset(training_labels, cfg):
+    cfg.model.heads.centroid = (
+        sleap.nn.config.CentroidsHeadConfig(
+            sigma=1.5, output_stride=1, offset_refinement=True
+        )
+    )
+    trainer = sleap.nn.training.CentroidConfmapsModelTrainer.from_config(
+        cfg, training_labels=training_labels
+    )
+    trainer.setup()
+    trainer.train()
+    assert trainer.keras_model.output_names[0] == "CentroidConfmapsHead_0"
+    assert trainer.keras_model.output_names[1] == "OffsetRefinementHead_0"
+    assert tuple(trainer.keras_model.outputs[0].shape) == (None, 384, 384, 1)
+    assert tuple(trainer.keras_model.outputs[1].shape) == (None, 384, 384, 2)
+
+
 def test_train_topdown(training_labels, cfg):
     cfg.model.heads.centered_instance = (
         sleap.nn.config.CenteredInstanceConfmapsHeadConfig(
