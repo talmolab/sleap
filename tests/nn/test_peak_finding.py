@@ -12,6 +12,7 @@ from sleap.nn.peak_finding import (
     find_local_peaks,
     find_global_peaks_integral,
     find_local_peaks_integral,
+    find_global_peaks_with_offsets,
 )
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
@@ -260,3 +261,29 @@ def test_find_local_peaks_local():
     assert_allclose(peak_vals, [1, 1, 1, 1, 1, 1, 1, 1, 1], atol=0.1)
     assert_array_equal(peak_sample_inds,  [0, 0, 0, 0, 0, 1, 1, 1, 1])
     assert_array_equal(peak_channel_inds, [0, 1, 0, 1, 1, 0, 1, 0, 1])
+
+
+@pytest.mark.parametrize("output_stride", [1, 2])
+def test_find_global_peaks_with_offsets(output_stride, min_labels):
+    labels = min_labels
+    p = sleap.pipelines.Pipeline(sleap.pipelines.LabelsReader(labels))
+    p += sleap.pipelines.InstanceCentroidFinder(
+        center_on_anchor_part=True, anchor_part_names="A", skeletons=labels.skeletons
+    )
+    p += sleap.pipelines.InstanceCropper(crop_width=192, crop_height=192)
+    p += sleap.pipelines.InstanceConfidenceMapGenerator(
+        sigma=1.5, output_stride=output_stride, all_instances=False, with_offsets=True
+    )
+    p += sleap.pipelines.Batcher(
+        batch_size=2,
+    )
+
+    ex = p.peek()
+    cms = ex["instance_confidence_maps"]
+    offs = ex["offsets"]
+
+    refined_peaks, peak_vals = find_global_peaks_with_offsets(cms, offs)
+    refined_peaks *= output_stride
+
+    assert_allclose(ex["center_instance"], refined_peaks, atol=1e-3)
+

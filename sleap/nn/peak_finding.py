@@ -536,7 +536,7 @@ def find_local_peaks_integral(
 
     Args:
         cms: Confidence maps. Tensor of shape (samples, height, width, channels).
-        crop_size: 
+        crop_size:
         threshold: Minimum confidence threshold. Peaks with values below this will
             ignored.
 
@@ -558,3 +558,82 @@ def find_local_peaks_integral(
     return find_local_peaks(
         cms, threshold=threshold, refinement="integral", integral_patch_size=crop_size
     )
+
+
+def find_global_peaks_with_offsets(
+    cms: tf.Tensor, offsets: tf.Tensor, threshold: float = 0.2
+) -> Tuple[tf.Tensor, tf.Tensor]:
+    """Find global peaks and refine with learned offset maps.
+
+    Args:
+        cms: Confidence maps tensor of shape `(samples, height, width, channels)`.
+        offsets: Offset maps tensor of shape `(samples, height, width, 2 * channels)`.
+        threshold: Scalar float specifying the minimum confidence value for peaks. Peaks
+            with values below this threshold will be replaced with NaNs.
+
+    Returns:
+        A tuple of `(peak_points, peak_vals)`.
+
+        `peak_points`: `float32` tensor of shape `(samples, channels, 2)`, where the
+        last axis indicates peak locations in xy order.
+
+        `peak_vals`: `float32` tensor of shape `(samples, channels)` containing the
+        values at the peak points.
+    """
+    # Find grid aligned peaks.
+    rough_peaks, peak_vals = find_global_peaks_rough(
+        cms, threshold=threshold
+    )  # (samples, channels, 2)
+
+    # Return early if not refining or no rough peaks found.
+    if tf.reduce_all(tf.math.is_nan(rough_peaks)):
+        return rough_peaks, peak_vals
+
+    samples = tf.shape(cms)[0]
+    channels = tf.shape(cms)[3]
+
+    # Setup subscript indexing to pull out offsets at the peaks.
+    subs_samples = tf.broadcast_to(
+        tf.reshape(tf.range(samples, dtype=tf.int32), [-1, 1, 1]),
+        [samples, channels, 1],
+    )
+    subs_channels = tf.broadcast_to(
+        tf.reshape(tf.range(channels, dtype=tf.int32), [1, -1, 1]),
+        [samples, channels, 1],
+    )
+    subs = tf.concat(
+        [
+            subs_samples,
+            tf.cast(tf.reverse(rough_peaks, axis=[2]), tf.int32),
+            subs_channels,
+        ],
+        axis=2,
+    )
+
+    # Flatten samples and channels to (n_peaks, 2).
+    rough_peaks = tf.reshape(rough_peaks, [samples * channels, 2])
+    subs = tf.reshape(subs, [samples * channels, 4])
+
+    # Keep only peaks that are not NaNs.
+    valid_idx = tf.squeeze(
+        tf.where(~tf.math.is_nan(tf.gather(rough_peaks, 0, axis=1))), axis=1
+    )
+    valid_peaks = tf.gather(rough_peaks, valid_idx, axis=0)
+    valid_subs = tf.gather(subs, valid_idx, axis=0)
+
+    # Expand last axes of offsets.
+    shape = tf.shape(offsets)
+    offsets = tf.reshape(offsets, [shape[0], shape[1], shape[2], -1, 2])
+
+    # Extract offsets at the peak locations.
+    peak_offsets = tf.gather_nd(offsets, valid_subs)
+
+    # Apply offsets.
+    refined_peaks = tf.tensor_scatter_nd_add(
+        rough_peaks, tf.expand_dims(valid_idx, axis=1), peak_offsets
+    )
+
+    # Reshape to (samples, channels, 2).
+    refined_peaks = tf.reshape(refined_peaks, [samples, channels, 2])
+
+    return refined_peaks, peak_vals
