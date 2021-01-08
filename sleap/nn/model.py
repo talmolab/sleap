@@ -140,8 +140,12 @@ class Model:
                 )
 
         elif isinstance(head_config, CentroidsHeadConfig):
-            heads = CentroidConfmapsHead.from_config(head_config)
-            output_stride = heads.output_stride
+            heads = [CentroidConfmapsHead.from_config(head_config)]
+            output_stride = heads[0].output_stride
+            if head_config.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(head_config)
+                )
 
         elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
             part_names = head_config.part_names
