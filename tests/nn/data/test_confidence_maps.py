@@ -214,12 +214,22 @@ def test_instance_confidence_map_generator(min_labels):
     )
 
     instance_confmap_generator.with_offsets = True
+    instance_confmap_generator.flatten_offsets = False
     ds = labels_reader.make_dataset()
     ds = instance_centroid_finder.transform_dataset(ds)
     ds = instance_cropper.transform_dataset(ds)
     ds = instance_confmap_generator.transform_dataset(ds)
     example = next(iter(ds))
     assert "offsets" in example
+    assert example["offsets"].shape == (80, 80, 2, 2)
+
+    instance_confmap_generator.flatten_offsets = True
+    ds = labels_reader.make_dataset()
+    ds = instance_centroid_finder.transform_dataset(ds)
+    ds = instance_cropper.transform_dataset(ds)
+    ds = instance_confmap_generator.transform_dataset(ds)
+    example = next(iter(ds))
+    assert example["offsets"].shape == (80, 80, 4)
 
 
 def test_instance_confidence_map_generator_with_all_instances(min_labels):

@@ -132,6 +132,9 @@ def make_multi_confmaps_with_offsets(
             confidence maps.
         offsets_threshold: Minimum confidence map value below which offsets will be
             replaced with zeros.
+        flatten_offsets: If `True`, the last two channels of the offset maps will be
+            flattened to produce rank-3 tensors. If `False`, the generated offset maps
+            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
 
     Returns:
         A tuple of `(confmaps, offsets)`.
@@ -197,6 +200,9 @@ class MultiConfidenceMapGenerator:
         with_offsets: If `True`, also return offsets for refining the peaks.
         offsets_threshold: Minimum confidence map value below which offsets will be
             replaced with zeros.
+        flatten_offsets: If `True`, the last two channels of the offset maps will be
+            flattened to produce rank-3 tensors. If `False`, the generated offset maps
+            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
     """
 
     sigma: float = 1.0
@@ -204,6 +210,7 @@ class MultiConfidenceMapGenerator:
     centroids: bool = False
     with_offsets: bool = False
     offsets_threshold: float = 0.2
+    flatten_offsets: bool = True
 
     @property
     def input_keys(self) -> List[Text]:
@@ -221,7 +228,7 @@ class MultiConfidenceMapGenerator:
         else:
             keys = self.input_keys + ["confidence_maps"]
         if self.with_offsets:
-            keys += ["offsets"]
+            keys.append("offsets")
 
         return keys
 
@@ -279,6 +286,11 @@ class MultiConfidenceMapGenerator:
                     self.offsets_threshold,
                 )
                 example["offsets"] = offsets
+                if self.flatten_offsets:
+                    shape = tf.shape(example["offsets"])
+                    example["offsets"] = tf.reshape(
+                        example["offsets"], [shape[0], shape[1], -1]
+                    )
             else:
                 cms = make_multi_confmaps(
                     points, xv, yv, self.sigma * self.output_stride
@@ -309,6 +321,9 @@ class InstanceConfidenceMapGenerator:
         with_offsets: If `True`, also return offsets for refining the peaks.
         offsets_threshold: Minimum confidence map value below which offsets will be
             replaced with zeros.
+        flatten_offsets: If `True`, the last two channels of the offset maps will be
+            flattened to produce rank-3 tensors. If `False`, the generated offset maps
+            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
     """
 
     sigma: float = 1.0
@@ -316,6 +331,7 @@ class InstanceConfidenceMapGenerator:
     all_instances: bool = False
     with_offsets: bool = False
     offsets_threshold: float = 0.2
+    flatten_offsets: bool = True
 
     @property
     def input_keys(self) -> List[Text]:
@@ -330,11 +346,11 @@ class InstanceConfidenceMapGenerator:
         """Return the keys that outgoing elements will have."""
         keys = self.input_keys + ["instance_confidence_maps"]
         if self.with_offsets:
-            keys += "offsets"
+            keys.append("offsets")
         if self.all_instances:
-            keys += ["all_instance_confidence_maps"]
+            keys.append("all_instance_confidence_maps")
             if self.with_offsets:
-                keys += "all_instance_offsets"
+                keys.append("all_instance_offsets")
         return keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
@@ -389,6 +405,11 @@ class InstanceConfidenceMapGenerator:
                     example["instance_confidence_maps"],
                     self.offsets_threshold,
                 )
+                if self.flatten_offsets:
+                    shape = tf.shape(example["offsets"])
+                    example["offsets"] = tf.reshape(
+                        example["offsets"], [shape[0], shape[1], -1]
+                    )
 
             if self.all_instances:
                 if self.with_offsets:
@@ -400,6 +421,11 @@ class InstanceConfidenceMapGenerator:
                         offsets_threshold=self.offsets_threshold,
                     )
                     example["all_instance_offsets"] = offsets
+                    if self.flatten_offsets:
+                        shape = tf.shape(example["all_instance_offsets"])
+                        example["all_instance_offsets"] = tf.reshape(
+                            example["all_instance_offsets"], [shape[0], shape[1], -1]
+                        )
                 else:
                     cms = make_multi_confmaps(
                         example["all_instances"],
@@ -408,6 +434,7 @@ class InstanceConfidenceMapGenerator:
                         sigma=self.sigma * self.output_stride,
                     )
                 example["all_instance_confidence_maps"] = cms
+
 
             return example
 
@@ -432,12 +459,16 @@ class SingleInstanceConfidenceMapGenerator:
         with_offsets: If `True`, also return offsets for refining the peaks.
         offsets_threshold: Minimum confidence map value below which offsets will be
             replaced with zeros.
+        flatten_offsets: If `True`, the last two channels of the offset maps will be
+            flattened to produce rank-3 tensors. If `False`, the generated offset maps
+            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
     """
 
     sigma: float = 1.0
     output_stride: int = 1
     with_offsets: bool = False
     offsets_threshold: float = 0.2
+    flatten_offsets: bool = True
 
     @property
     def input_keys(self) -> List[Text]:
@@ -449,7 +480,7 @@ class SingleInstanceConfidenceMapGenerator:
         """Return the keys that outgoing elements will have."""
         keys = self.input_keys + ["points", "confidence_maps"]
         if self.with_offsets:
-            keys += ["offsets"]
+            keys.append("offsets")
         return keys
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
@@ -499,6 +530,11 @@ class SingleInstanceConfidenceMapGenerator:
                     example["instance_confidence_maps"],
                     self.offsets_threshold,
                 )
+                if self.flatten_offsets:
+                    shape = tf.shape(example["offsets"])
+                    example["offsets"] = tf.reshape(
+                        example["offsets"], [shape[0], shape[1], -1]
+                    )
 
             return example
 
