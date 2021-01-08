@@ -637,3 +637,66 @@ def find_global_peaks_with_offsets(
     refined_peaks = tf.reshape(refined_peaks, [samples, channels, 2])
 
     return refined_peaks, peak_vals
+
+
+def find_local_peaks_with_offsets(
+    cms: tf.Tensor,
+    offsets: tf.Tensor,
+    threshold: float = 0.2,
+) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
+    """Find local peaks and refine with learned offset maps.
+
+    Args:
+        cms: Confidence maps. Tensor of shape `(samples, height, width, channels)`.
+        offsets: Offset maps tensor of shape `(samples, height, width, 2 * channels)`.
+        threshold: Minimum confidence threshold. Peaks with values below this will
+            ignored.
+
+    Returns:
+        A tuple of `(peak_points, peak_vals, peak_sample_inds, peak_channel_inds)`.
+
+        `peak_points`: float32 tensor of shape `(n_peaks, 2)`, where the last axis
+        indicates peak locations in xy order.
+
+        `peak_vals`: float32 tensor of shape `(n_peaks,)` containing the values at the
+        peak points.
+
+        `peak_sample_inds`: int32 tensor of shape `(n_peaks,)` containing the indices of
+        the sample each peak belongs to.
+
+        `peak_channel_inds`: int32 tensor of shape `(n_peaks,)` containing the indices
+        of the channel each peak belongs to.
+    """
+    # Find grid aligned peaks.
+    (
+        rough_peaks,
+        peak_vals,
+        peak_sample_inds,
+        peak_channel_inds,
+    ) = find_local_peaks_rough(cms, threshold=threshold)
+
+    # Return early if no rough peaks found.
+    if tf.shape(rough_peaks)[0] == 0:
+        return rough_peaks, peak_vals, peak_sample_inds, peak_channel_inds
+
+    # Setup subscript indexing to pull out offsets at the peaks.
+    subs = tf.concat(
+        [
+            tf.reshape(peak_sample_inds, [-1, 1]),
+            tf.cast(tf.reverse(rough_peaks, axis=[1]), tf.int32),
+            tf.reshape(peak_channel_inds, [-1, 1]),
+        ],
+        axis=1,
+    )
+    
+    # Expand last axes of offsets.
+    shape = tf.shape(offsets)
+    offsets = tf.reshape(offsets, [shape[0], shape[1], shape[2], -1, 2])
+    
+    # Extract offsets at the peak locations.
+    peak_offsets = tf.gather_nd(offsets, subs)
+
+    # Apply offsets.
+    refined_peaks = rough_peaks + peak_offsets
+
+    return refined_peaks, peak_vals, peak_sample_inds, peak_channel_inds
