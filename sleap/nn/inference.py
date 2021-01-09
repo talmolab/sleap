@@ -2111,7 +2111,7 @@ class BottomUpInferenceLayer(InferenceLayer):
     def find_peaks(self, cms, offsets):
         """Run peak finding on predicted confidence maps."""
         # Find local peaks.
-        if self.offsets is None:
+        if self.offsets_ind is None:
             # Use deterministic refinement.
             (
                 peaks,
