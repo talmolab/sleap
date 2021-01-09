@@ -11,16 +11,20 @@ from sleap.nn.data.confidence_maps import (
 )
 
 from sleap.nn.inference import (
+    InferenceLayer,
+    InferenceModel,
+    get_model_output_stride,
+    find_head,
+    SingleInstanceInferenceLayer,
+    SingleInstanceInferenceModel,
     CentroidCropGroundTruth,
+    CentroidCrop,
     FindInstancePeaksGroundTruth,
     FindInstancePeaks,
     TopDownInferenceModel,
-    InferenceLayer,
-    InferenceModel,
-    CentroidCrop,
-    get_model_output_stride,
-    SingleInstanceInferenceLayer,
-    SingleInstanceInferenceModel,
+    TopdownPredictor,
+    BottomupPredictor,
+    load_model,
 )
 
 sleap.nn.system.use_cpu_only()
@@ -415,6 +419,15 @@ def test_get_model_output_stride():
     assert get_model_output_stride(model, input_ind=1, output_ind=1) == 2
 
 
+def test_find_head():
+    x_in = tf.keras.layers.Input([4, 4, 1])
+    x = tf.keras.layers.Lambda(lambda x: x, name="A_0")(x_in)
+    model = tf.keras.Model(x_in, x)
+
+    assert find_head(model, "A") == 0
+    assert find_head(model, "B") is None
+
+
 def test_single_instance_inference():
     xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
     points = tf.cast([[1.75, 2.75], [3.75, 4.75], [5.75, 6.75]], tf.float32)
@@ -454,3 +467,53 @@ def test_single_instance_inference():
     assert_array_equal(preds["peaks"], points)
     assert "peak_vals" in preds
     assert "confmaps" in preds
+
+
+def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
+    predictor = TopdownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path
+    )
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    points_gt = np.concatenate([min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0)
+    points_pr = np.concatenate([labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0)
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+    
+
+def test_topdown_predictor_centered_instance(min_labels, min_centered_instance_model_path):
+    predictor = TopdownPredictor.from_trained_models(
+        confmap_model_path=min_centered_instance_model_path
+    )
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    points_gt = np.concatenate([min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0)
+    points_pr = np.concatenate([labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0)
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+
+def test_topdown_predictor_bottomup(min_labels, min_bottomup_model_path):
+    predictor = BottomupPredictor.from_trained_models(
+        model_path=min_bottomup_model_path
+    )
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    points_gt = np.concatenate([min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0)
+    points_pr = np.concatenate([labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0)
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.75)
+
+
+def test_load_model(min_centroid_model_path, min_centered_instance_model_path, min_bottomup_model_path):
+    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
+    assert isinstance(predictor, TopdownPredictor)
+
+    predictor = load_model(min_bottomup_model_path)
+    assert isinstance(predictor, BottomupPredictor)
