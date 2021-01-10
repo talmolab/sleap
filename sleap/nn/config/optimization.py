@@ -104,7 +104,7 @@ class HardKeypointMiningConfig:
         loss_scale: Factor to scale the hard keypoint losses by.
     """
 
-    online_mining: bool = True
+    online_mining: bool = False
     hard_to_easy_ratio: float = 2.0
     min_hard_keypoints: int = 2
     max_hard_keypoints: Optional[int] = None
