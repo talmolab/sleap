@@ -49,6 +49,7 @@ frame and instances listed in data view table.
 import re
 import os
 import random
+import platform
 
 from typing import Callable, List, Optional, Tuple
 
@@ -1563,6 +1564,12 @@ def main():
 
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
+
+    if platform.system() == "Darwin":
+        # TODO: Remove this workaround when we update to PySide2 >= 5.15.
+        # https://bugreports.qt.io/browse/QTBUG-87014
+        # https://stackoverflow.com/q/64818879
+        os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
     app = QApplication([])
     app.setApplicationName(f"SLEAP Label v{sleap.version.__version__}")
