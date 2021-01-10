@@ -605,7 +605,7 @@ def get_model_output_stride(
 
 def find_head(model: tf.keras.Model, name: str) -> Optional[int]:
     """Return the index of a head in a model's outputs.
-    
+
     Args:
         model: A `tf.keras.Model` trained by SLEAP.
         name: A string that is contained in the model output tensor name.
@@ -700,8 +700,7 @@ class SingleInstanceInferenceLayer(InferenceLayer):
 
         if self.confmaps_ind is None:
             self.confmaps_ind = find_head(
-                self.keras_model,
-                "SingleInstanceConfmapsHead"
+                self.keras_model, "SingleInstanceConfmapsHead"
             )
 
         if self.confmaps_ind is None:
@@ -713,9 +712,11 @@ class SingleInstanceInferenceLayer(InferenceLayer):
         if self.offsets_ind is None:
             self.offsets_ind = find_head(self.keras_model, "OffsetRefinementHead")
 
-        if  self.output_stride is None:
+        if self.output_stride is None:
             # Attempt to automatically infer the output stride.
-             self.output_stride = get_model_output_stride(self.keras_model, output_ind=self.confmaps_ind)
+            self.output_stride = get_model_output_stride(
+                self.keras_model, output_ind=self.confmaps_ind
+            )
 
     def call(self, data):
         """Predict instance confidence maps and find peaks.
@@ -1141,9 +1142,7 @@ class CentroidCrop(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model,
-                0,
-                self.confmaps_ind
+                self.keras_model, 0, self.confmaps_ind
             )
         self.output_stride = output_stride
         self.peak_threshold = peak_threshold
@@ -1351,11 +1350,10 @@ class FindInstancePeaks(InferenceLayer):
         self.return_confmaps = return_confmaps
         self.confmaps_ind = confmaps_ind
         self.offsets_ind = offsets_ind
-        
+
         if self.confmaps_ind is None:
             self.confmaps_ind = find_head(
-                self.keras_model,
-                "CenteredInstanceConfmapsHead"
+                self.keras_model, "CenteredInstanceConfmapsHead"
             )
 
         if self.confmaps_ind is None:
@@ -1370,9 +1368,7 @@ class FindInstancePeaks(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model,
-                0,
-                self.confmaps_ind
+                self.keras_model, 0, self.confmaps_ind
             )
         self.output_stride = output_stride
 
@@ -1473,7 +1469,7 @@ class FindInstancePeaks(InferenceLayer):
             # Use learned offsets.
             (
                 peak_points,
-                peak_vals
+                peak_vals,
             ) = sleap.nn.peak_finding.find_global_peaks_with_offsets(
                 cms,
                 offsets,
@@ -2039,10 +2035,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         self.offsets_ind = offsets_ind
 
         if self.confmaps_ind is None:
-            self.confmaps_ind = find_head(
-                self.keras_model,
-                "MultiInstanceConfmapsHead"
-            )
+            self.confmaps_ind = find_head(self.keras_model, "MultiInstanceConfmapsHead")
 
         if self.confmaps_ind is None:
             raise ValueError(
@@ -2051,10 +2044,7 @@ class BottomUpInferenceLayer(InferenceLayer):
             )
 
         if self.pafs_ind is None:
-            self.pafs_ind = find_head(
-                self.keras_model,
-                "PartAffinityFieldsHead"
-            )
+            self.pafs_ind = find_head(self.keras_model, "PartAffinityFieldsHead")
 
         if self.pafs_ind is None:
             raise ValueError(
@@ -2067,11 +2057,15 @@ class BottomUpInferenceLayer(InferenceLayer):
 
         if cm_output_stride is None:
             # Attempt to automatically infer the output stride.
-            cm_output_stride = get_model_output_stride(self.keras_model, output_ind=self.confmaps_ind)
+            cm_output_stride = get_model_output_stride(
+                self.keras_model, output_ind=self.confmaps_ind
+            )
         self.cm_output_stride = cm_output_stride
         if paf_output_stride is None:
             # Attempt to automatically infer the output stride.
-            paf_output_stride = get_model_output_stride(self.keras_model, output_ind=self.pafs_ind)
+            paf_output_stride = get_model_output_stride(
+                self.keras_model, output_ind=self.pafs_ind
+            )
         self.paf_output_stride = paf_output_stride
 
         self.peak_threshold = peak_threshold
