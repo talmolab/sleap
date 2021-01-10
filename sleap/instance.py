@@ -534,8 +534,8 @@ class Instance:
         return self.skeleton.node_to_index(node)
 
     def __getitem__(
-        self, node: Union[List[Union[str, Node]], Union[str, Node]]
-    ) -> Union[List[Point], Point]:
+        self, node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray]
+    ) -> Union[List[Point], Point, np.ndarray]:
         """
         Get the Points associated with particular skeleton node(s).
 
@@ -552,24 +552,28 @@ class Instance:
             to each node.
 
         """
-
-        # If the node is a list of nodes, use get item recursively and return a list of _points.
-        if type(node) is list:
-            ret_list = []
+        # If the node is a list of nodes, use get item recursively and return a list of
+        # _points.
+        if isinstance(node, (list, tuple, np.ndarray)):
+            pts = []
             for n in node:
-                ret_list.append(self.__getitem__(n))
+                pts.append(self.__getitem__(n))
 
-            return ret_list
+            if isinstance(node, np.ndarray):
+                return np.array([[pt.x, pt.y] for pt in pts])
+            else:
+                return pts
 
-        try:
-            node = self._node_to_index(node)
-            return self._points[node]
-        except ValueError:
-            raise KeyError(
-                f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
-            )
+        if isinstance(node, (Node, str)):
+            try:
+                node = self._node_to_index(node)
+            except ValueError:
+                raise KeyError(
+                    f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
+                )
+        return self._points[node]
 
-    def __contains__(self, node: Union[str, Node]) -> bool:
+    def __contains__(self, node: Union[str, Node, int]) -> bool:
         """
         Whether this instance has a point with the specified node.
 
@@ -584,18 +588,18 @@ class Instance:
         if isinstance(node, Node):
             node = node.name
 
-        if node not in self.skeleton:
-            return False
-
-        node_idx = self._node_to_index(node)
+        if isinstance(node, str):
+            if node not in self.skeleton:
+                return False
+            node = self._node_to_index(node)
 
         # If the points are nan, then they haven't been allocated.
-        return not self._points[node_idx].isnan()
+        return not self._points[node].isnan()
 
     def __setitem__(
         self,
-        node: Union[List[Union[str, Node]], Union[str, Node]],
-        value: Union[List[Point], Point],
+        node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray],
+        value: Union[List[Point], Point, np.ndarray],
     ):
         """
         Set the point(s) for given node(s).
@@ -612,31 +616,34 @@ class Instance:
         Returns:
             None
         """
-
         # Make sure node and value, if either are lists, are of compatible size
-        if type(node) is not list and type(value) is list and len(value) != 1:
-            raise IndexError(
-                "Node list for indexing must be same length and value list."
-            )
+        if isinstance(node, (list, np.ndarray)):
+            if not isinstance(value, (list, np.ndarray)) or len(value) != len(node):
+                raise IndexError(
+                    "Node list for indexing must be same length and value list."
+                )
 
-        if type(node) is list and type(value) is not list and len(node) != 1:
-            raise IndexError(
-                "Node list for indexing must be same length and value list."
-            )
-
-        # If we are dealing with lists, do multiple assignment recursively, this should be ok because
-        # skeletons and instances are small.
-        if type(node) is list:
             for n, v in zip(node, value):
                 self.__setitem__(n, v)
         else:
-            try:
-                node_idx = self._node_to_index(node)
-                self._points[node_idx] = value
-            except ValueError:
-                raise KeyError(
-                    f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
-                )
+            if isinstance(node, (Node, str)):
+                try:
+                    node_idx = self._node_to_index(node)
+                except ValueError:
+                    raise KeyError(
+                        f"The skeleton ({self.skeleton}) has no node '{node}'."
+                    )
+            else:
+                node_idx = node
+
+            if not isinstance(value, Point):
+                if hasattr(value, "__len__") and len(value) == 2:
+                    value = Point(x=value[0], y=value[1])
+                else:
+                    raise ValueError(
+                        "Instance point values must be (x, y) coordinates."
+                    )
+            self._points[node_idx] = value
 
     def __delitem__(self, node: Union[str, Node]):
         """
