@@ -51,3 +51,22 @@ def test_random_cropper(min_labels):
     assert tf.reduce_all(
         example["instances"] == (
             example_preaug["instances"] - tf.expand_dims(offset, axis=0)))
+
+
+def test_flip_instances_lr():
+    insts = tf.cast([
+        [[0, 1], [2, 3]],
+        [[4, 5], [6, 7]],
+    ], tf.float32)
+
+    insts_flip = augmentation.flip_instances_lr(insts, 8)
+    np.testing.assert_array_equal(insts_flip, [
+        [[7, 1], [5, 3]],
+        [[3, 5], [1, 7]]])
+
+    insts_flip1 = augmentation.flip_instances_lr(insts, 8, [[0, 1]])
+    insts_flip2 = augmentation.flip_instances_lr(insts, 8, [[1, 0]])
+    np.testing.assert_array_equal(insts_flip1, [
+        [[5, 3], [7, 1]],
+        [[1, 7], [3, 5]]])
+    np.testing.assert_array_equal(insts_flip1, insts_flip2)
