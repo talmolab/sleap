@@ -27,6 +27,7 @@ from sleap.nn.heads import (
     CenteredInstanceConfmapsHead,
     MultiInstanceConfmapsHead,
     PartAffinityFieldsHead,
+    OffsetRefinementHead,
 )
 from sleap.nn.config import (
     LEAPConfig,
@@ -72,6 +73,7 @@ HEADS = [
     CenteredInstanceConfmapsHead,
     MultiInstanceConfmapsHead,
     PartAffinityFieldsHead,
+    OffsetRefinementHead,
 ]
 Head = TypeVar("Head", *HEADS)
 
@@ -103,6 +105,8 @@ class Model:
         Arguments:
             config: The configurations as a `ModelConfig` instance.
             skeleton: A `sleap.Skeleton` to use if not provided in the config.
+            update_config: If `True`, the input model configuration will be updated with
+                values inferred from other fields.
 
         Returns:
             An instance of `Model` built with the specified configurations.
@@ -124,14 +128,24 @@ class Model:
                 part_names = skeleton.node_names
                 if update_config:
                     head_config.part_names = part_names
-            heads = SingleInstanceConfmapsHead.from_config(
-                head_config, part_names=part_names
-            )
-            output_stride = heads.output_stride
+            heads = [
+                SingleInstanceConfmapsHead.from_config(
+                    head_config, part_names=part_names
+                )
+            ]
+            output_stride = heads[0].output_stride
+            if head_config.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(head_config, part_names=part_names)
+                )
 
         elif isinstance(head_config, CentroidsHeadConfig):
-            heads = CentroidConfmapsHead.from_config(head_config)
-            output_stride = heads.output_stride
+            heads = [CentroidConfmapsHead.from_config(head_config)]
+            output_stride = heads[0].output_stride
+            if head_config.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(head_config)
+                )
 
         elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
             part_names = head_config.part_names
@@ -144,10 +158,16 @@ class Model:
                 part_names = skeleton.node_names
                 if update_config:
                     head_config.part_names = part_names
-            heads = CenteredInstanceConfmapsHead.from_config(
-                head_config, part_names=part_names
-            )
-            output_stride = heads.output_stride
+            heads = [
+                CenteredInstanceConfmapsHead.from_config(
+                    head_config, part_names=part_names
+                )
+            ]
+            output_stride = heads[0].output_stride
+            if head_config.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(head_config, part_names=part_names)
+                )
 
         elif isinstance(head_config, MultiInstanceConfig):
             part_names = head_config.confmaps.part_names
@@ -179,6 +199,13 @@ class Model:
                 PartAffinityFieldsHead.from_config(head_config.pafs, edges=edges),
             ]
             output_stride = min(heads[0].output_stride, heads[1].output_stride)
+            output_stride = heads[0].output_stride
+            if head_config.confmaps.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(
+                        head_config.confmaps, part_names=part_names
+                    )
+                )
 
         backbone_config.output_stride = output_stride
 
@@ -190,7 +217,7 @@ class Model:
         return self.backbone.maximum_stride
 
     def make_model(self, input_shape: Tuple[int, int, int]) -> tf.keras.Model:
-        """Create a trainable model from the configuration.
+        """Create a trainable model by connecting the backbone with the heads.
 
         Args:
             input_shape: Tuple of (height, width, channels) specifying the shape of the
