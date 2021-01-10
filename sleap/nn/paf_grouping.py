@@ -27,7 +27,7 @@ import attr
 from typing import Dict, List, Union, Tuple, Text
 import tensorflow as tf
 import numpy as np
-from scipy.optimize import linear_sum_assignment
+from sleap.nn.utils import tf_linear_sum_assignment
 from sleap.nn.config import MultiInstanceConfig
 
 
@@ -482,28 +482,6 @@ def score_paf_lines_batch(
         edge_inds,
         edge_peak_inds,
         line_scores,
-    )
-
-
-@tf.function
-def tf_linear_sum_assignment(cost_matrix: tf.Tensor) -> tf.Tensor:
-    """Run `linear_sum_assignment` as a TensorFlow function.
-
-    Args:
-        cost_matrix: Cost matrix of shape `(n_src, n_dst)`. Make sure to replace `NaN`s
-            with `np.inf`.
-
-    Returns:
-        A tuple of `(row, col)` with the indices of the optimal assignments.
-    """
-
-    def _linear_sum_assignment(cost_matrix):
-        """Wrap `linear_sum_assignment` for type safety."""
-        row, col = linear_sum_assignment(cost_matrix)
-        return row.astype("int32"), col.astype("int32")
-
-    return tf.numpy_function(
-        func=_linear_sum_assignment, inp=[cost_matrix], Tout=[tf.int32, tf.int32]
     )
 
 
