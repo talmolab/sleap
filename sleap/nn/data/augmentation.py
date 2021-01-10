@@ -45,10 +45,14 @@ def flip_instances_lr(
         n_instances = tf.shape(instances)[0]
         n_symmetries = tf.shape(symmetric_inds)[0]
 
+        inst_inds = tf.reshape(tf.repeat(tf.range(n_instances), n_symmetries), [-1, 1])
         sym_inds1 = tf.reshape(tf.gather(symmetric_inds, 0, axis=1), [-1, 1])
         sym_inds2 = tf.reshape(tf.gather(symmetric_inds, 1, axis=1), [-1, 1])
 
-        inst_inds = tf.reshape(tf.repeat(tf.range(n_instances), n_symmetries), [-1, 1])
+        inst_inds = tf.cast(inst_inds, tf.int32)
+        sym_inds1 = tf.cast(sym_inds1, tf.int32)
+        sym_inds2 = tf.cast(sym_inds2, tf.int32)
+
         subs1 = tf.concat([inst_inds, tf.tile(sym_inds1, [n_instances, 1])], axis=1)
         subs2 = tf.concat([inst_inds, tf.tile(sym_inds2, [n_instances, 1])], axis=1)
 
