@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
+import sleap
 from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
-
 from sleap.nn.data import providers
 from sleap.nn.data import augmentation
 
@@ -70,3 +70,46 @@ def test_flip_instances_lr():
         [[5, 3], [7, 1]],
         [[1, 7], [3, 5]]])
     np.testing.assert_array_equal(insts_flip1, insts_flip2)
+
+
+def test_random_flipper():
+    vid = sleap.Video.from_filename(
+        "tests/data/json_format_v1/centered_pair_low_quality.mp4"
+    )
+    skel = sleap.Skeleton.from_names_and_edge_inds(["A", "BL", "BR"], [[0, 1], [0, 2]])
+    labels = sleap.Labels([sleap.LabeledFrame(video=vid, frame_idx=0, instances=[
+        sleap.Instance.from_pointsarray([[25, 50], [50, 25], [25, 25]], skeleton=skel),
+        sleap.Instance.from_pointsarray([[125, 150], [150, 125], [125, 125]], skeleton=skel),
+    ])])
+    
+    p = labels.to_pipeline()
+    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(skel, probability=1.)
+    ex = p.peek()
+    np.testing.assert_array_equal(ex["image"], vid[0][0][:, ::-1])
+    np.testing.assert_array_equal(
+        ex["instances"],
+        [[[358.,  50.], [333.,  25.], [358.,  25.]],
+         [[258., 150.], [233., 125.], [258., 125.]]]
+    )
+
+    skel.add_symmetry("BL", "BR")
+
+    p = labels.to_pipeline()
+    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(skel, probability=1.)
+    ex = p.peek()
+    np.testing.assert_array_equal(ex["image"], vid[0][0][:, ::-1])
+    np.testing.assert_array_equal(
+        ex["instances"],
+        [[[358.,  50.], [358.,  25.], [333.,  25.]],
+         [[258., 150.], [258., 125.], [233., 125.]]]
+    )
+
+    p = labels.to_pipeline()
+    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(skel, probability=0.)
+    ex = p.peek()
+    np.testing.assert_array_equal(ex["image"], vid[0][0])
+    np.testing.assert_array_equal(
+        ex["instances"],
+        [[[25, 50], [50, 25], [25, 25]],
+         [[125, 150], [150, 125], [125, 125]]]
+    )

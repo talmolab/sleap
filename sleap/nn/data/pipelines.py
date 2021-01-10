@@ -20,6 +20,7 @@ from sleap.nn.data.augmentation import (
     AugmentationConfig,
     ImgaugAugmenter,
     RandomCropper,
+    RandomFlipper,
 )
 from sleap.nn.data.normalization import Normalizer
 from sleap.nn.data.resizing import Resizer, PointsRescaler
@@ -93,6 +94,7 @@ TRANSFORMERS = (
     KeyDeviceMover,
     PointsRescaler,
     LambdaMap,
+    RandomFlipper
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
