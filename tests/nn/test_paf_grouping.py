@@ -10,7 +10,6 @@ from sleap.nn.paf_grouping import (
     get_paf_lines,
     score_paf_lines,
     score_paf_lines_batch,
-    tf_linear_sum_assignment,
     match_candidates_sample,
     match_candidates_batch,
     group_instances_sample,
@@ -120,14 +119,6 @@ def test_score_paf_lines_batch():
     assert_array_equal(edge_inds.to_list(), [[0]])
     assert_array_equal(edge_peak_inds.to_list(), [[[0, 1]]])
     assert_allclose(line_scores.to_list(), [[24.27]], atol=1e-2)
-
-
-def test_tf_linear_sum_assignment():
-    r, c = tf_linear_sum_assignment(tf.cast([[-1, 0], [0, -1]], tf.float32))
-    assert_array_equal(r, [0, 1])
-    assert_array_equal(c, [0, 1])
-    assert r.dtype == tf.int32
-    assert c.dtype == tf.int32
 
 
 def test_match_candidates_sample():

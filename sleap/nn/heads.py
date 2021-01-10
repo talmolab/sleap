@@ -13,37 +13,6 @@ from sleap.nn.config import (
 
 
 @attr.s(auto_attribs=True)
-class CentroidConfmapsHead:
-    """Head for specifying instance centroid confidence maps."""
-
-    anchor_part: Optional[Text] = None
-    sigma: float = 5.0
-    output_stride: int = 1
-    loss_weight: float = 1.0
-
-    @property
-    def channels(self) -> int:
-        """Return the number of channels in the tensor output by this head."""
-        return 1
-
-    @classmethod
-    def from_config(cls, config: CentroidsHeadConfig) -> "CentroidConfmapsHead":
-        """Create this head from a set of configurations.
-
-        Attributes:
-            config: A `CentroidsHeadConfig` instance specifying the head parameters.
-
-        Returns:
-            The instantiated head with the specified configuration options.
-        """
-        return cls(
-            anchor_part=config.anchor_part,
-            sigma=config.sigma,
-            output_stride=config.output_stride,
-        )
-
-
-@attr.s(auto_attribs=True)
 class SingleInstanceConfmapsHead:
     """Head for specifying single instance confidence maps."""
 
@@ -80,6 +49,37 @@ class SingleInstanceConfmapsHead:
             part_names = config.part_names
         return cls(
             part_names=part_names,
+            sigma=config.sigma,
+            output_stride=config.output_stride,
+        )
+
+
+@attr.s(auto_attribs=True)
+class CentroidConfmapsHead:
+    """Head for specifying instance centroid confidence maps."""
+
+    anchor_part: Optional[Text] = None
+    sigma: float = 5.0
+    output_stride: int = 1
+    loss_weight: float = 1.0
+
+    @property
+    def channels(self) -> int:
+        """Return the number of channels in the tensor output by this head."""
+        return 1
+
+    @classmethod
+    def from_config(cls, config: CentroidsHeadConfig) -> "CentroidConfmapsHead":
+        """Create this head from a set of configurations.
+
+        Attributes:
+            config: A `CentroidsHeadConfig` instance specifying the head parameters.
+
+        Returns:
+            The instantiated head with the specified configuration options.
+        """
+        return cls(
+            anchor_part=config.anchor_part,
             sigma=config.sigma,
             output_stride=config.output_stride,
         )
@@ -259,8 +259,11 @@ class OffsetRefinementHead:
         Returns:
             The instantiated head with the specified configuration options.
         """
-        if config.part_names is not None:
-            part_names = config.part_names
+        if hasattr(config, "part_names"):
+            if config.part_names is not None:
+                part_names = config.part_names
+        elif hasattr(config, "anchor_part"):
+            part_names = [config.anchor_part]
         return cls(
             part_names=part_names,
             output_stride=config.output_stride,

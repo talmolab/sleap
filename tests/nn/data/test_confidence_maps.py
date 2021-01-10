@@ -103,7 +103,7 @@ def test_make_multi_confmaps_with_offsets():
         [[np.nan, np.nan], [-1., 5.]],
         ], tf.float32)
     cms, offsets = make_multi_confmaps_with_offsets(
-        instances, xv, yv, sigma=1., offsets_threshold=0.2
+        instances, xv, yv, stride=1, sigma=1., offsets_threshold=0.2
     )
     assert offsets.shape == (4, 5, 2, 2)
 
