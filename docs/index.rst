@@ -1,7 +1,6 @@
 .. include:: ../README.rst
-  :start-after: inclusion-marker-do-not-remove
 
-Getting started with SLEAP
+Getting started
 --------------------------
 
 Once you install SLEAP (see our :ref:`Installation` instructions) you should start by following the step-by-step :ref:`Tutorial`. This will guide you through the process of creating a project, adding videos, creating a skeleton for each animal in the video, labeling a few frames, and then training a model.
@@ -28,7 +27,7 @@ After you have accurate frame-by-frame prediction, you’re ready to predict for
 
 .. _Learn more:
 
-Learn more about SLEAP
+Learn more
 ----------------------
 
 Want to learn more about SLEAP and multi-animal pose tracking?
@@ -70,11 +69,13 @@ Documentation
 .. toctree::
     :maxdepth: 2
 
-    guides/installation
+    installation
     tutorials/tutorial
     guides/index
     guides/reference
     API <api>
+    GitHub <https://github.com/murthylab/sleap>
+    Releases <https://github.com/murthylab/sleap/releases>
 
 .. _Indices_and_Tables:
 

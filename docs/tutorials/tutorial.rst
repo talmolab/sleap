@@ -20,8 +20,8 @@ There are three main stages of using SLEAP:
 The tutorial will walk you through this entire process. You can read through the tutorial and then try running SLEAP on our `sample datasets <https://github.com/murthylab/sleap-datasets>`_—this will allow you to try out training and inference before you’ve labeled your own data for training.
 
 .. toctree::
-
-    ../guides/installation
+    :numbered:
+    
     new-project
     initial-labeling
     initial-training

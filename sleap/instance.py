@@ -1,5 +1,4 @@
-"""
-Data structures for all labeled data contained with a SLEAP project.
+"""Data structures for all labeled data contained with a SLEAP project.
 
 The relationships between objects in this module:
 
@@ -12,8 +11,8 @@ The relationships between objects in this module:
 * `Instance` (`PredictedInstance`) can be associated with a `Track`
 
 * A `PointArray` (or `PredictedPointArray`) contains zero or more
-  `Point` objects (or `PredictedPoint` objectss), ideally as many as
-  there are in the associated :class:`Skeleton` although these can get
+  `Point` objects (or `PredictedPoint` objects), ideally as many as
+  there are in the associated :class:`sleap.skeleton.Skeleton` although these can get
   out of sync if the skeleton is manipulated.
 """
 

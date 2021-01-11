@@ -7,6 +7,7 @@ on:
     branches:
       - master  # Branch that triggers updates to sleap.ai
       - develop
+      - talmo/docs_v2
     paths:
       - 'docs/**'
       - 'README.rst'
@@ -57,7 +58,8 @@ jobs:
 
       - name: Deploy (test)
         uses: peaceiris/actions-gh-pages@v3
-        if: github.ref != 'refs/heads/master'
+        # if: github.ref != 'refs/heads/master'
+        if: github.ref == 'refs/heads/talmo/docs_v2'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages-test

@@ -34,7 +34,7 @@ All Guides
 ----------
 
 .. toctree::
-    :caption: Guides
+    :maxdepth: 2
     :glob:
 
     *

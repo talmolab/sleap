@@ -1,4 +1,5 @@
-.. inclusion-marker-do-not-remove
+Social LEAP Estimates Animal Pose (SLEAP)
+=========================================
 
 |CI| |Coverage| |Documentation| |Downloads| |Stable version| |Latest version|
 
@@ -30,9 +31,6 @@
    :target: https://GitHub.com/murthylab/sleap/releases/
    :alt: Latest version
 
-
-Social LEAP Estimates Animal Pose (SLEAP)
-=========================================
 
 .. image:: https://sleap.ai/docs/_static/sleap_movie.gif
     :width: 600px
