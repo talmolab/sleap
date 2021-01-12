@@ -11,6 +11,7 @@ on:
     paths:
       - 'docs/**'
       - 'README.rst'
+      - '.github/workflows/website.yml'
 
 jobs:
   build:
