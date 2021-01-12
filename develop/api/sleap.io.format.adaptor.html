@@ -1,0 +1,377 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.io.format.coco" href="sleap.io.format.coco.html" /><link rel="prev" title="sleap.io.visuals" href="sleap.io.visuals.html" />
+
+    <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+        <title>sleap.io.format.adaptor - SLEAP (develop)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
+    <link rel="stylesheet" href="../_static/pygments.css">
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    
+
+
+<style>
+  :root {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+
+  /* For allowing end-user-specific overrides */
+  .override-light {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  .override-dark {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+</style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=26485485040e7aaf717c13fd0188a5ad2c2deb60">
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script defer="defer" src="../_static/jquery.js"></script>
+    <script defer="defer" src="../_static/underscore.js"></script>
+    <script defer="defer" src="../_static/doctools.js"></script>
+    <script defer="defer" src="../_static/clipboard.min.js"></script>
+    <script defer="defer" src="../_static/copybutton.js"></script>
+    <script defer="defer" src="../_static/togglebutton.js"></script>
+    <script defer="defer">var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script defer src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
+    </div>
+    <div class="header-right">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">SLEAP (develop)</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder=Search name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">1. Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">2. Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">3. Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html">4. Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">6. Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">7. Export Data For Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/choosing-models.html">Choosing a set of models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and/or inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Add more training data to a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/proofreading.html">Tracking and proofreading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#remote-inference">Remote inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/skeleton-design.html">Skeleton design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/training.html">Training with GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/training-package.html">Export a training package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="module-sleap.io.format.adaptor">
+<span id="sleap-io-format-adaptor"></span><h1>sleap.io.format.adaptor<a class="headerlink" href="#module-sleap.io.format.adaptor" title="Permalink to this headline">¶</a></h1>
+<p>File format adaptor base class.</p>
+<dl class="py class">
+<dt id="sleap.io.format.adaptor.Adaptor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.adaptor.</code><code class="sig-name descname">Adaptor</code><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L21-L92"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor" title="Permalink to this definition">¶</a></dt>
+<dd><p>File format adaptor base class.</p>
+<p>An adaptor handles reading and/or writing a specific file format. To add
+support for a new file format, you’ll create a new class which inherits from
+the Adaptor base class and implements the relevant functions.</p>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.all_exts">
+<em class="property">property </em><code class="sig-name descname">all_exts</code><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.all_exts" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of all file extensions supported by adaptor.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.can_read_file">
+<code class="sig-name descname">can_read_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle">sleap.io.format.filehandle.FileHandle</a></span></em><span class="sig-paren">)</span> → bool<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L55-L57"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this adaptor can read this file.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.can_write_filename">
+<code class="sig-name descname">can_write_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> → bool<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L59-L61"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this adaptor can write format of this filename.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.default_ext">
+<em class="property">property </em><code class="sig-name descname">default_ext</code><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.default_ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default file extension, e.g., ‘json’ (without ‘.’).</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.does_match_ext">
+<code class="sig-name descname">does_match_ext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> → bool<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L81-L87"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_match_ext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this adaptor can write format of this filename.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.does_read">
+<code class="sig-name descname">does_read</code><span class="sig-paren">(</span><span class="sig-paren">)</span> → bool<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L63-L65"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this adaptor supports reading.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.does_write">
+<code class="sig-name descname">does_write</code><span class="sig-paren">(</span><span class="sig-paren">)</span> → bool<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L67-L69"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this adaptor supports writing.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.formatted_ext_options">
+<em class="property">property </em><code class="sig-name descname">formatted_ext_options</code><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.formatted_ext_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>String for Qt file dialog extension options.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.handles">
+<em class="property">property </em><code class="sig-name descname">handles</code><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.handles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the type of object that can be read/written.</p>
+<p>The Dispatch class calls this method on all registered adaptors to
+determine which to use for reading/writing.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Human-reading name of the file format</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle">sleap.io.format.filehandle.FileHandle</a></span></em><span class="sig-paren">)</span> → object<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L71-L73"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the file and returns the appropriate deserialized object.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.io.format.adaptor.Adaptor.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">source_object</span><span class="p">:</span> <span class="n">object</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L75-L77"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the object to a file.</p>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.io.format.adaptor.SleapObjectType">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.adaptor.</code><code class="sig-name descname">SleapObjectType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L13-L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.adaptor.SleapObjectType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Types of files that an adaptor could read/write.</p>
+</dd></dl>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="sleap.io.format.coco.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">sleap.io.format.coco</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="sleap.io.visuals.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">sleap.io.visuals</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University
+            |
+            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+              and
+              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+              <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            |
+            <a class="muted-link" href="../_sources/api/sleap.io.format.adaptor.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>

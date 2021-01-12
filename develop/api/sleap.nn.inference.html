@@ -1,0 +1,1859 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.losses" href="sleap.nn.losses.html" /><link rel="prev" title="sleap.nn.heads" href="sleap.nn.heads.html" />
+
+    <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+        <title>sleap.nn.inference - SLEAP (develop)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
+    <link rel="stylesheet" href="../_static/pygments.css">
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    
+
+
+<style>
+  :root {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+
+  /* For allowing end-user-specific overrides */
+  .override-light {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  .override-dark {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+</style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=26485485040e7aaf717c13fd0188a5ad2c2deb60">
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script defer="defer" src="../_static/jquery.js"></script>
+    <script defer="defer" src="../_static/underscore.js"></script>
+    <script defer="defer" src="../_static/doctools.js"></script>
+    <script defer="defer" src="../_static/clipboard.min.js"></script>
+    <script defer="defer" src="../_static/copybutton.js"></script>
+    <script defer="defer" src="../_static/togglebutton.js"></script>
+    <script defer="defer">var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script defer src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
+    </div>
+    <div class="header-right">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">SLEAP (develop)</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder=Search name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">1. Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">2. Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">3. Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html">4. Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">6. Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">7. Export Data For Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/choosing-models.html">Choosing a set of models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and/or inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Add more training data to a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/proofreading.html">Tracking and proofreading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#remote-inference">Remote inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/skeleton-design.html">Skeleton design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/training.html">Training with GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/training-package.html">Export a training package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="module-sleap.nn.inference">
+<span id="sleap-nn-inference"></span><h1>sleap.nn.inference<a class="headerlink" href="#module-sleap.nn.inference" title="Permalink to this headline">¶</a></h1>
+<p>Inference pipelines and utilities.</p>
+<p>This module contains the classes and high level APIs for predicting instances on new
+data using trained models.</p>
+<p>The inference logic is implemented at two levels:</p>
+<ul class="simple">
+<li><p>Low-level <code class="xref py py-obj docutils literal notranslate"><span class="pre">InferenceModel`s</span> <span class="pre">which</span> <span class="pre">subclass</span> <span class="pre">`tf.keras.Model</span></code> and implement the core
+TensorFlow operations surrounding inference. These should only be used when
+implementing custom inference routines, such as real-time or performance-critical
+applications. They do not implement tracking (identity association).</p></li>
+<li><p>High-level <a href="#id1"><span class="problematic" id="id2">`</span></a>Predictor`s which handle data loading, preprocessing, inference, tracking
+and postprocessing, including converting raw array results into SLEAP-specific data
+structures. These should be used for general-purpose prediction, including interactive
+inference and applications that require tracking (identity association).</p></li>
+</ul>
+<p>For more information on tracking, see the <a class="reference internal" href="sleap.nn.tracking.html#module-sleap.nn.tracking" title="sleap.nn.tracking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracking</span></code></a> module.</p>
+<p>The recommended high-level API for loading saved models is the <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.load_models</span></code>
+function which provides a simplified interface for creating <a href="#id3"><span class="problematic" id="id4">`</span></a>Predictor`s.</p>
+<dl class="py class">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">BottomUpInferenceLayer</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1956-L2202"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keras layer that predicts instances from images using a trained model.</p>
+<p>This layer encapsulates all of the inference operations required for generating
+predictions from a centered instance confidence map model. This includes
+preprocessing, model forward pass, peak finding and coordinate adjustment.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.keras_model">
+<code class="sig-name descname">keras_model</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> that accepts rank-4 images as input and predicts
+rank-4 confidence maps and part affinity fields as output.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.paf_scorer">
+<code class="sig-name descname">paf_scorer</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.paf_scorer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer" title="sleap.nn.paf_grouping.PAFScorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.paf_grouping.PAFScorer</span></code></a> instance configured to group
+instances based on peaks and PAFs produced by the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.input_scale">
+<code class="sig-name descname">input_scale</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.input_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Float indicating if the images should be resized before being
+passed to the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.cm_output_stride">
+<code class="sig-name descname">cm_output_stride</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.cm_output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output stride of the model, denoting the scale of the output
+confidence maps relative to the images (after input scaling). This is used
+for adjusting the peak coordinates to the image grid. This will be inferred
+from the model shapes if not provided.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.paf_output_stride">
+<code class="sig-name descname">paf_output_stride</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.paf_output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output stride of the model, denoting the scale of the output
+part affinity fields relative to the images (after input scaling). This is
+used for adjusting the peak coordinates to the PAF grid. This will be
+inferred from the model shapes if not provided.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.peak_threshold">
+<code class="sig-name descname">peak_threshold</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.peak_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum confidence map value to consider a global peak as valid.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.refinement">
+<code class="sig-name descname">refinement</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, returns the grid-aligned peaks with no refinement. If
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"integral"</span></code>, peaks will be refined with integral regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>,
+peaks will be refined with quarter pixel local gradient offset. This has no
+effect if the model has an offset regression head.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.integral_patch_size">
+<code class="sig-name descname">integral_patch_size</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.integral_patch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of patches to crop around each rough peak for integral
+refinement as an integer scalar.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.return_confmaps">
+<code class="sig-name descname">return_confmaps</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.return_confmaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the confidence maps will be returned together with
+the predicted instances. This will result in slower inference times since
+the data must be copied off of the GPU, but is useful for visualizing the
+raw output of the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.return_pafs">
+<code class="sig-name descname">return_pafs</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.return_pafs" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the part affinity fields will be returned together with
+the predicted instances. This will result in slower inference times since
+the data must be copied off of the GPU, but is useful for visualizing the
+raw output of the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.confmaps_ind">
+<code class="sig-name descname">confmaps_ind</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.confmaps_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+confidence maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"MultiInstanceConfmapsHead"</span></code> in its name.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.pafs_ind">
+<code class="sig-name descname">pafs_ind</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.pafs_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to part affinity
+fields. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected automatically by
+searching for the first tensor that contains <code class="xref py py-obj docutils literal notranslate"><span class="pre">"PartAffinityFieldsHead"</span></code> in
+its name.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.offsets_ind">
+<code class="sig-name descname">offsets_ind</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.offsets_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+offset regression maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"OffsetRefinementHead"</span></code> in its name. If the head is not present, the method
+specified in the <a class="reference internal" href="#sleap.nn.inference.BottomUpInferenceLayer.refinement" title="sleap.nn.inference.BottomUpInferenceLayer.refinement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refinement</span></code></a> attribute will be used.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2151-L2202"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict instances for one batch of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – This may be either a single batch of images as a 4-D tensor of shape</p></li>
+<li><p><strong>`</strong> (<em>batch_size</em><em>, </em><em>height</em><em>, </em><em>width</em><em>, </em><em>channels</em>) – </p></li>
+<li><p><strong>batch in the "images" key.</strong> (<em>image</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peaks":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>: Instance skeleton
+points.</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peak_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">n_nodes)</span></code>: Confidence
+values for the instance skeleton points.</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_scores":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances)</span></code>: PAF matching score for each
+instance.</p>
+<p>If <a class="reference internal" href="#sleap.nn.inference.BottomUpInferenceLayer.return_confmaps" title="sleap.nn.inference.BottomUpInferenceLayer.return_confmaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BottomUpInferenceLayer.return_confmaps</span></code></a> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the predicted
+confidence maps will be returned in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">"confmaps"</span></code> key.</p>
+<p>If <a class="reference internal" href="#sleap.nn.inference.BottomUpInferenceLayer.return_pafs" title="sleap.nn.inference.BottomUpInferenceLayer.return_pafs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BottomUpInferenceLayer.return_pafs</span></code></a> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the predicted PAFs will
+be returned in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">"part_affinity_fields"</span></code> key.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>The predicted instances as a dictionary of tensors with keys</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.find_peaks">
+<code class="sig-name descname">find_peaks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cms</span></em>, <em class="sig-param"><span class="n">offsets</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2105-L2149"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.find_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run peak finding on predicted confidence maps.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.BottomUpInferenceLayer.forward_pass">
+<code class="sig-name descname">forward_pass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2077-L2103"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceLayer.forward_pass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run preprocessing and model inference on a batch.</p>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.BottomUpInferenceModel">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">BottomUpInferenceModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2205-L2251"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bottom-up instance prediction model.</p>
+<p>This model encapsulates the bottom-up approach where points are first detected by
+local peak detection and then grouped into instances by connectivity scoring using
+part affinity fields.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomUpInferenceModel.bottomup_layer">
+<code class="sig-name descname">bottomup_layer</code><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceModel.bottomup_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#sleap.nn.inference.BottomUpInferenceLayer" title="sleap.nn.inference.BottomUpInferenceLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BottomUpInferenceLayer</span></code></a>. This layer takes as input a full
+image and outputs the predicted instances.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.BottomUpInferenceModel.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">example</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2225-L2251"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomUpInferenceModel.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict instances for one batch of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>example</strong> – This may be either a single batch of images as a 4-D tensor of
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code>, or a dictionary
+containing the image batch in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">"images"</span></code> key.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peaks":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>: Instance skeleton</dt><dd><p>points.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peak_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">n_nodes)</span></code>: Confidence</dt><dd><p>values for the instance skeleton points.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_scores":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances)</span></code>: PAF matching score for each</dt><dd><p>instance.</p>
+</dd>
+</dl>
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">BottomUpInferenceModel.bottomup_layer.return_confmaps</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the
+predicted confidence maps will be returned in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">"confmaps"</span></code> key.</p>
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">BottomUpInferenceModel.bottomup_layer.return_pafs</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the
+predicted PAFs will be returned in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">"part_affinity_fields"</span></code> key.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>The predicted instances as a dictionary of tensors with keys</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.BottomupPredictor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">BottomupPredictor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bottomup_config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a></span></em>, <em class="sig-param"><span class="n">bottomup_model</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a></span></em>, <em class="sig-param"><span class="n">inference_model</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.nn.inference.BottomUpInferenceModel" title="sleap.nn.inference.BottomUpInferenceModel">sleap.nn.inference.BottomUpInferenceModel</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">integral_refinement</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">integral_patch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">max_edge_length_ratio</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">paf_line_points</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2255-L2552"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bottom-up multi-instance predictor.</p>
+<p>This high-level class handles initialization, preprocessing and tracking using a
+trained bottom-up multi-instance SLEAP model.</p>
+<p>This should be initialized using the <a class="reference internal" href="#sleap.nn.inference.BottomupPredictor.from_trained_models" title="sleap.nn.inference.BottomupPredictor.from_trained_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_trained_models()</span></code></a> constructor or the
+high-level API (<code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.load_model</span></code>).</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.bottomup_config">
+<code class="sig-name descname">bottomup_config</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.bottomup_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.TrainingJobConfig</span></code> containing the metadata
+for the trained bottomup model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.bottomup_model">
+<code class="sig-name descname">bottomup_model</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.bottomup_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.model.Model</span></code></a> instance created from the trained
+bottomup model. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, ground truth centroids will be used if available
+from the data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.inference_model">
+<code class="sig-name descname">inference_model</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.inference_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#sleap.nn.inference.BottomUpInferenceModel" title="sleap.nn.inference.BottomUpInferenceModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.inference.BottomUpInferenceModel</span></code></a> that wraps a
+trained <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> to implement preprocessing, centroid detection,
+cropping and peak finding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.inference.BottomUpInferenceModel" title="sleap.nn.inference.BottomUpInferenceModel">sleap.nn.inference.BottomUpInferenceModel</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.pipeline">
+<code class="sig-name descname">pipeline</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.Pipeline</span></code> that loads the data and batches input data.
+This will be updated dynamically if new data sources are used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline">sleap.nn.data.pipelines.Pipeline</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.tracker">
+<code class="sig-name descname">tracker</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.tracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="sleap.nn.tracking.html#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracking.Tracker</span></code></a> that will be called to associate
+detections over time. Predicted instances will not be assigned to tracks if
+if this is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.tracking.html#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker">sleap.nn.tracking.Tracker</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.batch_size">
+<code class="sig-name descname">batch_size</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.batch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default batch size to use when loading data for inference.
+Higher values increase inference speed at the cost of higher memory usage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.peak_threshold">
+<code class="sig-name descname">peak_threshold</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.peak_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum confidence map value to consider a local peak as valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.integral_refinement">
+<code class="sig-name descname">integral_refinement</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.integral_refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, peaks will be refined with integral regression.
+If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>, peaks will be refined with quarter pixel local
+gradient offset. This has no effect if the model has an offset regression
+head.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.integral_patch_size">
+<code class="sig-name descname">integral_patch_size</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.integral_patch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of patches to crop around each rough peak for integral
+refinement as an integer scalar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.max_edge_length_ratio">
+<code class="sig-name descname">max_edge_length_ratio</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.max_edge_length_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum expected length of a connected pair of points
+in relative image units. Candidate connections above this length will be
+penalized during matching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.BottomupPredictor.paf_line_points">
+<code class="sig-name descname">paf_line_points</code><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.paf_line_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of points to sample along the line integral.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.BottomupPredictor.from_trained_models">
+<em class="property">classmethod </em><code class="sig-name descname">from_trained_models</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">integral_refinement</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">integral_patch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.inference.BottomupPredictor" title="sleap.nn.inference.BottomupPredictor">sleap.nn.inference.BottomupPredictor</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2323-L2369"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.from_trained_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create predictor from a saved model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_path</strong> – Path to a bottom-up model folder or training job JSON file
+inside a model folder. This folder should contain <code class="xref py py-obj docutils literal notranslate"><span class="pre">training_config.json</span></code>
+and <code class="xref py py-obj docutils literal notranslate"><span class="pre">best_model.h5</span></code> files for a trained model.</p></li>
+<li><p><strong>batch_size</strong> – The default batch size to use when loading data for inference.
+Higher values increase inference speed at the cost of higher memory
+usage.</p></li>
+<li><p><strong>peak_threshold</strong> – Minimum confidence map value to consider a local peak as
+valid.</p></li>
+<li><p><strong>integral_refinement</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, peaks will be refined with integral
+regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>, peaks will be refined with quarter
+pixel local gradient offset. This has no effect if the model has an
+offset regression head.</p></li>
+<li><p><strong>integral_patch_size</strong> – Size of patches to crop around each rough peak for
+integral refinement as an integer scalar.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An instance of <a class="reference internal" href="#sleap.nn.inference.BottomupPredictor" title="sleap.nn.inference.BottomupPredictor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BottomupPredictor</span></code></a> with the loaded model.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.BottomupPredictor.make_pipeline">
+<code class="sig-name descname">make_pipeline</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_provider</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Provider<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline">sleap.nn.data.pipelines.Pipeline</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2371-L2397"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.make_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a data loading pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_provider</strong> – If not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, the pipeline will be created with an instance
+of a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Provider</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The created <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Pipeline</span></code> with batching and prefetching.</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>This method also updates the class attribute for the pipeline and will be
+called automatically when predicting on data from a new source.</p>
+</div>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.BottomupPredictor.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Provider<span class="p">, </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">, </span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> → Union<span class="p">[</span>List<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2517-L2552"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.BottomupPredictor.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run inference and tracking on a data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Provider</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Video</span></code> to
+run inference over.</p></li>
+<li><p><strong>make_labels</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (the default), returns a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> instance with
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.PredictedInstance`s.</span> <span class="pre">If</span> <span class="pre">`False</span></code>, just return a list of
+dictionaries containing the raw arrays returned by the inference model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> with <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.PredictedInstance`s</span> <span class="pre">if</span> <span class="pre">`make_labels</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>,
+otherwise a list of dictionaries containing batches of numpy arrays with the
+raw results.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.CentroidCrop">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">CentroidCrop</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1060-L1289"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.CentroidCrop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inference layer for applying centroid crop-based models.</p>
+<p>This layer encapsulates all of the inference operations requires for generating
+predictions from a centroid confidence map model. This includes preprocessing,
+model forward pass, peak finding, coordinate adjustment and cropping.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.keras_model">
+<code class="sig-name descname">keras_model</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> that accepts rank-4 images as input and predicts
+rank-4 confidence maps as output. This should be a model that is trained on
+centroid/anchor confidence maps.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.crop_size">
+<code class="sig-name descname">crop_size</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.crop_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integer scalar specifying the height/width of the centered crops.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.input_scale">
+<code class="sig-name descname">input_scale</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.input_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Float indicating if the images should be resized before being
+passed to the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.pad_to_stride">
+<code class="sig-name descname">pad_to_stride</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.pad_to_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>If not 1, input image will be paded to ensure that it is
+divisible by this value (after scaling). This should be set to the max
+stride of the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output stride of the model, denoting the scale of the output
+confidence maps relative to the images (after input scaling). This is used
+for adjusting the peak coordinates to the image grid. This will be inferred
+from the model shapes if not provided.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.peak_threshold">
+<code class="sig-name descname">peak_threshold</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.peak_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum confidence map value to consider a global peak as valid.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.refinement">
+<code class="sig-name descname">refinement</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, returns the grid-aligned peaks with no refinement. If
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"integral"</span></code>, peaks will be refined with integral regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>,
+peaks will be refined with quarter pixel local gradient offset. This has no
+effect if the model has an offset regression head.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.integral_patch_size">
+<code class="sig-name descname">integral_patch_size</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.integral_patch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of patches to crop around each rough peak for integral
+refinement as an integer scalar.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.return_confmaps">
+<code class="sig-name descname">return_confmaps</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.return_confmaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the confidence maps will be returned together with
+the predicted peaks. This will result in slower inference times since the
+data must be copied off of the GPU, but is useful for visualizing the raw
+output of the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.confmaps_ind">
+<code class="sig-name descname">confmaps_ind</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.confmaps_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+confidence maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"CentroidConfmapsHead"</span></code> in its name.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCrop.offsets_ind">
+<code class="sig-name descname">offsets_ind</code><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.offsets_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+offset regression maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"OffsetRefinementHead"</span></code> in its name. If the head is not present, the method
+specified in the <a class="reference internal" href="#sleap.nn.inference.CentroidCrop.refinement" title="sleap.nn.inference.CentroidCrop.refinement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refinement</span></code></a> attribute will be used.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.CentroidCrop.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1153-L1289"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.CentroidCrop.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict centroid confidence maps and crop around peaks.</p>
+<p>This layer can be chained with a <a class="reference internal" href="#sleap.nn.inference.FindInstancePeaks" title="sleap.nn.inference.FindInstancePeaks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FindInstancePeaks</span></code></a> layer to create a top-down
+inference function from full images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> – Full frame images as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of shape
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code> or a dictionary with key:
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"image"</span></code>: Full frame images in the same format as above.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"crops"</span></code>: Cropped images of shape</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">crop_size,</span> <span class="pre">crop_size,</span> <span class="pre">channels)</span></code>.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"crop_offsets"</span></code>: Coordinates of the top-left of the crops as <code class="xref py py-obj docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code></dt><dd><p>offsets of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">2)</span></code> for adjusting the predicted peak
+coordinates.</p>
+</dd>
+</dl>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids"</span></code>: The predicted centroids of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">2)</span></code>.
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals":</span> <span class="pre">The</span> <span class="pre">centroid</span> <span class="pre">confidence</span> <span class="pre">values</span> <span class="pre">of</span> <span class="pre">shape</span> <span class="pre">`(samples,</span> <span class="pre">?)</span></code>.</p>
+<p>If the <a class="reference internal" href="#sleap.nn.inference.CentroidCrop.return_confmaps" title="sleap.nn.inference.CentroidCrop.return_confmaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">return_confmaps</span></code></a> attribute is set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the output will also
+contain a key named <code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_confmaps"</span></code> containing a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.RaggedTensor</span></code> of
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">output_height,</span> <span class="pre">output_width,</span> <span class="pre">1)</span></code> containing the
+confidence maps predicted by the model.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A dictionary of outputs grouped by sample with keys</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.CentroidCropGroundTruth">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">CentroidCropGroundTruth</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L268-L344"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.CentroidCropGroundTruth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keras layer that simulates a centroid cropping model using ground truth.</p>
+<p>This layer is useful for testing and evaluating centered instance models.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.CentroidCropGroundTruth.crop_size">
+<code class="sig-name descname">crop_size</code><a class="headerlink" href="#sleap.nn.inference.CentroidCropGroundTruth.crop_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The length of the square box to extract around each centroid.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.CentroidCropGroundTruth.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">example_gt</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span></span></em><span class="sig-paren">)</span> → Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L281-L344"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.CentroidCropGroundTruth.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the ground truth instance crops.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>example_gt</strong> – <p>Dictionary generated from a labels pipeline with the keys:
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"image":</span> <span class="pre">(batch_size,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code>
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">2)</span></code>: The input centroids.</p>
+<blockquote>
+<div><p>Axis 1 is expected to be ragged.</p>
+</div></blockquote>
+<p>These can be generated by the <code class="xref py py-obj docutils literal notranslate"><span class="pre">InstanceCentroidFinder</span></code> transformer.</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"crops":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">crop_size,</span> <span class="pre">crop_size,</span> <span class="pre">channels)</span></code>
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"crop_offsets":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">crop_size,</span> <span class="pre">crop_size,</span> <span class="pre">channels)</span></code></p>
+<blockquote>
+<div><p>These contain the top-left coordinates of each crop in the full images.</p>
+</div></blockquote>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">2)</span></code>
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids)</span></code></p>
+<p>Axis 1 of all keys are expected to be ragged.</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids"</span></code> are from the input example and <code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals"</span></code> will be
+filled with ones.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dictionary containing the output of the instance cropping layer with keys</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.FindInstancePeaks">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">FindInstancePeaks</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1292-L1512"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keras layer that predicts instance peaks from images using a trained model.</p>
+<p>This layer encapsulates all of the inference operations required for generating
+predictions from a centered instance confidence map model. This includes
+preprocessing, model forward pass, peak finding and coordinate adjustment.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.keras_model">
+<code class="sig-name descname">keras_model</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> that accepts rank-4 images as input and predicts
+rank-4 confidence maps as output. This should be a model that is trained on
+centered instance confidence maps.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.input_scale">
+<code class="sig-name descname">input_scale</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.input_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Float indicating if the images should be resized before being
+passed to the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output stride of the model, denoting the scale of the output
+confidence maps relative to the images (after input scaling). This is used
+for adjusting the peak coordinates to the image grid. This will be inferred
+from the model shapes if not provided.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.peak_threshold">
+<code class="sig-name descname">peak_threshold</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.peak_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum confidence map value to consider a global peak as valid.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.refinement">
+<code class="sig-name descname">refinement</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, returns the grid-aligned peaks with no refinement. If
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"integral"</span></code>, peaks will be refined with integral regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>,
+peaks will be refined with quarter pixel local gradient offset. This has no
+effect if the model has an offset regression head.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.integral_patch_size">
+<code class="sig-name descname">integral_patch_size</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.integral_patch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of patches to crop around each rough peak for integral
+refinement as an integer scalar.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.return_confmaps">
+<code class="sig-name descname">return_confmaps</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.return_confmaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the confidence maps will be returned together with
+the predicted peaks. This will result in slower inference times since the
+data must be copied off of the GPU, but is useful for visualizing the raw
+output of the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.confmaps_ind">
+<code class="sig-name descname">confmaps_ind</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.confmaps_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+confidence maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"CenteredInstanceConfmapsHead"</span></code> in its name.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.FindInstancePeaks.offsets_ind">
+<code class="sig-name descname">offsets_ind</code><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.offsets_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+offset regression maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"OffsetRefinementHead"</span></code> in its name. If the head is not present, the method
+specified in the <a class="reference internal" href="#sleap.nn.inference.FindInstancePeaks.refinement" title="sleap.nn.inference.FindInstancePeaks.refinement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refinement</span></code></a> attribute will be used.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.FindInstancePeaks.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span></span></em><span class="sig-paren">)</span> → Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1375-L1512"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaks.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict confidence maps and infer peak coordinates.</p>
+<p>This layer can be chained with a <a class="reference internal" href="#sleap.nn.inference.CentroidCrop" title="sleap.nn.inference.CentroidCrop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CentroidCrop</span></code></a> layer to create a top-down
+inference function from full images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> – <p>Instance-centered images as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of shape
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.RaggedTensor</span></code> of shape
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code> where images are grouped by
+sample and may contain a variable number of crops, or a dictionary with
+keys:
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"crops"</span></code>: Cropped images in either format above.
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"crop_offsets"</span></code>: (Optional) Coordinates of the top-left of the crops as</p>
+<blockquote>
+<div><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> offsets of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">2)</span></code> for adjusting the
+predicted peak coordinates. No adjustment is performed if not
+provided.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids"</span></code>: (Optional) If provided, will be passed through to the</dt><dd><p>output.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals"</span></code>: (Optional) If provided, will be passed through to the</dt><dd><p>output.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peaks"</span></code>: The predicted peaks for each instance in the batch as a</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.RaggedTensor</span></code> of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">nodes,</span> <span class="pre">2)</span></code>.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peak_vals"</span></code>: The value of the confidence maps at the predicted</dt><dd><p>peaks for each instance in the batch as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.RaggedTensor</span></code> of shape
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">nodes)</span></code>.</p>
+</dd>
+</dl>
+<p>If provided (e.g., from an input <a class="reference internal" href="#sleap.nn.inference.CentroidCrop" title="sleap.nn.inference.CentroidCrop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CentroidCrop</span></code></a> layer), the centroids that
+generated the crops will also be included in the keys <code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids"</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals"</span></code>.</p>
+<p>If the <a class="reference internal" href="#sleap.nn.inference.FindInstancePeaks.return_confmaps" title="sleap.nn.inference.FindInstancePeaks.return_confmaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">return_confmaps</span></code></a> attribute is set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the output will also
+contain a key named <code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_confmaps"</span></code> containing a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.RaggedTensor</span></code> of
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">?,</span> <span class="pre">output_height,</span> <span class="pre">output_width,</span> <span class="pre">nodes)</span></code> containing the
+confidence maps predicted by the model.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A dictionary of outputs with keys</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.FindInstancePeaksGroundTruth">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">FindInstancePeaksGroundTruth</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L347-L429"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaksGroundTruth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keras layer that simulates a centered instance peaks model.</p>
+<p>This layer is useful for testing and evaluating centroid models.</p>
+<dl class="py method">
+<dt id="sleap.nn.inference.FindInstancePeaksGroundTruth.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">example_gt</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">crop_output</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span></span></em><span class="sig-paren">)</span> → Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L355-L429"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.FindInstancePeaksGroundTruth.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the ground truth instance peaks given a set of crops.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>example_gt</strong> – <p>Dictionary generated from a labels pipeline with the key:
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"instances":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances_gt,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code></p>
+<blockquote>
+<div><p>Axes 1 and 2 are expected to be ragged dimensions.</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>crop_output</strong> – <p>Dictionary containing the output of the instance cropping layer
+with keys:
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">2)</span></code>,
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids)</span></code></p>
+<blockquote>
+<div><p>Axis 1 of both keys are expected to be ragged.</p>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A dictionary with the instance peaks for each frame. The peaks are just the
+ground truth instances matched to the crop output centroids via greedy
+matching of the closest node point to each centroid.</p>
+<dl>
+<dt>The output will have keys:</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">2)</span></code>: The input centroids.
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids)</span></code>: The input centroid</p>
+<blockquote>
+<div><p>confidence values.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peaks":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>: The matched</dt><dd><p>instances.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peak_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_centroids,</span> <span class="pre">n_nodes)</span></code>: Peak</dt><dd><p>confidence values (all 1.0).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.InferenceLayer">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">InferenceLayer</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L432-L506"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base layer for wrapping a Keras model into a layer with preprocessing.</p>
+<p>This layer is useful for wrapping input preprocessing operations that would
+otherwise be handled by a separate pipeline.</p>
+<p>This layer expects the same input as the model (rank-4 image) and automatically
+converts the input to a float if it is in integer form. This can help improve
+performance by enabling inference directly on <code class="xref py py-obj docutils literal notranslate"><span class="pre">uint8</span></code> inputs.</p>
+<p>The <a class="reference internal" href="#sleap.nn.inference.InferenceLayer.call" title="sleap.nn.inference.InferenceLayer.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call()</span></code></a> method can be overloaded to create custom inference routines that
+take advantage of the <a class="reference internal" href="#sleap.nn.inference.InferenceLayer.preprocess" title="sleap.nn.inference.InferenceLayer.preprocess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess()</span></code></a> method.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.InferenceLayer.keras_model">
+<code class="sig-name descname">keras_model</code><a class="headerlink" href="#sleap.nn.inference.InferenceLayer.keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> that will be called on the input to this layer.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.InferenceLayer.input_scale">
+<code class="sig-name descname">input_scale</code><a class="headerlink" href="#sleap.nn.inference.InferenceLayer.input_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>If not 1.0, input image will be resized by this factor.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.InferenceLayer.pad_to_stride">
+<code class="sig-name descname">pad_to_stride</code><a class="headerlink" href="#sleap.nn.inference.InferenceLayer.pad_to_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>If not 1, input image will be paded to ensure that it is
+divisible by this value (after scaling).</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.InferenceLayer.ensure_grayscale">
+<code class="sig-name descname">ensure_grayscale</code><a class="headerlink" href="#sleap.nn.inference.InferenceLayer.ensure_grayscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, converts inputs to grayscale if not already. If
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, converts inputs to RGB if not already. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (default), infer
+from the shape of the input layer of the model.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.InferenceLayer.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> → tensorflow.python.framework.ops.Tensor<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L497-L506"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceLayer.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the model with preprocessed data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – Inputs to the model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Output of the model after being called with preprocessing.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.InferenceLayer.preprocess">
+<code class="sig-name descname">preprocess</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">imgs</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> → tensorflow.python.framework.ops.Tensor<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L471-L495"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceLayer.preprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply all preprocessing operations configured for this layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>imgs</strong> – A batch of images as a tensor.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The input tensor after applying preprocessing operations. The tensor will
+always be a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>, which will be adjusted to the range <code class="xref py py-obj docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> if it
+was previously an integer.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.InferenceModel">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">InferenceModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L509-L573"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLEAP inference model base class.</p>
+<p>This class wraps the <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> class to provide SLEAP-specific inference
+utilities such as handling different input data types, preprocessing and variable
+output shapes.</p>
+<dl class="py method">
+<dt id="sleap.nn.inference.InferenceModel.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>numpy.ndarray<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><span class="p">, </span>tensorflow.python.data.ops.dataset_ops.DatasetV2<span class="p">, </span><a class="reference internal" href="sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline">sleap.nn.data.pipelines.Pipeline</a><span class="p">, </span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">numpy</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> → Union<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>tensorflow.python.ops.ragged.ragged_tensor.RaggedTensor<span class="p">]</span><span class="p">]</span><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L517-L573"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.InferenceModel.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict instances in the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – <p>Input data in any form. Possible types:
+- <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.ndarray</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code>: Images of shape</p>
+<blockquote>
+<div><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code></p>
+</div></blockquote>
+<ul>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> with key <code class="xref py py-obj docutils literal notranslate"><span class="pre">"image"</span></code> as a tensor</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> that generates examples in one of the above formats.</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Pipeline</span></code> that generates examples in one of the above formats.</p></li>
+<li><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Video</span></code> which will be converted into a pipeline that generates</dt><dd><p>batches of <code class="xref py py-obj docutils literal notranslate"><span class="pre">batch_size</span></code> frames.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+<li><p><strong>numpy</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (default), returned values will be converted to
+<a href="#id5"><span class="problematic" id="id6">`</span></a>np.ndarray`s or Python primitives if scalars.</p></li>
+<li><p><strong>batch_size</strong> – Batch size to use for inference. No effect if using a dataset or
+pipeline as input since those are expected to generate batches.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The model outputs as a dictionary of (potentially ragged) tensors or numpy
+arrays if <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, values of the dictionary may be <a href="#id7"><span class="problematic" id="id8">`</span></a>tf.RaggedTensor`s
+with the same length for axis 0 (samples), but variable length axis 1
+(instances).</p>
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> and the output contained ragged tensors, they will be
+NaN-padded to the bounding shape and an additional key <code class="xref py py-obj docutils literal notranslate"><span class="pre">"n_valid"</span></code> will be
+included to indicate the number of valid elements (before padding) in axis
+1 of the tensors.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.MockPredictor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">MockPredictor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L130-L179"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.MockPredictor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.Predictor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L112-L126"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base interface class for predictors.</p>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">SingleInstanceInferenceLayer</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L631-L770"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inference layer for applying single instance models.</p>
+<p>This layer encapsulates all of the inference operations requires for generating
+predictions from a single instance confidence map model. This includes
+preprocessing, model forward pass, peak finding and coordinate adjustment.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.keras_model">
+<code class="sig-name descname">keras_model</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> that accepts rank-4 images as input and predicts
+rank-4 confidence maps as output. This should be a model that is trained on
+single instance confidence maps.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.input_scale">
+<code class="sig-name descname">input_scale</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.input_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Float indicating if the images should be resized before being
+passed to the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.pad_to_stride">
+<code class="sig-name descname">pad_to_stride</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.pad_to_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>If not 1, input image will be paded to ensure that it is
+divisible by this value (after scaling). This should be set to the max
+stride of the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output stride of the model, denoting the scale of the output
+confidence maps relative to the images (after input scaling). This is used
+for adjusting the peak coordinates to the image grid. This will be inferred
+from the model shapes if not provided.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.peak_threshold">
+<code class="sig-name descname">peak_threshold</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.peak_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum confidence map value to consider a global peak as valid.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.refinement">
+<code class="sig-name descname">refinement</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, returns the grid-aligned peaks with no refinement. If
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"integral"</span></code>, peaks will be refined with integral regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>,
+peaks will be refined with quarter pixel local gradient offset. This has no
+effect if the model has an offset regression head.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.integral_patch_size">
+<code class="sig-name descname">integral_patch_size</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.integral_patch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of patches to crop around each rough peak for integral
+refinement as an integer scalar.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.return_confmaps">
+<code class="sig-name descname">return_confmaps</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.return_confmaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the confidence maps will be returned together with
+the predicted peaks. This will result in slower inference times since the
+data must be copied off of the GPU, but is useful for visualizing the raw
+output of the model.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.confmaps_ind">
+<code class="sig-name descname">confmaps_ind</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.confmaps_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+confidence maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"SingleInstanceConfmapsHead"</span></code> in its name.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.offsets_ind">
+<code class="sig-name descname">offsets_ind</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.offsets_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the output tensor of the model corresponding to
+offset regression maps. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default), this will be detected
+automatically by searching for the first tensor that contains
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"OffsetRefinementHead"</span></code> in its name. If the head is not present, the method
+specified in the <a class="reference internal" href="#sleap.nn.inference.SingleInstanceInferenceLayer.refinement" title="sleap.nn.inference.SingleInstanceInferenceLayer.refinement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refinement</span></code></a> attribute will be used.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.SingleInstanceInferenceLayer.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L721-L770"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceLayer.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict instance confidence maps and find peaks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> – Full frame images as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of shape
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code> or a dictionary with key:
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"image"</span></code>: Full frame images in the same format as above.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"peaks"</span></code>: The predicted peaks of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">nodes,</span> <span class="pre">2)</span></code>.
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"peak_vals":</span> <span class="pre">The</span> <span class="pre">peak</span> <span class="pre">confidence</span> <span class="pre">values</span> <span class="pre">of</span> <span class="pre">shape</span> <span class="pre">`(samples,</span> <span class="pre">nodes)</span></code>.</p>
+<p>If the <a class="reference internal" href="#sleap.nn.inference.SingleInstanceInferenceLayer.return_confmaps" title="sleap.nn.inference.SingleInstanceInferenceLayer.return_confmaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">return_confmaps</span></code></a> attribute is set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the output will also
+contain a key named <code class="xref py py-obj docutils literal notranslate"><span class="pre">"confmaps"</span></code> containing a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of shape
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">output_height,</span> <span class="pre">output_width,</span> <span class="pre">1)</span></code> containing the confidence maps
+predicted by the model.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A dictionary of outputs grouped by sample with keys</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.SingleInstanceInferenceModel">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">SingleInstanceInferenceModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L773-L805"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single instance prediction model.</p>
+<p>This model encapsulates the basic single instance approach where it is assumed that
+there is only one instance in the frame. The images are passed to a peak detector
+which is trained to detect all body parts for the instance assuming a single peak
+per body part.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstanceInferenceModel.single_instance_layer">
+<code class="sig-name descname">single_instance_layer</code><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceModel.single_instance_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single instance instance peak detection layer. This
+layer takes as input full images and outputs the detected peaks.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.SingleInstanceInferenceModel.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">example</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L790-L805"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstanceInferenceModel.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict instances for one batch of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>example</strong> – This may be either a single batch of images as a 4-D tensor of
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code>, or a dictionary
+containing the image batch in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">"images"</span></code> key.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"peaks":</span> <span class="pre">(batch_size,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>: Instance skeleton points.
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"peak_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">n_nodes)</span></code>: Confidence values for the</p>
+<blockquote>
+<div><p>instance skeleton points.</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>The predicted instances as a dictionary of tensors with keys</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.SingleInstancePredictor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">SingleInstancePredictor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">confmap_config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a></span></em>, <em class="sig-param"><span class="n">confmap_model</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a></span></em>, <em class="sig-param"><span class="n">inference_model</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.nn.inference.SingleInstanceInferenceModel" title="sleap.nn.inference.SingleInstanceInferenceModel">sleap.nn.inference.SingleInstanceInferenceModel</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">integral_refinement</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">integral_patch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L809-L1057"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single instance predictor.</p>
+<p>This high-level class handles initialization, preprocessing and tracking using a
+trained single instance SLEAP model.</p>
+<p>This should be initialized using the <a class="reference internal" href="#sleap.nn.inference.SingleInstancePredictor.from_trained_models" title="sleap.nn.inference.SingleInstancePredictor.from_trained_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_trained_models()</span></code></a> constructor or the
+high-level API (<code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.load_model</span></code>).</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.confmap_config">
+<code class="sig-name descname">confmap_config</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.confmap_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.TrainingJobConfig</span></code> containing the metadata
+for the trained model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.confmap_model">
+<code class="sig-name descname">confmap_model</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.confmap_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.model.Model</span></code></a> instance created from the trained model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.inference_model">
+<code class="sig-name descname">inference_model</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.inference_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#sleap.nn.inference.SingleInstanceInferenceModel" title="sleap.nn.inference.SingleInstanceInferenceModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.inference.SingleInstanceInferenceModel</span></code></a> that wraps
+a trained <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> to implement preprocessing and peak finding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.inference.SingleInstanceInferenceModel" title="sleap.nn.inference.SingleInstanceInferenceModel">sleap.nn.inference.SingleInstanceInferenceModel</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.pipeline">
+<code class="sig-name descname">pipeline</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.Pipeline</span></code> that loads the data and batches input data.
+This will be updated dynamically if new data sources are used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline">sleap.nn.data.pipelines.Pipeline</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.peak_threshold">
+<code class="sig-name descname">peak_threshold</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.peak_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum confidence map value to consider a global peak as valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.integral_refinement">
+<code class="sig-name descname">integral_refinement</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.integral_refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, peaks will be refined with integral regression.
+If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>, peaks will be refined with quarter pixel local
+gradient offset. This has no effect if the model has an offset regression
+head.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.integral_patch_size">
+<code class="sig-name descname">integral_patch_size</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.integral_patch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of patches to crop around each rough peak for integral
+refinement as an integer scalar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.SingleInstancePredictor.batch_size">
+<code class="sig-name descname">batch_size</code><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.batch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default batch size to use when loading data for inference.
+Higher values increase inference speed at the cost of higher memory usage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.SingleInstancePredictor.from_trained_models">
+<em class="property">classmethod </em><code class="sig-name descname">from_trained_models</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">integral_refinement</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">integral_patch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.inference.SingleInstancePredictor" title="sleap.nn.inference.SingleInstancePredictor">sleap.nn.inference.SingleInstancePredictor</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L858-L904"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.from_trained_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the predictor from a saved model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_path</strong> – Path to a model folder or training job JSON file inside a model
+folder. This folder should contain <code class="xref py py-obj docutils literal notranslate"><span class="pre">training_config.json</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">best_model.h5</span></code> files for a trained model.</p></li>
+<li><p><strong>peak_threshold</strong> – Minimum confidence map value to consider a global peak as
+valid.</p></li>
+<li><p><strong>integral_refinement</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, peaks will be refined with integral
+regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>, peaks will be refined with quarter
+pixel local gradient offset. This has no effect if the model has an
+offset regression head.</p></li>
+<li><p><strong>integral_patch_size</strong> – Size of patches to crop around each rough peak for
+integral refinement as an integer scalar.</p></li>
+<li><p><strong>batch_size</strong> – The default batch size to use when loading data for inference.
+Higher values increase inference speed at the cost of higher memory
+usage.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An instance of`SingleInstancePredictor` with the models loaded.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.SingleInstancePredictor.make_pipeline">
+<code class="sig-name descname">make_pipeline</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_provider</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Provider<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline">sleap.nn.data.pipelines.Pipeline</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L906-L932"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.make_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a data loading pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_provider</strong> – If not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, the pipeline will be created with an instance
+of a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Provider</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The created <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Pipeline</span></code> with batching and prefetching.</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>This method also updates the class attribute for the pipeline and will be
+called automatically when predicting on data from a new source.</p>
+</div>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.SingleInstancePredictor.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Provider<span class="p">, </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">, </span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> → Union<span class="p">[</span>List<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1022-L1057"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.SingleInstancePredictor.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run inference on a data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Provider</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Video</span></code> to
+run inference over.</p></li>
+<li><p><strong>make_labels</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (the default), returns a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> instance with
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.PredictedInstance`s.</span> <span class="pre">If</span> <span class="pre">`False</span></code>, just return a list of
+dictionaries containing the raw arrays returned by the inference model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> with <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.PredictedInstance`s</span> <span class="pre">if</span> <span class="pre">`make_labels</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>,
+otherwise a list of dictionaries containing batches of numpy arrays with the
+raw results.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.TopDownInferenceModel">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">TopDownInferenceModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1515-L1574"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.TopDownInferenceModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top-down instance prediction model.</p>
+<p>This model encapsulates the top-down approach where instances are first detected by
+local peak detection of an anchor point and then cropped. These instance-centered
+crops are then passed to an instance peak detector which is trained to detect all
+remaining body parts for the instance that is centered within the crop.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopDownInferenceModel.centroid_crop">
+<code class="sig-name descname">centroid_crop</code><a class="headerlink" href="#sleap.nn.inference.TopDownInferenceModel.centroid_crop" title="Permalink to this definition">¶</a></dt>
+<dd><p>A centroid cropping layer. This can be either <a class="reference internal" href="#sleap.nn.inference.CentroidCrop" title="sleap.nn.inference.CentroidCrop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CentroidCrop</span></code></a> or
+<a class="reference internal" href="#sleap.nn.inference.CentroidCropGroundTruth" title="sleap.nn.inference.CentroidCropGroundTruth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CentroidCropGroundTruth</span></code></a>. This layer takes the full image as input and
+outputs a set of centroids and cropped boxes.</p>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopDownInferenceModel.instance_peaks">
+<code class="sig-name descname">instance_peaks</code><a class="headerlink" href="#sleap.nn.inference.TopDownInferenceModel.instance_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>A instance peak detection layer. This can be either
+<a class="reference internal" href="#sleap.nn.inference.FindInstancePeaks" title="sleap.nn.inference.FindInstancePeaks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FindInstancePeaks</span></code></a> or <a class="reference internal" href="#sleap.nn.inference.FindInstancePeaksGroundTruth" title="sleap.nn.inference.FindInstancePeaksGroundTruth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FindInstancePeaksGroundTruth</span></code></a>. This layer takes as
+input the output of the centroid cropper and outputs the detected peaks for
+the instances within each crop.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.TopDownInferenceModel.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">example</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span></span></em><span class="sig-paren">)</span> → Dict<span class="p">[</span>str<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1542-L1574"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.TopDownInferenceModel.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict instances for one batch of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>example</strong> – This may be either a single batch of images as a 4-D tensor of
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code>, or a dictionary
+containing the image batch in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">"images"</span></code> key. If using a ground
+truth model for either centroid cropping or instance peaks, the full
+example from a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline</span></code> is required for providing the metadata.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroids":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">2)</span></code>: Instance centroids.
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"centroid_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances)</span></code>: Instance centroid confidence</p>
+<blockquote>
+<div><p>values.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peaks":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>: Instance skeleton</dt><dd><p>points.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">"instance_peak_vals":</span> <span class="pre">(batch_size,</span> <span class="pre">n_instances,</span> <span class="pre">n_nodes)</span></code>: Confidence</dt><dd><p>values for the instance skeleton points.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>The predicted instances as a dictionary of tensors with keys</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.TopdownPredictor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">TopdownPredictor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">centroid_config</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">centroid_model</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">confmap_config</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">confmap_model</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inference_model</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.nn.inference.TopDownInferenceModel" title="sleap.nn.inference.TopDownInferenceModel">sleap.nn.inference.TopDownInferenceModel</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">integral_refinement</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">integral_patch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1578-L1953"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top-down multi-instance predictor.</p>
+<p>This high-level class handles initialization, preprocessing and tracking using a
+trained top-down multi-instance SLEAP model.</p>
+<p>This should be initialized using the <a class="reference internal" href="#sleap.nn.inference.TopdownPredictor.from_trained_models" title="sleap.nn.inference.TopdownPredictor.from_trained_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_trained_models()</span></code></a> constructor or the
+high-level API (<code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.load_model</span></code>).</p>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.centroid_config">
+<code class="sig-name descname">centroid_config</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.centroid_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.TrainingJobConfig</span></code> containing the metadata
+for the trained centroid model. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, ground truth centroids will be
+used if available from the data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.centroid_model">
+<code class="sig-name descname">centroid_model</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.centroid_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.model.Model</span></code></a> instance created from the trained
+centroid model. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, ground truth centroids will be used if available
+from the data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.confmap_config">
+<code class="sig-name descname">confmap_config</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.confmap_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.TrainingJobConfig</span></code> containing the metadata
+for the trained centered instance model. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, ground truth instances
+will be used if available from the data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.confmap_model">
+<code class="sig-name descname">confmap_model</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.confmap_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.model.Model</span></code></a> instance created from the trained
+centered-instance model. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, ground truth instances will be used if
+available from the data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.inference_model">
+<code class="sig-name descname">inference_model</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.inference_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#sleap.nn.inference.TopDownInferenceModel" title="sleap.nn.inference.TopDownInferenceModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.inference.TopDownInferenceModel</span></code></a> that wraps a
+trained <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> to implement preprocessing, centroid detection,
+cropping and peak finding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.inference.TopDownInferenceModel" title="sleap.nn.inference.TopDownInferenceModel">sleap.nn.inference.TopDownInferenceModel</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.pipeline">
+<code class="sig-name descname">pipeline</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.Pipeline</span></code> that loads the data and batches input data.
+This will be updated dynamically if new data sources are used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline">sleap.nn.data.pipelines.Pipeline</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.tracker">
+<code class="sig-name descname">tracker</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.tracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="sleap.nn.tracking.html#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracking.Tracker</span></code></a> that will be called to associate
+detections over time. Predicted instances will not be assigned to tracks if
+if this is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="sleap.nn.tracking.html#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker">sleap.nn.tracking.Tracker</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.batch_size">
+<code class="sig-name descname">batch_size</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.batch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default batch size to use when loading data for inference.
+Higher values increase inference speed at the cost of higher memory usage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.peak_threshold">
+<code class="sig-name descname">peak_threshold</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.peak_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum confidence map value to consider a local peak as valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.integral_refinement">
+<code class="sig-name descname">integral_refinement</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.integral_refinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, peaks will be refined with integral regression.
+If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>, peaks will be refined with quarter pixel local
+gradient offset. This has no effect if the model has an offset regression
+head.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt id="sleap.nn.inference.TopdownPredictor.integral_patch_size">
+<code class="sig-name descname">integral_patch_size</code><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.integral_patch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of patches to crop around each rough peak for integral
+refinement as an integer scalar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.TopdownPredictor.from_trained_models">
+<em class="property">classmethod </em><code class="sig-name descname">from_trained_models</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">centroid_model_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">confmap_model_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">peak_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">integral_refinement</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">integral_patch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.inference.TopdownPredictor" title="sleap.nn.inference.TopdownPredictor">sleap.nn.inference.TopdownPredictor</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1675-L1752"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.from_trained_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create predictor from saved models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>centroid_model_path</strong> – Path to a centroid model folder or training job JSON
+file inside a model folder. This folder should contain
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">training_config.json</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">best_model.h5</span></code> files for a trained model.</p></li>
+<li><p><strong>confmap_model_path</strong> – Path to a centered instance model folder or training job
+JSON file inside a model folder. This folder should contain
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">training_config.json</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">best_model.h5</span></code> files for a trained model.</p></li>
+<li><p><strong>batch_size</strong> – The default batch size to use when loading data for inference.
+Higher values increase inference speed at the cost of higher memory
+usage.</p></li>
+<li><p><strong>peak_threshold</strong> – Minimum confidence map value to consider a local peak as
+valid.</p></li>
+<li><p><strong>integral_refinement</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, peaks will be refined with integral
+regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>, peaks will be refined with quarter
+pixel local gradient offset. This has no effect if the model has an
+offset regression head.</p></li>
+<li><p><strong>integral_patch_size</strong> – Size of patches to crop around each rough peak for
+integral refinement as an integer scalar.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>An instance of <a class="reference internal" href="#sleap.nn.inference.TopdownPredictor" title="sleap.nn.inference.TopdownPredictor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TopdownPredictor</span></code></a> with the loaded models.</p>
+<p>One of the two models can be left as <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> to perform inference with ground
+truth data. This will only work with <code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelsReader</span></code> as the provider.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.TopdownPredictor.make_pipeline">
+<code class="sig-name descname">make_pipeline</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_provider</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Provider<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline">sleap.nn.data.pipelines.Pipeline</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1754-L1788"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.make_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a data loading pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_provider</strong> – If not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, the pipeline will be created with an instance
+of a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Provider</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The created <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Pipeline</span></code> with batching and prefetching.</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>This method also updates the class attribute for the pipeline and will be
+called automatically when predicting on data from a new source.</p>
+</div>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.nn.inference.TopdownPredictor.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Provider<span class="p">, </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">, </span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_labels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> → Union<span class="p">[</span>List<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L1918-L1953"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.TopdownPredictor.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run inference and tracking on a data source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Provider</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Video</span></code> to
+run inference over.</p></li>
+<li><p><strong>make_labels</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (the default), returns a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> instance with
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.PredictedInstance`s.</span> <span class="pre">If</span> <span class="pre">`False</span></code>, just return a list of
+dictionaries containing the raw arrays returned by the inference model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> with <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.PredictedInstance`s</span> <span class="pre">if</span> <span class="pre">`make_labels</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>,
+otherwise a list of dictionaries containing batches of numpy arrays with the
+raw results.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.nn.inference.VisualPredictor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">VisualPredictor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig">sleap.nn.config.training_job.TrainingJobConfig</a></span></em>, <em class="sig-param"><span class="n">model</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L183-L265"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.VisualPredictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predictor class for generating the visual output of model.</p>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.find_head">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">find_head</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="p">:</span> <span class="n">tensorflow.python.keras.engine.training.Model</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> → Optional<span class="p">[</span>int<span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L606-L628"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.find_head" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the index of a head in a model’s outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> trained by SLEAP.</p></li>
+<li><p><strong>name</strong> – A string that is contained in the model output tensor name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The index of the first output with a matched name or <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> if none were found.</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>SLEAP model heads are named:
+- <code class="xref py py-obj docutils literal notranslate"><span class="pre">"SingleInstanceConfmapsHead"</span></code>
+- <code class="xref py py-obj docutils literal notranslate"><span class="pre">"CentroidConfmapsHead"</span></code>
+- <code class="xref py py-obj docutils literal notranslate"><span class="pre">"CenteredInstanceConfmapsHead"</span></code>
+- <code class="xref py py-obj docutils literal notranslate"><span class="pre">"MultiInstanceConfmapsHead"</span></code>
+- <code class="xref py py-obj docutils literal notranslate"><span class="pre">"PartAffinityFieldsHead"</span></code>
+- <code class="xref py py-obj docutils literal notranslate"><span class="pre">"OffsetRefinementHead"</span></code></p>
+</div>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.find_heads_for_model_paths">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">find_heads_for_model_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">paths</span></em><span class="sig-paren">)</span> → Dict<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2734-L2754"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.find_heads_for_model_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given list of models paths, returns dict with path keyed by head name.</p>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.get_model_output_stride">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">get_model_output_stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="p">:</span> <span class="n">tensorflow.python.keras.engine.training.Model</span></em>, <em class="sig-param"><span class="n">input_ind</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">output_ind</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span> → int<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L576-L603"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.get_model_output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the stride (1/scale) of the model outputs relative to the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>.</p></li>
+<li><p><strong>input_ind</strong> – The index of the input to use as reference. Defaults to 0, indicating
+the first input for multi-output models.</p></li>
+<li><p><strong>output_ind</strong> – The index of the output to compute the stride for. Defaults to -1,
+indicating the last output for multi-output models.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The output stride of the model computed as the integer ratio of the input’s
+height relative to the output’s height, e.g., for a single input/output model:</p>
+<blockquote>
+<div><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">model.input.shape[1]</span> <span class="pre">//</span> <span class="pre">model.output.shape[1]</span></code></p>
+</div></blockquote>
+<p>Raises a warning if the shapes do not divide evenly.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.load_model">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">load_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_path</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">refinement</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'integral'</span></em>, <em class="sig-param"><span class="n">tracker</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tracker_window</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">tracker_max_instances</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.inference.Predictor" title="sleap.nn.inference.Predictor">sleap.nn.inference.Predictor</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2832-L2889"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.load_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a trained SLEAP model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_path</strong> – Path to model or list of path to models that were trained by SLEAP.
+These should be the directories that contain <code class="xref py py-obj docutils literal notranslate"><span class="pre">training_job.json</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">best_model.h5</span></code>.</p></li>
+<li><p><strong>batch_size</strong> – Number of frames to predict at a time. Larger values result in
+faster inference speeds, but require more memory.</p></li>
+<li><p><strong>refinement</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">"integral"</span></code>, peak locations will be refined with integral
+regression. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">"local"</span></code>, peaks will be refined with quarter pixel local
+gradient offset. This has no effect if the model has an offset regression
+head.</p></li>
+<li><p><strong>tracker</strong> – Name of the tracker to use with the inference model. Must be one of
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"simple"</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">"flow"</span></code>. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, no identity tracking across frames will
+be performed.</p></li>
+<li><p><strong>tracker_window</strong> – Number of frames of history to use when tracking. No effect when
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">tracker</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>tracker_max_instances</strong> – If not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, discard instances beyond this count when
+tracking. No effect when <code class="xref py py-obj docutils literal notranslate"><span class="pre">tracker</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>An instance of a <a class="reference internal" href="#sleap.nn.inference.Predictor" title="sleap.nn.inference.Predictor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Predictor</span></code></a> based on which model type was detected.</p>
+<p>If this is a top-down model, paths to the centroids model as well as the
+centered instance model must be provided. A <a class="reference internal" href="#sleap.nn.inference.TopdownPredictor" title="sleap.nn.inference.TopdownPredictor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TopdownPredictor</span></code></a> instance will be
+returned.</p>
+<p>If this is a bottom-up model, a <a class="reference internal" href="#sleap.nn.inference.BottomupPredictor" title="sleap.nn.inference.BottomupPredictor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BottomupPredictor</span></code></a> will be returned.</p>
+<p>If this is a single-instance model, a <a class="reference internal" href="#sleap.nn.inference.SingleInstancePredictor" title="sleap.nn.inference.SingleInstancePredictor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SingleInstancePredictor</span></code></a> will be
+returned.</p>
+<p>If a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tracker</span></code> is specified, the predictor will also run identity tracking over
+time.</p>
+</p>
+</dd>
+</dl>
+<p>See also: TopdownPredictor, BottomupPredictor, SingleInstancePredictor</p>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.main">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2892-L2969"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>CLI for running inference.</p>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.make_predictor_from_models">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">make_predictor_from_models</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trained_model_paths</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">labels_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">policy_args</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.inference.Predictor" title="sleap.nn.inference.Predictor">sleap.nn.inference.Predictor</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2757-L2798"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.make_predictor_from_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given dict of paths keyed by head name, returns appropriate predictor.</p>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.make_predictor_from_paths">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">make_predictor_from_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">paths</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.inference.Predictor" title="sleap.nn.inference.Predictor">sleap.nn.inference.Predictor</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L2729-L2731"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.make_predictor_from_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build predictor object from a list of model paths.</p>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.inference.safely_generate">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">safely_generate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ds</span><span class="p">:</span> <span class="n">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></em>, <em class="sig-param"><span class="n">progress</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/inference.py#L68-L102"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.safely_generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields examples from dataset, catching and logging exceptions.</p>
+</dd></dl>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="sleap.nn.losses.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">sleap.nn.losses</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="sleap.nn.heads.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">sleap.nn.heads</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University
+            |
+            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+              and
+              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+              <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            |
+            <a class="muted-link" href="../_sources/api/sleap.nn.inference.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>

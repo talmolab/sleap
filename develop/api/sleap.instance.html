@@ -1,0 +1,920 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.message" href="sleap.message.html" /><link rel="prev" title="Developer API" href="../api.html" />
+
+    <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+        <title>sleap.instance - SLEAP (develop)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
+    <link rel="stylesheet" href="../_static/pygments.css">
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    
+
+
+<style>
+  :root {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+
+  /* For allowing end-user-specific overrides */
+  .override-light {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  .override-dark {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+</style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=26485485040e7aaf717c13fd0188a5ad2c2deb60">
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script defer="defer" src="../_static/jquery.js"></script>
+    <script defer="defer" src="../_static/underscore.js"></script>
+    <script defer="defer" src="../_static/doctools.js"></script>
+    <script defer="defer" src="../_static/clipboard.min.js"></script>
+    <script defer="defer" src="../_static/copybutton.js"></script>
+    <script defer="defer" src="../_static/togglebutton.js"></script>
+    <script defer="defer">var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script defer src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
+    </div>
+    <div class="header-right">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">SLEAP (develop)</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder=Search name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">1. Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">2. Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">3. Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html">4. Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">6. Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">7. Export Data For Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/choosing-models.html">Choosing a set of models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and/or inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Add more training data to a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/proofreading.html">Tracking and proofreading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#remote-inference">Remote inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/skeleton-design.html">Skeleton design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/training.html">Training with GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/training-package.html">Export a training package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="module-sleap.instance">
+<span id="sleap-instance"></span><h1>sleap.instance<a class="headerlink" href="#module-sleap.instance" title="Permalink to this headline">¶</a></h1>
+<p>Data structures for all labeled data contained with a SLEAP project.</p>
+<p>The relationships between objects in this module:</p>
+<ul class="simple">
+<li><p>A <a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabeledFrame</span></code></a> can contain zero or more <code class="xref py py-obj docutils literal notranslate"><span class="pre">Instance`s</span>
+<span class="pre">(and</span> <span class="pre">`PredictedInstance</span></code> objects).</p></li>
+<li><p><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Instance</span></code></a> objects (and <a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictedInstance</span></code></a> objects) have <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PointArray</span></code></a>
+(or <a class="reference internal" href="#sleap.instance.PredictedPointArray" title="sleap.instance.PredictedPointArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictedPointArray</span></code></a>).</p></li>
+<li><p><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Instance</span></code></a> (<a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictedInstance</span></code></a>) can be associated with a <a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Track</span></code></a></p></li>
+<li><p>A <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PointArray</span></code></a> (or <a class="reference internal" href="#sleap.instance.PredictedPointArray" title="sleap.instance.PredictedPointArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictedPointArray</span></code></a>) contains zero or more
+<a class="reference internal" href="#sleap.instance.Point" title="sleap.instance.Point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Point</span></code></a> objects (or <a class="reference internal" href="#sleap.instance.PredictedPoint" title="sleap.instance.PredictedPoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictedPoint</span></code></a> objects), ideally as many as
+there are in the associated <a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><code class="xref py py-class docutils literal notranslate"><span class="pre">sleap.skeleton.Skeleton</span></code></a> although these can get
+out of sync if the skeleton is manipulated.</p></li>
+</ul>
+<dl class="py class">
+<dt id="sleap.instance.Instance">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a></span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">from_predicted</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">PredictedInstance</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">points</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray">sleap.instance.PointArray</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">LabeledFrame</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L344-L895"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> represents a labelled instance of a skeleton.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>skeleton</strong> – The skeleton that this instance is associated with.</p></li>
+<li><p><strong>points</strong> – A dictionary where keys are skeleton node names and
+values are Point objects. Alternatively, a point array whose
+length and order matches skeleton.nodes.</p></li>
+<li><p><strong>track</strong> – An optional multi-frame object track associated with
+this instance. This allows individual animals/objects to be
+tracked across frames.</p></li>
+<li><p><strong>from_predicted</strong> – The predicted instance (if any) that this was
+copied from.</p></li>
+<li><p><strong>frame</strong> – A back reference to the <a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code></a> that this
+<a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> belongs to. This field is set when
+instances are added to <a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code></a> objects.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.bounding_box">
+<em class="property">property </em><code class="sig-name descname">bounding_box</code><a class="headerlink" href="#sleap.instance.Instance.bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the instance’s containing bounding box in [y1, x1, y2, x2] format.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.centroid">
+<em class="property">property </em><code class="sig-name descname">centroid</code><a class="headerlink" href="#sleap.instance.Instance.centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns instance centroid as (x,y) numpy row vector.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.frame_idx">
+<em class="property">property </em><code class="sig-name descname">frame_idx</code><a class="headerlink" href="#sleap.instance.Instance.frame_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the index of the frame that this instance was found on.</p>
+<p>This is a convenience method for Instance.frame.frame_idx.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The frame number this instance was found on, or None if the
+instance is not associated with frame.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.from_pointsarray">
+<em class="property">classmethod </em><code class="sig-name descname">from_pointsarray</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a></span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L872-L895"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.from_pointsarray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance from pointsarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – A numpy array of shape (n_nodes, 2) and dtype float32 that contains
+the points in (x, y) coordinates of each node. Missing nodes should be
+represented as NaNs.</p></li>
+<li><p><strong>skeleton</strong> – A sleap.Skeleton instance with n_nodes nodes to associate with the
+predicted instance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new Instance.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.get_points_array">
+<code class="sig-name descname">get_points_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">copy</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">invisible_as_nan</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> → numpy.ndarray<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L750-L793"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.get_points_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the instance’s points in array form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>copy</strong> – If True, the return a copy of the points array as an ndarray.
+If False, return a view of the underlying recarray.</p></li>
+<li><p><strong>invisible_as_nan</strong> – Should invisible points be marked as NaN.
+If copy is False, then invisible_as_nan is ignored since we
+don’t want to set invisible points to NaNs in original data.</p></li>
+<li><p><strong>full</strong> – If True, return all data for points. Otherwise, return just
+the x and y coordinates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Either a recarray (if copy is False) or an ndarray (if copy True).</p>
+<p>The order of the rows corresponds to the ordering of the skeleton
+nodes. Any skeleton node not defined will have NaNs present.</p>
+<p>Columns in recarray are accessed by name, e.g., [“x”], [“y”].</p>
+<p>Columns in ndarray are accessed by number. The order matches
+the order in <code class="xref py py-obj docutils literal notranslate"><span class="pre">Point.dtype</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictedPoint.dtype</span></code>.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.matches">
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em><span class="sig-paren">)</span> → bool<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L662-L693"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether two instances match by value.</p>
+<p>Checks the types, points, track, and frame index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – The other <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if match, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.n_visible_points">
+<em class="property">property </em><code class="sig-name descname">n_visible_points</code><a class="headerlink" href="#sleap.instance.Instance.n_visible_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the count of points that are visible in this instance.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.nodes">
+<em class="property">property </em><code class="sig-name descname">nodes</code><a class="headerlink" href="#sleap.instance.Instance.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The tuple of nodes that have been labelled for this instance.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.nodes_points">
+<em class="property">property </em><code class="sig-name descname">nodes_points</code><a class="headerlink" href="#sleap.instance.Instance.nodes_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of (node, point) tuples for all labelled points.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.numpy">
+<code class="sig-name descname">numpy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> → numpy.ndarray<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L808-L817"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the instance node coordinates as a numpy array.</p>
+<p>Alias for <a class="reference internal" href="#sleap.instance.Instance.points_array" title="sleap.instance.Instance.points_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">points_array</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Array of shape (n_nodes, 2) of dtype float32 containing the coordinates of
+the instance’s nodes. Missing/not visible nodes will be replaced with NaNs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#sleap.instance.Instance.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>The tuple of labelled points, in order they were labelled.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.points_array">
+<em class="property">property </em><code class="sig-name descname">points_array</code><a class="headerlink" href="#sleap.instance.Instance.points_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nx2 array of x and y for visible points.</p>
+<p>Row in array corresponds to order of points in skeleton.
+Invisible points will have nans.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ndarray of visible point coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.Instance.transform_points">
+<code class="sig-name descname">transform_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">transformation_matrix</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L819-L833"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Instance.transform_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies transformation matrix to points.</p>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.instance.LabeledFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">LabeledFrame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idx</span></em>, <em class="sig-param"><span class="n">instances</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">sleap.instance.PredictedInstance</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1095-L1565"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds labeled data for a single frame of a video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>video</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> associated with this frame.</p></li>
+<li><p><strong>frame_idx</strong> – The index of frame in video.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.complex_frame_merge">
+<em class="property">classmethod </em><code class="sig-name descname">complex_frame_merge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em>, <em class="sig-param"><span class="n">new_frame</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a></span></em><span class="sig-paren">)</span> → Tuple<span class="p">[</span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1431-L1526"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.complex_frame_merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge two frames, return conflicts if any.</p>
+<p>A conflict occurs when
+* each frame has Instances which don’t perfectly match those</p>
+<blockquote>
+<div><p>in the other frame, or</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>each frame has PredictedInstances which don’t perfectly match
+those in the other frame.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_frame</strong> – The <a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabeledFrame</span></code></a> into which we want to merge.</p></li>
+<li><p><strong>new_frame</strong> – The <a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabeledFrame</span></code></a> from which we want to merge.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>list of instances that were merged</p></li>
+<li><p>list of conflicting instances from base</p></li>
+<li><p>list of conflicting instances from new</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple of three items</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.complex_merge_between">
+<em class="property">classmethod </em><code class="sig-name descname">complex_merge_between</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_labels</span><span class="p">:</span> <span class="n">Labels</span></em>, <em class="sig-param"><span class="n">new_frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">LabeledFrame</a><span class="p">]</span></span></em><span class="sig-paren">)</span> → Tuple<span class="p">[</span>Dict<span class="p">[</span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a><span class="p">, </span>Dict<span class="p">[</span>int<span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">]</span><span class="p">]</span><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1377-L1429"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.complex_merge_between" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge data from new frames into a <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> object.</p>
+<p>Everything that can be merged cleanly is merged, any conflicts
+are returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_labels</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> into which we are merging.</p></li>
+<li><p><strong>new_frames</strong> – The list of <a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code></a> objects from
+which we are merging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt>Dictionary, keys are <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code>, values are</dt><dd><p>dictionary in which keys are frame index (int)
+and value is list of :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>Instance`s</p>
+</dd>
+</dl>
+</li>
+<li><p>list of conflicting <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> objects from base</p></li>
+<li><p>list of conflicting <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> objects from new frames</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple of three items</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.find">
+<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span><a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">, </span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">user</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> → List<span class="p">[</span><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1185-L1205"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves instances (if any) matching specifications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>track</strong> – The <a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track"><code class="xref py py-class docutils literal notranslate"><span class="pre">Track</span></code></a> to match. Note that None will only
+match instances where <a href="#id3"><span class="problematic" id="id4">:attribute:`Instance.track`</span></a> is
+None. If track is -1, then we’ll match any track.</p></li>
+<li><p><strong>user</strong> – Whether to only match user (non-predicted) instances.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of instances.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.has_predicted_instances">
+<em class="property">property </em><code class="sig-name descname">has_predicted_instances</code><a class="headerlink" href="#sleap.instance.LabeledFrame.has_predicted_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the frame contains any predicted instances.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.has_user_instances">
+<em class="property">property </em><code class="sig-name descname">has_user_instances</code><a class="headerlink" href="#sleap.instance.LabeledFrame.has_user_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the frame contains any user instances.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.image">
+<em class="property">property </em><code class="sig-name descname">image</code><a class="headerlink" href="#sleap.instance.LabeledFrame.image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the image for this frame of shape (height, width, channels).</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.index">
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em><span class="sig-paren">)</span> → int<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1130-L1132"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns index of given <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a>.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.insert">
+<code class="sig-name descname">insert</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1152-L1167"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds instance to frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> – The index in list of frame instances where we should
+insert the new instance.</p></li>
+<li><p><strong>value</strong> – The instance to associate with frame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.instances">
+<em class="property">property </em><code class="sig-name descname">instances</code><a class="headerlink" href="#sleap.instance.LabeledFrame.instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of all instances associated with this frame.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.instances_to_show">
+<em class="property">property </em><code class="sig-name descname">instances_to_show</code><a class="headerlink" href="#sleap.instance.LabeledFrame.instances_to_show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of instances to show in GUI for this frame.</p>
+<p>This list will not include any predicted instances for which
+there’s a corresponding regular instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of instances to show in GUI.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.merge_frames">
+<em class="property">static </em><code class="sig-name descname">merge_frames</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labeled_frames</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">remove_redundant</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> → List<span class="p">[</span><a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">sleap.instance.LabeledFrame</a><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1329-L1375"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.merge_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merged LabeledFrames for same video and frame index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labeled_frames</strong> – List of <a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code></a> objects to merge.</p></li>
+<li><p><strong>video</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> for which to merge.
+This is specified so we don’t have to check all frames when we
+already know which video has new labeled frames.</p></li>
+<li><p><strong>remove_redundant</strong> – Whether to drop instances in the merged frames
+where there’s a perfect match.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The merged list of :class:<a href="#id5"><span class="problematic" id="id6">`</span></a>LabeledFrame`s.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.plot">
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1533-L1546"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the frame with all instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – If False, only the instances will be plotted without loading the
+original image.</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
+options.</p>
+</div>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.plot_predicted">
+<code class="sig-name descname">plot_predicted</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1548-L1565"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.LabeledFrame.plot_predicted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the frame with all predicted instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – If False, only the instances will be plotted without loading the
+original image.</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
+options.</p>
+</div>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.predicted_instances">
+<em class="property">property </em><code class="sig-name descname">predicted_instances</code><a class="headerlink" href="#sleap.instance.LabeledFrame.predicted_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of predicted instances associated with frame.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.training_instances">
+<em class="property">property </em><code class="sig-name descname">training_instances</code><a class="headerlink" href="#sleap.instance.LabeledFrame.training_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of user instances with points for training.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.unused_predictions">
+<em class="property">property </em><code class="sig-name descname">unused_predictions</code><a class="headerlink" href="#sleap.instance.LabeledFrame.unused_predictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of “unused” <a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedInstance</span></code></a> objects in frame.</p>
+<p>This is all the <a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedInstance</span></code></a> objects which do not have
+a corresponding <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> in the same track in frame.</p>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.LabeledFrame.user_instances">
+<em class="property">property </em><code class="sig-name descname">user_instances</code><a class="headerlink" href="#sleap.instance.LabeledFrame.user_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of user instances associated with this frame.</p>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.instance.Point">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">visible</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">complete</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L41-L90"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Point" title="Permalink to this definition">¶</a></dt>
+<dd><p>A labelled point and any metadata associated with it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The horizontal pixel location of point within image frame.</p></li>
+<li><p><strong>y</strong> – The vertical pixel location of point within image frame.</p></li>
+<li><p><strong>visible</strong> – Whether point is visible in the labelled image or not.</p></li>
+<li><p><strong>complete</strong> – Has the point been verified by the user labeler.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.instance.Point.isnan">
+<code class="sig-name descname">isnan</code><span class="sig-paren">(</span><span class="sig-paren">)</span> → bool<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L83-L90"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Point.isnan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Are either of the coordinates a NaN value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if x or y is NaN, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.instance.PointArray">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PointArray</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">buf</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">strides</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">formats</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">titles</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">byteorder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">aligned</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">order</span><span class="o">=</span><span class="default_value">'C'</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L166-L279"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PointArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>PointArray is a sub-class of numpy recarray which stores
+Point objects as records.</p>
+<dl class="py method">
+<dt id="sleap.instance.PointArray.from_array">
+<em class="property">classmethod </em><code class="sig-name descname">from_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray">sleap.instance.PointArray</a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray">sleap.instance.PointArray</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L257-L279"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PointArray.from_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointArray</span></code></a> (or child) to a new instance.</p>
+<p>This will convert an object to the same type as itself,
+so a <a class="reference internal" href="#sleap.instance.PredictedPointArray" title="sleap.instance.PredictedPointArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedPointArray</span></code></a> will result in the same.</p>
+<p>Uses the default attribute values for new array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>a</strong> – The array to convert.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointArray</span></code></a> or <a class="reference internal" href="#sleap.instance.PredictedPointArray" title="sleap.instance.PredictedPointArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedPointArray</span></code></a> with
+the same points as a.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.PointArray.make_default">
+<em class="property">classmethod </em><code class="sig-name descname">make_default</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray">sleap.instance.PointArray</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L220-L237"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PointArray.make_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a point array where points are all set to default.</p>
+<p>The constructed <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointArray</span></code></a> will have specified size
+and each value in the array is assigned the default values for
+a <code class="xref py py-class docutils literal notranslate"><span class="pre">Point`</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>size</strong> – The number of points to allocate.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A point array with all elements set to Point()</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.instance.PredictedInstance">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedInstance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a></span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">from_predicted</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">PredictedInstance</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">points</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray">sleap.instance.PointArray</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frame</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame">LabeledFrame</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">score</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">tracking_score</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L899-L1000"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>A predicted instance is an output of the inference procedure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>score</strong> – The instance-level grouping prediction score.</p></li>
+<li><p><strong>tracking_score</strong> – The instance-level track matching score.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.instance.PredictedInstance.from_arrays">
+<em class="property">classmethod </em><code class="sig-name descname">from_arrays</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">point_confidences</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">instance_score</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a></span></em>, <em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">sleap.instance.PredictedInstance</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L959-L1000"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance.from_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a predicted instance from data arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – A numpy array of shape (n_nodes, 2) and dtype float32 that contains
+the points in (x, y) coordinates of each node. Missing nodes should be
+represented as NaNs.</p></li>
+<li><p><strong>point_confidences</strong> – A numpy array of shape (n_nodes,) and dtype float32 that
+contains the confidence/score of the points.</p></li>
+<li><p><strong>instance_score</strong> – Scalar float representing the overall instance score, e.g.,
+the PAF grouping score.</p></li>
+<li><p><strong>skeleton</strong> – A sleap.Skeleton instance with n_nodes nodes to associate with the
+predicted instance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new PredictedInstance.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.PredictedInstance.from_instance">
+<em class="property">classmethod </em><code class="sig-name descname">from_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">score</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance">sleap.instance.PredictedInstance</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L934-L957"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedInstance.from_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <a class="reference internal" href="#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedInstance</span></code></a> from an <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a>.</p>
+<p>The fields are copied in a shallow manner with the exception of
+points. For each point in the instance a <a class="reference internal" href="#sleap.instance.PredictedPoint" title="sleap.instance.PredictedPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedPoint</span></code></a>
+is created with score set to default value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> – The Instance object to shallow copy data from.</p></li>
+<li><p><strong>score</strong> – The score for this instance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A PredictedInstance for the given Instance.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="sleap.instance.PredictedInstance.points_and_scores_array">
+<em class="property">property </em><code class="sig-name descname">points_and_scores_array</code><a class="headerlink" href="#sleap.instance.PredictedInstance.points_and_scores_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>(N, 3) array of (x, y, score) for predicted points.</p>
+<p>Row in arrow corresponds to order of points in skeleton.
+Invisible points will have NaNs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ndarray of visible point coordinates and scores.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.instance.PredictedPoint">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedPoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">nan</span></em>, <em class="sig-param"><span class="n">visible</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">complete</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">score</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L98-L156"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>A predicted point is an output of the inference procedure.</p>
+<p>It has all the properties of a labeled point, plus a score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The horizontal pixel location of point within image frame.</p></li>
+<li><p><strong>y</strong> – The vertical pixel location of point within image frame.</p></li>
+<li><p><strong>visible</strong> – Whether point is visible in the labelled image or not.</p></li>
+<li><p><strong>complete</strong> – Has the point been verified by the user labeler.</p></li>
+<li><p><strong>score</strong> – The point-level prediction score.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.instance.PredictedPoint.from_point">
+<em class="property">classmethod </em><code class="sig-name descname">from_point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">point</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Point" title="sleap.instance.Point">sleap.instance.Point</a></span></em>, <em class="sig-param"><span class="n">score</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.0</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.instance.PredictedPoint" title="sleap.instance.PredictedPoint">sleap.instance.PredictedPoint</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L144-L156"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPoint.from_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a PredictedPoint from a Point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>point</strong> – The point to copy all data from.</p></li>
+<li><p><strong>score</strong> – The score for this predicted point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A scored point based on the point passed in.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.instance.PredictedPointArray">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">PredictedPointArray</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">buf</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">strides</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">formats</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">titles</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">byteorder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">aligned</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">order</span><span class="o">=</span><span class="default_value">'C'</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L282-L306"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPointArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>PredictedPointArray is analogous to PointArray except for predicted
+points.</p>
+<dl class="py method">
+<dt id="sleap.instance.PredictedPointArray.to_array">
+<em class="property">classmethod </em><code class="sig-name descname">to_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.PredictedPointArray" title="sleap.instance.PredictedPointArray">sleap.instance.PredictedPointArray</a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.instance.PointArray" title="sleap.instance.PointArray">sleap.instance.PointArray</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L290-L306"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.PredictedPointArray.to_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a PredictedPointArray to a normal PointArray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>a</strong> – The array to convert.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The converted array.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="sleap.instance.Track">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">Track</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spawned_on</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L310-L334"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Track" title="Permalink to this definition">¶</a></dt>
+<dd><p>A track object is associated with a set of animal/object instances
+across multiple frames of video. This allows tracking of unique
+entities in the video over time and space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spawned_on</strong> – The video frame that this track was spawned on.</p></li>
+<li><p><strong>name</strong> – A name given to this track for identifying purposes.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.instance.Track.matches">
+<code class="sig-name descname">matches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L324-L334"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.Track.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if two tracks match by value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – The other track to check</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if they match, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.instance.make_instance_cattr">
+<code class="sig-prename descclassname">sleap.instance.</code><code class="sig-name descname">make_instance_cattr</code><span class="sig-paren">(</span><span class="sig-paren">)</span> → cattr.converters.Converter<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/instance.py#L1003-L1091"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.instance.make_instance_cattr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cattr converter for Lists of Instances/PredictedInstances.</p>
+<p>This is required because cattrs doesn’t automatically detect the
+class when the attributes of one class are a subset of another.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A cattr converter with hooks registered for structuring and</dt><dd><p>unstructuring <a class="reference internal" href="#sleap.instance.Instance" title="sleap.instance.Instance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code></a> objects and
+:class:<a href="#id7"><span class="problematic" id="id8">`</span></a>PredictedInstance`s.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="sleap.message.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">sleap.message</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../api.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Developer API</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University
+            |
+            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+              and
+              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+              <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            |
+            <a class="muted-link" href="../_sources/api/sleap.instance.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>
