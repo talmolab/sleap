@@ -62,6 +62,7 @@ jobs:
         if: github.ref == 'refs/heads/talmo/docs_v2'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages-test
+          # publish_branch: gh-pages-test
+          publish_branch: gh-pages
           publish_dir: docs/build/html
           destination_dir: develop
