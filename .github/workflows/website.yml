@@ -64,3 +64,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages-test
           publish_dir: docs/build/html
+          destination_dir: develop

@@ -42,6 +42,8 @@ release = "develop"
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
 
+html_baseurl = "/develop/"
+
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
