@@ -19,6 +19,8 @@ TEST_JSON_MIN_LABELS = "tests/data/json_format_v2/minimal_instance.json"
 TEST_SLP_MIN_LABELS = "tests/data/slp_hdf5/minimal_instance.slp"
 TEST_MAT_LABELS = "tests/data/mat/labels.mat"
 TEST_SLP_MIN_LABELS_ROBOT = "tests/data/slp_hdf5/small_robot_minimal.slp"
+TEST_MIN_TRACKS_2NODE_LABELS = "tests/data/tracks/clip.2node.slp"
+TEST_MIN_TRACKS_13NODE_LABELS = "tests/data/tracks/clip.slp"
 
 
 @pytest.fixture
@@ -44,6 +46,21 @@ def min_labels_slp():
 @pytest.fixture
 def min_labels_robot():
     return Labels.load_file(TEST_SLP_MIN_LABELS_ROBOT)
+
+
+@pytest.fixture
+def min_tracks_2node_labels():
+    return Labels.load_file(
+        TEST_MIN_TRACKS_2NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
+    )
+
+
+@pytest.fixture
+def min_tracks_13node_labels():
+    return Labels.load_file(
+        TEST_MIN_TRACKS_13NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
+    )
+
 
 @pytest.fixture
 def mat_labels():
