@@ -18,6 +18,7 @@ TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.jso
 TEST_JSON_MIN_LABELS = "tests/data/json_format_v2/minimal_instance.json"
 TEST_SLP_MIN_LABELS = "tests/data/slp_hdf5/minimal_instance.slp"
 TEST_MAT_LABELS = "tests/data/mat/labels.mat"
+TEST_SLP_MIN_LABELS_ROBOT = "tests/data/slp_hdf5/small_robot_minimal.slp"
 
 
 @pytest.fixture
@@ -39,6 +40,10 @@ def min_labels():
 def min_labels_slp():
     return Labels.load_file(TEST_SLP_MIN_LABELS)
 
+
+@pytest.fixture
+def min_labels_robot():
+    return Labels.load_file(TEST_SLP_MIN_LABELS_ROBOT)
 
 @pytest.fixture
 def mat_labels():
