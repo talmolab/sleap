@@ -764,6 +764,14 @@ class SingleInstanceInferenceLayer(InferenceLayer):
                 threshold=self.peak_threshold,
             )
 
+        # Adjust for stride and scale.
+        peaks = peaks * self.output_stride
+        if self.input_scale != 1.0:
+            # Note: We add 0.5 here to offset TensorFlow's weird image resizing. This
+            # may not always(?) be the most correct approach.
+            # See: https://github.com/tensorflow/tensorflow/issues/6720
+            peaks = (peaks / self.input_scale) + 0.5
+
         out = {"peaks": peaks, "peak_vals": peak_vals}
         if self.return_confmaps:
             out["confmaps"] = cms
@@ -961,13 +969,16 @@ class SingleInstancePredictor(Predictor):
             # Run inference on current batch.
             preds = self.inference_model.predict(ex)
 
-            # Convert to numpy arrays if not already.
-            if isinstance(preds["video_ind"], tf.Tensor):
-                preds["video_ind"] = preds["video_ind"].numpy().flatten()
-            if isinstance(preds["frame_ind"], tf.Tensor):
-                preds["frame_ind"] = preds["frame_ind"].numpy().flatten()
+            ex["peaks"] = preds["peaks"]
+            ex["peak_vals"] = preds["peak_vals"]
 
-            yield preds
+            # Convert to numpy arrays if not already.
+            if isinstance(ex["video_ind"], tf.Tensor):
+                ex["video_ind"] = ex["video_ind"].numpy().flatten()
+            if isinstance(ex["frame_ind"], tf.Tensor):
+                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+            
+            yield ex
 
     def _make_labeled_frames_from_generator(
         self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
@@ -2775,7 +2786,7 @@ def make_predictor_from_models(
         )
     elif "single_instance" in trained_model_paths:
         predictor = SingleInstancePredictor.from_trained_models(
-            confmap_model_path=trained_model_paths["single_instance"],
+            trained_model_paths["single_instance"],
             **get_relevant_args("single"),
             **kwargs,
         )
