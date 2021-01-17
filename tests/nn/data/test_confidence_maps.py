@@ -10,6 +10,7 @@ from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_multi_confmaps,
     make_multi_confmaps_with_offsets,
+    SingleInstanceConfidenceMapGenerator,
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
 )
@@ -107,6 +108,28 @@ def test_make_multi_confmaps_with_offsets():
     )
     assert offsets.shape == (4, 5, 2, 2)
 
+
+def test_single_instance_confidence_map_generator(min_labels_robot):
+    labels_reader = providers.LabelsReader(min_labels_robot)
+    confmap_generator = SingleInstanceConfidenceMapGenerator(
+        sigma=5, output_stride=2, with_offsets=False
+    )
+    ds = labels_reader.make_dataset()
+    ds = confmap_generator.transform_dataset(ds)
+    example = next(iter(ds))
+    assert example["confidence_maps"].shape == (320 // 2, 560 // 2, 2)
+    assert example["confidence_maps"].dtype == tf.float32
+
+    confmap_generator = SingleInstanceConfidenceMapGenerator(
+        sigma=5, output_stride=2, with_offsets=True
+    )
+    ds = labels_reader.make_dataset()
+    ds = confmap_generator.transform_dataset(ds)
+    example = next(iter(ds))
+    assert example["confidence_maps"].shape == (320 // 2, 560 // 2, 2)
+    assert example["confidence_maps"].dtype == tf.float32
+    assert example["offsets"].shape == (320 // 2, 560 // 2, 4)
+    assert example["offsets"].dtype == tf.float32
 
 def test_multi_confidence_map_generator(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
