@@ -39,6 +39,23 @@ def test_labels_reader(min_labels):
     np.testing.assert_array_equal(example["skeleton_inds"], [0, 0])
     assert example["skeleton_inds"].dtype == tf.int32
 
+    np.testing.assert_array_equal(example["track_inds"], [-1, -1])
+    assert example["track_inds"].dtype == tf.int32
+
+
+def test_labels_reader_with_tracks(min_tracks_2node_labels):
+    labels_reader = providers.LabelsReader.from_user_instances(min_tracks_2node_labels)
+    ds = labels_reader.make_dataset()
+    example = next(iter(ds))
+
+    assert example["instances"].shape == (2, 2, 2)
+    assert example["instances"].dtype == tf.float32
+
+    np.testing.assert_array_equal(example["track_inds"], [1, 0])
+    assert example["track_inds"].dtype == tf.int32
+    labels_reader.tracks[example["track_inds"][0]].name == "male"
+    labels_reader.tracks[example["track_inds"][1]].name == "female"
+
 
 def test_labels_reader_no_visible_points(min_labels):
     inst = min_labels.labeled_frames[0].instances[0]

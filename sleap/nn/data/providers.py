@@ -86,12 +86,18 @@ class LabelsReader:
             "scale",
             "instances",
             "skeleton_inds",
+            "track_inds",
         ]
 
     @property
     def videos(self) -> List[sleap.Video]:
         """Return the list of videos that `video_ind` in examples match up with."""
         return self.labels.videos
+
+    @property
+    def tracks(self) -> List[sleap.Track]:
+        """Return the list of tracks that `track_inds` in examples match up with."""
+        return self.labels.tracks
 
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None
@@ -124,6 +130,9 @@ class LabelsReader:
                     containing all of the instances in the frame.
                 "skeleton_inds": Tensor of shape (n_instances,) of dtype tf.int32 that
                     specifies the index of the skeleton used for each instance.
+                "track_inds": Tensor of shape (n_instance,) of dtype tf.int32 that
+                    specifies the index of the instance track identity. If not
+                    specified, in the labels, this is set to -1.
         """
         # Grab an image to test for the dtype.
         test_lf = self.labels[0]
@@ -143,6 +152,12 @@ class LabelsReader:
             skeleton_inds = np.array(
                 [self.labels.skeletons.index(inst.skeleton) for inst in lf.instances]
             ).astype("int32")
+            track_inds = np.array(
+                [
+                    self.tracks.index(inst.track) if inst.track is not None else -1
+                    for inst in lf.instances
+                ]
+            ).astype("int32")
             return (
                 raw_image,
                 raw_image_size,
@@ -150,6 +165,7 @@ class LabelsReader:
                 video_ind,
                 frame_ind,
                 skeleton_inds,
+                track_inds,
             )
 
         def fetch_lf(ind):
@@ -162,14 +178,24 @@ class LabelsReader:
                 video_ind,
                 frame_ind,
                 skeleton_inds,
+                track_inds,
             ) = tf.py_function(
                 py_fetch_lf,
                 [ind],
-                [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
+                [
+                    image_dtype,
+                    tf.int32,
+                    tf.float32,
+                    tf.int32,
+                    tf.int64,
+                    tf.int32,
+                    tf.int32,
+                ],
             )
             image = tf.ensure_shape(image, test_image.shape)
             instances = tf.ensure_shape(instances, tf.TensorShape([None, None, 2]))
             skeleton_inds = tf.ensure_shape(skeleton_inds, tf.TensorShape([None]))
+            track_inds = tf.ensure_shape(track_inds, tf.TensorShape([None]))
 
             return {
                 "image": image,
@@ -180,6 +206,7 @@ class LabelsReader:
                 "scale": tf.ones([2], dtype=tf.float32),
                 "instances": instances,
                 "skeleton_inds": skeleton_inds,
+                "track_inds": track_inds,
             }
 
         if self.example_indices is None:
@@ -285,7 +312,9 @@ class VideoReader:
                     grid in order to properly map points to image coordinates.
         """
         # Grab an image to test for the dtype.
-        test_image = tf.convert_to_tensor(self.video.get_frame(self.video.last_frame_idx))
+        test_image = tf.convert_to_tensor(
+            self.video.get_frame(self.video.last_frame_idx)
+        )
         image_dtype = test_image.dtype
 
         def py_fetch_frame(ind):
