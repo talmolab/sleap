@@ -87,6 +87,7 @@ class LabelsReader:
             "instances",
             "skeleton_inds",
             "track_inds",
+            "n_tracks",
         ]
 
     @property
@@ -158,6 +159,7 @@ class LabelsReader:
                     for inst in lf.instances
                 ]
             ).astype("int32")
+            n_tracks = np.array(len(self.tracks)).astype("int32")
             return (
                 raw_image,
                 raw_image_size,
@@ -166,6 +168,7 @@ class LabelsReader:
                 frame_ind,
                 skeleton_inds,
                 track_inds,
+                n_tracks,
             )
 
         def fetch_lf(ind):
@@ -179,6 +182,7 @@ class LabelsReader:
                 frame_ind,
                 skeleton_inds,
                 track_inds,
+                n_tracks,
             ) = tf.py_function(
                 py_fetch_lf,
                 [ind],
@@ -188,6 +192,7 @@ class LabelsReader:
                     tf.float32,
                     tf.int32,
                     tf.int64,
+                    tf.int32,
                     tf.int32,
                     tf.int32,
                 ],
@@ -207,6 +212,7 @@ class LabelsReader:
                 "instances": instances,
                 "skeleton_inds": skeleton_inds,
                 "track_inds": track_inds,
+                "n_tracks": n_tracks,
             }
 
         if self.example_indices is None:
