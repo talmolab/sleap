@@ -76,13 +76,16 @@ class ClassMapGenerator:
 
     Attributes:
         sigma: Standard deviation of the 2D Gaussian distribution sampled to generate
-            confidence maps. This defines the spread in units of the input image's grid,
-            i.e., it does not take scaling in previous steps into account.
-        output_stride: Relative stride of the generated confidence maps. This is
-            effectively the reciprocal of the output scale, i.e., increase this to
-            generate confidence maps that are smaller than the input images.
-        centroids: If `True`, generate confidence maps for centroids rather than
+            confidence maps for masking the identity maps. This defines the spread in
+            units of the input image's grid, i.e., it does not take scaling in previous
+            steps into account.
+        output_stride: Relative stride of the generated maps. This is effectively the
+            reciprocal of the output scale, i.e., increase this to generate maps that
+            are smaller than the input images.
+        centroids: If `True`, generate masking confidence maps for centroids rather than
             instance points.
+        class_map_threshold: Minimum confidence map value below which map values will be
+            replaced with zeros.
     """
 
     sigma: float = 2.0
@@ -104,28 +107,16 @@ class ClassMapGenerator:
         return self.input_keys + ["class_maps"]
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
-        """Create a dataset that contains the generated confidence maps.
+        """Create a dataset that contains the generated class identity maps.
 
         Args:
-            input_ds: A dataset with elements that contain the keys `"image"`, `"scale"`
-                and either "instances" or "centroids" depending on whether the
-                `centroids` attribute is set to `True`.
+            input_ds: A dataset with elements that contain the keys `"image"`,
+                `"track_inds"`, `"n_tracks"` and either `"instances"` or `"centroids"`
+                depending on whether the `centroids` attribute is set to `True`.
 
         Returns:
             A `tf.data.Dataset` with the same keys as the input, as well as a
-            `"confidence_maps"` or `"centroid_confidence_maps"` key containing the
-            generated confidence maps.
-
-            If the `with_offsets` attribute is `True`, example will contain a
-            `"offsets"` key.
-
-        Notes:
-            The output stride is relative to the current scale of the image. To map
-            points on the confidence maps to the raw image, first multiply them by the
-            output stride, and then scale the x- and y-coordinates by the `"scale"` key.
-
-            Importantly, the `sigma` will be proportional to the current image grid, not
-            the original grid prior to scaling operations.
+            `"class_maps"` key containing the generated class maps.
         """
         # Infer image dimensions to generate the full scale sampling grid.
         test_example = next(iter(input_ds))
