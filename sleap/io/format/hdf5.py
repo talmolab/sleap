@@ -256,6 +256,17 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
             d["videos"] = Video.cattr().unstructure(new_videos)
 
+        else:
+            # Include the source video metadata if this was a package.
+            new_videos = []
+            for video in labels.videos:
+                if hasattr(video.backend, "_source_video"):
+                    new_videos.append(video.backend._source_video)
+                else:
+                    new_videos.append(video)
+            d["videos"] = Video.cattr().unstructure(new_videos)
+
+
         with h5py.File(filename, "a") as f:
 
             # Add all the JSON metadata
