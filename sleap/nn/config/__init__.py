@@ -11,6 +11,8 @@ from sleap.nn.config.model import (
     MultiInstanceConfmapsHeadConfig,
     PartAffinityFieldsHeadConfig,
     MultiInstanceConfig,
+    ClassMapsHeadConfig,
+    MultiClassConfig,
     HeadsConfig,
     LEAPConfig,
     UNetConfig,

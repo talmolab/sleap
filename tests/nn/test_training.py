@@ -23,8 +23,11 @@ def cfg():
         max_stride=8, output_stride=1, filters=8, filters_rate=1.0
     )
     cfg.optimization.preload_data = False
+    cfg.optimization.online_shuffling = False
+    cfg.optimization.prefetch = False
     cfg.optimization.batch_size = 1
     cfg.optimization.batches_per_epoch = 2
+    cfg.optimization.val_batches_per_epoch = 2
     cfg.optimization.epochs = 1
     cfg.outputs.save_outputs = False
     return cfg
@@ -130,7 +133,8 @@ def test_train_topdown_with_offset(training_labels, cfg):
 
 def test_train_bottomup(training_labels, cfg):
     cfg.model.heads.multi_instance = sleap.nn.config.MultiInstanceConfig(
-        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(output_stride=1, offset_refinement=False),
+        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(
+            output_stride=1, offset_refinement=False),
         pafs=sleap.nn.config.PartAffinityFieldsHeadConfig(output_stride=2)
     )
     trainer = sleap.nn.training.TopdownConfmapsModelTrainer.from_config(
@@ -147,7 +151,8 @@ def test_train_bottomup(training_labels, cfg):
 
 def test_train_bottomup_with_offset(training_labels, cfg):
     cfg.model.heads.multi_instance = sleap.nn.config.MultiInstanceConfig(
-        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(output_stride=1, offset_refinement=True),
+        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(
+            output_stride=1, offset_refinement=True),
         pafs=sleap.nn.config.PartAffinityFieldsHeadConfig(output_stride=2)
     )
     trainer = sleap.nn.training.TopdownConfmapsModelTrainer.from_config(
@@ -162,3 +167,24 @@ def test_train_bottomup_with_offset(training_labels, cfg):
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 384, 384, 2)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 192, 192, 2)
     assert tuple(trainer.keras_model.outputs[2].shape) == (None, 384, 384, 4)
+
+
+def test_train_bottomup_multiclass(min_tracks_2node_labels, cfg):
+    labels = min_tracks_2node_labels
+    cfg.data.preprocessing.input_scaling = 0.5
+    cfg.model.heads.multi_class = sleap.nn.config.MultiClassConfig(
+        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(
+            output_stride=2, offset_refinement=False),
+        class_maps=sleap.nn.config.ClassMapsHeadConfig(
+            output_stride=2)
+    )
+    trainer = sleap.nn.training.BottomUpMultiClassModelTrainer.from_config(
+        cfg, training_labels=labels
+    )
+    trainer.setup()
+    trainer.train()
+
+    assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead_0"
+    assert trainer.keras_model.output_names[1] == "ClassMapsHead_0"
+    assert tuple(trainer.keras_model.outputs[0].shape) == (None, 256, 256, 2)
+    assert tuple(trainer.keras_model.outputs[1].shape) == (None, 256, 256, 2)

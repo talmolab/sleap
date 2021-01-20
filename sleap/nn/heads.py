@@ -9,6 +9,7 @@ from sleap.nn.config import (
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfmapsHeadConfig,
     PartAffinityFieldsHeadConfig,
+    ClassMapsHeadConfig,
 )
 
 
@@ -208,6 +209,47 @@ class PartAffinityFieldsHead:
             edges = config.edges
         return cls(
             edges=edges,
+            sigma=config.sigma,
+            output_stride=config.output_stride,
+            loss_weight=config.loss_weight,
+        )
+
+
+@attr.s(auto_attribs=True)
+class ClassMapsHead:
+    """Head for specifying class identity maps."""
+
+    classes: List[Text]
+    sigma: float = 5.0
+    output_stride: int = 1
+    loss_weight: float = 1.0
+
+    @property
+    def channels(self) -> int:
+        """Return the number of channels in the tensor output by this head."""
+        return len(self.classes)
+
+    @classmethod
+    def from_config(
+        cls,
+        config: ClassMapsHeadConfig,
+        classes: Optional[List[Text]] = None,
+    ) -> "ClassMapsHead":
+        """Create this head from a set of configurations.
+
+        Attributes:
+            config: A `ClassMapsHeadConfig` instance specifying the head parameters.
+            classes: List of string names of the classes that this head will predict.
+                This must be set if the `classes` attribute of the configuration is not
+                set.
+
+        Returns:
+            The instantiated head with the specified configuration options.
+        """
+        if config.classes is not None:
+            classes = config.classes
+        return cls(
+            classes=classes,
             sigma=config.sigma,
             output_stride=config.output_stride,
             loss_weight=config.loss_weight,

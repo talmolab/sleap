@@ -27,6 +27,7 @@ from sleap.nn.heads import (
     CenteredInstanceConfmapsHead,
     MultiInstanceConfmapsHead,
     PartAffinityFieldsHead,
+    ClassMapsHead,
     OffsetRefinementHead,
 )
 from sleap.nn.config import (
@@ -39,6 +40,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
+    ClassMapsHeadConfig,
+    MultiClassConfig,
     BackboneConfig,
     HeadsConfig,
     ModelConfig,
@@ -73,6 +76,7 @@ HEADS = [
     CenteredInstanceConfmapsHead,
     MultiInstanceConfmapsHead,
     PartAffinityFieldsHead,
+    ClassMapsHead,
     OffsetRefinementHead,
 ]
 Head = TypeVar("Head", *HEADS)
@@ -98,6 +102,7 @@ class Model:
         cls,
         config: ModelConfig,
         skeleton: Optional[sleap.Skeleton] = None,
+        tracks: Optional[List[sleap.Track]] = None,
         update_config: bool = False,
     ) -> "Model":
         """Create a SLEAP model from configurations.
@@ -207,6 +212,44 @@ class Model:
                     )
                 )
 
+        elif isinstance(head_config, MultiClassConfig):
+            part_names = head_config.confmaps.part_names
+            if part_names is None:
+                if skeleton is None:
+                    raise ValueError(
+                        "Skeleton must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                part_names = skeleton.node_names
+                if update_config:
+                    head_config.confmaps.part_names = part_names
+
+            classes = head_config.class_maps.classes
+            if classes is None:
+                if tracks is None:
+                    raise ValueError(
+                        "Classes must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                classes = [t.name for t in tracks]
+            if update_config:
+                head_config.class_maps.classes = classes
+
+            heads = [
+                MultiInstanceConfmapsHead.from_config(
+                    head_config.confmaps, part_names=part_names
+                ),
+                ClassMapsHead.from_config(head_config.class_maps, classes=classes),
+            ]
+            output_stride = min(heads[0].output_stride, heads[1].output_stride)
+            output_stride = heads[0].output_stride
+            if head_config.confmaps.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(
+                        head_config.confmaps, part_names=part_names
+                    )
+                )
+
         backbone_config.output_stride = output_stride
 
         return cls(backbone=backbone_cls.from_config(backbone_config), heads=heads)
@@ -241,6 +284,10 @@ class Model:
         # Build output layers for each head.
         x_outs = []
         for output in self.heads:
+            if isinstance(output, ClassMapsHead):
+                activation = "sigmoid"
+            else:
+                activation = "linear"
             x_head = []
             if output.output_stride == self.backbone.output_stride:
                 # The main output has the same stride as the head, so build output layer
@@ -252,6 +299,7 @@ class Model:
                             kernel_size=1,
                             strides=1,
                             padding="same",
+                            activation=activation,
                             name=f"{type(output).__name__}_{i}",
                         )(x)
                     )
@@ -269,6 +317,7 @@ class Model:
                                     kernel_size=1,
                                     strides=1,
                                     padding="same",
+                                    activation=activation,
                                     name=f"{type(output).__name__}_{i}",
                                 )(feat.tensor)
                             )

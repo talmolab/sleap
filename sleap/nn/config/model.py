@@ -274,6 +274,62 @@ class MultiInstanceConfig:
     pafs: PartAffinityFieldsHeadConfig = attr.ib(factory=PartAffinityFieldsHeadConfig)
 
 
+@attr.s(auto_attribs=True)
+class ClassMapsHeadConfig:
+    """Configurations for class map heads.
+
+    These heads are used in bottom-up multi-instance models that classify detected
+    points using a fixed set of learned classes (e.g., animal identities).
+
+    Class maps are an image-space representation of the probability of that each class
+    occupies a given pixel. This is similar to semantic segmentation, however only the
+    pixels in the neighborhood of the landmarks have a class assignment.
+
+    Attributes:
+        classes: List of string names of the classes that this head will predict.
+        sigma: Spread of the Gaussian distribution that determines the neighborhood
+            that the class maps will be nonzero around each landmark.
+        output_stride: The stride of the output class maps relative to the input image.
+            This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in maps that are 0.5x the size of the input. This should be the same
+            size as the confidence maps they are associated with.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
+    """
+
+    classes: Optional[List[Text]] = None
+    sigma: float = 5.0
+    output_stride: int = 1
+    loss_weight: float = 1.0
+
+
+@attr.s(auto_attribs=True)
+class MultiClassConfig:
+    """Configuration for multi-instance confidence map and class map models.
+
+    This configuration specifies a multi-head model that outputs both multi-instance
+    confidence maps and class maps, which together enable multi-instance pose tracking
+    in a bottom-up fashion, i.e., no instance cropping, centroids or PAFs are required.
+    The limitation with this approach is that the classes, e.g., animal identities, must
+    be labeled in the training data and cannot be generalized beyond those classes. This
+    is still useful for applications in which the animals are uniquely identifiable and
+    tracking their identities at inference time is critical, e.g., for closed loop
+    experiments.
+
+    Attributes:
+        confmaps: Part confidence map configuration (see the description in
+            `MultiInstanceConfmapsHeadConfig`).
+        class_maps: Class map configuration (see the description in
+            `ClassMapsHeadConfig`).
+    """
+
+    confmaps: MultiInstanceConfmapsHeadConfig = attr.ib(
+        factory=MultiInstanceConfmapsHeadConfig
+    )
+    class_maps: ClassMapsHeadConfig = attr.ib(factory=ClassMapsHeadConfig)
+
+
 @oneof
 @attr.s(auto_attribs=True)
 class HeadsConfig:
@@ -286,12 +342,14 @@ class HeadsConfig:
         centroid: An instance of `CentroidsHeadConfig`.
         centered_instance: An instance of `CenteredInstanceConfmapsHeadConfig`.
         multi_instance: An instance of `MultiInstanceConfig`.
+        multi_class: An instance of `MultiClassConfig`.
     """
 
     single_instance: Optional[SingleInstanceConfmapsHeadConfig] = None
     centroid: Optional[CentroidsHeadConfig] = None
     centered_instance: Optional[CenteredInstanceConfmapsHeadConfig] = None
     multi_instance: Optional[MultiInstanceConfig] = None
+    multi_class: Optional[MultiClassConfig] = None
 
 
 @attr.s(auto_attribs=True)
