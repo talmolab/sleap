@@ -2563,9 +2563,577 @@ class BottomupPredictor(Predictor):
             return list(generator)
 
 
+class BottomUpMultiClassInferenceLayer(InferenceLayer):
+    """Keras layer that predicts instances from images using a trained model.
+
+    This layer encapsulates all of the inference operations required for generating
+    predictions from a centered instance confidence map model. This includes
+    preprocessing, model forward pass, peak finding and coordinate adjustment.
+
+    Attributes:
+        keras_model: A `tf.keras.Model` that accepts rank-4 images as input and predicts
+            rank-4 confidence maps and part affinity fields as output.
+        paf_scorer: A `sleap.nn.paf_grouping.PAFScorer` instance configured to group
+            instances based on peaks and PAFs produced by the model.
+        input_scale: Float indicating if the images should be resized before being
+            passed to the model.
+        cm_output_stride: Output stride of the model, denoting the scale of the output
+            confidence maps relative to the images (after input scaling). This is used
+            for adjusting the peak coordinates to the image grid. This will be inferred
+            from the model shapes if not provided.
+        paf_output_stride: Output stride of the model, denoting the scale of the output
+            part affinity fields relative to the images (after input scaling). This is
+            used for adjusting the peak coordinates to the PAF grid. This will be
+            inferred from the model shapes if not provided.
+        peak_threshold: Minimum confidence map value to consider a global peak as valid.
+        refinement: If `None`, returns the grid-aligned peaks with no refinement. If
+            `"integral"`, peaks will be refined with integral regression. If `"local"`,
+            peaks will be refined with quarter pixel local gradient offset. This has no
+            effect if the model has an offset regression head.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        return_confmaps: If `True`, the confidence maps will be returned together with
+            the predicted instances. This will result in slower inference times since
+            the data must be copied off of the GPU, but is useful for visualizing the
+            raw output of the model.
+        return_pafs: If `True`, the part affinity fields will be returned together with
+            the predicted instances. This will result in slower inference times since
+            the data must be copied off of the GPU, but is useful for visualizing the
+            raw output of the model.
+        confmaps_ind: Index of the output tensor of the model corresponding to
+            confidence maps. If `None` (the default), this will be detected
+            automatically by searching for the first tensor that contains
+            `"MultiInstanceConfmapsHead"` in its name.
+        pafs_ind: Index of the output tensor of the model corresponding to part affinity
+            fields. If `None` (the default), this will be detected automatically by
+            searching for the first tensor that contains `"PartAffinityFieldsHead"` in
+            its name.
+        offsets_ind: Index of the output tensor of the model corresponding to
+            offset regression maps. If `None` (the default), this will be detected
+            automatically by searching for the first tensor that contains
+            `"OffsetRefinementHead"` in its name. If the head is not present, the method
+            specified in the `refinement` attribute will be used.
+    """
+
+    def __init__(
+        self,
+        keras_model: tf.keras.Model,
+        input_scale: float = 1.0,
+        pad_to_stride: int = 1,
+        cm_output_stride: Optional[int] = None,
+        class_maps_output_stride: Optional[int] = None,
+        peak_threshold: float = 0.2,
+        refinement: Optional[str] = "local",
+        integral_patch_size: int = 5,
+        return_confmaps: bool = False,
+        return_class_maps: bool = False,
+        confmaps_ind: Optional[int] = None,
+        class_maps_ind: Optional[int] = None,
+        offsets_ind: Optional[int] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            keras_model=keras_model,
+            input_scale=input_scale,
+            pad_to_stride=pad_to_stride,
+            **kwargs,
+        )
+        self.confmaps_ind = confmaps_ind
+        self.class_maps_ind = pafs_ind
+        self.offsets_ind = offsets_ind
+
+        if self.confmaps_ind is None:
+            self.confmaps_ind = find_head(self.keras_model, "MultiInstanceConfmapsHead")
+
+        if self.confmaps_ind is None:
+            raise ValueError(
+                "Index of the confidence maps output tensor must be specified if not "
+                "named 'MultiInstanceConfmapsHead'."
+            )
+
+        if self.class_maps_ind is None:
+            self.class_maps_ind = find_head(self.keras_model, "ClassMapsHead")
+
+        if self.class_maps_ind is None:
+            raise ValueError(
+                "Index of the part affinity fields output tensor must be specified if "
+                "not named 'ClassMapsHead'."
+            )
+
+        if self.offsets_ind is None:
+            self.offsets_ind = find_head(self.keras_model, "OffsetRefinementHead")
+
+        if cm_output_stride is None:
+            # Attempt to automatically infer the output stride.
+            cm_output_stride = get_model_output_stride(
+                self.keras_model, output_ind=self.confmaps_ind
+            )
+        self.cm_output_stride = cm_output_stride
+        if class_maps_output_stride is None:
+            # Attempt to automatically infer the output stride.
+            class_maps_output_stride = get_model_output_stride(
+                self.keras_model, output_ind=self.class_maps_ind
+            )
+        self.class_maps_output_stride = class_maps_output_stride
+
+        self.peak_threshold = peak_threshold
+        self.refinement = refinement
+        self.integral_patch_size = integral_patch_size
+        self.return_confmaps = return_confmaps
+        self.return_class_maps = return_class_maps
+
+    def forward_pass(self, data):
+        """Run preprocessing and model inference on a batch."""
+        if isinstance(data, dict):
+            imgs = data["image"]
+        else:
+            imgs = data
+
+        # Preprocess full images.
+        imgs = self.preprocess(imgs)
+
+        # Model forward pass.
+        preds = self.keras_model(imgs)
+        cms = preds[self.confmaps_ind]
+        class_maps = preds[self.class_maps_ind]
+        if self.offsets_ind is not None:
+            offsets = preds[self.offsets_ind]
+        else:
+            offsets = None
+
+        if isinstance(cms, list):
+            cms = cms[-1]
+        if isinstance(class_maps, list):
+            class_maps = class_maps[-1]
+
+        return cms, class_maps, offsets
+
+    def find_peaks(self, cms, offsets):
+        """Run peak finding on predicted confidence maps."""
+        # Find local peaks.
+        if self.offsets_ind is None:
+            # Use deterministic refinement.
+            (
+                peaks,
+                peak_vals,
+                peak_sample_inds,
+                peak_channel_inds,
+            ) = sleap.nn.peak_finding.find_local_peaks(
+                cms,
+                threshold=self.peak_threshold,
+                refinement=self.refinement,
+                integral_patch_size=self.integral_patch_size,
+            )
+        else:
+            # Use learned offsets.
+            (
+                peaks,
+                peak_vals,
+                peak_sample_inds,
+                peak_channel_inds,
+            ) = sleap.nn.peak_finding.find_local_peaks_with_offsets(
+                cms,
+                offsets,
+                threshold=self.peak_threshold,
+            )
+
+        # Adjust for confidence map output stride.
+        peaks = peaks * tf.cast(self.cm_output_stride, tf.float32)
+
+        return peaks, peak_vals, peak_channel_inds
+
+    def call(self, data):
+        """Predict instances for one batch of images.
+
+        Args:
+            data: This may be either a single batch of images as a 4-D tensor of shape
+            `(batch_size, height, width, channels)`, or a dictionary containing the
+            image batch in the `"images"` key.
+
+        Returns:
+            The predicted instances as a dictionary of tensors with keys:
+
+            `"instance_peaks": (batch_size, n_instances, n_nodes, 2)`: Instance skeleton
+            points.
+
+            `"instance_peak_vals": (batch_size, n_instances, n_nodes)`: Confidence
+            values for the instance skeleton points.
+
+            `"instance_scores": (batch_size, n_instances)`: PAF matching score for each
+            instance.
+
+            If `BottomUpInferenceLayer.return_confmaps` is `True`, the predicted
+            confidence maps will be returned in the `"confmaps"` key.
+
+            If `BottomUpInferenceLayer.return_pafs` is `True`, the predicted PAFs will
+            be returned in the `"part_affinity_fields"` key.
+        """
+        cms, class_maps, offsets = self.forward_pass(data)
+        peaks, peak_vals, peak_channel_inds = self.find_peaks(cms, offsets)
+        peaks = peaks / tf.cast(self.class_maps_output_stride, tf.float32)
+        (
+            predicted_instances,
+            predicted_peak_scores,
+            predicted_instance_scores,
+        ) = sleap.nn.identity.classify_peaks(class_maps, peaks, peak_vals, peak_sample_inds, peak_channel_inds, n_channels=tf.shape(cms)[3])
+        predicted_instances = predicted_instances * tf.cast(self.class_maps_output_stride, tf.float32)
+
+        # Adjust for input scaling.
+        if self.input_scale != 1.0:
+            # Note: We add 0.5 here to offset TensorFlow's weird image resizing. This
+            # may not always(?) be the most correct approach.
+            # See: https://github.com/tensorflow/tensorflow/issues/6720
+            predicted_instances = (predicted_instances / self.input_scale) + 0.5
+
+        # Build outputs and return.
+        out = {
+            "instance_peaks": predicted_instances,
+            "instance_peak_vals": predicted_peak_scores,
+            "instance_scores": predicted_instance_scores,
+        }
+        if self.return_confmaps:
+            out["confmaps"] = cms
+        if self.return_class_maps:
+            out["class_maps"] = class_maps
+        return out
+
+
+class BottomUpMultiClassInferenceModel(InferenceModel):
+    """Bottom-up instance prediction model.
+
+    This model encapsulates the bottom-up approach where points are first detected by
+    local peak detection and then grouped into instances by connectivity scoring using
+    part affinity fields.
+
+    Attributes:
+        bottomup_layer: A `BottomUpInferenceLayer`. This layer takes as input a full
+            image and outputs the predicted instances.
+    """
+
+    def __init__(self, inference_layer, **kwargs):
+        super().__init__(**kwargs)
+        self.inference_layer = inference_layer
+
+    def call(self, example):
+        """Predict instances for one batch of images.
+
+        Args:
+            example: This may be either a single batch of images as a 4-D tensor of
+                shape `(batch_size, height, width, channels)`, or a dictionary
+                containing the image batch in the `"images"` key.
+
+        Returns:
+            The predicted instances as a dictionary of tensors with keys:
+
+            `"instance_peaks": (batch_size, n_instances, n_nodes, 2)`: Instance skeleton
+                points.
+            `"instance_peak_vals": (batch_size, n_instances, n_nodes)`: Confidence
+                values for the instance skeleton points.
+            `"instance_scores": (batch_size, n_instances)`: PAF matching score for each
+                instance.
+
+            If `BottomUpInferenceModel.bottomup_layer.return_confmaps` is `True`, the
+            predicted confidence maps will be returned in the `"confmaps"` key.
+
+            If `BottomUpInferenceModel.bottomup_layer.return_pafs` is `True`, the
+            predicted PAFs will be returned in the `"part_affinity_fields"` key.
+        """
+        if isinstance(example, tf.Tensor):
+            example = dict(image=example)
+        return self.inference_layer(example)
+
+
+@attr.s(auto_attribs=True)
+class BottomUpMultiClassPredictor(Predictor):
+    """Bottom-up multi-instance predictor.
+
+    This high-level class handles initialization, preprocessing and tracking using a
+    trained bottom-up multi-instance SLEAP model.
+
+    This should be initialized using the `from_trained_models()` constructor or the
+    high-level API (`sleap.load_model`).
+
+    Attributes:
+        bottomup_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained bottomup model.
+        bottomup_model: A `sleap.nn.model.Model` instance created from the trained
+            bottomup model. If `None`, ground truth centroids will be used if available
+            from the data source.
+        inference_model: A `sleap.nn.inference.BottomUpInferenceModel` that wraps a
+            trained `tf.keras.Model` to implement preprocessing, centroid detection,
+            cropping and peak finding.
+        pipeline: A `sleap.nn.data.Pipeline` that loads the data and batches input data.
+            This will be updated dynamically if new data sources are used.
+        tracker: A `sleap.nn.tracking.Tracker` that will be called to associate
+            detections over time. Predicted instances will not be assigned to tracks if
+            if this is `None`.
+        batch_size: The default batch size to use when loading data for inference.
+            Higher values increase inference speed at the cost of higher memory usage.
+        peak_threshold: Minimum confidence map value to consider a local peak as valid.
+        integral_refinement: If `True`, peaks will be refined with integral regression.
+            If `False`, `"local"`, peaks will be refined with quarter pixel local
+            gradient offset. This has no effect if the model has an offset regression
+            head.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        max_edge_length_ratio: The maximum expected length of a connected pair of points
+            in relative image units. Candidate connections above this length will be
+            penalized during matching.
+        paf_line_points: Number of points to sample along the line integral.
+    """
+
+    config: TrainingJobConfig
+    model: Model
+    inference_model: Optional[BottomUpMultiClassInferenceModel] = attr.ib(default=None)
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
+    batch_size: int = 4
+    integral_refinement: bool = True
+    integral_patch_size: int = 5
+    max_edge_length_ratio: float = 0.5
+
+    def _initialize_inference_model(self):
+        """Initialize the inference model from the trained model and configuration."""
+        self.inference_model = BottomUpMultiClassInferenceModel(
+            BottomUpMultiClassInferenceLayer(
+                keras_model=self.model.keras_model,
+                input_scale=self.config.data.preprocessing.input_scaling,
+                pad_to_stride=self.model.maximum_stride,
+                refinement="integral" if self.integral_refinement else "local",
+                integral_patch_size=self.integral_patch_size,
+            )
+        )
+
+    @classmethod
+    def from_trained_models(
+        cls,
+        model_path: Text,
+        batch_size: int = 4,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 5,
+    ) -> "BottomupPredictor":
+        """Create predictor from a saved model.
+
+        Args:
+            model_path: Path to a bottom-up model folder or training job JSON file
+                inside a model folder. This folder should contain `training_config.json`
+                and `best_model.h5` files for a trained model.
+            batch_size: The default batch size to use when loading data for inference.
+                Higher values increase inference speed at the cost of higher memory
+                usage.
+            peak_threshold: Minimum confidence map value to consider a local peak as
+                valid.
+            integral_refinement: If `True`, peaks will be refined with integral
+                regression. If `False`, `"local"`, peaks will be refined with quarter
+                pixel local gradient offset. This has no effect if the model has an
+                offset regression head.
+            integral_patch_size: Size of patches to crop around each rough peak for
+                integral refinement as an integer scalar.
+
+        Returns:
+            An instance of `BottomupPredictor` with the loaded model.
+        """
+        # Load bottomup model.
+        config = TrainingJobConfig.load_json(model_path)
+        keras_model_path = get_keras_model_path(model_path)
+        model = Model.from_config(bottomup_config.model)
+        model.keras_model = tf.keras.models.load_model(
+            keras_model_path, compile=False
+        )
+        obj = cls(
+            config=config,
+            model=model,
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
+            batch_size=batch_size,
+        )
+        obj._initialize_inference_model()
+        return obj
+
+    def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+        """Make a data loading pipeline.
+
+        Args:
+            data_provider: If not `None`, the pipeline will be created with an instance
+                of a `sleap.pipelines.Provider`.
+
+        Returns:
+            The created `sleap.pipelines.Pipeline` with batching and prefetching.
+
+        Notes:
+            This method also updates the class attribute for the pipeline and will be
+            called automatically when predicting on data from a new source.
+        """
+        pipeline = Pipeline()
+        if data_provider is not None:
+            pipeline.providers = [data_provider]
+
+        pipeline += sleap.nn.data.pipelines.Batcher(
+            batch_size=self.batch_size, drop_remainder=False, unrag=False
+        )
+
+        pipeline += Prefetcher()
+
+        self.pipeline = pipeline
+
+        return pipeline
+
+    def _predict_generator(
+        self, data_provider: Provider
+    ) -> Iterator[Dict[str, np.ndarray]]:
+        """Create a generator that yields batches of inference results.
+
+        This method handles creating or updating the input `sleap.pipelines.Pipeline`
+        for loading the data, as well as looping over the batches and running inference.
+
+        Args:
+            data_provider: The `sleap.pipelines.Provider` that contains data that should
+                be used for inference.
+
+        Returns:
+            A generator yielding batches predicted results as dictionaries of numpy
+            arrays.
+        """
+        # Initialize data pipeline and inference model if needed.
+        if self.pipeline is None:
+            self.make_pipeline()
+        if self.inference_model is None:
+            self._initialize_inference_model()
+
+        # Update the data provider source.
+        self.pipeline.providers = [data_provider]
+
+        # Loop over data batches.
+        for ex in self.pipeline.make_dataset():
+            # Run inference on current batch.
+            preds = self.inference_model.predict(ex)
+
+            # Crop possibly variable length results.
+            ex["instance_peaks"] = [
+                x[:n] for x, n in zip(preds["instance_peaks"], preds["n_valid"])
+            ]
+            ex["instance_peak_vals"] = [
+                x[:n] for x, n in zip(preds["instance_peak_vals"], preds["n_valid"])
+            ]
+            ex["instance_scores"] = [
+                x[:n] for x, n in zip(preds["instance_scores"], preds["n_valid"])
+            ]
+
+            # Convert to numpy arrays if not already.
+            if isinstance(ex["video_ind"], tf.Tensor):
+                ex["video_ind"] = ex["video_ind"].numpy().flatten()
+            if isinstance(ex["frame_ind"], tf.Tensor):
+                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+
+            yield ex
+
+    def _make_labeled_frames_from_generator(
+        self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
+    ) -> List[sleap.LabeledFrame]:
+        """Create labeled frames from a generator that yields inference results.
+
+        This method converts pure arrays into SLEAP-specific data structures and runs
+        them through the tracker if it is specified.
+
+        Args:
+            generator: A generator that returns dictionaries with inference results.
+                This should return dictionaries with keys `"image"`, `"video_ind"`,
+                `"frame_ind"`, `"instance_peaks"`, `"instance_peak_vals"`, and
+                `"instance_scores"`. This can be created using the
+                `_predict_generator()` method.
+            data_provider: The `sleap.pipelines.Provider` that the predictions are being
+                created from. This is used to retrieve the `sleap.Video` instance
+                associated with each inference result.
+
+        Returns:
+            A list of `sleap.LabeledFrame`s with `sleap.PredictedInstance`s created from
+            arrays returned from the inference result generator.
+        """
+        skeleton = self.bottomup_config.data.labels.skeletons[0]
+
+        # Loop over batches.
+        predicted_frames = []
+        for ex in generator:
+
+            # Loop over frames.
+            for image, video_ind, frame_ind, points, confidences, scores in zip(
+                ex["image"],
+                ex["video_ind"],
+                ex["frame_ind"],
+                ex["instance_peaks"],
+                ex["instance_peak_vals"],
+                ex["instance_scores"],
+            ):
+
+                # Loop over instances.
+                predicted_instances = []
+                for pts, confs, score in zip(points, confidences, scores):
+                    predicted_instances.append(
+                        sleap.instance.PredictedInstance.from_arrays(
+                            points=pts,
+                            point_confidences=confs,
+                            instance_score=score.mean(),
+                            skeleton=skeleton,
+                        )
+                    )
+
+                predicted_frames.append(
+                    sleap.LabeledFrame(
+                        video=data_provider.videos[video_ind],
+                        frame_idx=frame_ind,
+                        instances=predicted_instances,
+                    )
+                )
+
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
+
+        return predicted_frames
+
+    def predict(
+        self,
+        data: Union[Provider, sleap.Labels, sleap.Video],
+        make_labels: bool = True,
+    ) -> Union[List[Dict[str, np.ndarray]], sleap.Labels]:
+        """Run inference and tracking on a data source.
+
+        Args:
+            data: A `sleap.pipelines.Provider`, `sleap.Labels` or `sleap.Video` to
+                run inference over.
+            make_labels: If `True` (the default), returns a `sleap.Labels` instance with
+                `sleap.PredictedInstance`s. If `False`, just return a list of
+                dictionaries containing the raw arrays returned by the inference model.
+
+        Returns:
+            A `sleap.Labels` with `sleap.PredictedInstance`s if `make_labels` is `True`,
+            otherwise a list of dictionaries containing batches of numpy arrays with the
+            raw results.
+        """
+        # Create provider if necessary.
+        if isinstance(data, sleap.Labels):
+            data = LabelsReader(data)
+        elif isinstance(data, sleap.Video):
+            data = VideoReader(data)
+
+        # Initialize inference loop generator.
+        generator = self._predict_generator(data)
+
+        if make_labels:
+            # Create SLEAP data structures while consuming results.
+            return sleap.Labels(
+                self._make_labeled_frames_from_generator(generator, data)
+            )
+        else:
+            # Just return the raw results.
+            return list(generator)
+
+
 CLI_PREDICTORS = {
     "topdown": TopdownPredictor,
     "bottomup": BottomupPredictor,
+    "bottomup_multiclass": BottomUpMultiClassPredictor,
     "single": SingleInstancePredictor,
 }
 
@@ -2788,6 +3356,12 @@ def make_predictor_from_models(
         predictor = SingleInstancePredictor.from_trained_models(
             trained_model_paths["single_instance"],
             **get_relevant_args("single"),
+            **kwargs,
+        )
+    elif "multi_class" in trained_model_paths:
+        predictor = BottomUpMultiClassPredictor.from_trained_models(
+            trained_model_paths["multi_class"],
+            **get_relevant_args("bottomup_multiclass"),
             **kwargs,
         )
     elif (

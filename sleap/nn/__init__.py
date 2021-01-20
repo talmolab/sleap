@@ -7,8 +7,9 @@ import sleap.nn.heads
 import sleap.nn.inference
 import sleap.nn.losses
 import sleap.nn.model
-import sleap.nn.paf_grouping
 import sleap.nn.peak_finding
+import sleap.nn.paf_grouping
+import sleap.nn.identity
 import sleap.nn.system
 import sleap.nn.training
 import sleap.nn.tracking

@@ -688,6 +688,10 @@ def evaluate_model(
         predictor = sleap.nn.inference.BottomupPredictor(
             bottomup_config=cfg, bottomup_model=model
         )
+    elif isinstance(head_config, MultiClassConfig):
+        predictor = sleap.nn.inference.BottomUpMultiClassPredictor(
+            config=cfg, model=model
+        )
     elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
         predictor = sleap.nn.inference.SingleInstancePredictor(
             confmap_config=cfg, confmap_model=model
