@@ -2994,7 +2994,7 @@ class BottomUpMultiClassPredictor(Predictor):
                         sleap.instance.PredictedInstance.from_arrays(
                             points=pts,
                             point_confidences=confs,
-                            instance_score=score.mean(),
+                            instance_score=np.nanmean(score),
                             skeleton=skeleton,
                             track=track,
                         )
