@@ -32,6 +32,7 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
+    MultiClassConfig,
     SingleInstanceConfmapsHeadConfig,
 )
 from sleap.nn.model import Model
@@ -39,6 +40,7 @@ from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.inference import (
     TopdownPredictor,
     BottomupPredictor,
+    BottomUpMultiClassPredictor,
     SingleInstancePredictor,
 )
 

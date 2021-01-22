@@ -25,6 +25,7 @@ from sleap.nn.inference import (
     TopDownInferenceModel,
     TopdownPredictor,
     BottomupPredictor,
+    BottomUpMultiClassPredictor,
     load_model,
 )
 
@@ -179,7 +180,9 @@ def test_instance_peaks_layer():
     )
 
     x_in = tf.keras.layers.Input([12, 12, 3])
-    x_out = tf.keras.layers.Lambda(lambda x: x, name="CenteredInstanceConfmapsHead")(x_in)
+    x_out = tf.keras.layers.Lambda(lambda x: x, name="CenteredInstanceConfmapsHead")(
+        x_in
+    )
     model = tf.keras.Model(inputs=x_in, outputs=x_out)
 
     instance_peaks_layer = FindInstancePeaks(
@@ -470,7 +473,9 @@ def test_single_instance_inference():
     assert "confmaps" in preds
 
 
-def test_single_instance_predictor(min_labels_robot, min_single_instance_robot_model_path):
+def test_single_instance_predictor(
+    min_labels_robot, min_single_instance_robot_model_path
+):
     predictor = SingleInstancePredictor.from_trained_models(
         min_single_instance_robot_model_path
     )
@@ -478,9 +483,13 @@ def test_single_instance_predictor(min_labels_robot, min_single_instance_robot_m
     assert len(labels_pr) == 2
     assert len(labels_pr[0].instances) == 1
 
-    points_gt = np.concatenate([min_labels_robot[0][0].numpy(), min_labels_robot[1][0].numpy()], axis=0)
-    points_pr = np.concatenate([labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0)
-    assert_allclose(points_gt, points_pr, atol=10.)
+    points_gt = np.concatenate(
+        [min_labels_robot[0][0].numpy(), min_labels_robot[1][0].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0
+    )
+    assert_allclose(points_gt, points_pr, atol=10.0)
 
 
 def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
@@ -491,13 +500,19 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
 
-    points_gt = np.concatenate([min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0)
-    points_pr = np.concatenate([labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0)
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
-    
 
-def test_topdown_predictor_centered_instance(min_labels, min_centered_instance_model_path):
+
+def test_topdown_predictor_centered_instance(
+    min_labels, min_centered_instance_model_path
+):
     predictor = TopdownPredictor.from_trained_models(
         confmap_model_path=min_centered_instance_model_path
     )
@@ -505,8 +520,12 @@ def test_topdown_predictor_centered_instance(min_labels, min_centered_instance_m
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
 
-    points_gt = np.concatenate([min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0)
-    points_pr = np.concatenate([labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0)
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
@@ -519,13 +538,49 @@ def test_topdown_predictor_bottomup(min_labels, min_bottomup_model_path):
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
 
-    points_gt = np.concatenate([min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0)
-    points_pr = np.concatenate([labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0)
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.75)
 
 
-def test_load_model(min_single_instance_robot_model_path, min_centroid_model_path, min_centered_instance_model_path, min_bottomup_model_path):
+def test_topdown_predictor_bottomup_multiclass(
+    min_tracks_2node_labels, min_bottomup_multiclass_model_path
+):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = BottomUpMultiClassPredictor.from_trained_models(
+        model_path=min_bottomup_multiclass_model_path,
+        peak_threshold=0.7,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    inds1 = np.argsort([x.track.name for x in labels_gt[0]])
+    inds2 = np.argsort([x.track.name for x in labels_pr[0]])
+    assert labels_gt[0][inds1[0]].track == labels_pr[0][inds2[0]].track
+    assert labels_gt[0][inds1[1]].track == labels_pr[0][inds2[1]].track
+
+    assert_allclose(
+        labels_gt[0][inds1[0]].numpy(), labels_pr[0][inds2[0]].numpy(), rtol=0.02
+    )
+    assert_allclose(
+        labels_gt[0][inds1[1]].numpy(), labels_pr[0][inds2[1]].numpy(), rtol=0.02
+    )
+
+
+def test_load_model(
+    min_single_instance_robot_model_path,
+    min_centroid_model_path,
+    min_centered_instance_model_path,
+    min_bottomup_model_path,
+    min_bottomup_multiclass_model_path,
+):
     predictor = load_model(min_single_instance_robot_model_path)
     assert isinstance(predictor, SingleInstancePredictor)
 
@@ -534,3 +589,6 @@ def test_load_model(min_single_instance_robot_model_path, min_centroid_model_pat
 
     predictor = load_model(min_bottomup_model_path)
     assert isinstance(predictor, BottomupPredictor)
+
+    predictor = load_model(min_bottomup_multiclass_model_path)
+    assert isinstance(predictor, BottomUpMultiClassPredictor)
