@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 
+import sleap
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
@@ -496,6 +497,66 @@ def test_merge_predictions():
     assert len(merged[dummy_video_a][0]) == 1  # the predicted instance was merged
     assert not extra_a
     assert not extra_b
+
+
+def test_merge_with_package(min_labels_robot, tmpdir):
+    # Add a suggestion and save with images.
+    labels = min_labels_robot
+    labels.suggestions.append(
+        sleap.io.dataset.SuggestionFrame(video=labels.video, frame_idx=1)
+    )
+    pkg_path = os.path.join(tmpdir, "test.pkg.slp")
+    assert len(labels.predicted_instances) == 0
+    labels.save(pkg_path, with_images=True, embed_suggested=True)
+
+    # Load package.
+    labels_pkg = sleap.load_file(pkg_path)
+    assert isinstance(labels_pkg.video.backend, sleap.io.video.HDF5Video)
+    assert labels_pkg.video.backend.has_embedded_images
+    assert isinstance(labels_pkg.video.backend._source_video.backend, sleap.io.video.MediaVideo)
+    assert len(labels_pkg.predicted_instances) == 0
+
+    # Add prediction.
+    inst = labels_pkg.user_instances[0]
+    inst_pr = sleap.PredictedInstance.from_pointsarray(
+        inst.numpy(), skeleton=labels_pkg.skeleton
+    )
+    labels_pkg.append(sleap.LabeledFrame(
+        video=labels_pkg.suggestions[0].video,
+        frame_idx=labels_pkg.suggestions[0].frame_idx,
+        instances=[inst_pr])
+    )
+
+    # Save labels without image data.
+    preds_path = pkg_path + ".predictions.slp"
+    labels_pkg.save(preds_path)
+
+    # Load predicted labels created from package.
+    labels_pr = sleap.load_file(preds_path)
+    assert len(labels_pr.predicted_instances) == 1
+
+    # Merge with base labels.
+    base_video_path = labels.video.backend.filename
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(labels, labels_pr)
+    assert len(labels.videos) == 1
+    assert labels.video.backend.filename == base_video_path
+    assert len(labels.predicted_instances) == 1
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels.predicted_instances[0].frame.frame_idx == 1
+
+    # Merge predictions to package instead.
+    labels_pkg = sleap.load_file(pkg_path)
+    labels_pr = sleap.load_file(preds_path)
+    assert len(labels_pkg.predicted_instances) == 0
+    base_video_path = labels_pkg.video.backend.filename
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(labels_pkg, labels_pr)
+    assert len(labels_pkg.videos) == 1
+    assert labels_pkg.video.backend.filename == base_video_path
+    assert len(labels_pkg.predicted_instances) == 1
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels_pkg.predicted_instances[0].frame.frame_idx == 1
 
 
 def skeleton_ids_from_label_instances(labels):
