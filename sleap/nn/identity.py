@@ -48,6 +48,8 @@ def group_class_peaks(
 
     See also: classify_peaks
     """
+    peak_sample_inds = tf.cast(peak_sample_inds, tf.int32)
+    peak_channel_inds = tf.cast(peak_channel_inds, tf.int32)
     peak_inds = tf.TensorArray(
         tf.int32, size=n_samples * n_channels, infer_shape=False, element_shape=[None]
     )
@@ -133,6 +135,8 @@ def classify_peaks(
     # Build subscripts and pull out class probabilities for each peak from class maps.
     n_samples = tf.shape(class_maps)[0]
     n_instances = tf.shape(class_maps)[3]
+    peak_sample_inds = tf.cast(peak_sample_inds, tf.int32)
+    peak_channel_inds = tf.cast(peak_channel_inds, tf.int32)
     subs = tf.concat(
         [
             tf.reshape(peak_sample_inds, [-1, 1]),
