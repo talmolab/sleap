@@ -2959,8 +2959,12 @@ class BottomUpMultiClassPredictor(Predictor):
         """
         skeleton = self.config.data.labels.skeletons[0]
         tracks = self.tracks
-        if tracks is None and hasattr(data_provider, "tracks"):
-            tracks = data_provider.tracks
+        if tracks is None:
+            if hasattr(data_provider, "tracks"):
+                tracks = data_provider.tracks
+            elif self.config.model.heads.multi_class.class_maps.classes is not None:
+                names = self.config.model.heads.multi_class.class_maps.classes
+                tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
 
         # Loop over batches.
         predicted_frames = []
