@@ -62,13 +62,36 @@ def test_flip_instances_lr():
     insts_flip = augmentation.flip_instances_lr(insts, 8)
     np.testing.assert_array_equal(insts_flip, [
         [[7, 1], [5, 3]],
-        [[3, 5], [1, 7]]])
+        [[3, 5], [1, 7]]
+    ])
 
     insts_flip1 = augmentation.flip_instances_lr(insts, 8, [[0, 1]])
     insts_flip2 = augmentation.flip_instances_lr(insts, 8, [[1, 0]])
     np.testing.assert_array_equal(insts_flip1, [
         [[5, 3], [7, 1]],
-        [[1, 7], [3, 5]]])
+        [[1, 7], [3, 5]]
+    ])
+    np.testing.assert_array_equal(insts_flip1, insts_flip2)
+
+
+def test_flip_instances_ud():
+    insts = tf.cast([
+        [[0, 1], [2, 3]],
+        [[4, 5], [6, 7]],
+    ], tf.float32)
+
+    insts_flip = augmentation.flip_instances_ud(insts, 8)
+    np.testing.assert_array_equal(insts_flip, [
+        [[0, 6], [2, 4]],
+        [[4, 2], [6, 0]]
+    ])
+
+    insts_flip1 = augmentation.flip_instances_ud(insts, 8, [[0, 1]])
+    insts_flip2 = augmentation.flip_instances_ud(insts, 8, [[1, 0]])
+    np.testing.assert_array_equal(insts_flip1, [
+        [[2, 4], [0, 6]],
+        [[6, 0], [4, 2]]
+    ])
     np.testing.assert_array_equal(insts_flip1, insts_flip2)
 
 
@@ -83,7 +106,8 @@ def test_random_flipper():
     ])])
     
     p = labels.to_pipeline()
-    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(skel, probability=1.)
+    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
+        skel, horizontal=True, probability=1.)
     ex = p.peek()
     np.testing.assert_array_equal(ex["image"], vid[0][0][:, ::-1])
     np.testing.assert_array_equal(
@@ -95,7 +119,8 @@ def test_random_flipper():
     skel.add_symmetry("BL", "BR")
 
     p = labels.to_pipeline()
-    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(skel, probability=1.)
+    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
+        skel, horizontal=True, probability=1.)
     ex = p.peek()
     np.testing.assert_array_equal(ex["image"], vid[0][0][:, ::-1])
     np.testing.assert_array_equal(
@@ -105,11 +130,23 @@ def test_random_flipper():
     )
 
     p = labels.to_pipeline()
-    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(skel, probability=0.)
+    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
+        skel, horizontal=True, probability=0.)
     ex = p.peek()
     np.testing.assert_array_equal(ex["image"], vid[0][0])
     np.testing.assert_array_equal(
         ex["instances"],
         [[[25, 50], [50, 25], [25, 25]],
          [[125, 150], [150, 125], [125, 125]]]
+    )
+
+    p = labels.to_pipeline()
+    p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
+        skel, horizontal=False, probability=1.)
+    ex = p.peek()
+    np.testing.assert_array_equal(ex["image"], vid[0][0][::-1, :])
+    np.testing.assert_array_equal(
+        ex["instances"],
+        [[[25, 333], [25, 358], [50, 358]],
+         [[125, 233], [125, 258], [150, 258]]]
     )
