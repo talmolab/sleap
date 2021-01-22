@@ -64,7 +64,7 @@ def group_class_peaks(
             is_sample_channel = (peak_sample_inds == sample) & (
                 peak_channel_inds == channel
             )
-            probs = peak_class_probs[is_sample_channel]
+            probs = tf.boolean_mask(peak_class_probs, is_sample_channel)
 
             # Assign group peaks by probability.
             peak_inds_sc, class_inds_sc = tf_linear_sum_assignment(-probs)
