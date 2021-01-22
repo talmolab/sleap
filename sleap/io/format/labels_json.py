@@ -412,17 +412,11 @@ class LabelsJsonAdaptor(Adaptor):
                     # Try to match videos using either their current or source filename
                     # if available.
                     old_vid_paths = [old_vid.filename]
-                    if (
-                        hasattr(old_vid.backend, "has_embedded_images")
-                        and old_vid.backend.has_embedded_images
-                    ):
+                    if getattr(old_vid.backend, "has_embedded_images", False):
                         old_vid_paths.append(old_vid.backend._source_video.filename)
 
                     new_vid_paths = [vid.filename]
-                    if (
-                        hasattr(vid.backend, "has_embedded_images")
-                        and vid.has_embedded_images
-                    ):
+                    if getattr(vid.backend, "has_embedded_images", False):
                         new_vid_paths.append(vid.backend._source_video.filename)
 
                     is_match = False
