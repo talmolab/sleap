@@ -94,7 +94,7 @@ TRANSFORMERS = (
     KeyDeviceMover,
     PointsRescaler,
     LambdaMap,
-    RandomFlipper
+    RandomFlipper,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -382,6 +382,11 @@ class SingleInstanceConfmapsPipeline:
         if self.optimization_config.online_shuffling:
             pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
 
+        if self.optimization_config.augmentation_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.skeletons[0],
+                horizontal=self.optimization_config.augmentation_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
@@ -536,7 +541,9 @@ class CentroidConfmapsPipeline:
             output_stride=self.centroid_confmap_head.output_stride,
             centroids=True,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -663,7 +670,11 @@ class TopdownConfmapsPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
-
+        if self.optimization_config.augmentation_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.skeletons[0],
+                horizontal=self.optimization_config.augmentation_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
@@ -680,7 +691,9 @@ class TopdownConfmapsPipeline:
             output_stride=self.instance_confmap_head.output_stride,
             all_instances=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -794,6 +807,11 @@ class BottomUpPipeline:
             )
 
         aug_config = self.optimization_config.augmentation_config
+        if aug_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.skeletons[0],
+                horizontal=aug_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(aug_config)
         if aug_config.random_crop:
             pipeline += RandomCropper(
@@ -808,7 +826,9 @@ class BottomUpPipeline:
             output_stride=self.confmaps_head.output_stride,
             centroids=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
         pipeline += PartAffinityFieldsGenerator(
             sigma=self.pafs_head.sigma,
@@ -864,7 +884,7 @@ class BottomUpPipeline:
             model_output_keys=[
                 "predicted_confidence_maps",
                 "predicted_part_affinity_fields",
-            ]
+            ],
         )
         pipeline += LocalPeakFinder(
             confmaps_stride=self.confmaps_head.output_stride,

@@ -533,6 +533,18 @@ augmentation:
   label: Brightness Max Val
   name: optimization.augmentation_config.brightness_max_val
   type: double
+- name: optimization.augmentation_config.random_flip
+  label: Random flip
+  help: 'Randomly reflect images and instances. IMPORTANT: Left/right symmetric nodes must be indicated in the skeleton or this will lead to incorrect results!'
+  type: bool
+  default: false
+- name: optimization.augmentation_config.flip_horizontal
+  label: Flip left/right
+  help: Flip images horizontally when randomly reflecting. If unchecked, flipping will
+    reflect images up/down.
+  type: bool
+  default: true
+
 optimization:
 - default: 8
   help: Number of examples per minibatch, i.e., a single step of training. Higher

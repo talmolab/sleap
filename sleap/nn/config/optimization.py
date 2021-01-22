@@ -52,6 +52,11 @@ class AugmentationConfig:
             the augmentations above.
         random_crop_width: Width of random crops.
         random_crop_height: Height of random crops.
+        random_flip: If `True`, images will be randomly reflected. The coordinates of
+            the instances will be adjusted accordingly. Body parts that are left/right
+            symmetric must be marked on the skeleton in order to be swapped correctly.
+        flip_horizontal: If `True`, flip images left/right when randomly reflecting
+            them. If `False`, flipping is down up/down instead.
     """
 
     rotate: bool = False
@@ -78,6 +83,8 @@ class AugmentationConfig:
     random_crop: bool = False
     random_crop_height: int = 256
     random_crop_width: int = 256
+    random_flip: bool = False
+    flip_horizontal: bool = True
 
 
 @attr.s(auto_attribs=True)
