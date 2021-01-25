@@ -429,31 +429,37 @@ def setup_visualization(
     """Set up visualization callbacks from config."""
     callbacks = []
 
-    try:
-        matplotlib.use("Qt5Agg")
-    except ImportError:
-        print(
-            "Unable to use Qt backend for matplotlib. "
-            "This probably means Qt is running headless."
-        )
-
-    if config.save_visualizations and config.save_outputs:
-        callbacks.append(
-            MatplotlibSaver(
-                save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
+    if config.save_outputs:
+        if config.save_visualizations:
+            try:
+                matplotlib.use("Qt5Agg")
+            except ImportError:
+                print(
+                    "Unable to use Qt backend for matplotlib. "
+                    "This probably means Qt is running headless."
+                )
+            callbacks.append(
+                MatplotlibSaver(
+                    save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
+                )
             )
-        )
 
-    if (
-        config.tensorboard.write_logs
-        and config.tensorboard.visualizations
-        and config.save_outputs
-    ):
-        callbacks.append(
-            TensorBoardMatplotlibWriter(
-                log_dir=os.path.join(run_path, name), plot_fn=viz_fn, tag=name
+        if (
+            config.tensorboard.write_logs
+            and config.tensorboard.visualizations
+        ):
+            try:
+                matplotlib.use("Qt5Agg")
+            except ImportError:
+                print(
+                    "Unable to use Qt backend for matplotlib. "
+                    "This probably means Qt is running headless."
+                )
+            callbacks.append(
+                TensorBoardMatplotlibWriter(
+                    log_dir=os.path.join(run_path, name), plot_fn=viz_fn, tag=name
+                )
             )
-        )
 
     return callbacks
 
