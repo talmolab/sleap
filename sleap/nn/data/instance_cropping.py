@@ -279,7 +279,7 @@ class InstanceCropper:
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return [self.image_key, self.instances_key, self.centroids_key]
+        return [self.image_key, self.instances_key, self.centroids_key, "track_inds"]
 
     @property
     def output_keys(self) -> List[Text]:
@@ -289,6 +289,7 @@ class InstanceCropper:
             "bbox",
             "center_instance",
             "center_instance_ind",
+            "track_ind",
             "all_instances",
             "centroid",
             "full_image_height",
@@ -310,6 +311,7 @@ class InstanceCropper:
                     (n_instances, n_nodes, 2).
                 "centroids": The computed centroid for each instance in a tf.float32
                     tensor of shape (n_instances, 2).
+                "track_inds": The track indices of the indices if available.
                 Any additional keys present will be replicated in each output.
 
         Returns:
@@ -331,6 +333,7 @@ class InstanceCropper:
                 "center_instance_ind": Scalar tf.int32 index of the centered instance
                     relative to all the instances in the frame. This can be used to
                     index into additional keys that may contain data from all instances.
+                "track_ind": Index of the track the instance belongs to if available.
                 "all_instances": The points of all instances in the frame in image
                     coordinates in the "instance_image". This will be a tf.float32
                     tensor of shape (n_instances, n_nodes, 2). This is useful for multi-
@@ -408,6 +411,7 @@ class InstanceCropper:
                 "bbox": bboxes,
                 "center_instance": center_instances,
                 "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
+                "track_ind": frame_data["track_inds"],
                 "all_instances": all_instances,
                 "centroid": frame_data[self.centroids_key],
                 "full_image_height": tf.repeat(
