@@ -362,6 +362,8 @@ class InstanceCropper:
         keys_to_expand = [
             key for key in test_example.keys() if key not in self.input_keys
         ]
+        if "class" in keys_to_expand:
+            keys_to_expand.remove("class")
         img_channels = test_example[self.image_key].shape[-1]
         if self.keep_full_image:
             keys_to_expand.append(self.image_key)
@@ -421,6 +423,8 @@ class InstanceCropper:
                     tf.shape(frame_data[self.image_key])[1], n_instances
                 ),
             }
+            if "class" in frame_data:
+                instances_data["class"] = frame_data["class"]
             if self.mock_centroid_confidence:
                 instances_data["centroid_confidence"] = tf.ones(
                     [n_instances], dtype=tf.float32

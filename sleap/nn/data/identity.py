@@ -98,8 +98,9 @@ class ClassVectorGenerator:
 
         def generate_class_vectors(example):
             """Local processing function for dataset mapping."""
-            example["class"] = make_class_vectors(
-                example["track_inds"], example["n_tracks"]
+            example["class"] = tf.cast(
+                make_class_vectors(example["track_inds"], example["n_tracks"]),
+                tf.float32,
             )
             return example
 
