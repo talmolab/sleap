@@ -31,7 +31,7 @@ from sleap.nn.data.confidence_maps import (
     SingleInstanceConfidenceMapGenerator,
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
-from sleap.nn.data.identity import ClassMapGenerator
+from sleap.nn.data.identity import ClassVectorGenerator, ClassMapGenerator
 from sleap.nn.data.dataset_ops import (
     Shuffler,
     Batcher,
@@ -76,6 +76,7 @@ TRANSFORMERS = (
     InstanceConfidenceMapGenerator,
     PartAffinityFieldsGenerator,
     SingleInstanceConfidenceMapGenerator,
+    ClassVectorGenerator,
     ClassMapGenerator,
     Shuffler,
     Batcher,

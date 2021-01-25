@@ -5,6 +5,7 @@ import sleap
 from sleap.nn.data.identity import (
     make_class_vectors,
     make_class_maps,
+    ClassVectorGenerator,
     ClassMapGenerator,
 )
 
@@ -25,6 +26,19 @@ def test_make_class_maps():
     np.testing.assert_array_equal(
         tf.gather_nd(class_maps, [[6, 4], [24, 18]]), [[0, 1], [1, 0]]
     )
+
+
+def test_class_vector_generator(min_tracks_2node_labels):
+    labels = min_tracks_2node_labels
+
+    gen = ClassVectorGenerator()
+
+    p = labels.to_pipeline()
+    ds = p.make_dataset()
+    ds = gen.transform_dataset(ds)
+    ex = next(iter(ds))
+
+    np.testing.assert_array_equal(ex["class"], [[0, 1], [1, 0]])
 
 
 def test_class_map_generator(min_tracks_2node_labels):
