@@ -177,3 +177,7 @@ def test_labels_reader_multi_size():
 
     example = next(ds_iter)
     assert example["image"].shape == (512, 512, 1)
+
+    from sleap.nn.data.resizing import SizeEqualizer
+    s = SizeEqualizer()
+    dso = s.transform_dataset(ds)

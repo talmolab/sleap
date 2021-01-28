@@ -167,7 +167,6 @@ class LabelsReader:
                 [ind],
                 [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
             )
-            image = tf.ensure_shape(image, test_image.shape)
             instances = tf.ensure_shape(instances, tf.TensorShape([None, None, 2]))
             skeleton_inds = tf.ensure_shape(skeleton_inds, tf.TensorShape([None]))
 

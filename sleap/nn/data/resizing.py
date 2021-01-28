@@ -252,6 +252,94 @@ class Resizer:
 
 
 @attr.s(auto_attribs=True)
+class SizeEqualizer:
+    """Data transformer that ensures output images have uniform shape by resizing/padding smaller images.
+
+    Attributes:
+        image_key: String name of the key containing the images to resize.
+        scale_key: String name of the key containing the scale of the images.
+        points_key: String name of the key containing points to adjust for the resizing
+            operation.
+        keep_full_image: If True, keeps the (original size) full image in the examples.
+            This is useful for multi-scale inference.
+        full_image_key: String name of the key containing the full images.
+    """
+
+    image_key: Text = "image"
+    scale_key: Text = "scale"
+    points_key: Optional[Text] = "instances"
+    keep_full_image: bool = False
+    full_image_key: Text = "full_image"
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        input_keys = [self.image_key, self.scale_key]
+        if self.points_key is not None:
+            input_keys.append(self.points_key)
+        return input_keys
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        output_keys = self.input_keys
+        if self.keep_full_image:
+            output_keys.append(self.full_image_key)
+        return output_keys
+
+    def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
+        """Transform a dataset with potentially different size images into one with equal sized images.
+
+        Args:
+            ds_input: A dataset with the image specified in the `image_key` attribute,
+                points specified in the `points_key` attribute, and the "scale" key for
+                tracking scaling transformations.
+
+        Returns:
+            A `tf.data.Dataset` with elements containing the same images and points of equal size.
+
+            If the `keep_full_image` attribute is True, a key specified by
+            `full_image_key` will be added with the to the example containing the image
+            before any processing.
+        """
+
+
+        # determine max height and width
+        shapes = [tf.shape(e[self.image_key]) for e in ds_input]
+        max_height = max([s[-3] for s in shapes])
+        max_width = max([s[-2] for s in shapes])
+
+        # mapping function: match to max height width by resizing and padding bottom/right accordingly
+        def match_to_max_height_and_width(example):
+            if self.keep_full_image:
+                example[self.full_image_key] = example[self.image_key]
+
+            current_shape = tf.shape(example[self.image_key])
+            if current_shape[-3] < max_height or current_shape[-2] < max_width:
+                # match size
+                example[self.image_key] = tf.image.resize_with_pad(
+                    example[self.image_key],
+                    target_height=max_height,
+                    target_width=max_width,
+                    method=ResizeMethod.BILINEAR,
+                    antialias=False
+                )
+
+                # ???
+                if self.points_key:
+                    example[self.points_key] = example[self.points_key] * self.scale
+                example[self.scale_key] = example[self.scale_key] * self.scale
+
+            return example
+
+
+        ds_output = ds_input.map(
+            match_to_max_height_and_width, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return ds_output
+
+
+@attr.s(auto_attribs=True)
 class PointsRescaler:
     """Transformer to apply or invert scaling operations on points."""
 
