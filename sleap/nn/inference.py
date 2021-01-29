@@ -2791,8 +2791,8 @@ class BottomUpMultiClassPredictor(Predictor):
         if tracks is None:
             if hasattr(data_provider, "tracks"):
                 tracks = data_provider.tracks
-            elif self.config.model.heads.multi_class.class_maps.classes is not None:
-                names = self.config.model.heads.multi_class.class_maps.classes
+            elif self.config.model.heads.multi_class_bottomup.class_maps.classes is not None:
+                names = self.config.model.heads.multi_class_bottomup.class_maps.classes
                 tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
 
         # Loop over batches.
@@ -3068,9 +3068,9 @@ def make_predictor_from_models(
             **get_relevant_args("single"),
             **kwargs,
         )
-    elif "multi_class" in trained_model_paths:
+    elif "multi_class_bottomup" in trained_model_paths:
         predictor = BottomUpMultiClassPredictor.from_trained_models(
-            trained_model_paths["multi_class"],
+            trained_model_paths["multi_class_bottomup"],
             **get_relevant_args("bottomup_multiclass"),
             **kwargs,
         )

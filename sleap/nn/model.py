@@ -29,6 +29,7 @@ from sleap.nn.heads import (
     MultiInstanceConfmapsHead,
     PartAffinityFieldsHead,
     ClassMapsHead,
+    ClassVectorsHead,
     OffsetRefinementHead,
 )
 from sleap.nn.config import (
@@ -41,8 +42,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
-    ClassMapsHeadConfig,
-    MultiClassConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
     BackboneConfig,
     HeadsConfig,
     ModelConfig,
@@ -205,7 +206,7 @@ class Model:
                     )
                 )
 
-        elif isinstance(head_config, MultiClassConfig):
+        elif isinstance(head_config, MultiClassBottomUpConfig):
             part_names = head_config.confmaps.part_names
             if part_names is None:
                 if skeleton is None:
@@ -233,6 +234,44 @@ class Model:
                     head_config.confmaps, part_names=part_names
                 ),
                 ClassMapsHead.from_config(head_config.class_maps, classes=classes),
+            ]
+            output_stride = min(heads[0].output_stride, heads[1].output_stride)
+            output_stride = heads[0].output_stride
+            if head_config.confmaps.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(
+                        head_config.confmaps, part_names=part_names
+                    )
+                )
+
+        elif isinstance(head_config, MultiClassTopDownConfig):
+            part_names = head_config.confmaps.part_names
+            if part_names is None:
+                if skeleton is None:
+                    raise ValueError(
+                        "Skeleton must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                part_names = skeleton.node_names
+                if update_config:
+                    head_config.confmaps.part_names = part_names
+
+            classes = head_config.class_vectors.classes
+            if classes is None:
+                if tracks is None:
+                    raise ValueError(
+                        "Classes must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                classes = [t.name for t in tracks]
+            if update_config:
+                head_config.class_vectors.classes = classes
+
+            heads = [
+                CenteredInstanceConfmapsHead.from_config(
+                    head_config.confmaps, part_names=part_names
+                ),
+                ClassVectorsHead.from_config(head_config.class_maps, classes=classes),
             ]
             output_stride = min(heads[0].output_stride, heads[1].output_stride)
             output_stride = heads[0].output_stride

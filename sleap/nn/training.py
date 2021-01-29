@@ -27,7 +27,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
-    MultiClassConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
 )
 
 # Model
@@ -590,8 +591,12 @@ class Trainer(ABC):
             trainer_cls = TopdownConfmapsModelTrainer
         elif isinstance(head_config, MultiInstanceConfig):
             trainer_cls = BottomUpModelTrainer
-        elif isinstance(head_config, MultiClassConfig):
+        elif isinstance(head_config, MultiClassBottomUpConfig):
             trainer_cls = BottomUpMultiClassModelTrainer
+        elif isinstance(head_config, MultiClassTopDownConfig):
+            # TODO:
+            # trainer_cls = TopDownMultiClassModelTrainer
+            pass
         elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
             trainer_cls = SingleInstanceModelTrainer
         else:
@@ -1344,7 +1349,7 @@ class BottomUpMultiClassModelTrainer(Trainer):
     @property
     def has_offsets(self) -> bool:
         """Whether model is configured to output refinement offsets."""
-        return self.config.model.heads.multi_class.confmaps.offset_refinement
+        return self.config.model.heads.multi_class_bottomup.confmaps.offset_refinement
 
     def _update_config(self):
         """Update the configuration with inferred values."""

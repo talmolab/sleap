@@ -172,7 +172,7 @@ def test_train_bottomup_with_offset(training_labels, cfg):
 def test_train_bottomup_multiclass(min_tracks_2node_labels, cfg):
     labels = min_tracks_2node_labels
     cfg.data.preprocessing.input_scaling = 0.5
-    cfg.model.heads.multi_class = sleap.nn.config.MultiClassConfig(
+    cfg.model.heads.multi_class_bottomup = sleap.nn.config.MultiClassBottomUpConfig(
         confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(
             output_stride=2, offset_refinement=False),
         class_maps=sleap.nn.config.ClassMapsHeadConfig(

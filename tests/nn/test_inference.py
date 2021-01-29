@@ -530,7 +530,7 @@ def test_topdown_predictor_centered_instance(
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
 
-def test_topdown_predictor_bottomup(min_labels, min_bottomup_model_path):
+def test_bottomup_predictor(min_labels, min_bottomup_model_path):
     predictor = BottomupPredictor.from_trained_models(
         model_path=min_bottomup_model_path
     )
@@ -548,7 +548,7 @@ def test_topdown_predictor_bottomup(min_labels, min_bottomup_model_path):
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.75)
 
 
-def test_topdown_predictor_bottomup_multiclass(
+def test_bottomup_multiclass_predictor(
     min_tracks_2node_labels, min_bottomup_multiclass_model_path
 ):
     labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])

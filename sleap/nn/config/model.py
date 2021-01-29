@@ -317,7 +317,7 @@ class ClassMapsHeadConfig:
 
 
 @attr.s(auto_attribs=True)
-class MultiClassConfig:
+class MultiClassBottomUpConfig:
     """Configuration for multi-instance confidence map and class map models.
 
     This configuration specifies a multi-head model that outputs both multi-instance
@@ -342,6 +342,68 @@ class MultiClassConfig:
     class_maps: ClassMapsHeadConfig = attr.ib(factory=ClassMapsHeadConfig)
 
 
+@attr.s(auto_attribs=True)
+class ClassVectorsHeadConfig:
+    """Configurations for class vectors heads.
+
+    These heads are used in top-down multi-instance models that classify detected
+    points using a fixed set of learned classes (e.g., animal identities).
+
+    Class vectors represent the probability that the image is associated with each of
+    the specified classes. This is similar to a standard classification task.
+
+    Attributes:
+        classes: List of string names of the classes that this head will predict.
+        num_fc_layers: Number of fully-connected layers before the classification output
+            layer. These can help in transforming general image features into
+            classification-specific features.
+        num_fc_units: Number of units (dimensions) in the fully-connected layers before
+            classification. Increasing this can improve the representational capacity in
+            the pre-classification layers.
+        output_stride: The stride of the output class maps relative to the input image.
+            This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in maps that are 0.5x the size of the input. This should be the same
+            size as the confidence maps they are associated with.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
+    """
+
+    classes: Optional[List[Text]] = None
+    num_fc_layers: int = 1
+    num_fc_units: int = 64
+    output_stride: int = 1
+    loss_weight: float = 1.0
+
+
+@attr.s(auto_attribs=True)
+class MultiClassTopDownConfig:
+    """Configuration for centered-instance confidence map and class map models.
+
+    This configuration specifies a multi-head model that outputs both centered-instance
+    confidence maps and class vectors, which together enable multi-instance pose
+    tracking in a top-down fashion, i.e., instance-centered crops followed by pose
+    estimation and classification.
+
+    The limitation with this approach is that the classes, e.g., animal identities, must
+    be labeled in the training data and cannot be generalized beyond those classes. This
+    is still useful for applications in which the animals are uniquely identifiable and
+    tracking their identities at inference time is critical, e.g., for closed loop
+    experiments.
+
+    Attributes:
+        confmaps: Part confidence map configuration (see the description in
+            `CenteredInstanceConfmapsHeadConfig`).
+        class_vectors: Class map configuration (see the description in
+            `ClassVectorsHeadConfig`).
+    """
+
+    confmaps: CenteredInstanceConfmapsHeadConfig = attr.ib(
+        factory=CenteredInstanceConfmapsHeadConfig
+    )
+    class_vectors: ClassVectorsHeadConfig = attr.ib(factory=ClassVectorsHeadConfig)
+
+
 @oneof
 @attr.s(auto_attribs=True)
 class HeadsConfig:
@@ -361,7 +423,8 @@ class HeadsConfig:
     centroid: Optional[CentroidsHeadConfig] = None
     centered_instance: Optional[CenteredInstanceConfmapsHeadConfig] = None
     multi_instance: Optional[MultiInstanceConfig] = None
-    multi_class: Optional[MultiClassConfig] = None
+    multi_class_bottomup: Optional[MultiClassBottomUpConfig] = None
+    multi_class_topdown: Optional[MultiClassTopDownConfig] = None
 
 
 @attr.s(auto_attribs=True)

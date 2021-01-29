@@ -12,6 +12,7 @@ from sleap.nn.config import (
     MultiInstanceConfmapsHeadConfig,
     PartAffinityFieldsHeadConfig,
     ClassMapsHeadConfig,
+    ClassVectorsHeadConfig,
 )
 
 
@@ -103,14 +104,14 @@ class SingleInstanceConfmapsHead(Head):
             part_names=part_names,
             sigma=config.sigma,
             output_stride=config.output_stride,
-            loss_weight=config.loss_weight
+            loss_weight=config.loss_weight,
         )
 
 
 @attr.s(auto_attribs=True)
 class CentroidConfmapsHead(Head):
     """Head for specifying instance centroid confidence maps.
-    
+
     Attributes:
         anchor_part: Name of the part to use as an anchor node. If not specified, the
             bounding box centroid will be used.
@@ -356,6 +357,92 @@ class ClassMapsHead(Head):
             output_stride=config.output_stride,
             loss_weight=config.loss_weight,
         )
+
+
+@attr.s(auto_attribs=True)
+class ClassVectorsHead(Head):
+    """Head for specifying classification heads.
+
+    Attributes:
+        classes: List of string names of the classes.
+        num_fc_layers: Number of fully connected layers after flattening input features.
+        num_fc_units: Number of units (dimensions) in fully connected layers prior to
+            classification output.
+        output_stride: Stride of the output head tensor. The input tensor is expected to
+            be at the same stride.
+        loss_weight: Weight of the loss term for this head during optimization.
+    """
+
+    classes: List[Text]
+    num_fc_layers: int = 1
+    num_fc_units: int = 64
+    output_stride: int = 1
+    loss_weight: float = 1.0
+
+    @property
+    def channels(self) -> int:
+        """Return the number of channels in the tensor output by this head."""
+        return len(self.classes)
+
+    @property
+    def activation(self) -> str:
+        """Return the activation function of the head output layer."""
+        return "softmax"
+
+    @classmethod
+    def from_config(
+        cls,
+        config: ClassVectorsHeadConfig,
+        classes: Optional[List[Text]] = None,
+    ) -> "ClassVectorsHead":
+        """Create this head from a set of configurations.
+
+        Attributes:
+            config: A `ClassVectorsHeadConfig` instance specifying the head parameters.
+            classes: List of string names of the classes that this head will predict.
+                This must be set if the `classes` attribute of the configuration is not
+                set.
+
+        Returns:
+            The instantiated head with the specified configuration options.
+        """
+        if config.classes is not None:
+            classes = config.classes
+        return cls(
+            classes=classes,
+            num_fc_layers=config.num_fc_layers,
+            num_fc_units=config.num_fc_units,
+            output_stride=config.output_stride,
+            loss_weight=config.loss_weight,
+        )
+
+    def make_head(self, x_in: tf.Tensor, name: Optional[Text] = None) -> tf.Tensor:
+        """Make head output tensor from input feature tensor.
+
+        Args:
+            x_in: An input `tf.Tensor`.
+            name: If provided, specifies the name of the output layer. If not (the
+                default), uses the name of the head as the layer name.
+
+        Returns:
+            A `tf.Tensor` with the correct shape for the head.
+        """
+        if name is None:
+            name = f"{type(self).__name__}"
+        x = tf.keras.layers.GlobalMaxPool2D(name="pre_classification_global_pool")(x)
+        x = tf.keras.layers.Flatten(name="pre_classification_flatten")(x)
+        for i in range(self.num_fc_layers):
+            x = tf.keras.layers.Dense(
+                self.num_fc_units, name=f"pre_classification{i}_fc"
+            )(x)
+            x = tf.keras.layers.BatchNormalization(name=f"pre_classification{i}_bn")(x)
+            x = tf.keras.layers.Activation("relu", name=f"pre_classification{i}_relu")(
+                x
+            )
+        x = tf.keras.layers.Dense(self.channels, activation=self.activation, name=name)(
+            x
+        )
+        return x
 
 
 ConfmapConfig = Union[

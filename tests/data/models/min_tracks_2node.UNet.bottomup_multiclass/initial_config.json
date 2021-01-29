@@ -43,7 +43,7 @@
             "centroid": null,
             "centered_instance": null,
             "multi_instance": null,
-            "multi_class": {
+            "multi_class_bottomup": {
                 "confmaps": {
                     "part_names": null,
                     "sigma": 5.0,

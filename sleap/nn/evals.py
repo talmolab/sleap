@@ -32,7 +32,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
-    MultiClassConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
     SingleInstanceConfmapsHeadConfig,
 )
 from sleap.nn.model import Model
@@ -690,10 +691,16 @@ def evaluate_model(
         predictor = sleap.nn.inference.BottomupPredictor(
             bottomup_config=cfg, bottomup_model=model
         )
-    elif isinstance(head_config, MultiClassConfig):
+    elif isinstance(head_config, MultiClassBottomUpConfig):
         predictor = sleap.nn.inference.BottomUpMultiClassPredictor(
             config=cfg, model=model
         )
+    elif isinstance(head_config, MultiClassTopDownConfig):
+        # TODO:
+        # predictor = sleap.nn.inference.TopDownMultiClassPredictor(
+        #     config=cfg, model=model
+        # )
+        pass
     elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
         predictor = sleap.nn.inference.SingleInstancePredictor(
             confmap_config=cfg, confmap_model=model
