@@ -2844,6 +2844,7 @@ CLI_PREDICTORS = {
     "topdown": TopdownPredictor,
     "bottomup": BottomupPredictor,
     "bottomup_multiclass": BottomUpMultiClassPredictor,
+    # "topdown_multiclass": TopDownMultiClassPredictor,  #  TODO
     "single": SingleInstancePredictor,
 }
 
