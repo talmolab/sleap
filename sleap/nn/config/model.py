@@ -28,6 +28,9 @@ class SingleInstanceConfmapsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
         offset_refinement: If `True`, model will also output an offset refinement map
             used to achieve subpixel localization of peaks during inference. This can
             improve the localization accuracy of the model at the cost of additional
@@ -40,6 +43,7 @@ class SingleInstanceConfmapsHeadConfig:
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
+    loss_weight: float = 1.0
     offset_refinement: bool = False
 
 
@@ -72,6 +76,9 @@ class CentroidsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
         offset_refinement: If `True`, model will also output an offset refinement map
             used to achieve subpixel localization of peaks during inference. This can
             improve the localization accuracy of the model at the cost of additional
@@ -84,6 +91,7 @@ class CentroidsHeadConfig:
     anchor_part: Optional[Text] = None
     sigma: float = 5.0
     output_stride: int = 1
+    loss_weight: float = 1.0
     offset_refinement: bool = False
 
 
@@ -129,6 +137,9 @@ class CenteredInstanceConfmapsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
         offset_refinement: If `True`, model will also output an offset refinement map
             used to achieve subpixel localization of peaks during inference. This can
             improve the localization accuracy of the model at the cost of additional
@@ -142,6 +153,7 @@ class CenteredInstanceConfmapsHeadConfig:
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
+    loss_weight: float = 1.0
     offset_refinement: bool = False
 
 

@@ -22,6 +22,7 @@ from sleap.nn.architectures import (
     IntermediateFeature,
 )
 from sleap.nn.heads import (
+    Head,
     CentroidConfmapsHead,
     SingleInstanceConfmapsHead,
     CenteredInstanceConfmapsHead,
@@ -70,17 +71,6 @@ BACKBONE_CONFIG_TO_CLS = {
     PretrainedEncoderConfig: UnetPretrainedEncoder,
 }
 
-HEADS = [
-    CentroidConfmapsHead,
-    SingleInstanceConfmapsHead,
-    CenteredInstanceConfmapsHead,
-    MultiInstanceConfmapsHead,
-    PartAffinityFieldsHead,
-    ClassMapsHead,
-    OffsetRefinementHead,
-]
-Head = TypeVar("Head", *HEADS)
-
 
 @attr.s(auto_attribs=True)
 class Model:
@@ -118,7 +108,10 @@ class Model:
         """
         # Figure out which backbone class to use.
         backbone_config = config.backbone.which_oneof()
-        backbone_cls = BACKBONE_CONFIG_TO_CLS[type(backbone_config)]
+        backbone_cls = BACKBONE_CONFIG_TO_CLS.get(type(backbone_config), None)
+        if backbone_cls is None:
+            raise ValueError(
+                "Backbone architecture (config.model.backbone) was not specified.")
 
         # Figure out which head class to use.
         head_config = config.heads.which_oneof()
@@ -249,6 +242,10 @@ class Model:
                         head_config.confmaps, part_names=part_names
                     )
                 )
+        else:
+            raise ValueError(
+                "Head configuration (config.model.heads) was not specified."
+            )
 
         backbone_config.output_stride = output_stride
 
@@ -284,24 +281,13 @@ class Model:
         # Build output layers for each head.
         x_outs = []
         for output in self.heads:
-            if isinstance(output, ClassMapsHead):
-                activation = "sigmoid"
-            else:
-                activation = "linear"
             x_head = []
             if output.output_stride == self.backbone.output_stride:
                 # The main output has the same stride as the head, so build output layer
                 # from that tensor.
                 for i, x in enumerate(x_main):
                     x_head.append(
-                        tf.keras.layers.Conv2D(
-                            filters=output.channels,
-                            kernel_size=1,
-                            strides=1,
-                            padding="same",
-                            activation=activation,
-                            name=f"{type(output).__name__}_{i}",
-                        )(x)
+                        output.make_head(x)
                     )
 
             else:
@@ -312,14 +298,7 @@ class Model:
                     if feats[0].stride == output.output_stride:
                         for i, feat in enumerate(feats):
                             x_head.append(
-                                tf.keras.layers.Conv2D(
-                                    filters=output.channels,
-                                    kernel_size=1,
-                                    strides=1,
-                                    padding="same",
-                                    activation=activation,
-                                    name=f"{type(output).__name__}_{i}",
-                                )(feat.tensor)
+                                output.make_head(feat.tensor)
                             )
                         break
 

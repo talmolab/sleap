@@ -44,7 +44,7 @@ def test_train_single_instance(min_labels_robot, cfg):
     )
     trainer.setup()
     trainer.train()
-    assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead_0"
+    assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 320, 560, 2)
 
 
@@ -59,10 +59,10 @@ def test_train_single_instance_with_offset(min_labels_robot, cfg):
     )
     trainer.setup()
     trainer.train()
-    assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead_0"
+    assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 320, 560, 2)
 
-    assert trainer.keras_model.output_names[1] == "OffsetRefinementHead_0"
+    assert trainer.keras_model.output_names[1] == "OffsetRefinementHead"
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 320, 560, 4)
 
 
@@ -77,7 +77,7 @@ def test_train_centroids(training_labels, cfg):
     )
     trainer.setup()
     trainer.train()
-    assert trainer.keras_model.output_names[0] == "CentroidConfmapsHead_0"
+    assert trainer.keras_model.output_names[0] == "CentroidConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 384, 384, 1)
 
 
@@ -92,8 +92,8 @@ def test_train_centroids_with_offset(training_labels, cfg):
     )
     trainer.setup()
     trainer.train()
-    assert trainer.keras_model.output_names[0] == "CentroidConfmapsHead_0"
-    assert trainer.keras_model.output_names[1] == "OffsetRefinementHead_0"
+    assert trainer.keras_model.output_names[0] == "CentroidConfmapsHead"
+    assert trainer.keras_model.output_names[1] == "OffsetRefinementHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 384, 384, 1)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 384, 384, 2)
 
@@ -109,7 +109,7 @@ def test_train_topdown(training_labels, cfg):
     )
     trainer.setup()
     trainer.train()
-    assert trainer.keras_model.output_names[0] == "CenteredInstanceConfmapsHead_0"
+    assert trainer.keras_model.output_names[0] == "CenteredInstanceConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 96, 96, 2)
 
 
@@ -125,8 +125,8 @@ def test_train_topdown_with_offset(training_labels, cfg):
     trainer.setup()
     trainer.train()
 
-    assert trainer.keras_model.output_names[0] == "CenteredInstanceConfmapsHead_0"
-    assert trainer.keras_model.output_names[1] == "OffsetRefinementHead_0"
+    assert trainer.keras_model.output_names[0] == "CenteredInstanceConfmapsHead"
+    assert trainer.keras_model.output_names[1] == "OffsetRefinementHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 96, 96, 2)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 96, 96, 4)
 
@@ -143,8 +143,8 @@ def test_train_bottomup(training_labels, cfg):
     trainer.setup()
     trainer.train()
 
-    assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead_0"
-    assert trainer.keras_model.output_names[1] == "PartAffinityFieldsHead_0"
+    assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead"
+    assert trainer.keras_model.output_names[1] == "PartAffinityFieldsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 384, 384, 2)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 192, 192, 2)
 
@@ -161,9 +161,9 @@ def test_train_bottomup_with_offset(training_labels, cfg):
     trainer.setup()
     trainer.train()
 
-    assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead_0"
-    assert trainer.keras_model.output_names[1] == "PartAffinityFieldsHead_0"
-    assert trainer.keras_model.output_names[2] == "OffsetRefinementHead_0"
+    assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead"
+    assert trainer.keras_model.output_names[1] == "PartAffinityFieldsHead"
+    assert trainer.keras_model.output_names[2] == "OffsetRefinementHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 384, 384, 2)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 192, 192, 2)
     assert tuple(trainer.keras_model.outputs[2].shape) == (None, 384, 384, 4)
@@ -184,7 +184,7 @@ def test_train_bottomup_multiclass(min_tracks_2node_labels, cfg):
     trainer.setup()
     trainer.train()
 
-    assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead_0"
-    assert trainer.keras_model.output_names[1] == "ClassMapsHead_0"
+    assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead"
+    assert trainer.keras_model.output_names[1] == "ClassMapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 256, 256, 2)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 256, 256, 2)
