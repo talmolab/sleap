@@ -166,18 +166,3 @@ def test_labels_reader_multi_size():
         ]
     )
 
-    # Create a loader for those labels.
-    labels_reader = providers.LabelsReader(labels)
-    ds = labels_reader.make_dataset()
-    ds_iter = iter(ds)
-
-    # Check shapes of individual samples.
-    example = next(ds_iter)
-    assert example["image"].shape == (320, 560, 1)
-
-    example = next(ds_iter)
-    assert example["image"].shape == (512, 512, 1)
-
-    from sleap.nn.data.resizing import SizeEqualizer
-    s = SizeEqualizer()
-    dso = s.transform_dataset(ds)

@@ -263,6 +263,8 @@ class SizeEqualizer:
         keep_full_image: If True, keeps the (original size) full image in the examples.
             This is useful for multi-scale inference.
         full_image_key: String name of the key containing the full images.
+        max_image_height: int The target height to which all smaller images will be resized/padded to.
+        max_image_width: int The target width to which all smaller images will be resized/padded to.
     """
 
     image_key: Text = "image"
@@ -270,6 +272,8 @@ class SizeEqualizer:
     points_key: Optional[Text] = "instances"
     keep_full_image: bool = False
     full_image_key: Text = "full_image"
+    max_image_height: int = None
+    max_image_width: int = None
 
     @property
     def input_keys(self) -> List[Text]:
@@ -303,38 +307,51 @@ class SizeEqualizer:
             before any processing.
         """
 
-
-        # determine max height and width
-        shapes = [tf.shape(e[self.image_key]) for e in ds_input]
-        max_height = max([s[-3] for s in shapes])
-        max_width = max([s[-2] for s in shapes])
-
         # mapping function: match to max height width by resizing and padding bottom/right accordingly
-        def match_to_max_height_and_width(example):
+        def resize_and_pad(example):
+            image = example[self.image_key]
             if self.keep_full_image:
-                example[self.full_image_key] = example[self.image_key]
+                example[self.full_image_key] = image
 
-            current_shape = tf.shape(example[self.image_key])
-            if current_shape[-3] < max_height or current_shape[-2] < max_width:
-                # match size
-                example[self.image_key] = tf.image.resize_with_pad(
-                    example[self.image_key],
-                    target_height=max_height,
-                    target_width=max_width,
-                    method=ResizeMethod.BILINEAR,
+            current_shape = tf.shape(image)
+            if current_shape[-3] < self.max_image_height or current_shape[-2] < self.max_image_width:
+                # Calculate target height and width for resizing the image (no padding yet)
+                hratio = self.max_image_height / tf.cast(current_shape[-3], tf.float32)
+                wratio = self.max_image_width / tf.cast(current_shape[-2], tf.float32)
+                if hratio > wratio:
+                    target_height=tf.cast(tf.cast(current_shape[-3], tf.float32) * wratio, tf.int32)
+                    target_width=self.max_image_width
+                    example[self.scale_key] = example[self.scale_key] * wratio
+                else:
+                    target_height=self.max_image_height
+                    target_width=tf.cast(tf.cast(current_shape[-2], tf.float32) * hratio, tf.int32)
+                    example[self.scale_key] = example[self.scale_key] * hratio
+                # Resize the image to fill one of the dimensions by preserving aspect ratio
+                image = tf.image.resize_with_pad(
+                    image,
+                    target_height=target_height,
+                    target_width=target_width,
+                    method=tf.image.ResizeMethod.BILINEAR,
                     antialias=False
                 )
-
-                # ???
+                # Pad the image on bottom/right with zeroes to match specified dimensions
+                image = tf.image.pad_to_bounding_box(
+                    image,
+                    offset_height=0,
+                    offset_width=0,
+                    target_height=self.max_image_height,
+                    target_width=self.max_image_width
+                )
+                example[self.image_key] = tf.cast(image, example[self.image_key].dtype)
+                # Scale the instance points accordingly
                 if self.points_key:
-                    example[self.points_key] = example[self.points_key] * self.scale
-                example[self.scale_key] = example[self.scale_key] * self.scale
+                    example[self.points_key] = example[self.points_key] * example[self.scale_key]
 
             return example
 
 
         ds_output = ds_input.map(
-            match_to_max_height_and_width, num_parallel_calls=tf.data.experimental.AUTOTUNE
+            resize_and_pad, num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
         return ds_output
 

@@ -123,7 +123,7 @@ class Pipeline:
         """Create a pipeline from a sequence of providers and transformers.
 
         Args:
-            sequence: List or tuple of providers and transformer instances.
+            blocks: List or tuple of providers and transformer instances.
 
         Returns:
             An instantiated pipeline with all blocks chained.
