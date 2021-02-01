@@ -202,39 +202,23 @@ def test_labels_reader_multi_size():
     transform_iter = iter(size_matcher.transform_dataset(ds))
     im1 = next(transform_iter)["image"]
     assert im1.shape == (750, 750, 1)
+    # Check padding is on the bottom
+    for y in range(700, 750):
+        for x in range(0, 750):
+            assert im1[y][x] == 0
     im2 = next(transform_iter)["image"]
     assert im2.shape == (750, 750, 1)
-    # Check padding is correct
+
 
     # Check SizeMatcher when target is larger in one dimension
-    size_matcher = SizeMatcher(max_image_height=750, max_image_width=560)
+    size_matcher = SizeMatcher(max_image_height=512, max_image_width=750)
     transform_iter = iter(size_matcher.transform_dataset(ds))
     im1 = next(transform_iter)["image"]
-    assert im1.shape == (750, 560, 1)
+    assert im1.shape == (512, 750, 1)
     im2 = next(transform_iter)["image"]
-    assert im2.shape == (750, 560, 1)
-    # Check padding is correct
-
-    '''
-    dso_iter = iter(dso)
-    # Check shapes of individual samples.
-    example = next(dso_iter)
-    image = example["image"]
-
-    sleap.nn.viz.plot_img(example["image"])
-    plt.savefig("example1_post.png")
-
-    assert example["image"].shape == (1000, 1500, 1)
-
-    example = next(dso_iter)
-    sleap.nn.viz.plot_img(example["image"])
-    plt.savefig("example2_post.png")
-
-    assert example["image"].shape == (1000, 1500, 1)
-    '''
-    assert 0 == 1
-
-    import matplotlib.pyplot as plt
-    sleap.nn.viz.plot_img(example["image"])
-    plt.savefig("example1_pre.png")
+    assert im2.shape == (512, 750, 1)
+    # Check padding is on the right
+    for y in range(0, 512):
+        for x in range(512, 750):
+            assert im2[y][x] == 0
 
