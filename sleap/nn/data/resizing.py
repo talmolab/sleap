@@ -252,7 +252,7 @@ class Resizer:
 
 
 @attr.s(auto_attribs=True)
-class SizeEqualizer:
+class SizeMatcher:
     """Data transformer that ensures output images have uniform shape by resizing/padding smaller images.
 
     Attributes:
@@ -314,7 +314,14 @@ class SizeEqualizer:
                 example[self.full_image_key] = image
 
             current_shape = tf.shape(image)
-            if current_shape[-3] < self.max_image_height or current_shape[-2] < self.max_image_width:
+
+            if (current_shape[-3] == self.max_image_height and current_shape[-2] == self.max_image_width) \
+                or current_shape[-3] > self.max_image_height \
+                or current_shape[-2] > self.max_image_width:
+                # If image shape matches target shape, or larger than target shape in any dimension, don't do anything
+                return example
+
+            elif current_shape[-3] < self.max_image_height or current_shape[-2] < self.max_image_width:
                 # Calculate target height and width for resizing the image (no padding yet)
                 hratio = self.max_image_height / tf.cast(current_shape[-3], tf.float32)
                 wratio = self.max_image_width / tf.cast(current_shape[-2], tf.float32)
@@ -330,9 +337,7 @@ class SizeEqualizer:
                 image = tf.image.resize_with_pad(
                     image,
                     target_height=target_height,
-                    target_width=target_width,
-                    method=tf.image.ResizeMethod.BILINEAR,
-                    antialias=False
+                    target_width=target_width
                 )
                 # Pad the image on bottom/right with zeroes to match specified dimensions
                 image = tf.image.pad_to_bounding_box(

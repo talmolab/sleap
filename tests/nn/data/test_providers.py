@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from sleap.nn.system import use_cpu_only
+from sleap.nn.data.resizing import SizeMatcher
 
 use_cpu_only()  # hide GPUs for test
 from tests.fixtures.videos import TEST_H5_FILE, TEST_SMALL_ROBOT_MP4_FILE
@@ -165,4 +166,75 @@ def test_labels_reader_multi_size():
             ),
         ]
     )
+
+    # Create a loader for those labels.
+    labels_reader = providers.LabelsReader(labels)
+    ds = labels_reader.make_dataset()
+    ds_iter = iter(ds)
+
+    # Check LabelReader can provide different shapes of individual samples
+    assert next(ds_iter)["image"].shape == (320, 560, 1)
+    assert next(ds_iter)["image"].shape == (512, 512, 1)
+
+    # Check SizeMatcher is a no-op when target dims is not strictly larger than actual image dims
+    no_op_size_matcher = SizeMatcher(max_image_height=500, max_image_width=500)
+    transform_iter = iter(no_op_size_matcher.transform_dataset(ds))
+    assert next(transform_iter)["image"].shape == (320, 560, 1)
+    assert next(transform_iter)["image"].shape == (512, 512, 1)
+    # Variant 2
+    no_op_size_matcher = SizeMatcher(max_image_height=320, max_image_width=560)
+    transform_iter = iter(no_op_size_matcher.transform_dataset(ds))
+    assert next(transform_iter)["image"].shape == (320, 560, 1)
+    assert next(transform_iter)["image"].shape == (512, 512, 1)
+    # Variant 3
+    no_op_size_matcher = SizeMatcher(max_image_height=1320, max_image_width=511)
+    transform_iter = iter(no_op_size_matcher.transform_dataset(ds))
+    assert next(transform_iter)["image"].shape == (320, 560, 1)
+    assert next(transform_iter)["image"].shape == (512, 512, 1)
+    # Variant 4
+    no_op_size_matcher = SizeMatcher(max_image_height=319, max_image_width=1560)
+    transform_iter = iter(no_op_size_matcher.transform_dataset(ds))
+    assert next(transform_iter)["image"].shape == (320, 560, 1)
+    assert next(transform_iter)["image"].shape == (512, 512, 1)
+
+    # Check SizeMatcher when target is larger in both dimensions
+    size_matcher = SizeMatcher(max_image_height=750, max_image_width=750)
+    transform_iter = iter(size_matcher.transform_dataset(ds))
+    im1 = next(transform_iter)["image"]
+    assert im1.shape == (750, 750, 1)
+    im2 = next(transform_iter)["image"]
+    assert im2.shape == (750, 750, 1)
+    # Check padding is correct
+
+    # Check SizeMatcher when target is larger in one dimension
+    size_matcher = SizeMatcher(max_image_height=750, max_image_width=560)
+    transform_iter = iter(size_matcher.transform_dataset(ds))
+    im1 = next(transform_iter)["image"]
+    assert im1.shape == (750, 560, 1)
+    im2 = next(transform_iter)["image"]
+    assert im2.shape == (750, 560, 1)
+    # Check padding is correct
+
+    '''
+    dso_iter = iter(dso)
+    # Check shapes of individual samples.
+    example = next(dso_iter)
+    image = example["image"]
+
+    sleap.nn.viz.plot_img(example["image"])
+    plt.savefig("example1_post.png")
+
+    assert example["image"].shape == (1000, 1500, 1)
+
+    example = next(dso_iter)
+    sleap.nn.viz.plot_img(example["image"])
+    plt.savefig("example2_post.png")
+
+    assert example["image"].shape == (1000, 1500, 1)
+    '''
+    assert 0 == 1
+
+    import matplotlib.pyplot as plt
+    sleap.nn.viz.plot_img(example["image"])
+    plt.savefig("example1_pre.png")
 
