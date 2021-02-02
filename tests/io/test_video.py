@@ -117,7 +117,7 @@ def test_is_missing():
     assert vid.is_missing
     vid = Video.from_numpy(
         Video.from_media(TEST_SMALL_ROBOT_MP4_FILE).get_frames((3, 7, 9))
-        )
+    )
     assert not vid.is_missing
 
 
@@ -398,4 +398,3 @@ def test_safe_frame_loading_all_invalid():
 
     assert idxs == []
     assert frames is None
-

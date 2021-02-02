@@ -91,11 +91,9 @@ class MultiCheckWidget(QGroupBox):
                 check_button.setChecked(False)
 
     def boundingRect(self) -> QRectF:
-        """Method required by Qt.
-        """
+        """Method required by Qt."""
         return QRectF()
 
     def paint(self, painter, option, widget=None):
-        """Method required by Qt.
-        """
+        """Method required by Qt."""
         pass

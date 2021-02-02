@@ -436,7 +436,10 @@ class FrameMatches:
                     # candidates.
                     track_instances = candidate_instances_by_track[candidate_track]
                     track_matching_similarities = [
-                        similarity_function(untracked_instance, candidate_instance,)
+                        similarity_function(
+                            untracked_instance,
+                            candidate_instance,
+                        )
                         for candidate_instance in track_instances
                     ]
 

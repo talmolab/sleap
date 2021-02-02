@@ -510,8 +510,8 @@ class Labels(MutableSequence):
             self.tracks.extend(new_tracks)
 
     def _update_containers(self, new_label: LabeledFrame):
-        """ Ensure that top-level containers are kept updated with new
-        instances of objects that come along with new labels. """
+        """Ensure that top-level containers are kept updated with new
+        instances of objects that come along with new labels."""
 
         if new_label.video not in self.videos:
             self.videos.append(new_label.video)

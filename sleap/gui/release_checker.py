@@ -65,9 +65,7 @@ class ReleaseChecker:
     """
 
     repo_id: str = REPO_ID
-    releases: List[Release] = attr.ib(
-        factory=list, converter=filter_test_releases
-    )
+    releases: List[Release] = attr.ib(factory=list, converter=filter_test_releases)
     checked: bool = attr.ib(default=False, init=False)
 
     def check_for_releases(self) -> bool:

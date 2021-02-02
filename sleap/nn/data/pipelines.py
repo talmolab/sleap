@@ -338,7 +338,6 @@ class SingleInstanceConfmapsPipeline:
     optimization_config: OptimizationConfig
     single_instance_confmap_head: SingleInstanceConfmapsHead
     offsets_head: Optional[OffsetRefinementHead] = None
-    
 
     def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
         """Create base pipeline with input data only.
@@ -398,7 +397,9 @@ class SingleInstanceConfmapsPipeline:
             sigma=self.single_instance_confmap_head.sigma,
             output_stride=self.single_instance_confmap_head.output_stride,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -539,7 +540,9 @@ class CentroidConfmapsPipeline:
             output_stride=self.centroid_confmap_head.output_stride,
             centroids=True,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -683,7 +686,9 @@ class TopdownConfmapsPipeline:
             output_stride=self.instance_confmap_head.output_stride,
             all_instances=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -811,7 +816,9 @@ class BottomUpPipeline:
             output_stride=self.confmaps_head.output_stride,
             centroids=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
         pipeline += PartAffinityFieldsGenerator(
             sigma=self.pafs_head.sigma,
@@ -867,7 +874,7 @@ class BottomUpPipeline:
             model_output_keys=[
                 "predicted_confidence_maps",
                 "predicted_part_affinity_fields",
-            ]
+            ],
         )
         pipeline += LocalPeakFinder(
             confmaps_stride=self.confmaps_head.output_stride,

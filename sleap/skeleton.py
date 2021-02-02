@@ -114,8 +114,10 @@ class Skeleton:
 
     def __repr__(self) -> str:
         """Return full description of the skeleton."""
-        return (f"Skeleton(name='{self.name}', "
-                f"nodes={self.node_names}, edges={self.edge_names})")
+        return (
+            f"Skeleton(name='{self.name}', "
+            f"nodes={self.node_names}, edges={self.edge_names})"
+        )
 
     def __str__(self) -> str:
         """Return short readable description of the skeleton."""

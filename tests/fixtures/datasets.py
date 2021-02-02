@@ -45,6 +45,7 @@ def min_labels_slp():
 def min_labels_robot():
     return Labels.load_file(TEST_SLP_MIN_LABELS_ROBOT)
 
+
 @pytest.fixture
 def mat_labels():
     return Labels.load_leap_matlab(TEST_MAT_LABELS, gui=False)

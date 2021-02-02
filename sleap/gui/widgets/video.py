@@ -396,8 +396,7 @@ class QtVideoPlayer(QWidget):
             self.plot()
 
     def reset(self):
-        """ Reset viewer by removing all video data.
-        """
+        """Reset viewer by removing all video data."""
         self.video = None
         self.state["frame_idx"] = None
         self.view.clear()
@@ -466,7 +465,7 @@ class QtVideoPlayer(QWidget):
         self._video_image_loader.request(idx)
 
     def showLabels(self, show):
-        """ Show/hide node labels for all instances in viewer.
+        """Show/hide node labels for all instances in viewer.
 
         Args:
             show: Show if True, hide otherwise.
@@ -475,7 +474,7 @@ class QtVideoPlayer(QWidget):
             inst.showLabels(show)
 
     def showEdges(self, show):
-        """ Show/hide node edges for all instances in viewer.
+        """Show/hide node edges for all instances in viewer.
 
         Args:
             show: Show if True, hide otherwise.
@@ -489,8 +488,7 @@ class QtVideoPlayer(QWidget):
             inst.highlight_text = highlight_text
 
     def zoomToFit(self):
-        """ Zoom view to fit all instances.
-        """
+        """Zoom view to fit all instances."""
         zoom_rect = self.view.instancesBoundingRect(margin=20)
         if not zoom_rect.size().isEmpty():
             self.view.zoomToRect(zoom_rect)
@@ -755,13 +753,11 @@ class GraphicsView(QGraphicsView):
         self.setTransformationAnchor(anchor_mode)
 
     def hasImage(self) -> bool:
-        """ Returns whether or not the scene contains an image pixmap.
-        """
+        """Returns whether or not the scene contains an image pixmap."""
         return self._pixmapHandle is not None
 
     def clear(self):
-        """ Clears the displayed frame from the scene.
-        """
+        """Clears the displayed frame from the scene."""
 
         if self._pixmapHandle:
             # get the pixmap currently shown
@@ -890,7 +886,7 @@ class GraphicsView(QGraphicsView):
         self.updatedSelection.emit()
 
     def getSelectionIndex(self) -> Optional[int]:
-        """ Returns the index of the currently selected instance.
+        """Returns the index of the currently selected instance.
         If no instance selected, returns None.
         """
         instances = self.all_instances
@@ -901,7 +897,7 @@ class GraphicsView(QGraphicsView):
                 return idx
 
     def getSelectionInstance(self) -> Optional[Instance]:
-        """ Returns the currently selected instance.
+        """Returns the currently selected instance.
         If no instance selected, returns None.
         """
         instances = self.all_instances
@@ -928,13 +924,11 @@ class GraphicsView(QGraphicsView):
         return None
 
     def resizeEvent(self, event):
-        """ Maintain current zoom on resize.
-        """
+        """Maintain current zoom on resize."""
         self.updateViewer()
 
     def mousePressEvent(self, event):
-        """ Start mouse pan or zoom mode.
-        """
+        """Start mouse pan or zoom mode."""
         scenePos = self.mapToScene(event.pos())
         # keep track of click location
         self._down_pos = event.pos()
@@ -962,8 +956,7 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        """ Stop mouse pan or zoom mode (apply zoom if valid).
-        """
+        """Stop mouse pan or zoom mode (apply zoom if valid)."""
         QGraphicsView.mouseReleaseEvent(self, event)
         scenePos = self.mapToScene(event.pos())
 
@@ -1037,8 +1030,7 @@ class GraphicsView(QGraphicsView):
         self.centerOn(zoom_rect.center())
 
     def clearZoom(self):
-        """ Clear zoom stack. Doesn't update display.
-        """
+        """Clear zoom stack. Doesn't update display."""
         self.zoomFactor = 1
 
     @staticmethod
@@ -1077,8 +1069,7 @@ class GraphicsView(QGraphicsView):
         return GraphicsView.getInstancesBoundingRect(self.all_instances, margin=margin)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
-        """ Custom event handler, clears zoom.
-        """
+        """Custom event handler, clears zoom."""
         scenePos = self.mapToScene(event.pos())
         if event.button() == Qt.LeftButton:
 
@@ -1093,8 +1084,7 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mouseDoubleClickEvent(self, event)
 
     def wheelEvent(self, event):
-        """ Custom event handler. Zoom in/out based on scroll wheel change.
-        """
+        """Custom event handler. Zoom in/out based on scroll wheel change."""
         # zoom on wheel when no mouse buttons are pressed
         if event.buttons() == Qt.NoButton:
             angle = event.angleDelta().y()
@@ -1166,7 +1156,7 @@ class QtNodeLabel(QGraphicsTextItem):
         self.adjustStyle()
 
     def adjustPos(self, *args, **kwargs):
-        """ Update the position of the label based on the position of the node.
+        """Update the position of the label based on the position of the node.
 
         Args:
             Accepts arbitrary arguments so we can connect to various signals.
@@ -1220,8 +1210,7 @@ class QtNodeLabel(QGraphicsTextItem):
         self.adjustStyle()
 
     def adjustStyle(self):
-        """ Update visual display of the label and its node.
-        """
+        """Update visual display of the label and its node."""
 
         complete_color = (
             QColor(80, 194, 159) if self.node.point.complete else QColor(232, 45, 32)
@@ -1248,35 +1237,29 @@ class QtNodeLabel(QGraphicsTextItem):
             self.setDefaultTextColor(complete_color)  # redish
 
     def boundingRect(self):
-        """ Method required by Qt.
-        """
+        """Method required by Qt."""
         return super(QtNodeLabel, self).boundingRect()
 
     def paint(self, *args, **kwargs):
-        """ Method required by Qt.
-        """
+        """Method required by Qt."""
         super(QtNodeLabel, self).paint(*args, **kwargs)
 
     def mousePressEvent(self, event):
-        """ Pass events along so that clicking label is like clicking node.
-        """
+        """Pass events along so that clicking label is like clicking node."""
         self.setCursor(Qt.ArrowCursor)
         self.node.mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        """ Pass events along so that clicking label is like clicking node.
-        """
+        """Pass events along so that clicking label is like clicking node."""
         self.node.mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """ Pass events along so that clicking label is like clicking node.
-        """
+        """Pass events along so that clicking label is like clicking node."""
         self.unsetCursor()
         self.node.mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
-        """ Pass events along so that clicking label is like clicking node.
-        """
+        """Pass events along so that clicking label is like clicking node."""
         self.node.wheelEvent(event)
 
 
@@ -1375,8 +1358,7 @@ class QtNode(QGraphicsEllipseItem):
         self.updatePoint(user_change=False)
 
     def calls(self):
-        """ Method to call all callbacks.
-        """
+        """Method to call all callbacks."""
         for callback in self.callbacks:
             if callable(callback):
                 callback(self)
@@ -1437,8 +1419,7 @@ class QtNode(QGraphicsEllipseItem):
             self.point.visible = visible
 
     def mousePressEvent(self, event):
-        """ Custom event handler for mouse press.
-        """
+        """Custom event handler for mouse press."""
         # Do nothing if node is from predicted instance
         if self.parentObject().predicted:
             return
@@ -1474,8 +1455,7 @@ class QtNode(QGraphicsEllipseItem):
             pass
 
     def mouseMoveEvent(self, event):
-        """ Custom event handler for mouse move.
-        """
+        """Custom event handler for mouse move."""
         # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
@@ -1486,8 +1466,7 @@ class QtNode(QGraphicsEllipseItem):
             )  # don't count change until mouse release
 
     def mouseReleaseEvent(self, event):
-        """ Custom event handler for mouse release.
-        """
+        """Custom event handler for mouse release."""
         # print(event)
         self.unsetCursor()
         if self.dragParent:
@@ -1543,12 +1522,18 @@ class QtEdge(QGraphicsPolygonItem):
         self.show_non_visible = show_non_visible
 
         super(QtEdge, self).__init__(
-            polygon=QPolygonF(), parent=parent, *args, **kwargs,
+            polygon=QPolygonF(),
+            parent=parent,
+            *args,
+            **kwargs,
         )
 
         self.setLine(
             QLineF(
-                self.src.point.x, self.src.point.y, self.dst.point.x, self.dst.point.y,
+                self.src.point.x,
+                self.src.point.y,
+                self.dst.point.x,
+                self.dst.point.y,
             )
         )
 
@@ -1935,13 +1920,11 @@ class QtInstance(QGraphicsObject):
         self.edges_shown = show
 
     def boundingRect(self):
-        """ Method required Qt to determine bounding rect for item.
-        """
+        """Method required Qt to determine bounding rect for item."""
         return self._bounding_rect
 
     def paint(self, painter, option, widget=None):
-        """ Method required by Qt.
-        """
+        """Method required by Qt."""
         pass
 
 
@@ -1957,13 +1940,11 @@ class QtTextWithBackground(QGraphicsTextItem):
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
     def boundingRect(self):
-        """ Method required by Qt.
-        """
+        """Method required by Qt."""
         return super(QtTextWithBackground, self).boundingRect()
 
     def paint(self, painter, option, *args, **kwargs):
-        """ Method required by Qt.
-        """
+        """Method required by Qt."""
         text_color = self.defaultTextColor()
         brush = painter.brush()
         background_color = "white" if text_color.lightnessF() < 0.4 else "black"

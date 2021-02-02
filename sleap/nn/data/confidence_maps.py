@@ -535,9 +535,7 @@ class SingleInstanceConfidenceMapGenerator:
 
             if self.with_offsets:
                 example["offsets"] = mask_offsets(
-                    make_offsets(
-                        example["points"], xv, yv, stride=self.output_stride
-                    ),
+                    make_offsets(example["points"], xv, yv, stride=self.output_stride),
                     example["confidence_maps"],
                     self.offsets_threshold,
                 )

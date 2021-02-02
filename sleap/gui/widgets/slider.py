@@ -487,7 +487,10 @@ class VideoSlider(QtWidgets.QGraphicsView):
         start_pos = self._toPos(start, center=True)
         end_pos = self._toPos(end, center=True)
         box_rect = QtCore.QRect(
-            start_pos, self._header_height, end_pos - start_pos, self.box_rect.height(),
+            start_pos,
+            self._header_height,
+            end_pos - start_pos,
+            self.box_rect.height(),
         )
 
         box_object.setRect(box_rect)

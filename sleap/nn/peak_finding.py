@@ -688,11 +688,11 @@ def find_local_peaks_with_offsets(
         ],
         axis=1,
     )
-    
+
     # Expand last axes of offsets.
     shape = tf.shape(offsets)
     offsets = tf.reshape(offsets, [shape[0], shape[1], shape[2], -1, 2])
-    
+
     # Extract offsets at the peak locations.
     peak_offsets = tf.gather_nd(offsets, subs)
 

@@ -76,7 +76,9 @@ class VideoWriterSkvideo(VideoWriter):
         fps = str(fps)
         self._writer = skvideo.io.FFmpegWriter(
             filename,
-            inputdict={"-r": fps,},
+            inputdict={
+                "-r": fps,
+            },
             outputdict={
                 "-c:v": "libx264",
                 "-preset": "superfast",

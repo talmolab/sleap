@@ -1,9 +1,12 @@
 import numpy as np
 import tensorflow as tf
-from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
+from sleap.nn.system import use_cpu_only
+
+use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.architectures import leap
 from sleap.nn.config import LEAPConfig
+
 
 class LeapTests(tf.test.TestCase):
     def test_leap_cnn_reference(self):
@@ -80,13 +83,14 @@ class LeapTests(tf.test.TestCase):
             )
 
     def test_leap_cnn_reference_from_config(self):
-        arch = leap.LeapCNN.from_config(LEAPConfig(
-            max_stride=8,
-            output_stride=1,
-            filters=64,
-            filters_rate=2,
-            up_interpolate=False,
-            stacks=1
+        arch = leap.LeapCNN.from_config(
+            LEAPConfig(
+                max_stride=8,
+                output_stride=1,
+                filters=64,
+                filters_rate=2,
+                up_interpolate=False,
+                stacks=1,
             )
         )
         x_in = tf.keras.layers.Input((192, 192, 1))

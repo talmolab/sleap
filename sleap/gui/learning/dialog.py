@@ -619,7 +619,8 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 self.form_widget.set_field_options(
-                    field_name, skeleton.node_names,
+                    field_name,
+                    skeleton.node_names,
                 )
 
         # Connect actions for change to pipeline
@@ -733,7 +734,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
                 self.form_widgets[form_name].set_field_options(
-                    field_name, skeleton.node_names,
+                    field_name,
+                    skeleton.node_names,
                 )
 
         if self._video:
@@ -890,7 +892,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     def _set_head(self):
         if self.head:
             self.set_fields_from_key_val_dict(
-                {"_heads_name": self.head,}
+                {
+                    "_heads_name": self.head,
+                }
             )
 
             self.form_widgets["model"].set_field_enabled("_heads_name", False)

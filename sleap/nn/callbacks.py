@@ -56,7 +56,7 @@ class TrainingControllerZMQ(tf.keras.callbacks.Callback):
                 self.set_lr(msg["lr"])
 
     def set_lr(self, lr):
-        """ Adjust the model learning rate.
+        """Adjust the model learning rate.
 
         This is the based off of the implementation used in the native learning rate
         scheduling callbacks.

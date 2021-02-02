@@ -58,7 +58,9 @@ def pad_to_stride(image: tf.Tensor, max_stride: int) -> tf.Tensor:
             paddings = tf.cast([[0, pad_bottom], [0, pad_right], [0, 0]], tf.int32)
         else:
             # tf.rank(image) == 4:
-            paddings = tf.cast([[0, 0], [0, pad_bottom], [0, pad_right], [0, 0]], tf.int32)
+            paddings = tf.cast(
+                [[0, 0], [0, pad_bottom], [0, pad_right], [0, 0]], tf.int32
+            )
 
         image = tf.pad(image, paddings, mode="CONSTANT", constant_values=0)
     return image
@@ -140,7 +142,7 @@ class Resizer:
         pad_to_stride: Optional[int] = None,
         keep_full_image: bool = False,
         full_image_key: Text = "full_image",
-        points_key: Optional[Text] = "instances"
+        points_key: Optional[Text] = "instances",
     ) -> "Resizer":
         """Build an instance of this class from its configuration options.
 

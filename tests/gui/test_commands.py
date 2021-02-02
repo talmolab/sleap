@@ -19,10 +19,12 @@ def test_delete_user_dialog(centered_pair_predictions):
 
 
 def test_import_labels_from_dlc_folder():
-    csv_files = ImportDeepLabCutFolder.find_dlc_files_in_folder('tests/data/dlc_multiple_datasets')
+    csv_files = ImportDeepLabCutFolder.find_dlc_files_in_folder(
+        "tests/data/dlc_multiple_datasets"
+    )
     assert set([fix_path_separator(f) for f in csv_files]) == {
-        'tests/data/dlc_multiple_datasets/video2/dlc_dataset_2.csv',
-        'tests/data/dlc_multiple_datasets/video1/dlc_dataset_1.csv',
+        "tests/data/dlc_multiple_datasets/video2/dlc_dataset_2.csv",
+        "tests/data/dlc_multiple_datasets/video1/dlc_dataset_1.csv",
     }
 
     labels = ImportDeepLabCutFolder.import_labels_from_dlc_files(csv_files)
@@ -33,10 +35,12 @@ def test_import_labels_from_dlc_folder():
     assert len(labels.nodes) == 3
     assert len(labels.tracks) == 0
 
-    assert set([fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]) == {
-        'tests/data/dlc_multiple_datasets/video2/img002.jpg',
-        'tests/data/dlc_multiple_datasets/video1/img000.jpg',
-        'tests/data/dlc_multiple_datasets/video1/img000.jpg',
+    assert set(
+        [fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]
+    ) == {
+        "tests/data/dlc_multiple_datasets/video2/img002.jpg",
+        "tests/data/dlc_multiple_datasets/video1/img000.jpg",
+        "tests/data/dlc_multiple_datasets/video1/img000.jpg",
     }
 
     assert set([l.frame_idx for l in labels.labeled_frames]) == {0, 0, 1}

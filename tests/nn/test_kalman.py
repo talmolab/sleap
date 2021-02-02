@@ -48,7 +48,12 @@ def test_first_choice_matching():
 
     # another cost matrix
     # make sure we get *best* match for each track, regardless of row order
-    cost_matrix = np.array([[50, 100], [10, 150],])
+    cost_matrix = np.array(
+        [
+            [50, 100],
+            [10, 150],
+        ]
+    )
     match_by_track = k.match_dict_from_match_function(
         cost_matrix=cost_matrix,
         row_items=instances,
@@ -121,7 +126,12 @@ def test_track_instance_matches():
     # best match is instance a -> track a
     # next match is instance b -> track b
     # but instance b would prefer track a
-    cost_matrix = np.array([[10, 100], [50, 150],])
+    cost_matrix = np.array(
+        [
+            [10, 100],
+            [50, 150],
+        ]
+    )
 
     matches = k.get_track_instance_matches(
         cost_matrix=cost_matrix,
@@ -143,7 +153,12 @@ def test_track_instance_matches():
     # best match is instance b -> track a (cost 10)
     # next match is instance a -> track b (cost 100)
     # each instance gets its first choice so "too close" check shouldn't apply
-    cost_matrix = np.array([[50, 100], [10, 150],])
+    cost_matrix = np.array(
+        [
+            [50, 100],
+            [10, 150],
+        ]
+    )
 
     matches = k.get_track_instance_matches(
         cost_matrix=cost_matrix,
