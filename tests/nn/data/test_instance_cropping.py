@@ -1,7 +1,9 @@
 import pytest
 import numpy as np
 import tensorflow as tf
-from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
+from sleap.nn.system import use_cpu_only
+
+use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.data import providers
 from sleap.nn.data import instance_centroids
@@ -20,11 +22,13 @@ def test_normalize_bboxes():
 
 def test_make_centered_bboxes():
     bbox = instance_cropping.make_centered_bboxes(
-        tf.convert_to_tensor([[1, 1]], tf.float32), box_height=3, box_width=3)
+        tf.convert_to_tensor([[1, 1]], tf.float32), box_height=3, box_width=3
+    )
     np.testing.assert_array_equal(bbox, [[0, 0, 2, 2]])
 
     bbox = instance_cropping.make_centered_bboxes(
-        tf.convert_to_tensor([[2, 2]], tf.float32), box_height=4, box_width=4)
+        tf.convert_to_tensor([[2, 2]], tf.float32), box_height=4, box_width=4
+    )
     np.testing.assert_array_equal(bbox, [[0.5, 0.5, 3.5, 3.5]])
 
 
@@ -35,40 +39,40 @@ def test_crop_bboxes():
     img = tf.stack([XX, YY], axis=-1)
 
     centroids = tf.convert_to_tensor([[1, 1]], tf.float32)
-    bboxes = instance_cropping.make_centered_bboxes(centroids,
-        box_height=3, box_width=3)
+    bboxes = instance_cropping.make_centered_bboxes(
+        centroids, box_height=3, box_width=3
+    )
     crops = instance_cropping.crop_bboxes(img, bboxes)
 
-    patch_xx = [[0, 1, 2],
-                [0, 1, 2],
-                [0, 1, 2]]
-    patch_yy = [[0, 0, 0],
-                [1, 1, 1],
-                [2, 2, 2]]
+    patch_xx = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
+    patch_yy = [[0, 0, 0], [1, 1, 1], [2, 2, 2]]
     expected_patch = np.expand_dims(np.stack([patch_xx, patch_yy], axis=-1), axis=0)
     np.testing.assert_array_equal(crops, expected_patch)
     np.testing.assert_array_equal(crops, np.expand_dims(img.numpy()[:3, :3, :], axis=0))
     assert crops.dtype == img.dtype
 
+
 def test_crop_bboxes_rounding():
     # Test for rounding truncation bug when computing bounding box size for cropping.
     bboxes = instance_cropping.make_centered_bboxes(
-        tf.cast([[464.42838, 550.14276]], tf.float32),
-        box_height=100, box_width=100
+        tf.cast([[464.42838, 550.14276]], tf.float32), box_height=100, box_width=100
     )
     crops = instance_cropping.crop_bboxes(
-        tf.zeros([16, 16, 1], tf.float32),
-        bboxes=bboxes
+        tf.zeros([16, 16, 1], tf.float32), bboxes=bboxes
     )
     assert crops.shape == (1, 100, 100, 1)
+
 
 def test_instance_cropper(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
     instance_centroid_finder = instance_centroids.InstanceCentroidFinder(
-        center_on_anchor_part=True, anchor_part_names="A",
-        skeletons=labels_reader.labels.skeletons)
+        center_on_anchor_part=True,
+        anchor_part_names="A",
+        skeletons=labels_reader.labels.skeletons,
+    )
     instance_cropper = instance_cropping.InstanceCropper(
-        crop_width=160, crop_height=160, keep_full_image=False)
+        crop_width=160, crop_height=160, keep_full_image=False
+    )
 
     ds = instance_centroid_finder.transform_dataset(labels_reader.make_dataset())
     ds = instance_cropper.transform_dataset(ds)
@@ -117,10 +121,13 @@ def test_instance_cropper(min_labels):
 def test_instance_cropper_keeping_full_image(min_labels):
     labels_reader = providers.LabelsReader(min_labels)
     instance_centroid_finder = instance_centroids.InstanceCentroidFinder(
-        center_on_anchor_part=True, anchor_part_names="A",
-        skeletons=labels_reader.labels.skeletons)
+        center_on_anchor_part=True,
+        anchor_part_names="A",
+        skeletons=labels_reader.labels.skeletons,
+    )
     instance_cropper = instance_cropping.InstanceCropper(
-        crop_width=160, crop_height=160, keep_full_image=True)
+        crop_width=160, crop_height=160, keep_full_image=True
+    )
 
     ds = instance_centroid_finder.transform_dataset(labels_reader.make_dataset())
     ds = instance_cropper.transform_dataset(ds)

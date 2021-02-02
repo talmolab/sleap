@@ -266,7 +266,6 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     new_videos.append(video)
             d["videos"] = Video.cattr().unstructure(new_videos)
 
-
         with h5py.File(filename, "a") as f:
 
             # Add all the JSON metadata

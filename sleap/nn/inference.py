@@ -977,7 +977,7 @@ class SingleInstancePredictor(Predictor):
                 ex["video_ind"] = ex["video_ind"].numpy().flatten()
             if isinstance(ex["frame_ind"], tf.Tensor):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
-            
+
             yield ex
 
     def _make_labeled_frames_from_generator(

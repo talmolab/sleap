@@ -181,6 +181,7 @@ class KeyMapper:
             A dataset that generates examples with the tensors in `input_keys` mapped to
             keys in `output_keys` according to the structure in `key_maps`.
         """
+
         def map_keys(example):
             """Local processing function for dataset mapping."""
             output_keys = []

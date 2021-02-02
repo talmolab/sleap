@@ -31,10 +31,8 @@ def cfg():
 
 
 def test_train_single_instance(min_labels_robot, cfg):
-    cfg.model.heads.single_instance = (
-        sleap.nn.config.SingleInstanceConfmapsHeadConfig(
-            sigma=1.5, output_stride=1, offset_refinement=False
-        )
+    cfg.model.heads.single_instance = sleap.nn.config.SingleInstanceConfmapsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=False
     )
     trainer = sleap.nn.training.SingleInstanceModelTrainer.from_config(
         cfg, training_labels=min_labels_robot
@@ -46,10 +44,8 @@ def test_train_single_instance(min_labels_robot, cfg):
 
 
 def test_train_single_instance_with_offset(min_labels_robot, cfg):
-    cfg.model.heads.single_instance = (
-        sleap.nn.config.SingleInstanceConfmapsHeadConfig(
-            sigma=1.5, output_stride=1, offset_refinement=True
-        )
+    cfg.model.heads.single_instance = sleap.nn.config.SingleInstanceConfmapsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=True
     )
     trainer = sleap.nn.training.SingleInstanceModelTrainer.from_config(
         cfg, training_labels=min_labels_robot
@@ -64,10 +60,8 @@ def test_train_single_instance_with_offset(min_labels_robot, cfg):
 
 
 def test_train_centroids(training_labels, cfg):
-    cfg.model.heads.centroid = (
-        sleap.nn.config.CentroidsHeadConfig(
-            sigma=1.5, output_stride=1, offset_refinement=False
-        )
+    cfg.model.heads.centroid = sleap.nn.config.CentroidsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=False
     )
     trainer = sleap.nn.training.CentroidConfmapsModelTrainer.from_config(
         cfg, training_labels=training_labels
@@ -79,10 +73,8 @@ def test_train_centroids(training_labels, cfg):
 
 
 def test_train_centroids_with_offset(training_labels, cfg):
-    cfg.model.heads.centroid = (
-        sleap.nn.config.CentroidsHeadConfig(
-            sigma=1.5, output_stride=1, offset_refinement=True
-        )
+    cfg.model.heads.centroid = sleap.nn.config.CentroidsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=True
     )
     trainer = sleap.nn.training.CentroidConfmapsModelTrainer.from_config(
         cfg, training_labels=training_labels
@@ -130,8 +122,10 @@ def test_train_topdown_with_offset(training_labels, cfg):
 
 def test_train_bottomup(training_labels, cfg):
     cfg.model.heads.multi_instance = sleap.nn.config.MultiInstanceConfig(
-        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(output_stride=1, offset_refinement=False),
-        pafs=sleap.nn.config.PartAffinityFieldsHeadConfig(output_stride=2)
+        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(
+            output_stride=1, offset_refinement=False
+        ),
+        pafs=sleap.nn.config.PartAffinityFieldsHeadConfig(output_stride=2),
     )
     trainer = sleap.nn.training.TopdownConfmapsModelTrainer.from_config(
         cfg, training_labels=training_labels
@@ -147,8 +141,10 @@ def test_train_bottomup(training_labels, cfg):
 
 def test_train_bottomup_with_offset(training_labels, cfg):
     cfg.model.heads.multi_instance = sleap.nn.config.MultiInstanceConfig(
-        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(output_stride=1, offset_refinement=True),
-        pafs=sleap.nn.config.PartAffinityFieldsHeadConfig(output_stride=2)
+        confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(
+            output_stride=1, offset_refinement=True
+        ),
+        pafs=sleap.nn.config.PartAffinityFieldsHeadConfig(output_stride=2),
     )
     trainer = sleap.nn.training.TopdownConfmapsModelTrainer.from_config(
         cfg, training_labels=training_labels

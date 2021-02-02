@@ -58,7 +58,11 @@ class SleapAnalysisAdaptor(Adaptor):
 
     @classmethod
     def read(
-        cls, file: FileHandle, video: Union[Video, str], *args, **kwargs,
+        cls,
+        file: FileHandle,
+        video: Union[Video, str],
+        *args,
+        **kwargs,
     ) -> Labels:
         connect_adj_nodes = False
 

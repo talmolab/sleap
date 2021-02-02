@@ -119,7 +119,12 @@ def test_analysis_hdf5(tmpdir, centered_pair_predictions):
 
     write_analysis(centered_pair_predictions, output_path=filename, all_frames=True)
 
-    labels = read(filename, for_object="labels", as_format="analysis", video=video,)
+    labels = read(
+        filename,
+        for_object="labels",
+        as_format="analysis",
+        video=video,
+    )
 
     assert len(labels) == len(centered_pair_predictions)
     assert len(labels.tracks) == len(centered_pair_predictions.tracks)

@@ -258,9 +258,14 @@ def test_instance_from_pointsarray(skeleton):
 
 
 def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
-    user_inst = Instance(skeleton=skeleton, points={skeleton.nodes[0]: Point(1, 2)},)
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={skeleton.nodes[0]: Point(1, 2)},
+    )
     user_frame = LabeledFrame(
-        video=centered_pair_vid, frame_idx=0, instances=[user_inst],
+        video=centered_pair_vid,
+        frame_idx=0,
+        instances=[user_inst],
     )
 
     pred_inst = PredictedInstance(
@@ -269,7 +274,9 @@ def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
         score=1.0,
     )
     pred_frame = LabeledFrame(
-        video=centered_pair_vid, frame_idx=0, instances=[pred_inst],
+        video=centered_pair_vid,
+        frame_idx=0,
+        instances=[pred_inst],
     )
 
     LabeledFrame.complex_frame_merge(user_frame, pred_frame)
@@ -282,9 +289,18 @@ def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
 
 
 def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
-    user_inst = Instance(skeleton=skeleton, points={skeleton.nodes[0]: Point(1, 2)},)
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={skeleton.nodes[0]: Point(1, 2)},
+    )
     user_labels = Labels(
-        [LabeledFrame(video=centered_pair_vid, frame_idx=0, instances=[user_inst],)]
+        [
+            LabeledFrame(
+                video=centered_pair_vid,
+                frame_idx=0,
+                instances=[user_inst],
+            )
+        ]
     )
 
     pred_inst = PredictedInstance(
@@ -293,7 +309,13 @@ def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
         score=1.0,
     )
     pred_labels = Labels(
-        [LabeledFrame(video=centered_pair_vid, frame_idx=0, instances=[pred_inst],)]
+        [
+            LabeledFrame(
+                video=centered_pair_vid,
+                frame_idx=0,
+                instances=[pred_inst],
+            )
+        ]
     )
 
     # Merge predictions into current labels dataset

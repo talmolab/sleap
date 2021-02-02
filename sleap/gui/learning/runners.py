@@ -370,7 +370,8 @@ def write_pipeline_files(
 
         # Get list of cli args
         cli_args, _ = inference_task.make_predict_cli_call(
-            item_for_inference=item_for_inference, output_path=prediction_output_path,
+            item_for_inference=item_for_inference,
+            output_path=prediction_output_path,
         )
         # And join them into a single call to inference
         inference_script += " ".join(cli_args) + "\n"

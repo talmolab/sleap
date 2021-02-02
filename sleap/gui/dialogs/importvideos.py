@@ -49,10 +49,10 @@ class ImportVideos:
 
     def ask(self):
         """Runs the import UI.
-        
+
         1. Show file selection dialog.
         2. Show import parameter dialog with widget for each file.
-        
+
         Args:
             None.
         Returns:
@@ -81,7 +81,7 @@ class ImportVideos:
 
 class ImportParamDialog(QDialog):
     """Dialog for selecting parameters with preview when importing video.
-    
+
     Args:
         filenames (list): List of files we want to import.
     """
@@ -253,7 +253,7 @@ class ImportItemWidget(QFrame):
 
     def get_data(self) -> dict:
         """Get all data (fixed and user-selected) for imported video.
-        
+
         Returns:
             Dict with data for this video.
         """

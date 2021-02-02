@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
-from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
+from sleap.nn.system import use_cpu_only
+
+use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.data import providers
 from sleap.nn.data import augmentation
@@ -49,5 +51,6 @@ def test_random_cropper(min_labels):
     assert "crop_bbox" in example
     offset = tf.stack([example["crop_bbox"][0, 1], example["crop_bbox"][0, 0]], axis=-1)
     assert tf.reduce_all(
-        example["instances"] == (
-            example_preaug["instances"] - tf.expand_dims(offset, axis=0)))
+        example["instances"]
+        == (example_preaug["instances"] - tf.expand_dims(offset, axis=0))
+    )
