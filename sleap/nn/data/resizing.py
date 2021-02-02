@@ -315,21 +315,18 @@ class SizeMatcher:
 
             current_shape = tf.shape(image)
 
-            if (current_shape[-3] == self.max_image_height and current_shape[-2] == self.max_image_width) \
-                or current_shape[-3] > self.max_image_height \
-                or current_shape[-2] > self.max_image_width:
-                # If image shape matches target shape, or larger than target shape in any dimension, don't do anything
-                return example
-
-            elif current_shape[-3] < self.max_image_height or current_shape[-2] < self.max_image_width:
+            # Only apply this transform if image shape differs from target
+            if current_shape[-3] != self.max_image_height or current_shape[-2] != self.max_image_width:
                 # Calculate target height and width for resizing the image (no padding yet)
                 hratio = self.max_image_height / tf.cast(current_shape[-3], tf.float32)
                 wratio = self.max_image_width / tf.cast(current_shape[-2], tf.float32)
                 if hratio > wratio:
+                    # The bottleneck is width, scale to fit width first then pad to height
                     target_height=tf.cast(tf.cast(current_shape[-3], tf.float32) * wratio, tf.int32)
                     target_width=self.max_image_width
                     example[self.scale_key] = example[self.scale_key] * wratio
                 else:
+                    # The bottleneck is height, scale to fit height first then pad to width
                     target_height=self.max_image_height
                     target_width=tf.cast(tf.cast(current_shape[-2], tf.float32) * hratio, tf.int32)
                     example[self.scale_key] = example[self.scale_key] * hratio
