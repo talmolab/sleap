@@ -376,6 +376,7 @@ class ClassVectorsHead(Head):
     classes: List[Text]
     num_fc_layers: int = 1
     num_fc_units: int = 64
+    global_pool: bool = True
     output_stride: int = 1
     loss_weight: float = 1.0
 
@@ -412,6 +413,7 @@ class ClassVectorsHead(Head):
             classes=classes,
             num_fc_layers=config.num_fc_layers,
             num_fc_units=config.num_fc_units,
+            global_pool=config.global_pool,
             output_stride=config.output_stride,
             loss_weight=config.loss_weight,
         )
@@ -429,7 +431,9 @@ class ClassVectorsHead(Head):
         """
         if name is None:
             name = f"{type(self).__name__}"
-        x = tf.keras.layers.GlobalMaxPool2D(name="pre_classification_global_pool")(x)
+        x = x_in
+        if self.global_pool:
+            x = tf.keras.layers.GlobalMaxPool2D(name="pre_classification_global_pool")(x)
         x = tf.keras.layers.Flatten(name="pre_classification_flatten")(x)
         for i in range(self.num_fc_layers):
             x = tf.keras.layers.Dense(

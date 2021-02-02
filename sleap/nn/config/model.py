@@ -372,6 +372,7 @@ class ClassVectorsHeadConfig:
     classes: Optional[List[Text]] = None
     num_fc_layers: int = 1
     num_fc_units: int = 64
+    global_pool: bool = True
     output_stride: int = 1
     loss_weight: float = 1.0
 

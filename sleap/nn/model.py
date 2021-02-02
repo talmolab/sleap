@@ -271,7 +271,7 @@ class Model:
                 CenteredInstanceConfmapsHead.from_config(
                     head_config.confmaps, part_names=part_names
                 ),
-                ClassVectorsHead.from_config(head_config.class_maps, classes=classes),
+                ClassVectorsHead.from_config(head_config.class_vectors, classes=classes),
             ]
             output_stride = min(heads[0].output_stride, heads[1].output_stride)
             output_stride = heads[0].output_stride
