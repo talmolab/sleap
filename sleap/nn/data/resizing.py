@@ -275,6 +275,68 @@ class SizeMatcher:
     max_image_height: int = None
     max_image_width: int = None
 
+
+    @classmethod
+    def from_config(
+        cls,
+        config: PreprocessingConfig,
+        provider: Optional[Provider] = None,
+        update_config: bool = True,
+        image_key: Text = "image",
+        scale_key: Text = "scale",
+        keep_full_image: bool = False,
+        full_image_key: Text = "full_image",
+        points_key: Optional[Text] = "instances"
+    ) -> "SizeMatcher":
+        """Build an instance of this class from configuration.
+
+        Args:
+            config: An `PreprocessingConfig` instance with the desired parameters. If
+                `config.resize_and_pad_to_target` is True and 'target_height' / 'target_width' are not set, provider
+                needs to be set that implements 'max_height_and_width'.
+            provider: Data provider.
+            update_config: If True, the input model configuration will be updated with
+                values inferred from other fields.
+            image_key: String name of the key containing the images to resize.
+            scale_key: String name of the key containing the scale of the images.
+            pad_to_stride: An integer specifying the `pad_to_stride` if
+                `config.pad_to_stride` is not an explicit integer (e.g., set to None).
+            keep_full_image: If True, keeps the (original size) full image in the
+                examples. This is useful for multi-scale inference.
+            full_image_key: String name of the key containing the full images.
+            points_key: String name of the key containing points to adjust for the
+                resizing operation.
+        Returns:
+            An instance of this class.
+
+        Raises:
+            ValueError: If `provider` is not set or does not implement `max_height_and_width`.
+        """
+        if config.resize_and_pad_to_target:
+            if config.target_height is not None and config.target_width is not None:
+                max_height = config.target_height
+                max_width = config.target_width
+            else:
+                try:
+                    max_height, max_width = provider.max_height_and_width()
+                except:
+                    raise ValueError("target_height / target_width could not be determined")
+                if update_config:
+                    config.target_height = max_height
+                    config.target_width = max_width
+        else:
+            max_height, max_width = None, None
+
+        return cls(
+            image_key=image_key,
+            points_key=points_key,
+            scale_key=scale_key,
+            keep_full_image=keep_full_image,
+            full_image_key=full_image_key,
+            max_image_height=max_height,
+            max_image_width=max_width,
+        )
+
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""

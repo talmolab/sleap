@@ -93,7 +93,7 @@ class LabelsReader:
         """Return the list of videos that `video_ind` in examples match up with."""
         return self.labels.videos
 
-    def max_video_height_and_width(self) -> Tuple[int, int]:
+    def max_height_and_width(self) -> Tuple[int, int]:
         return max(video.shape[1] for video in self.videos), max(video.shape[2] for video in self.videos)
 
     def make_dataset(
