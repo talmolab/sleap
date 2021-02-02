@@ -352,12 +352,12 @@ class SingleInstanceConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
                 crop_height=self.optimization_config.augmentation_config.random_crop_height,
@@ -397,13 +397,12 @@ class SingleInstanceConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
-
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += SingleInstanceConfidenceMapGenerator(
             sigma=self.single_instance_confmap_head.sigma,
             output_stride=self.single_instance_confmap_head.output_stride,
@@ -494,12 +493,12 @@ class CentroidConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
                 crop_height=self.optimization_config.augmentation_config.random_crop_height,
@@ -545,13 +544,12 @@ class CentroidConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
-
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -658,12 +656,12 @@ class TopdownConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -700,13 +698,12 @@ class TopdownConfmapsPipeline:
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
-
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -799,12 +796,12 @@ class BottomUpPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
                 crop_height=self.optimization_config.augmentation_config.random_crop_height,
@@ -845,13 +842,12 @@ class BottomUpPipeline:
                 crop_width=aug_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
-
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += MultiConfidenceMapGenerator(
             sigma=self.confmaps_head.sigma,
             output_stride=self.confmaps_head.output_stride,
