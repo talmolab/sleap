@@ -191,7 +191,7 @@ def test_size_matcher():
     im1 = next(transform_iter)["image"]
     assert im1.shape == (512, 560, 1)
     # Check padding is on the bottom
-    check_padding(im2, 320, 512, 0, 560)
+    check_padding(im1, 320, 512, 0, 560)
     im2 = next(transform_iter)["image"]
     assert im2.shape == (512, 560, 1)
     # Check padding is on the right
