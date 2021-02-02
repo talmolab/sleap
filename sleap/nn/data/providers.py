@@ -94,7 +94,9 @@ class LabelsReader:
         return self.labels.videos
 
     def max_height_and_width(self) -> Tuple[int, int]:
-        return max(video.shape[1] for video in self.videos), max(video.shape[2] for video in self.videos)
+        return max(video.shape[1] for video in self.videos), max(
+            video.shape[2] for video in self.videos
+        )
 
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None

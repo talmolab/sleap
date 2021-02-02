@@ -123,6 +123,7 @@ def test_resizer_from_config():
             config=resizing.PreprocessingConfig(input_scaling=0.5, pad_to_stride=None)
         )
 
+
 def test_size_matcher():
     # Create some fake data using two different size videos.
     skeleton = sleap.Skeleton.from_names_and_edge_inds(["A"])
