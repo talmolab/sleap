@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 import attr
-from typing import Text, Optional, List, Sequence, Union
+from typing import Text, Optional, List, Sequence, Union, Tuple
 import sleap
 
 
@@ -92,6 +92,9 @@ class LabelsReader:
     def videos(self) -> List[sleap.Video]:
         """Return the list of videos that `video_ind` in examples match up with."""
         return self.labels.videos
+
+    def max_video_height_and_width(self) -> Tuple[int, int]:
+        return max(video.shape[1] for video in self.videos), max(video.shape[2] for video in self.videos)
 
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None

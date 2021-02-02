@@ -174,3 +174,7 @@ def test_labels_reader_multi_size():
     # Check LabelReader can provide different shapes of individual samples
     assert next(ds_iter)["image"].shape == (320, 560, 1)
     assert next(ds_iter)["image"].shape == (512, 512, 1)
+
+    h, w = labels_reader.max_video_height_and_width()
+    assert h == 512
+    assert w == 560
