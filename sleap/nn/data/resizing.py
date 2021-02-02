@@ -280,7 +280,7 @@ class SizeMatcher:
     def from_config(
         cls,
         config: PreprocessingConfig,
-        provider: Optional[Provider] = None,
+        provider: Optional = None,
         update_config: bool = True,
         image_key: Text = "image",
         scale_key: Text = "scale",
