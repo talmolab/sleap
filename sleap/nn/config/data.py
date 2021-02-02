@@ -76,6 +76,13 @@ class PreprocessingConfig:
             max stride (typically 32). This padding will be ignored when instance
             cropping inputs since the crop size should already be divisible by the
             model's max stride.
+        resize_and_pad_to_target: If True, will resize and pad all images in the dataset to match target dimensions.
+            This is useful when preprocessing datasets with mixed image dimensions (from different video resolutions).
+            Aspect ratio is preserved, and padding applied (if needed) to bottom or right of image only.
+        target_height: Target image height for 'resize_and_pad_to_target'. When not explicitly provided, inferred as the
+            max image height from the dataset.
+        target_width: Target image width for 'resize_and_pad_to_target'. When not explicitly provided, inferred as the
+            max image width from the dataset.
     """
 
     ensure_rgb: bool = False
@@ -88,6 +95,9 @@ class PreprocessingConfig:
     )
     input_scaling: float = 1.0
     pad_to_stride: Optional[int] = None
+    resize_and_pad_to_target: bool = True
+    target_height: Optional[int] = None
+    target_width: Optional[int] = None
 
 
 @attr.s(auto_attribs=True)
