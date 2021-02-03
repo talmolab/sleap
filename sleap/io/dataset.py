@@ -685,6 +685,17 @@ class Labels(MutableSequence):
         else:
             raise KeyError("Invalid label indexing arguments.")
 
+    def get(key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Get an item from the labels or return `None` if not found.
+
+        This is a safe version of `labels[...]` that will not raise an exception if the
+        item is not found.
+        """
+        try:
+            return self[key, *args]
+        except KeyError:
+            return None
+
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
         # TODO: Maybe we should remove this method altogether?
@@ -1093,11 +1104,11 @@ class Labels(MutableSequence):
         for suggestion in self.suggestions:
             if suggestion.video == video:
                 fidx = suggestion.frame_idx
-                if not user_labeled and (
-                    (video, fidx) not in self
-                    or not self[(video, fidx)].has_user_instances
-                ):
-                    frame_indices.append(fidx)
+                if not user_labeled:
+                    lf = self.get((video, fidx))
+                    if lf not None and lf.has_user_instances:
+                        continue
+                frame_indices.append(fidx)
         return frame_indices
 
     def get_suggestions(self) -> List[SuggestionFrame]:
