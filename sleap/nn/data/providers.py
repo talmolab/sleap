@@ -175,7 +175,13 @@ class LabelsReader:
                 [ind],
                 [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
             )
-            image = tf.ensure_shape(image, (None, None, image_num_channels))
+
+            # Ensure shape with constant or variable height/width, based on whether or not the videos have mixed sizes
+            if self.is_from_multi_size_videos():
+                image = tf.ensure_shape(image, (None, None, image_num_channels))
+            else:
+                image = tf.ensure_shape(image, first_image.shape)
+
             instances = tf.ensure_shape(instances, tf.TensorShape([None, None, 2]))
             skeleton_inds = tf.ensure_shape(skeleton_inds, tf.TensorShape([None]))
 
