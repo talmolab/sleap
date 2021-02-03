@@ -1580,8 +1580,8 @@ def main():
     window = MainWindow(labels_path=args.labels_path)
     window.showMaximized()
 
-    # if not args.labels_path:
-    #     window.commands.openProject(first_open=True)
+    # Disable GPU in GUI process.
+    sleap.use_cpu_only()
 
     if args.profiling:
         import cProfile
