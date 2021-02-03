@@ -1178,13 +1178,17 @@ class MainWindow(QMainWindow):
         spacer = "        "
 
         if message is None:
-            message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+            message = ""
+            if len(self.labels.videos) > 1:
+                message += f"Video {self.labels.videos.index(current_video)+1}/"
+                message += f"{len(self.labels.videos)}"
+                message += spacer
+
+            message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
-                message += f" (selection: {start+1:,}-{end:,})"
-
-            if len(self.labels.videos) > 1:
-                message += f" of video {self.labels.videos.index(current_video)+1}"
+                message += spacer
+                message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
