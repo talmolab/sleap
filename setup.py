@@ -32,10 +32,10 @@ setup(
     setup_requires=["setuptools_scm"],
     install_requires=get_requirements(),
     extras_require={"dev": get_requirements("dev"),},
-    description="SLEAP (Social LEAP Estimates Animal Pose) is a deep learning framework for estimating animal pose.",
+    description="SLEAP (Social LEAP Estimates Animal Poses) is a deep learning framework for animal pose tracking.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    author="Talmo Pereira, David Turner, Nat Tabris",
+    author="Talmo Pereira, Arie Matsliah, David Turner, Nat Tabris",
     author_email="talmo@princeton.edu",
     project_urls={
         "Documentation": "https://sleap.ai/#sleap",
