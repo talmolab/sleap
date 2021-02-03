@@ -23,6 +23,7 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from scipy.io import loadmat
 
+
 NodeRef = Union[str, "Node"]
 H5FileRef = Union[str, h5py.File]
 
@@ -117,12 +118,24 @@ class Skeleton:
         """Return full description of the skeleton."""
         return (
             f"Skeleton(name='{self.name}', "
-            f"nodes={self.node_names}, edges={self.edge_names})"
+            f"nodes={self.node_names}, "
+            f"edges={self.edge_names}, "
+            f"symmetries={self.symmetry_names}"
+            ")"
         )
 
     def __str__(self) -> str:
         """Return short readable description of the skeleton."""
-        return f"Skeleton(nodes={len(self.nodes)}, edges={len(self.edges)})"
+        nodes = ", ".join(self.node_names)
+        edges = ", ".join([f"{s}->{d}" for (s, d) in self.edge_names])
+        symm = ", ".join([f"{s}<->{d}" for (s, d) in self.symmetry_names])
+        return (
+            "Skeleton("
+            f"nodes=[{nodes}], "
+            f"edges=[{edges}], "
+            f"symmetries=[{symm}]"
+            ")"
+        )
 
     def matches(self, other: "Skeleton") -> bool:
         """
@@ -394,8 +407,15 @@ class Skeleton:
             if edge_type == EdgeType.SYMMETRY
         ]
         # Get rid of duplicates
-        symmetries = list(set([tuple(sorted(e, key=operator.attrgetter("name"))) for e in symmetries]))
+        symmetries = list(
+            set([tuple(sorted(e, key=operator.attrgetter("name"))) for e in symmetries])
+        )
         return symmetries
+
+    @property
+    def symmetry_names(self) -> List[Tuple[str, str]]:
+        """List of symmetry edges as tuples of node names."""
+        return [(s.name, d.name) for (s, d) in self.symmetries]
 
     @property
     def symmetries_full(self) -> List[Tuple[Node, Node, Any, Any]]:

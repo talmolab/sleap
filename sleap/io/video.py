@@ -982,7 +982,13 @@ class Video:
 
     def __str__(self) -> str:
         """Informal string representation (for print or format)."""
-        return type(self).__name__ + " ([%d x %d x %d x %d])" % self.shape
+        return (
+            "Video("
+            f"filename={self.filename}, "
+            f"shape={self.shape}, "
+            f"backend={type(self.backend).__name__}"
+            ")"
+        )
 
     def __len__(self) -> int:
         """Return the length of the video as the number of frames."""

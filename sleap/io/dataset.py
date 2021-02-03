@@ -875,8 +875,8 @@ class Labels(MutableSequence):
 
     def describe(self):
         """Print basic statistics about the labels dataset."""
-        print("Skeleton:", self.skeleton)
-        print(f"Videos: {len(self.videos)}")
+        print(f"Skeleton: {self.skeleton}")
+        print(f"Videos: {[v.filename for v in self.videos]}")
         n_user = 0
         n_pred = 0
         n_user_inst = 0
@@ -891,7 +891,7 @@ class Labels(MutableSequence):
         print(f"Frames (user/predicted): {n_user:,}/{n_pred:,}")
         print(f"Instances (user/predicted): {n_user_inst:,}/{n_pred_inst:,}")
         print("Tracks:", self.tracks)
-        print(f"Suggestions: {len(self.suggestions)}")
+        print(f"Suggestions: {len(self.suggestions):,}")
         print("Provenance:", self.provenance)
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):

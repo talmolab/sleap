@@ -319,7 +319,7 @@ class Track:
         name: A name given to this track for identifying purposes.
     """
 
-    spawned_on: int = attr.ib(converter=int)
+    spawned_on: int = attr.ib(default=0, converter=int)
     name: str = attr.ib(default="", converter=str)
 
     def matches(self, other: "Track"):
@@ -341,7 +341,7 @@ class Track:
 # that are created in post init so they are not serialized.
 
 
-@attr.s(eq=False, order=False, slots=True)
+@attr.s(eq=False, order=False, slots=True, repr=False, str=False)
 class Instance:
     """
     The class :class:`Instance` represents a labelled instance of a skeleton.
@@ -391,7 +391,8 @@ class Instance:
         """
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
-                f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})"
+                f"Instance.from_predicted type must be PredictedInstance (not "
+                "{type(from_predicted)})"
             )
 
     @_points.validator
@@ -425,7 +426,8 @@ class Instance:
         elif isinstance(points, PointArray):
             if len(points) != len(self.skeleton.nodes):
                 raise ValueError(
-                    "PointArray does not have the same number of rows as skeleton nodes."
+                    "PointArray does not have the same number of rows as skeleton "
+                    "nodes."
                 )
 
     def __attrs_post_init__(self):
@@ -667,6 +669,22 @@ class Instance:
                 f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
             )
 
+    def __repr__(self) -> str:
+        """String representation of this object."""
+        pts = []
+        for node, pt in self.nodes_points:
+            pts.append(f"{node.name}: ({pt.x:.1f}, {pt.y:.1f})")
+        pts = ", ".join(pts)
+
+        return (
+            "Instance("
+            f"video={self.video}, "
+            f"frame_idx={self.frame_idx}, "
+            f"points=[{pts}], "
+            f"track={self.track}"
+            ")"
+        )
+
     def matches(self, other: "Instance") -> bool:
         """
         Whether two instances match by value.
@@ -715,7 +733,7 @@ class Instance:
     @property
     def nodes_points(self) -> List[Tuple[Node, Point]]:
         """
-        The list of (node, point) tuples for all labelled points.
+        The list of (node, point) tuples for all labeled points.
         """
         names_to_points = dict(zip(self.nodes, self.points))
         return names_to_points.items()
@@ -862,16 +880,16 @@ class Instance:
         return sum(~np.isnan(self.points_array[:, 0]))
 
     @property
+    def video(self) -> Optional[Video]:
+        """The video of the labeled frame this instance is associated with."""
+        if self.frame is None:
+            return None
+        else:
+            return self.frame.video
+    
+    @property
     def frame_idx(self) -> Optional[int]:
-        """
-        Get the index of the frame that this instance was found on.
-
-        This is a convenience method for Instance.frame.frame_idx.
-
-        Returns:
-            The frame number this instance was found on, or None if the
-            instance is not associated with frame.
-        """
+        """The frame index of the labeled frame this instance is associated with."""
         if self.frame is None:
             return None
         else:
@@ -887,14 +905,15 @@ class Instance:
         """Create an instance from pointsarray.
 
         Args:
-            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains
-                the points in (x, y) coordinates of each node. Missing nodes should be
-                represented as NaNs.
-            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
-                predicted instance.
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in (x, y) coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            skeleton: A `sleap.Skeleton` instance with `n_nodes` nodes to associate with
+                the instance.
+            track: Optional `sleap.Track` object to associate with the instance.
 
         Returns:
-            A new Instance.
+            A new `Instance` object.
         """
         predicted_points = dict()
         for point, node_name in zip(points, skeleton.node_names):
@@ -905,8 +924,33 @@ class Instance:
 
         return cls(points=predicted_points, skeleton=skeleton, track=track)
 
+    @classmethod
+    def from_numpy(
+        cls,
+        points: np.ndarray,
+        skeleton: Skeleton,
+        track: Optional[Track] = None,
+    ) -> "Instance":
+        """Create an instance from a numpy array.
 
-@attr.s(eq=False, order=False, slots=True)
+        Args:
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in (x, y) coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            skeleton: A `sleap.Skeleton` instance with `n_nodes` nodes to associate with
+                the instance.
+            track: Optional `sleap.Track` object to associate with the instance.
+
+        Returns:
+            A new `Instance` object.
+
+        Notes:
+            This is an alias for `Instance.from_pointsarray()`.
+        """
+        return cls.from_pointsarray(points, skeleton, track=track)
+
+
+@attr.s(eq=False, order=False, slots=True, repr=False, str=False)
 class PredictedInstance(Instance):
     """
     A predicted instance is an output of the inference procedure.
@@ -928,6 +972,24 @@ class PredictedInstance(Instance):
         if self.from_predicted is not None:
             raise ValueError("PredictedInstance should not have from_predicted.")
 
+    def __repr__(self) -> str:
+        """String representation of this object."""
+        pts = []
+        for node, pt in self.nodes_points:
+            pts.append(f"{node.name}: ({pt.x:.1f}, {pt.y:.1f}, {pt.score:.2f})")
+        pts = ", ".join(pts)
+
+        return (
+            "PredictedInstance("
+            f"video={self.video}, "
+            f"frame_idx={self.frame_idx}, "
+            f"points=[{pts}], "
+            f"score={self.score:.2f}, "
+            f"track={self.track}, "
+            f"tracking_score={self.tracking_score:.2f}"
+            ")"
+        )
+
     @property
     def points_and_scores_array(self) -> np.ndarray:
         """
@@ -941,6 +1003,11 @@ class PredictedInstance(Instance):
         """
         pts = self.get_points_array(full=True, copy=True, invisible_as_nan=True)
         return pts[:, (0, 1, 4)]  # (x, y, score)
+
+    @property
+    def scores(self) -> np.ndarray:
+        """Return point scores for each predicted node."""
+        return self.points_and_scores_array[:, 2]
 
     @classmethod
     def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":
@@ -988,9 +1055,10 @@ class PredictedInstance(Instance):
                 the PAF grouping score.
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
+            track: Optional `sleap.Track` to associate with the instance.
 
         Returns:
-            A new PredictedInstance.
+            A new `PredictedInstance`.
         """
         predicted_points = dict()
         for point, confidence, node_name in zip(
