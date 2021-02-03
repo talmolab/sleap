@@ -99,7 +99,10 @@ class LabelsReader:
         )
 
     def is_from_multi_size_videos(self) -> bool:
-        return len(set(v.shape[1] for v in self.videos)) > 1 or len(set(v.shape[2] for v in self.videos)) > 1
+        return (
+            len(set(v.shape[1] for v in self.videos)) > 1
+            or len(set(v.shape[2] for v in self.videos)) > 1
+        )
 
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None
