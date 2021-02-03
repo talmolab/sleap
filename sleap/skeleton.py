@@ -14,6 +14,7 @@ import json
 import h5py
 import copy
 
+import operator
 from enum import Enum
 from itertools import count
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Text
@@ -393,7 +394,7 @@ class Skeleton:
             if edge_type == EdgeType.SYMMETRY
         ]
         # Get rid of duplicates
-        symmetries = list(set([tuple(set(e)) for e in symmetries]))
+        symmetries = list(set([tuple(sorted(e, key=operator.attrgetter("name"))) for e in symmetries]))
         return symmetries
 
     @property
@@ -412,6 +413,16 @@ class Skeleton:
             for src, dst, key, attr in self._graph.edges(keys=True, data=True)
             if attr["type"] == EdgeType.SYMMETRY
         ]
+
+    @property
+    def symmetric_inds(self) -> np.ndarray:
+        """Return the symmetric nodes as an array of indices."""
+        return np.array(
+            [
+                [self.nodes.index(node1), self.nodes.index(node2)]
+                for node1, node2 in self.symmetries
+            ]
+        )
 
     def node_to_index(self, node: NodeRef) -> int:
         """
