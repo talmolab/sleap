@@ -15,4 +15,4 @@ from sleap.nn import inference
 from sleap.nn.inference import load_model
 from sleap.nn.system import use_cpu_only, disable_preallocation
 from sleap.nn.system import summary as system_summary
-from sleap.version import __version__
+from sleap.version import __version__, versions

@@ -17,7 +17,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
 # Get the sleap version
 with open(path.join(here, "sleap/version.py")) as f:
     version_file = f.read()
-    sleap_version = re.search("\d.+(?=['\"])", version_file).group(0)
+    sleap_version = re.search("__version__ = \"([0-9\\.a]+)\"", version_file).group(1)
 
 
 def get_requirements(require_name=None):
