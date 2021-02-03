@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 import attr
-from typing import Text, Optional, List, Sequence, Union
+from typing import Text, Optional, List, Sequence, Union, Tuple
 import sleap
 
 
@@ -93,6 +93,19 @@ class LabelsReader:
         """Return the list of videos that `video_ind` in examples match up with."""
         return self.labels.videos
 
+    @property
+    def max_height_and_width(self) -> Tuple[int, int]:
+        return max(video.shape[1] for video in self.videos), max(
+            video.shape[2] for video in self.videos
+        )
+
+    @property
+    def is_from_multi_size_videos(self) -> bool:
+        return (
+            len(set(v.shape[1] for v in self.videos)) > 1
+            or len(set(v.shape[2] for v in self.videos)) > 1
+        )
+
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None
     ) -> tf.data.Dataset:
@@ -125,10 +138,10 @@ class LabelsReader:
                 "skeleton_inds": Tensor of shape (n_instances,) of dtype tf.int32 that
                     specifies the index of the skeleton used for each instance.
         """
-        # Grab an image to test for the dtype.
-        test_lf = self.labels[0]
-        test_image = tf.convert_to_tensor(test_lf.image)
-        image_dtype = test_image.dtype
+        # Grab the first image to capture dtype and number of color channels.
+        first_image = tf.convert_to_tensor(self.labels[0].image)
+        image_dtype = first_image.dtype
+        image_num_channels = first_image.shape[-1]
 
         def py_fetch_lf(ind):
             """Local function that will not be autographed."""
@@ -167,7 +180,13 @@ class LabelsReader:
                 [ind],
                 [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
             )
-            image = tf.ensure_shape(image, test_image.shape)
+
+            # Ensure shape with constant or variable height/width, based on whether or not the videos have mixed sizes
+            if self.is_from_multi_size_videos:
+                image = tf.ensure_shape(image, (None, None, image_num_channels))
+            else:
+                image = tf.ensure_shape(image, first_image.shape)
+
             instances = tf.ensure_shape(instances, tf.TensorShape([None, None, 2]))
             skeleton_inds = tf.ensure_shape(skeleton_inds, tf.TensorShape([None]))
 

@@ -23,7 +23,7 @@ from sleap.nn.data.augmentation import (
     RandomFlipper,
 )
 from sleap.nn.data.normalization import Normalizer
-from sleap.nn.data.resizing import Resizer, PointsRescaler
+from sleap.nn.data.resizing import Resizer, PointsRescaler, SizeMatcher
 from sleap.nn.data.instance_centroids import InstanceCentroidFinder
 from sleap.nn.data.instance_cropping import InstanceCropper, PredictedInstanceCropper
 from sleap.nn.data.confidence_maps import (
@@ -69,6 +69,7 @@ TRANSFORMERS = (
     RandomCropper,
     Normalizer,
     Resizer,
+    SizeMatcher,
     InstanceCentroidFinder,
     InstanceCropper,
     MultiConfidenceMapGenerator,
@@ -125,7 +126,7 @@ class Pipeline:
         """Create a pipeline from a sequence of providers and transformers.
 
         Args:
-            sequence: List or tuple of providers and transformer instances.
+            blocks: List or tuple of providers and transformer instances.
 
         Returns:
             An instantiated pipeline with all blocks chained.
@@ -353,6 +354,11 @@ class SingleInstanceConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -398,8 +404,12 @@ class SingleInstanceConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += SingleInstanceConfidenceMapGenerator(
             sigma=self.single_instance_confmap_head.sigma,
             output_stride=self.single_instance_confmap_head.output_stride,
@@ -490,6 +500,11 @@ class CentroidConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -536,8 +551,12 @@ class CentroidConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -644,6 +663,11 @@ class TopdownConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
@@ -685,8 +709,12 @@ class TopdownConfmapsPipeline:
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -779,6 +807,11 @@ class BottomUpPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -825,8 +858,12 @@ class BottomUpPipeline:
                 crop_width=aug_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += MultiConfidenceMapGenerator(
             sigma=self.confmaps_head.sigma,
             output_stride=self.confmaps_head.output_stride,
