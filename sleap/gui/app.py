@@ -1588,8 +1588,15 @@ def main():
     window = MainWindow(labels_path=args.labels_path)
     window.showMaximized()
 
-    # Disable GPU in GUI process.
+    # Disable GPU in GUI process. This does not affect subprocesses.
     sleap.use_cpu_only()
+
+    # Print versions.
+    print()
+    print("Software versions:")
+    sleap.versions()
+    print()
+    print("Happy SLEAPing! :)")
 
     if args.profiling:
         import cProfile
