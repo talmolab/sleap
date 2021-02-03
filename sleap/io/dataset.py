@@ -855,44 +855,34 @@ class Labels(MutableSequence):
     @property
     def user_instances(self) -> List[Instance]:
         """Return list of all user (non-predicted) instances."""
-        return [inst for inst in self.all_instances if isinstance(inst, Instance)]
+        return [inst for inst in self.all_instances if type(inst) == Instance]
 
     @property
     def predicted_instances(self) -> List[PredictedInstance]:
         """Return list of all predicted instances."""
         return [
-            inst for inst in self.all_instances if isinstance(inst, PredictedInstance)
+            inst for inst in self.all_instances if type(inst) == PredictedInstance
         ]
 
     def describe(self):
         """Print basic statistics about the labels dataset."""
         print(f"Videos: {len(self.videos)}")
-        n_user_inst = len(self.user_instances)
-        n_predicted_inst = len(self.predicted_instances)
-        print(
-            f"Instances: {n_user_inst:,} (user-labeled), "
-            f"{n_predicted_inst:,} (predicted), "
-            f"{n_user_inst + n_predicted_inst:,} (total)"
-        )
-        n_user_only = 0
-        n_pred_only = 0
-        n_both = 0
+        n_user = 0
+        n_pred = 0
+        n_user_inst = 0
+        n_pred_inst = 0
         for lf in self.labeled_frames:
-            has_user = lf.has_user_instances
-            has_pred = lf.has_predicted_instances
-            if has_user and not has_pred:
-                n_user_only += 1
-            elif not has_user and has_pred:
-                n_pred_only += 1
-            elif has_user and has_pred:
-                n_both += 1
-        n_total = len(self.labeled_frames)
-        print(
-            f"Frames: {n_user_only:,} (user-labeled), "
-            f"{n_pred_only:,} (predicted), "
-            f"{n_both:,} (both), "
-            f"{n_total:,} (total)"
-        )
+            if lf.has_user_instances:
+                n_user += 1
+                n_user_inst += len(lf.user_instances)
+            if lf.has_predicted_instances:
+                n_pred += 1
+                n_pred_inst += len(lf.predicted_instances)
+        print(f"Frames (user/predicted): {n_user:,}/{n_pred:,}")
+        print(f"Instances (user/predicted): {n_user_inst:,}/{n_pred_inst:,}")
+        print(f"Suggestions: {len(self.suggestions)}")
+        print("Skeleton:", self.skeleton)
+        print("Provenance:", self.provenance)
 
     def instances(self, video: Video = None, skeleton: Skeleton = None):
         """Iterate over instances in the labels, optionally with filters.
