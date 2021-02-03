@@ -1125,13 +1125,14 @@ class MainWindow(QMainWindow):
             suggestion_status_text = ""
             suggestion_list = self.labels.get_suggestions()
             if suggestion_list:
-                suggestion_label_counts = [
-                    self.labels.instance_count(item.video, item.frame_idx)
-                    for item in suggestion_list
-                ]
-                labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
+                labeled_count = 0
+                for suggestion in suggestion_list:
+                    lf = self.labels.get((suggestion.video, suggestion.frame_idx))
+                    if lf is not None and lf.has_user_instances:
+                        labeled_count += 1
+                prc = (labeled_count / len(suggestion_list)) * 100
                 suggestion_status_text = (
-                    f"{labeled_count}/{len(suggestion_list)} labeled"
+                    f"{labeled_count}/{len(suggestion_list)} labeled ({prc:.1f}%)"
                 )
             self.suggested_count_label.setText(suggestion_status_text)
 
