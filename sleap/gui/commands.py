@@ -29,6 +29,7 @@ for now it's at least easy to see where this separation is violated.
 import attr
 import operator
 import os
+import re
 
 from abc import ABC
 from enum import Enum
@@ -817,6 +818,22 @@ class ImportAnalysisFile(AppCommand):
         return True
 
 
+def get_new_version_filename(filename: str) -> str:
+    """Increment version number in filenames that end in `.v###.slp`."""
+    p = PurePath(filename)
+
+    match = re.match(".*\\.v(\\d+)\\.slp", filename)
+    if match is not None:
+        old_ver = match.group(1)
+        new_ver = str(int(old_ver) + 1).zfill(len(old_ver))
+        filename = filename.replace(f".v{old_ver}.slp", f".v{new_ver}.slp")
+        filename = str(PurePath(filename))
+    else:
+        filename = str(p.with_name(f"{p.stem} copy{p.suffix}"))
+
+    return filename
+
+
 class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
@@ -849,14 +866,13 @@ class SaveProjectAs(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"] or "untitled"
-        p = PurePath(default_name)
-        default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
-
+        default_name = context.state["filename"]
+        if default_name:
+            default_name = get_new_version_filename(default_name)
+        else:
+            default_name = "labels.v000.slp"
         filters = [
-            "SLEAP HDF5 dataset (*.slp)",
-            "SLEAP JSON dataset (*.json)",
-            "Compressed JSON (*.zip)",
+            "SLEAP labels dataset (*.slp)"
         ]
         filename, selected_filter = FileDialog.save(
             context.app,
@@ -881,7 +897,7 @@ class ExportAnalysisFile(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"] or "untitled"
+        default_name = context.state["filename"] or "labels"
         p = PurePath(default_name)
         default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
 
