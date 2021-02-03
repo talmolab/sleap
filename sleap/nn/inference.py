@@ -2726,7 +2726,10 @@ def make_video_readers_from_cli(args) -> List[VideoReader]:
             elif args.only_suggested_frames:
                 readers.append(
                     VideoReader(
-                        video=video, example_indices=labels.get_video_suggestions(video)
+                        video=video,
+                        example_indices=labels.get_video_suggestions(
+                            video, user_labeled=False
+                        ),
                     )
                 )
             else:

@@ -860,9 +860,7 @@ class Labels(MutableSequence):
     @property
     def predicted_instances(self) -> List[PredictedInstance]:
         """Return list of all predicted instances."""
-        return [
-            inst for inst in self.all_instances if type(inst) == PredictedInstance
-        ]
+        return [inst for inst in self.all_instances if type(inst) == PredictedInstance]
 
     def describe(self):
         """Print basic statistics about the labels dataset."""
@@ -1076,16 +1074,30 @@ class Labels(MutableSequence):
         ]
         return track_frame_inst
 
-    def get_video_suggestions(self, video: Video) -> List[int]:
+    def get_video_suggestions(
+        self, video: Video, user_labeled: bool = True
+    ) -> List[int]:
         """Return a list of suggested frame indices.
 
         Args:
             video: Video to get suggestions for.
+            user_labeled: If `True` (the default), return frame indices for suggestions
+                that already have user labels. If `False`, only suggestions with no user
+                labeled instances will be returned.
 
         Returns:
-            Indices of the labeled frames for for the specified video.
+            Indices of the suggested frames for for the specified video.
         """
-        return [item.frame_idx for item in self.suggestions if item.video == video]
+        frame_indices = []
+        for suggestion in self.suggestions:
+            if suggestion.video == video:
+                fidx = suggestion.frame_idx
+                if not user_labeled and (
+                    (video, fidx) not in self
+                    or not self[(video, fidx)].has_user_instances
+                ):
+                    frame_indices.append(fidx)
+        return frame_indices
 
     def get_suggestions(self) -> List[SuggestionFrame]:
         """Return all suggestions as a list of SuggestionFrame items."""
