@@ -93,11 +93,13 @@ class LabelsReader:
         """Return the list of videos that `video_ind` in examples match up with."""
         return self.labels.videos
 
+    @property
     def max_height_and_width(self) -> Tuple[int, int]:
         return max(video.shape[1] for video in self.videos), max(
             video.shape[2] for video in self.videos
         )
 
+    @property
     def is_from_multi_size_videos(self) -> bool:
         return (
             len(set(v.shape[1] for v in self.videos)) > 1
@@ -180,7 +182,7 @@ class LabelsReader:
             )
 
             # Ensure shape with constant or variable height/width, based on whether or not the videos have mixed sizes
-            if self.is_from_multi_size_videos():
+            if self.is_from_multi_size_videos:
                 image = tf.ensure_shape(image, (None, None, image_num_channels))
             else:
                 image = tf.ensure_shape(image, first_image.shape)

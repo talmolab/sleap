@@ -317,7 +317,7 @@ class SizeMatcher:
                 max_width = config.target_width
             else:
                 try:
-                    max_height, max_width = provider.max_height_and_width()
+                    max_height, max_width = provider.max_height_and_width
                 except:
                     raise ValueError(
                         "target_height / target_width could not be determined"
