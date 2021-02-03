@@ -469,7 +469,8 @@ class SuggestionsTableModel(GenericTableModel):
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
         # show how many labeled instances are in this frame
-        val = labels.instance_count(item.video, item.frame_idx)
+        lf = labels.get((item.video, item.frame_idx))
+        val = 0 if lf is None else len(lf.user_instances)
         val = str(val) if val > 0 else ""
         item_dict["labeled"] = val
 
