@@ -11,6 +11,8 @@ from sleap.nn.data import providers
 def test_labels_reader(min_labels):
     labels_reader = providers.LabelsReader.from_user_instances(min_labels)
     ds = labels_reader.make_dataset()
+    assert not labels_reader.is_from_multi_size_videos()
+
     example = next(iter(ds))
 
     assert len(labels_reader) == 1
@@ -47,6 +49,8 @@ def test_labels_reader_no_visible_points(min_labels):
 
     labels_reader = providers.LabelsReader.from_user_instances(min_labels)
     ds = labels_reader.make_dataset()
+    assert not labels_reader.is_from_multi_size_videos()
+
     example = next(iter(ds))
 
     # There should be two instances in the labels dataset
@@ -175,6 +179,8 @@ def test_labels_reader_multi_size():
     assert next(ds_iter)["image"].shape == (320, 560, 1)
     assert next(ds_iter)["image"].shape == (512, 512, 1)
 
+    # Check util functions
     h, w = labels_reader.max_height_and_width()
     assert h == 512
     assert w == 560
+    assert labels_reader.is_from_multi_size_videos()
