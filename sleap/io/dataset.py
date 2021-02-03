@@ -1978,8 +1978,15 @@ def load_file(
     filename: Text,
     detect_videos: bool = True,
     search_paths: Optional[Union[List[Text], Text]] = None,
+    match_to: Optional[Labels] = None
 ) -> Labels:
     """Load a SLEAP labels file.
+
+    SLEAP labels files (`.slp`) contain all the metadata for a labeling project or the
+    predicted labels from a video. This includes the skeleton, videos, labeled frames,
+    user-labeled and predicted instances, suggestions and tracks.
+
+    See `sleap.io.dataset.Labels` for more detailed information.
 
     Args:
         filename: Path to a SLEAP labels (.slp) file.
@@ -1990,6 +1997,9 @@ def load_file(
             be the direct path to the video file or its containing folder. If not
             specified, defaults to searching for the videos in the same folder as the
             labels.
+        match_to: If a `sleap.Labels` object is provided, attempt to match and reuse
+            video and skeleton objects when loading. This is useful when comparing the
+            contents across sets of labels.
 
     Returns:
         The loaded `Labels` instance.
@@ -2004,6 +2014,6 @@ def load_file(
     if detect_videos:
         if search_paths is None:
             search_paths = os.path.dirname(filename)
-        return Labels.load_file(filename, search_paths)
+        return Labels.load_file(filename, search_paths, match_to=match_to)
     else:
-        return Labels.load_file(filename)
+        return Labels.load_file(filename, match_to=match_to)
