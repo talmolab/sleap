@@ -879,7 +879,10 @@ class Instance:
 
     @classmethod
     def from_pointsarray(
-        cls, points: np.ndarray, skeleton: Skeleton, track: Optional[Track] = None,
+        cls,
+        points: np.ndarray,
+        skeleton: Skeleton,
+        track: Optional[Track] = None,
     ) -> "Instance":
         """Create an instance from pointsarray.
 

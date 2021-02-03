@@ -84,7 +84,10 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
 
 
 def writer(
-    in_q: Queue, progress_queue: Queue, filename: str, fps: float,
+    in_q: Queue,
+    progress_queue: Queue,
+    filename: str,
+    fps: float,
 ):
     """Write annotated images to video.
 
@@ -224,7 +227,8 @@ class VideoMarkerThread(Thread):
             t0 = clock()
 
             imgs = self._mark_images(
-                frame_indices=frames_idx_chunk, frame_images=video_frame_images,
+                frame_indices=frames_idx_chunk,
+                frame_images=video_frame_images,
             )
 
             elapsed = clock() - t0
@@ -264,7 +268,9 @@ class VideoMarkerThread(Thread):
         return self._plot_instances_cv(video_frame, frame_idx)
 
     def _plot_instances_cv(
-        self, img: np.ndarray, frame_idx: int,
+        self,
+        img: np.ndarray,
+        frame_idx: int,
     ) -> Optional[np.ndarray]:
         """Adds visuals annotations to single frame image.
 
@@ -474,7 +480,10 @@ def save_labeled_video(
         crop_size_xy=crop_size_xy,
         color_manager=color_manager,
     )
-    thread_write = Thread(target=writer, args=(q2, progress_queue, filename, fps),)
+    thread_write = Thread(
+        target=writer,
+        args=(q2, progress_queue, filename, fps),
+    )
 
     thread_read.start()
     thread_mark.start()

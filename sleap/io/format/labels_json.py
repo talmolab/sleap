@@ -328,7 +328,7 @@ class LabelsJsonAdaptor(Adaptor):
 
                 # Ensure that filename ends with .json
                 # shutil will append .zip
-                filename = re.sub("(\.json)?(\.zip)?$", ".json", filename)
+                filename = re.sub("(\\.json)?(\\.zip)?$", ".json", filename)
 
                 # Write the json to the tmp directory, we will zip it up with the frame data.
                 full_out_filename = os.path.join(tmp_dir, os.path.basename(filename))
@@ -408,12 +408,29 @@ class LabelsJsonAdaptor(Adaptor):
                         break
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
-                    # compare last three parts of path
-                    if vid.filename == old_vid.filename or weak_filename_match(
-                        vid.filename, old_vid.filename
-                    ):
-                        # use video from match
-                        videos[idx] = old_vid
+
+                    # Try to match videos using either their current or source filename
+                    # if available.
+                    old_vid_paths = [old_vid.filename]
+                    if getattr(old_vid.backend, "has_embedded_images", False):
+                        old_vid_paths.append(old_vid.backend._source_video.filename)
+
+                    new_vid_paths = [vid.filename]
+                    if getattr(vid.backend, "has_embedded_images", False):
+                        new_vid_paths.append(vid.backend._source_video.filename)
+
+                    is_match = False
+                    for old_vid_path in old_vid_paths:
+                        for new_vid_path in new_vid_paths:
+                            if old_vid_path == new_vid_path or weak_filename_match(
+                                old_vid_path, new_vid_path
+                            ):
+                                is_match = True
+                                videos[idx] = old_vid
+                                break
+                        if is_match:
+                            break
+                    if is_match:
                         break
 
         suggestions = []

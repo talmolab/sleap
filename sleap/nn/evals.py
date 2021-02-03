@@ -714,7 +714,9 @@ def evaluate_model(
         logger.info("Saved predictions: %s", labels_pr_path)
 
         if metrics is not None:
-            metrics_path = os.path.join(cfg.outputs.run_path, f"metrics.{split_name}.npz")
+            metrics_path = os.path.join(
+                cfg.outputs.run_path, f"metrics.{split_name}.npz"
+            )
             np.savez_compressed(metrics_path, **{"metrics": metrics})
             logger.info("Saved metrics: %s", metrics_path)
 

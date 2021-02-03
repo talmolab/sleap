@@ -285,7 +285,9 @@ class VideoReader:
                     grid in order to properly map points to image coordinates.
         """
         # Grab an image to test for the dtype.
-        test_image = tf.convert_to_tensor(self.video.get_frame(0))
+        test_image = tf.convert_to_tensor(
+            self.video.get_frame(self.video.last_frame_idx)
+        )
         image_dtype = test_image.dtype
 
         def py_fetch_frame(ind):

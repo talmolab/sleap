@@ -628,7 +628,9 @@ class ImportLEAP(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_leap_matlab(filename=params["filename"],)
+        labels = Labels.load_leap_matlab(
+            filename=params["filename"],
+        )
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -729,10 +731,16 @@ class ImportDeepLabCut(AppCommand):
 class ImportDeepLabCutFolder(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-        csv_files = ImportDeepLabCutFolder.find_dlc_files_in_folder(params['folder_name'])
+        csv_files = ImportDeepLabCutFolder.find_dlc_files_in_folder(
+            params["folder_name"]
+        )
         if csv_files:
-            win = MessageDialog(f"Importing {len(csv_files)} DeepLabCut datasets...", context.app)
-            merged_labels = ImportDeepLabCutFolder.import_labels_from_dlc_files(csv_files)
+            win = MessageDialog(
+                f"Importing {len(csv_files)} DeepLabCut datasets...", context.app
+            )
+            merged_labels = ImportDeepLabCutFolder.import_labels_from_dlc_files(
+                csv_files
+            )
             win.hide()
 
             new_window = context.app.__class__()
@@ -2268,6 +2276,7 @@ class CheckForUpdates(AppCommand):
                 f"  Prerelease: {prerelease.version}"
             )
             context.state["prerelease_version_menu"].setEnabled(True)
+
     # TODO: Provide GUI feedback about result.
 
 

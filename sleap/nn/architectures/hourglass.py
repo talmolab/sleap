@@ -90,13 +90,12 @@ class StemBlock(encoder_decoder.EncoderBlock):
             prefix=prefix + "_conv7x7",
         )
         x = conv(x, filters=2 * self.filters, prefix=prefix + "_conv3x3")
-            
+
         x = tf.keras.layers.MaxPool2D(
             strides=2 if (self.pool and self.pooling_stride > 1) else 1,
             padding="same",
-            name=prefix + "_pool")(
-            x
-        )
+            name=prefix + "_pool",
+        )(x)
         x = conv(x, filters=self.output_filters, prefix=prefix + "_conv3x3_out")
         return x
 
@@ -197,7 +196,7 @@ class Hourglass(encoder_decoder.EncoderDecoder):
     """Encoder-decoder definition of the (stacked) hourglass network backbone.
 
     This implements the architecture of the `Associative Embedding paper
-    <https://arxiv.org/abs/1611.05424>`_, which improves upon the architecture in the 
+    <https://arxiv.org/abs/1611.05424>`_, which improves upon the architecture in the
     `original hourglass paper <https://arxiv.org/abs/1603.06937>`_. The primary changes
     are to replace the residual block with simple convolutions and modify the filter
     sizes.

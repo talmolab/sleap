@@ -333,11 +333,13 @@ class SingleInstanceConfmapsPipeline:
         optimization_config: Optimization-related configuration.
         single_instance_confmap_head: Instantiated head describing the output confidence
             maps tensor.
+        offsets_head: Optional head describing the offset refinement maps.
     """
 
     data_config: DataConfig
     optimization_config: OptimizationConfig
     single_instance_confmap_head: SingleInstanceConfmapsHead
+    offsets_head: Optional[OffsetRefinementHead] = None
 
     def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
         """Create base pipeline with input data only.
@@ -401,6 +403,10 @@ class SingleInstanceConfmapsPipeline:
         pipeline += SingleInstanceConfidenceMapGenerator(
             sigma=self.single_instance_confmap_head.sigma,
             output_stride=self.single_instance_confmap_head.output_stride,
+            with_offsets=self.offsets_head is not None,
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:

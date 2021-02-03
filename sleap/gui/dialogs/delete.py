@@ -24,7 +24,10 @@ class DeleteDialog(QtWidgets.QDialog):
     # NOTE: use type by name (rather than importing CommandContext) to avoid
     # circular includes.
     def __init__(
-        self, context: "CommandContext", *args, **kwargs,
+        self,
+        context: "CommandContext",
+        *args,
+        **kwargs,
     ):
 
         super(DeleteDialog, self).__init__(*args, **kwargs)
@@ -161,7 +164,9 @@ class DeleteDialog(QtWidgets.QDialog):
                 frame_idx=self.context.state["frame_idx"],
             )
         elif frames_value == "current video":
-            lf_list = labels.find(video=self.context.state["video"],)
+            lf_list = labels.find(
+                video=self.context.state["video"],
+            )
         elif frames_value == "all videos":
             lf_list = labels.labeled_frames
         elif frames_value == "selected clip":

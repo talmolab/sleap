@@ -50,7 +50,12 @@ class LabelsDeepPoseKitAdaptor(Adaptor):
 
     @classmethod
     def read(
-        cls, file: FileHandle, video_path: str, skeleton_path: str, *args, **kwargs,
+        cls,
+        file: FileHandle,
+        video_path: str,
+        skeleton_path: str,
+        *args,
+        **kwargs,
     ) -> Labels:
         f = file.file
 

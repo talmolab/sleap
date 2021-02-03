@@ -54,7 +54,11 @@ class LabelsLeapMatlabAdaptor(Adaptor):
 
     @classmethod
     def read(
-        cls, file: FileHandle, gui: bool = True, *args, **kwargs,
+        cls,
+        file: FileHandle,
+        gui: bool = True,
+        *args,
+        **kwargs,
     ):
         filename = file.filename
 

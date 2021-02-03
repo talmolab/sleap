@@ -1532,7 +1532,7 @@ class PAFScorer:
             `tf.float32`.
 
         Notes:
-            This is a high level API for grouping peaks into instances using PAFs. 
+            This is a high level API for grouping peaks into instances using PAFs.
 
             See the `PAFScorer` class documentation for more details on the algorithm.
 

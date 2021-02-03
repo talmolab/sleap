@@ -275,7 +275,7 @@ class Prefetcher:
 @attr.s(auto_attribs=True)
 class Preloader:
     """Preload elements of the underlying dataset to generate in-memory examples.
-    
+
     This transformer can lead to considerable performance improvements at the cost of
     memory consumption.
 

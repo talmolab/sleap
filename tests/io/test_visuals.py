@@ -41,7 +41,8 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
 
     # Make sure we can mark images
     marked_image_list = marker_thread._mark_images(
-        frame_indices=frames, frame_images=small_images,
+        frame_indices=frames,
+        frame_images=small_images,
     )
 
     # There's a point at 201, 186 (i.e. 50.25, 46.5), so make sure it got marked

@@ -540,7 +540,7 @@ class Trainer(ABC):
         video_search_paths: Optional[List[Text]] = None,
     ) -> "Trainer":
         """Initialize the trainer from a training job configuration.
-        
+
         Args:
             config: A `TrainingJobConfig` instance.
             training_labels: Training labels to use instead of the ones in the config,
@@ -690,7 +690,10 @@ class Trainer(ABC):
 
         # TODO: Implement general part loss reporting.
         part_names = None
-        if isinstance(self.pipeline_builder, TopdownConfmapsPipeline) and self.pipeline_builder.offsets_head is None:
+        if (
+            isinstance(self.pipeline_builder, TopdownConfmapsPipeline)
+            and self.pipeline_builder.offsets_head is None
+        ):
             part_names = [
                 sanitize_scope_name(name) for name in self.model.heads[0].part_names
             ]
@@ -885,7 +888,7 @@ class SingleInstanceModelTrainer(Trainer):
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             single_instance_confmap_head=self.model.heads[0],
-            offsets_head=self.model.heads[1] if self.has_offsets else None
+            offsets_head=self.model.heads[1] if self.has_offsets else None,
         )
 
     @property
@@ -989,7 +992,7 @@ class CentroidConfmapsModelTrainer(Trainer):
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             centroid_confmap_head=self.model.heads[0],
-            offsets_head=self.model.heads[1] if self.has_offsets else None
+            offsets_head=self.model.heads[1] if self.has_offsets else None,
         )
 
     @property
@@ -1105,7 +1108,7 @@ class TopdownConfmapsModelTrainer(Trainer):
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             instance_confmap_head=self.model.heads[0],
-            offsets_head=self.model.heads[1] if self.has_offsets else None
+            offsets_head=self.model.heads[1] if self.has_offsets else None,
         )
 
     @property
@@ -1221,7 +1224,7 @@ class BottomUpModelTrainer(Trainer):
             optimization_config=self.config.optimization,
             confmaps_head=self.model.heads[0],
             pafs_head=self.model.heads[1],
-            offsets_head=self.model.heads[2] if self.has_offsets else None
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
         )
 
     @property

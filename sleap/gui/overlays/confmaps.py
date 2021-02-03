@@ -57,13 +57,11 @@ class ConfMapsPlot(QtWidgets.QGraphicsObject):
                 )
 
     def boundingRect(self) -> QtCore.QRectF:
-        """Method required by Qt.
-        """
+        """Method required by Qt."""
         return self.rect
 
     def paint(self, painter, option, widget=None):
-        """Method required by Qt.
-        """
+        """Method required by Qt."""
         pass
 
 

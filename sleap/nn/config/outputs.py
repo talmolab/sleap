@@ -112,7 +112,7 @@ class ZMQConfig:
 @attr.s(auto_attribs=True)
 class OutputsConfig:
     """Configuration of training outputs.
-    
+
     Attributes:
         save_outputs: If True, file system-based outputs will be saved. If False,
             nothing will be written to disk, which may be useful for interactive
@@ -191,7 +191,8 @@ class OutputsConfig:
         """
         if self.run_name is None:
             raise ValueError(
-                "Run path cannot be determined when the run name is not set.")
+                "Run path cannot be determined when the run name is not set."
+            )
         folder_name = self.run_name_prefix + self.run_name
         if self.run_name_suffix is not None:
             folder_name += self.run_name_suffix

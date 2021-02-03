@@ -26,22 +26,14 @@ def test_get_connection_candidates():
     n_nodes = 4
 
     edge_inds, edge_peak_inds = get_connection_candidates(
-        peak_channel_inds_sample,
-        skeleton_edges,
-        n_nodes
+        peak_channel_inds_sample, skeleton_edges, n_nodes
     )
 
     assert_array_equal(edge_inds, [0, 0, 0, 0, 0, 0, 1, 1])
 
-    assert_array_equal(edge_peak_inds,
-        [[0, 3],
-         [0, 4],
-         [1, 3],
-         [1, 4],
-         [2, 3],
-         [2, 4],
-         [3, 5],
-         [4, 5]])
+    assert_array_equal(
+        edge_peak_inds, [[0, 3], [0, 4], [1, 3], [1, 4], [2, 3], [2, 4], [3, 5], [4, 5]]
+    )
 
 
 def test_make_line_subs():
@@ -50,19 +42,12 @@ def test_make_line_subs():
     edge_inds = tf.constant([0], tf.int32)
 
     line_subs = make_line_subs(
-        peaks_sample,
-        edge_peak_inds,
-        edge_inds,
-        n_line_points=3,
-        pafs_stride=2
+        peaks_sample, edge_peak_inds, edge_inds, n_line_points=3, pafs_stride=2
     )
-    assert_array_equal(line_subs,
-        [[[[0, 0, 0],
-           [0, 0, 1]],
-          [[2, 1, 0],
-           [2, 1, 1]],
-          [[4, 2, 0],
-           [4, 2, 1]]]])
+    assert_array_equal(
+        line_subs,
+        [[[[0, 0, 0], [0, 0, 1]], [[2, 1, 0], [2, 1, 1]], [[4, 2, 0], [4, 2, 1]]]],
+    )
 
 
 def test_paf_lines():
@@ -77,12 +62,9 @@ def test_paf_lines():
         edge_peak_inds,
         edge_inds,
         n_line_points=3,
-        pafs_stride=2
+        pafs_stride=2,
     )
-    assert_array_equal(paf_lines,
-        [[[ 0,  1],
-          [18, 19],
-          [36, 37]]])
+    assert_array_equal(paf_lines, [[[0, 1], [18, 19], [36, 37]]])
 
 
 def test_score_paf_lines():
@@ -90,7 +72,14 @@ def test_score_paf_lines():
     peaks_sample = tf.constant([[0, 0], [4, 8]], tf.float32)
     edge_peak_inds = tf.constant([[0, 1]], tf.int32)
     edge_inds = tf.constant([0], tf.int32)
-    paf_lines = get_paf_lines(pafs_sample, peaks_sample, edge_peak_inds, edge_inds, n_line_points=3, pafs_stride=2)
+    paf_lines = get_paf_lines(
+        pafs_sample,
+        peaks_sample,
+        edge_peak_inds,
+        edge_inds,
+        n_line_points=3,
+        pafs_stride=2,
+    )
 
     scores = score_paf_lines(paf_lines, peaks_sample, edge_peak_inds, max_edge_length=2)
     assert_allclose(scores, [24.27], atol=1e-2)
@@ -114,7 +103,7 @@ def test_score_paf_lines_batch():
         n_line_points,
         pafs_stride,
         max_edge_length_ratio,
-        n_nodes
+        n_nodes,
     )
     assert_array_equal(edge_inds.to_list(), [[0]])
     assert_array_equal(edge_peak_inds.to_list(), [[[0, 1]]])
@@ -133,10 +122,7 @@ def test_match_candidates_sample():
         match_dst_peak_inds,
         match_line_scores,
     ) = match_candidates_sample(
-        edge_inds_sample,
-        edge_peak_inds_sample,
-        line_scores_sample,
-        n_edges
+        edge_inds_sample, edge_peak_inds_sample, line_scores_sample, n_edges
     )
 
     src_peak_inds_k, _ = tf.unique(edge_peak_inds_sample[:, 0])
@@ -145,16 +131,22 @@ def test_match_candidates_sample():
     assert_array_equal(match_edge_inds, [0])
     assert_array_equal(match_src_peak_inds, [1])
     assert_array_equal(match_dst_peak_inds, [0])
-    assert_array_equal(match_line_scores, [1.])
+    assert_array_equal(match_line_scores, [1.0])
     assert tf.gather(src_peak_inds_k, match_src_peak_inds)[0] == 2
     assert tf.gather(dst_peak_inds_k, match_dst_peak_inds)[0] == 1
 
 
 def test_match_candidates_batch():
     row_ids = tf.constant([0, 0], dtype=tf.int32)
-    edge_inds = tf.RaggedTensor.from_value_rowids(tf.constant([0, 0], dtype=tf.int32), row_ids)
-    edge_peak_inds = tf.RaggedTensor.from_value_rowids(tf.constant([[0, 1], [2, 1]], dtype=tf.int32), row_ids)
-    line_scores = tf.RaggedTensor.from_value_rowids(tf.constant([-0.5, 1.0], dtype=tf.float32), row_ids)
+    edge_inds = tf.RaggedTensor.from_value_rowids(
+        tf.constant([0, 0], dtype=tf.int32), row_ids
+    )
+    edge_peak_inds = tf.RaggedTensor.from_value_rowids(
+        tf.constant([[0, 1], [2, 1]], dtype=tf.int32), row_ids
+    )
+    line_scores = tf.RaggedTensor.from_value_rowids(
+        tf.constant([-0.5, 1.0], dtype=tf.float32), row_ids
+    )
     n_edges = 1
 
     (
@@ -162,12 +154,7 @@ def test_match_candidates_batch():
         match_src_peak_inds,
         match_dst_peak_inds,
         match_line_scores,
-    ) = match_candidates_batch(
-        edge_inds,
-        edge_peak_inds,
-        line_scores,
-        n_edges
-    )
+    ) = match_candidates_batch(edge_inds, edge_peak_inds, line_scores, n_edges)
 
     assert isinstance(match_edge_inds, tf.RaggedTensor)
     assert isinstance(match_src_peak_inds, tf.RaggedTensor)
@@ -176,7 +163,7 @@ def test_match_candidates_batch():
     assert_array_equal(match_edge_inds.flat_values, [0])
     assert_array_equal(match_src_peak_inds.flat_values, [1])
     assert_array_equal(match_dst_peak_inds.flat_values, [0])
-    assert_array_equal(match_line_scores.flat_values, [1.])
+    assert_array_equal(match_line_scores.flat_values, [1.0])
 
 
 def test_group_instances_sample():
@@ -195,7 +182,7 @@ def test_group_instances_sample():
     (
         predicted_instances,
         predicted_peak_scores,
-        predicted_instance_scores
+        predicted_instance_scores,
     ) = group_instances_sample(
         peaks_sample,
         peak_scores_sample,
@@ -212,35 +199,43 @@ def test_group_instances_sample():
 
     assert_array_equal(
         predicted_instances,
-        [[[ 0.,  1.],
-          [ 2.,  3.],
-          [ 4.,  5.]],
-
-         [[ 6.,  7.],
-          [ 8.,  9.],
-          [ np.nan,  np.nan],]]
+        [
+            [[0.0, 1.0], [2.0, 3.0], [4.0, 5.0]],
+            [
+                [6.0, 7.0],
+                [8.0, 9.0],
+                [np.nan, np.nan],
+            ],
+        ],
     )
-    assert_array_equal(
-        predicted_peak_scores,
-        [[0., 1., 2.],
-         [3., 4., np.nan]]
-    )
-    assert_array_equal(
-        predicted_instance_scores,
-        [1., 2.]
-    )
+    assert_array_equal(predicted_peak_scores, [[0.0, 1.0, 2.0], [3.0, 4.0, np.nan]])
+    assert_array_equal(predicted_instance_scores, [1.0, 2.0])
 
 
 def test_group_instances_batch():
     row_ids = tf.zeros([5], dtype=tf.int32)
-    peaks = tf.RaggedTensor.from_value_rowids(tf.reshape(tf.range(5 * 2, dtype=tf.float32), [5, 2]), row_ids)
-    peak_scores = tf.RaggedTensor.from_value_rowids(tf.range(5, dtype=tf.float32), row_ids)
-    peak_channel_inds = tf.RaggedTensor.from_value_rowids(tf.constant([0, 1, 2, 0, 1], tf.int32), row_ids)
+    peaks = tf.RaggedTensor.from_value_rowids(
+        tf.reshape(tf.range(5 * 2, dtype=tf.float32), [5, 2]), row_ids
+    )
+    peak_scores = tf.RaggedTensor.from_value_rowids(
+        tf.range(5, dtype=tf.float32), row_ids
+    )
+    peak_channel_inds = tf.RaggedTensor.from_value_rowids(
+        tf.constant([0, 1, 2, 0, 1], tf.int32), row_ids
+    )
     row_ids_edges = tf.zeros([3], dtype=tf.int32)
-    match_edge_inds = tf.RaggedTensor.from_value_rowids(tf.constant([0, 1, 0], tf.int32), row_ids_edges)
-    match_src_peak_inds = tf.RaggedTensor.from_value_rowids(tf.constant([0, 0, 1], tf.int32), row_ids_edges)
-    match_dst_peak_inds = tf.RaggedTensor.from_value_rowids(tf.constant([0, 0, 1], tf.int32), row_ids_edges)
-    match_line_scores = tf.RaggedTensor.from_value_rowids(tf.range(3, dtype=tf.float32), row_ids_edges)
+    match_edge_inds = tf.RaggedTensor.from_value_rowids(
+        tf.constant([0, 1, 0], tf.int32), row_ids_edges
+    )
+    match_src_peak_inds = tf.RaggedTensor.from_value_rowids(
+        tf.constant([0, 0, 1], tf.int32), row_ids_edges
+    )
+    match_dst_peak_inds = tf.RaggedTensor.from_value_rowids(
+        tf.constant([0, 0, 1], tf.int32), row_ids_edges
+    )
+    match_line_scores = tf.RaggedTensor.from_value_rowids(
+        tf.range(3, dtype=tf.float32), row_ids_edges
+    )
     n_nodes = 3
     n_edges = 2
     edge_types = [EdgeType(0, 1), EdgeType(1, 2)]
@@ -249,7 +244,7 @@ def test_group_instances_batch():
     (
         predicted_instances,
         predicted_peak_scores,
-        predicted_instance_scores
+        predicted_instance_scores,
     ) = group_instances_batch(
         peaks,
         peak_scores,
@@ -270,20 +265,16 @@ def test_group_instances_batch():
 
     assert_array_equal(
         predicted_instances.flat_values,
-        [[[ 0.,  1.],
-          [ 2.,  3.],
-          [ 4.,  5.]],
-
-         [[ 6.,  7.],
-          [ 8.,  9.],
-          [ np.nan,  np.nan],]]
+        [
+            [[0.0, 1.0], [2.0, 3.0], [4.0, 5.0]],
+            [
+                [6.0, 7.0],
+                [8.0, 9.0],
+                [np.nan, np.nan],
+            ],
+        ],
     )
     assert_array_equal(
-        predicted_peak_scores.flat_values,
-        [[0., 1., 2.],
-         [3., 4., np.nan]]
+        predicted_peak_scores.flat_values, [[0.0, 1.0, 2.0], [3.0, 4.0, np.nan]]
     )
-    assert_array_equal(
-        predicted_instance_scores.flat_values,
-        [1., 2.]
-    )
+    assert_array_equal(predicted_instance_scores.flat_values, [1.0, 2.0])
