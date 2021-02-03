@@ -119,3 +119,15 @@ class TrainingJobConfig:
         """
         with open(filename, "w") as f:
             f.write(self.to_json())
+
+
+def load_config(filename: Text) -> TrainingJobConfig:
+    """Load a training job configuration for a model run.
+
+    Args:
+        filename: Path to a JSON file or directory containing `training_job.json`.
+
+    Returns:
+        The parsed `TrainingJobConfig`.
+    """
+    return TrainingJobConfig.load_json(filename)
