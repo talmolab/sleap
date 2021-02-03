@@ -663,6 +663,7 @@ class MainWindow(QMainWindow):
 
         predictionMenu.addSeparator()
 
+
         add_menu_item(
             predictionMenu,
             "show metrics",
@@ -678,10 +679,21 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
+
+        training_package_menu = predictionMenu.addMenu("Export Training Package...")
         add_menu_item(
-            predictionMenu,
+            training_package_menu,
+            "export user labels package",
+            "Labeled frames",
+            self.commands.exportUserLabelsPackage,
+        ).setToolTip(
+            "Export user-labeled frames with image data into a single SLP file.\n\n"
+            "Use this for archiving a dataset with labeled frames only."
+        )
+        add_menu_item(
+            training_package_menu,
             "export training package",
-            "Export Training Package...",
+            "Labeled + suggested frames (recommended)",
             self.commands.exportTrainingPackage,
         ).setToolTip(
             "Export user-labeled frames and suggested frames with image data into a "
@@ -690,18 +702,9 @@ class MainWindow(QMainWindow):
             "unlabeled frames."
         )
         add_menu_item(
-            predictionMenu,
-            "export user labels package",
-            "Export Package with User Labels Only...",
-            self.commands.exportUserLabelsPackage,
-        ).setToolTip(
-            "Export user-labeled frames with image data into a single SLP file.\n\n"
-            "Use this for archiving a dataset with labeled frames only."
-        )
-        add_menu_item(
-            predictionMenu,
+            training_package_menu,
             "export full package",
-            "Export Package with All Labels...",
+            "Labeled + predicted + suggested frames",
             self.commands.exportFullPackage,
         ).setToolTip(
             "Export all frames (including predictions) and suggested frames with image "
