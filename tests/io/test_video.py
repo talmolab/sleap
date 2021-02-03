@@ -4,12 +4,13 @@ import h5py
 
 import numpy as np
 
-from sleap.io.video import Video, HDF5Video, MediaVideo, DummyVideo
+from sleap.io.video import Video, HDF5Video, MediaVideo, DummyVideo, load_video
 from tests.fixtures.videos import (
     TEST_H5_FILE,
     TEST_SMALL_ROBOT_MP4_FILE,
     TEST_H5_DSET,
     TEST_H5_INPUT_FORMAT,
+    TEST_SMALL_CENTERED_PAIR_VID
 )
 
 # FIXME:
@@ -398,3 +399,9 @@ def test_safe_frame_loading_all_invalid():
 
     assert idxs == []
     assert frames is None
+
+
+def test_load_video():
+    video = load_video(TEST_SMALL_CENTERED_PAIR_VID)
+    assert video.shape == (1100, 384, 384, 1)
+    assert video[:3].shape == (3, 384, 384, 1)
