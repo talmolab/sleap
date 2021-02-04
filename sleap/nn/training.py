@@ -1416,6 +1416,9 @@ def main():
         job_config.outputs.run_name_suffix = args.suffix
     job_config.outputs.save_visualizations |= args.save_viz
 
+    logger.info("Versions:")
+    sleap.versions()
+
     logger.info(f"Training labels file: {args.labels_path}")
     logger.info(f"Training profile: {job_filename}")
     logger.info("")

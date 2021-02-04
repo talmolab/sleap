@@ -2687,13 +2687,6 @@ def make_cli_parser():
     # Add args for tracking
     Tracker.add_cli_parser_args(parser, arg_scope="tracking")
 
-    parser.add_argument(
-        "--test-pipeline",
-        default=False,
-        action="store_true",
-        help="Test pipeline construction without running anything.",
-    )
-
     return parser
 
 
@@ -2894,7 +2887,9 @@ def load_model(
     See also: TopdownPredictor, BottomupPredictor, SingleInstancePredictor
     """
     if isinstance(model_path, str):
-        model_path = [model_path]
+        model_paths = [model_path]
+    else:
+        model_paths = model_path
 
     # Uncompress ZIP packaged models.
     tmp_dirs = []
@@ -2912,7 +2907,7 @@ def load_model(
             models_paths[i] = tmp_dir.name
 
     predictor = make_predictor_from_paths(
-        model_path, batch_size=batch_size, integral_refinement=refinement == "integral"
+        model_paths, batch_size=batch_size, integral_refinement=refinement == "integral"
     )
     if tracker is not None:
         predictor.tracker = Tracker.make_tracker_by_name(
@@ -2946,8 +2941,13 @@ def main():
             sleap.nn.system.use_gpu(args.gpu)
     sleap.nn.system.disable_preallocation()
 
+    print("Versions:")
+    sleap.versions()
+    print()
+
     print("System:")
     sleap.nn.system.summary()
+    print()
 
     video_readers = make_video_readers_from_cli(args)
 
@@ -2965,27 +2965,6 @@ def main():
     # Make the tracker
     tracker = make_tracker_from_cli(policy_args)
     predictor.tracker = tracker
-
-    if args.test_pipeline:
-        print()
-
-        print(policy_args)
-        print()
-
-        print(predictor)
-        print()
-
-        predictor.make_pipeline()
-        print("===pipeline transformers===")
-        print()
-        for transformer in predictor.pipeline.transformers:
-            print(transformer.__class__.__name__)
-            print(f"\t-> {transformer.input_keys}")
-            print(f"\t   {transformer.output_keys} ->")
-            print()
-
-        print("--test-pipeline arg set so stopping here.")
-        return
 
     # Run inference!
     t0 = time.time()
