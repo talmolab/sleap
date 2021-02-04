@@ -4,9 +4,11 @@ Run training/inference in background process via CLI.
 import abc
 import attr
 import os
+import psutil
 import subprocess as sub
 import tempfile
 import time
+import shutil
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 
@@ -519,9 +521,11 @@ def run_gui_training(
             def waiting():
                 if gui:
                     QtWidgets.QApplication.instance().processEvents()
+                    if win.canceled:
+                        return "cancel"
 
             # Run training
-            trained_job_path, success = train_subprocess(
+            trained_job_path, ret = train_subprocess(
                 job_config=job,
                 labels_filename=labels_filename,
                 video_paths=video_path_list,
@@ -529,10 +533,17 @@ def run_gui_training(
                 save_viz=save_viz,
             )
 
-            if success:
+            if ret == "success":
                 # get the path to the resulting TrainingJob file
                 trained_job_paths[model_type] = trained_job_path
                 print(f"Finished training {str(model_type)}.")
+            elif ret == "canceled":
+                if gui:
+                    win.close()
+                print("Deleting canceled run data:", trained_job_path)
+                shutil.rmtree(trained_job_path, ignore_errors=True)
+                trained_job_paths[model_type] = None
+                break
             else:
                 if gui:
                     win.close()
@@ -656,18 +667,29 @@ def train_subprocess(
 
         if not SKIP_TRAINING:
             # Run training in a subprocess
-            with sub.Popen(cli_args) as proc:
+            proc = sub.Popen(cli_args)
 
-                # Wait till training is done, calling a callback if given.
-                while proc.poll() is None:
-                    if waiting_callback is not None:
-                        if waiting_callback() == -1:
-                            # -1 signals user cancellation
-                            return "", False
-                    time.sleep(0.1)
+            # Wait till training is done, calling a callback if given.
+            while proc.poll() is None:
+                if waiting_callback is not None:
+                    # Return something to differentiate canceling from failure
+                    ret = waiting_callback()
+                    if ret == "cancel":
+                        print("Canceling training...")
+                        proc_ = psutil.Process(proc.pid)
+                        for subproc_ in proc_.children(recursive=True):
+                            subproc_.kill()
+                        proc_.kill()
+                        print(f"Killed: {proc.pid}")
+                        return run_path, "canceled"
+                time.sleep(0.1)
 
-                success = proc.returncode == 0
+            # Check return code.
+            if proc.returncode == 0:
+                ret = "success"
+            else:
+                ret = proc.returncode
 
     print("Run Path:", run_path)
 
-    return run_path, success
+    return run_path, ret

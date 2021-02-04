@@ -28,6 +28,8 @@ class LossViewer(QtWidgets.QMainWindow):
 
         self.show_controller = show_controller
         self.stop_button = None
+        self.cancel_button = None
+        self.canceled = False
 
         self.redraw_batch_interval = 40
         self.batches_to_show = -1  # -1 to show all
@@ -162,9 +164,12 @@ class LossViewer(QtWidgets.QMainWindow):
 
             control_layout.addStretch(1)
 
-            self.stop_button = QtWidgets.QPushButton("Stop Training")
+            self.stop_button = QtWidgets.QPushButton("Stop Early")
             self.stop_button.clicked.connect(self.stop)
             control_layout.addWidget(self.stop_button)
+            self.cancel_button = QtWidgets.QPushButton("Cancel Training")
+            self.cancel_button.clicked.connect(self.cancel)
+            control_layout.addWidget(self.cancel_button)
 
             widget = QtWidgets.QWidget()
             widget.setLayout(control_layout)
@@ -242,12 +247,19 @@ class LossViewer(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.check_messages)
         self.timer.start(20)
 
+    def cancel(self):
+        """Set the cancel flag."""
+        self.canceled = True
+        if self.cancel_button is not None:
+            self.cancel_button.setText("Canceling...")
+            self.cancel_button.setEnabled(False)
+
     def stop(self):
         """Action to stop training."""
 
         if self.zmq_ctrl is not None:
             # send command to stop training
-            logger.info("Sending command to stop training")
+            logger.info("Sending command to stop training.")
             self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop")))
 
         # Disable the button
