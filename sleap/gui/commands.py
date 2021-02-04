@@ -1885,7 +1885,11 @@ class GenerateSuggestions(EditCommand):
     def do_action(cls, context: CommandContext, params: dict):
 
         # TODO: Progress bar
-        win = MessageDialog("Generating list of suggested frames...", context.app)
+        win = MessageDialog(
+            "Generating list of suggested frames... "
+            "This may take a few minutes.",
+            context.app
+        )
 
         new_suggestions = VideoFrameSuggestions.suggest(
             labels=context.labels, params=params
@@ -1929,7 +1933,7 @@ class ClearSuggestions(EditCommand):
 
         # Warn that suggestions will be cleared
         
-        response = QMessageBox.critical(
+        response = QMessageBox.warning(
             context.app,
             "Clearing all suggestions",
             "Are you sure you want to remove all suggestions from the project?",
