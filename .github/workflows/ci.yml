@@ -8,7 +8,39 @@ on:
       - 'tests/**'
 
 jobs:
-  build:
+  type_check:
+    name: Type Check
+    runs-on: "ubuntu-18.04"
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Install Dependencies
+      run: |
+        pip install mypy
+    - name: Run MyPy
+      # TODO: remove this once all MyPy errors get fixed
+      continue-on-error: true
+      run: |
+        mypy --follow-imports=skip --ignore-missing-imports sleap tests
+  lint:
+    name: Lint
+    runs-on: "ubuntu-18.04"
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Install Dependencies
+      run: |
+        pip install black
+    - name: Run Black
+      run: |
+        black --check sleap tests
+  tests:
     name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:

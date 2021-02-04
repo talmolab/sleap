@@ -394,7 +394,9 @@ class Skeleton:
             if edge_type == EdgeType.SYMMETRY
         ]
         # Get rid of duplicates
-        symmetries = list(set([tuple(sorted(e, key=operator.attrgetter("name"))) for e in symmetries]))
+        symmetries = list(
+            set([tuple(sorted(e, key=operator.attrgetter("name"))) for e in symmetries])
+        )
         return symmetries
 
     @property
