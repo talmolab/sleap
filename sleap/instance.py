@@ -534,8 +534,7 @@ class Instance:
         return self.skeleton.node_to_index(node)
 
     def __getitem__(
-        self,
-        node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray],
+        self, node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray]
     ) -> Union[List[Point], Point, np.ndarray]:
         """
         Get the Points associated with particular skeleton node(s).
