@@ -56,6 +56,18 @@ jobs:
           sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
           export DISPLAY=":1"
           xvfb-run pytest --cov=sleap --cov-report=xml tests/
+      - name: Type-check with MyPy (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        shell: bash -l {0}
+        run: |
+          pip install mypy
+          mypy --follow-imports=skip --ignore-missing-imports sleap tests
+      - name: Lint with Black (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        shell: bash -l {0}
+        run: |
+          pip install black
+          black --check sleap tests
       - name: Upload coverage
         uses: codecov/codecov-action@v1
         if: matrix.os == 'ubuntu-18.04'
