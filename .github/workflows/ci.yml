@@ -20,7 +20,7 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install mypy
-    - name: mypy
+    - name: Run MyPy
       run: |
         mypy --follow-imports=skip --ignore-missing-imports sleap tests
   lint:
@@ -35,7 +35,7 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install black
-    - name: mypy
+    - name: Run Black
       run: |
         black --check sleap tests
   tests:
