@@ -1580,7 +1580,7 @@ class TopDownInferenceModel(InferenceModel):
 
 
 @attr.s(auto_attribs=True)
-class TopdownPredictor(Predictor):
+class TopDownPredictor(Predictor):
     """Top-down multi-instance predictor.
 
     This high-level class handles initialization, preprocessing and tracking using a
@@ -1686,7 +1686,7 @@ class TopdownPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
-    ) -> "TopdownPredictor":
+    ) -> "TopDownPredictor":
         """Create predictor from saved models.
 
         Args:
@@ -1709,7 +1709,7 @@ class TopdownPredictor(Predictor):
                 integral refinement as an integer scalar.
 
         Returns:
-            An instance of `TopdownPredictor` with the loaded models.
+            An instance of `TopDownPredictor` with the loaded models.
 
             One of the two models can be left as `None` to perform inference with ground
             truth data. This will only work with `LabelsReader` as the provider.
@@ -2176,7 +2176,7 @@ class BottomUpInferenceModel(InferenceModel):
 
 
 @attr.s(auto_attribs=True)
-class BottomupPredictor(Predictor):
+class BottomUpPredictor(Predictor):
     """Bottom-up multi-instance predictor.
 
     This high-level class handles initialization, preprocessing and tracking using a
@@ -2253,7 +2253,7 @@ class BottomupPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
-    ) -> "BottomupPredictor":
+    ) -> "BottomUpPredictor":
         """Create predictor from a saved model.
 
         Args:
@@ -2273,7 +2273,7 @@ class BottomupPredictor(Predictor):
                 integral refinement as an integer scalar.
 
         Returns:
-            An instance of `BottomupPredictor` with the loaded model.
+            An instance of `BottomUpPredictor` with the loaded model.
         """
         # Load bottomup model.
         bottomup_config = TrainingJobConfig.load_json(model_path)
@@ -2746,7 +2746,7 @@ class BottomUpMultiClassPredictor(Predictor):
                 integral refinement as an integer scalar.
 
         Returns:
-            An instance of `BottomupPredictor` with the loaded model.
+            An instance of `BottomUpPredictor` with the loaded model.
         """
         # Load bottomup model.
         config = TrainingJobConfig.load_json(model_path)
@@ -2841,8 +2841,8 @@ class BottomUpMultiClassPredictor(Predictor):
 
 
 CLI_PREDICTORS = {
-    "topdown": TopdownPredictor,
-    "bottomup": BottomupPredictor,
+    "topdown": TopDownPredictor,
+    "bottomup": BottomUpPredictor,
     "bottomup_multiclass": BottomUpMultiClassPredictor,
     # "topdown_multiclass": TopDownMultiClassPredictor,  #  TODO
     "single": SingleInstancePredictor,
@@ -3058,7 +3058,7 @@ def make_predictor_from_models(
         return dict()
 
     if "multi_instance" in trained_model_paths:
-        predictor = BottomupPredictor.from_trained_models(
+        predictor = BottomUpPredictor.from_trained_models(
             trained_model_paths["multi_instance"],
             **get_relevant_args("bottomup"),
             **kwargs,
@@ -3078,7 +3078,7 @@ def make_predictor_from_models(
     elif (
         "centroid" in trained_model_paths and "centered_instance" in trained_model_paths
     ):
-        predictor = TopdownPredictor.from_trained_models(
+        predictor = TopDownPredictor.from_trained_models(
             centroid_model_path=trained_model_paths["centroid"],
             confmap_model_path=trained_model_paths["centered_instance"],
             **get_relevant_args("topdown"),
@@ -3158,10 +3158,10 @@ def load_model(
         An instance of a `Predictor` based on which model type was detected.
 
         If this is a top-down model, paths to the centroids model as well as the
-        centered instance model must be provided. A `TopdownPredictor` instance will be
+        centered instance model must be provided. A `TopDownPredictor` instance will be
         returned.
 
-        If this is a bottom-up model, a `BottomupPredictor` will be returned.
+        If this is a bottom-up model, a `BottomUpPredictor` will be returned.
 
         If this is a single-instance model, a `SingleInstancePredictor` will be
         returned.
@@ -3169,7 +3169,7 @@ def load_model(
         If a `tracker` is specified, the predictor will also run identity tracking over
         time.
 
-    See also: TopdownPredictor, BottomupPredictor, SingleInstancePredictor
+    See also: TopDownPredictor, BottomUpPredictor, SingleInstancePredictor
     """
     if isinstance(model_path, str):
         model_path = [model_path]

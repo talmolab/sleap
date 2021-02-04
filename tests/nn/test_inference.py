@@ -23,8 +23,8 @@ from sleap.nn.inference import (
     FindInstancePeaksGroundTruth,
     FindInstancePeaks,
     TopDownInferenceModel,
-    TopdownPredictor,
-    BottomupPredictor,
+    TopDownPredictor,
+    BottomUpPredictor,
     BottomUpMultiClassPredictor,
     load_model,
 )
@@ -493,7 +493,7 @@ def test_single_instance_predictor(
 
 
 def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
-    predictor = TopdownPredictor.from_trained_models(
+    predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path
     )
     labels_pr = predictor.predict(min_labels)
@@ -513,7 +513,7 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
 def test_topdown_predictor_centered_instance(
     min_labels, min_centered_instance_model_path
 ):
-    predictor = TopdownPredictor.from_trained_models(
+    predictor = TopDownPredictor.from_trained_models(
         confmap_model_path=min_centered_instance_model_path
     )
     labels_pr = predictor.predict(min_labels)
@@ -531,7 +531,7 @@ def test_topdown_predictor_centered_instance(
 
 
 def test_bottomup_predictor(min_labels, min_bottomup_model_path):
-    predictor = BottomupPredictor.from_trained_models(
+    predictor = BottomUpPredictor.from_trained_models(
         model_path=min_bottomup_model_path
     )
     labels_pr = predictor.predict(min_labels)
@@ -590,10 +590,10 @@ def test_load_model(
     assert isinstance(predictor, SingleInstancePredictor)
 
     predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
-    assert isinstance(predictor, TopdownPredictor)
+    assert isinstance(predictor, TopDownPredictor)
 
     predictor = load_model(min_bottomup_model_path)
-    assert isinstance(predictor, BottomupPredictor)
+    assert isinstance(predictor, BottomUpPredictor)
 
     predictor = load_model(min_bottomup_multiclass_model_path)
     assert isinstance(predictor, BottomUpMultiClassPredictor)
