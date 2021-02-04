@@ -412,7 +412,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
-    suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
+    suggestions: List[SuggestionFrame] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
     provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
         default=attr.Factory(dict)
@@ -1085,6 +1085,30 @@ class Labels(MutableSequence):
             and (frame_range is None or lf.frame_idx in frame_range)
         ]
         return track_frame_inst
+
+    def add_suggestion(self, video: Video, frame_idx: int):
+        """Add a suggested frame to the labels.
+
+        Args:
+            video: `sleap.Video` instance of the suggestion.
+            frame_idx: Index of the frame of the suggestion.
+        """
+        for suggestion in self.suggestions:
+            if suggestion.video == video and suggestion.frame_idx == frame_idx:
+                return
+        self.suggestions.append(SuggestionFrame(video=video, frame_idx=frame_idx))
+
+    def remove_suggestion(self, video: Video, frame_idx: int):
+        """Remove a suggestion from the list by video and frame index.
+
+        Args:
+            video: `sleap.Video` instance of the suggestion.
+            frame_idx: Index of the frame of the suggestion.
+        """ 
+        for suggestion in self.suggestions:
+            if suggestion.video == video and suggestion.frame_idx == frame_idx:
+                self.suggestions.remove(suggestion)
+                return
 
     def get_video_suggestions(
         self, video: Video, user_labeled: bool = True

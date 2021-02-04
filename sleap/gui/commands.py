@@ -327,6 +327,18 @@ class CommandContext:
         """Goes to previous suggested frame."""
         self.execute(GoPrevSuggestedFrame)
 
+    def addCurrentFrameAsSuggestion(self):
+        """Add current frame as a suggestion."""
+        self.execute(AddSuggestion)
+
+    def removeSuggestion(self):
+        """Remove the selected frame from suggestions."""
+        self.execute(RemoveSuggestion)
+
+    def clearSuggestions(self):
+        """Clear all suggestions."""
+        self.execute(ClearSuggestions)
+
     def nextTrackFrame(self):
         """Goes to next frame on which a track starts."""
         self.execute(GoNextTrackFrame)
@@ -682,18 +694,6 @@ class ImportCoco(AppCommand):
         if len(filename) == 0:
             return False
 
-        # QtWidgets.QMessageBox(
-        #     text="Please locate the directory with image files for this dataset."
-        # ).exec_()
-        #
-        # img_dir = FileDialog.openDir(
-        #     None,
-        #     directory=os.path.dirname(filename),
-        #     caption="Open Image Directory"
-        # )
-        # if len(img_dir) == 0:
-        #     return False
-
         params["filename"] = filename
         params["img_dir"] = os.path.dirname(filename)
 
@@ -871,9 +871,7 @@ class SaveProjectAs(AppCommand):
             default_name = get_new_version_filename(default_name)
         else:
             default_name = "labels.v000.slp"
-        filters = [
-            "SLEAP labels dataset (*.slp)"
-        ]
+        filters = ["SLEAP labels dataset (*.slp)"]
         filename, selected_filter = FileDialog.save(
             context.app,
             caption="Save As...",
@@ -1886,6 +1884,7 @@ class GenerateSuggestions(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
 
+        # TODO: Progress bar
         win = MessageDialog("Generating list of suggested frames...", context.app)
 
         new_suggestions = VideoFrameSuggestions.suggest(
@@ -1895,6 +1894,56 @@ class GenerateSuggestions(EditCommand):
         context.labels.set_suggestions(new_suggestions)
 
         win.hide()
+
+
+class AddSuggestion(EditCommand):
+    topics = [UpdateTopic.suggestions]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        context.labels.add_suggestion(
+            context.state["video"], context.state["frame_idx"]
+        )
+        context.app.suggestionsTable.selectRow(len(context.labels) - 1)
+
+
+class RemoveSuggestion(EditCommand):
+    topics = [UpdateTopic.suggestions]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        selected_frame = context.app.suggestionsTable.getSelectedRowItem()
+        if selected_frame is not None:
+            context.labels.remove_suggestion(
+                selected_frame.video, selected_frame.frame_idx
+            )
+
+
+class ClearSuggestions(EditCommand):
+    topics = [UpdateTopic.suggestions]
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        if len(context.labels.suggestions) == 0:
+            return False
+
+        # Warn that suggestions will be cleared
+        
+        response = QMessageBox.critical(
+            context.app,
+            "Clearing all suggestions",
+            "Are you sure you want to remove all suggestions from the project?",
+            QMessageBox.Yes,
+            QMessageBox.No,
+        )
+        if response == QMessageBox.No:
+            return False
+
+        return True
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        context.labels.suggestions = []
 
 
 class MergeProject(EditCommand):

@@ -462,7 +462,10 @@ class SuggestionsTableModel(GenericTableModel):
 
         item_dict["SuggestionFrame"] = item
 
-        video_string = f"{labels.videos.index(item.video)+1}: {os.path.basename(item.video.filename)}"
+        video_string = (
+            f"{labels.videos.index(item.video)+1}: "
+            f"{os.path.basename(item.video.filename)}"
+        )
 
         item_dict["group"] = str(item.group + 1) if item.group is not None else ""
         item_dict["group_int"] = item.group if item.group is not None else -1

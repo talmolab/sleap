@@ -790,11 +790,6 @@ class MainWindow(QMainWindow):
             dock_widget.setLayout(layout)
             dock.setWidget(dock_widget)
 
-            # key = f"hide {name.lower()} dock"
-            # print(f"prefs[{key}] = {prefs[key]}")
-            # if key in prefs and prefs[key]:
-            # dock.hide()
-
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
             self.viewMenu.addAction(dock.toggleViewAction())
 
@@ -939,6 +934,34 @@ class MainWindow(QMainWindow):
         )
 
         suggestions_layout.addWidget(self.suggestionsTable)
+
+        
+        hb = QHBoxLayout()
+
+        _add_button(
+            hb,
+            "Add current frame",
+            self.process_events_then(self.commands.addCurrentFrameAsSuggestion),
+            "add current frame as suggestion",
+        )
+
+        _add_button(
+            hb,
+            "Remove",
+            self.process_events_then(self.commands.removeSuggestion),
+            "remove suggestion",
+        )
+
+        _add_button(
+            hb,
+            "Clear all",
+            self.process_events_then(self.commands.clearSuggestions),
+            "clear suggestions",
+        )
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        suggestions_layout.addWidget(hbw)
 
         hb = QHBoxLayout()
 
