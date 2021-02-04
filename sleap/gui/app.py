@@ -359,13 +359,16 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
-
-        fileMenu.addSeparator()
         add_menu_item(
             fileMenu,
             "export analysis",
             "Export Analysis HDF5...",
             self.commands.exportAnalysisFile,
+        )
+
+        fileMenu.addSeparator()
+        add_menu_item(
+            fileMenu, "reset prefs", "Reset preferences to defaults...", self.resetPrefs
         )
 
         fileMenu.addSeparator()
@@ -662,7 +665,6 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
-
 
         add_menu_item(
             predictionMenu,
@@ -1219,6 +1221,15 @@ class MainWindow(QMainWindow):
                     message += " in video"
 
         self.statusBar().showMessage(message)
+
+    def resetPrefs(self):
+        """Reset preferences to defaults."""
+        prefs.reset_to_default()
+        msg = QMessageBox()
+        msg.setText(
+            "Note: Some preferences may not take effect until application is restarted."
+        )
+        msg.exec_()
 
     def loadProjectFile(self, filename: Optional[str] = None):
         """

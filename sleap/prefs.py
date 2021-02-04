@@ -12,7 +12,7 @@ class Preferences(object):
 
     _prefs = None
     _defaults = {
-        "medium step size": 4,
+        "medium step size": 10,
         "large step size": 100,
         "color predicted": False,
         "palette": "standard",
@@ -47,6 +47,11 @@ class Preferences(object):
     def save(self):
         """Save preferences to file."""
         util.save_config_yaml(self._filename, self._prefs)
+
+    def reset_to_default(self):
+        """Reset preferences to default."""
+        util.save_config_yaml(self._filename, self._defaults)
+        self.load()
 
     def _validate_key(self, key):
         if key not in self._defaults:
