@@ -1609,34 +1609,36 @@ class LabeledFrame:
         """Return the image for this frame of shape (height, width, channels)."""
         return self.video.get_frame(self.frame_idx)
 
-    def plot(self, image: bool = True):
+    def plot(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all instances.
 
         Args:
             image: If False, only the instances will be plotted without loading the
                 original image.
+            scale: Relative scaling for the figure.
 
         Notes:
-            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
-            options.
+            See `sleap.nn.viz.plot_img` and `sleap.nn.viz.plot_instances` for more
+            plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image)
+            sleap.nn.viz.plot_img(self.image, scale=scale)
         sleap.nn.viz.plot_instances(self.instances)
 
-    def plot_predicted(self, image: bool = True):
+    def plot_predicted(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all predicted instances.
 
         Args:
             image: If False, only the instances will be plotted without loading the
                 original image.
+            scale: Relative scaling for the figure.
 
         Notes:
-            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
-            options.
+            See `sleap.nn.viz.plot_img` and `sleap.nn.viz.plot_instances` for more
+            plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image)
+            sleap.nn.viz.plot_img(self.image, scale=scale)
         sleap.nn.viz.plot_instances(
             self.predicted_instances,
             color_by_track=(len(self.predicted_instances) > 0)
