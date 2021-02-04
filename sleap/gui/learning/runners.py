@@ -498,7 +498,8 @@ def run_gui_training(
                 os.path.dirname(labels_filename), "models"
             )
             training.setup_new_run_folder(
-                job.outputs, base_run_name=f"{model_type}.{len(labels)}"
+                job.outputs,
+                base_run_name=f"{model_type}.n={len(labels.user_labeled_frames)}",
             )
 
             if gui:
@@ -619,8 +620,6 @@ def train_subprocess(
     save_viz: bool = False,
 ):
     """Runs training inside subprocess."""
-
-    # run_name = job_config.outputs.run_name
     run_path = job_config.outputs.run_path
 
     success = False
