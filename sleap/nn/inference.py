@@ -2900,11 +2900,11 @@ def load_model(
             tmp_dirs.append(tmp_dir)
 
             # Remove the temp dir when program exits in case something goes wrong.
-            atexit.register(shutil.rmtree, tmp_dir.name, True)
+            atexit.register(shutil.rmtree, tmp_dir.name, ignore_errors=True)
 
             # Extract and replace in the list.
             shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
-            models_paths[i] = tmp_dir.name
+            model_paths[i] = tmp_dir.name
 
     predictor = make_predictor_from_paths(
         model_paths, batch_size=batch_size, integral_refinement=refinement == "integral"
