@@ -2204,6 +2204,7 @@ class AddMissingInstanceNodes(EditCommand):
 
     @classmethod
     def add_random_nodes(cls, context, instance, visible):
+        # TODO: Move this to Instance so we can do this on-demand
         # the rect that's currently visible in the window view
         in_view_rect = context.app.player.getVisibleRect()
 

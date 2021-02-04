@@ -894,7 +894,9 @@ class Labels(MutableSequence):
         print(f"Suggestions: {len(self.suggestions):,}")
         print("Provenance:", self.provenance)
 
-    def instances(self, video: Video = None, skeleton: Skeleton = None):
+    def instances(
+        self, video: Optional[Video] = None, skeleton: Optional[Skeleton] = None
+    ):
         """Iterate over instances in the labels, optionally with filters.
 
         Args:
@@ -1104,7 +1106,7 @@ class Labels(MutableSequence):
         Args:
             video: `sleap.Video` instance of the suggestion.
             frame_idx: Index of the frame of the suggestion.
-        """ 
+        """
         for suggestion in self.suggestions:
             if suggestion.video == video and suggestion.frame_idx == frame_idx:
                 self.suggestions.remove(suggestion)
@@ -1681,6 +1683,28 @@ class Labels(MutableSequence):
             suggested=embed_suggested,
         )
 
+    def export(self, filename: str):
+        """Export labels to analysis HDF5 format.
+
+        This expects the labels to contain data for a single video (e.g., predictions).
+        
+        Args:
+            filename: Path to output HDF5 file.
+
+        Notes:
+            This will write the contents of the labels out as a HDF5 file without
+            complete metadata.
+
+            The resulting file will have datasets:
+                - `/node_names`: List of skeleton node names.
+                - `/track_names`: List of track names.
+                - `/tracks`: All coordinates of the instances in the labels.
+                - `/track_occupancy`: Mask denoting which instances are present in each
+                    frame.
+        """
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+        SleapAnalysisAdaptor.write(filename, self)
+
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
         from .format import read
@@ -2014,7 +2038,7 @@ def load_file(
     filename: Text,
     detect_videos: bool = True,
     search_paths: Optional[Union[List[Text], Text]] = None,
-    match_to: Optional[Labels] = None
+    match_to: Optional[Labels] = None,
 ) -> Labels:
     """Load a SLEAP labels file.
 
