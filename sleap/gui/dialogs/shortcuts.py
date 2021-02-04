@@ -28,11 +28,26 @@ class ShortcutDialog(QtWidgets.QDialog):
         for action, widget in self.key_widgets.items():
             self.shortcuts[action] = widget.keySequence().toString()
         self.shortcuts.save()
+        self.info_msg()
+        super(ShortcutDialog, self).accept()
 
+    def info_msg(self):
+        """Display information about changes."""
+        msg = QtWidgets.QMessageBox()
+        msg.setText(
+            "Application must be restarted before changes to keyboard shortcuts take "
+            "effect."
+        )
+        msg.exec_()
+
+    def reset(self):
+        """Reset to defaults."""
+        self.shortcuts.reset_to_default()
+        self.info_msg()
         super(ShortcutDialog, self).accept()
 
     def load_shortcuts(self):
-        """Loads shortcuts object."""
+        """Load shortcuts object."""
         self.shortcuts = Shortcuts()
 
     def make_form(self):
@@ -41,26 +56,28 @@ class ShortcutDialog(QtWidgets.QDialog):
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.make_shortcuts_widget())
-        layout.addWidget(
-            QtWidgets.QLabel(
-                "Any changes to keyboard shortcuts will not take effect "
-                "until you quit and re-open the application."
-            )
-        )
         layout.addWidget(self.make_buttons_widget())
         self.setLayout(layout)
 
     def make_buttons_widget(self) -> QtWidgets.QDialogButtonBox:
-        """Makes the form buttons."""
-        buttons = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
-        )
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
+        """Make the form buttons."""
+        buttons = QtWidgets.QDialogButtonBox()
+        save = QtWidgets.QPushButton("Save")
+        save.clicked.connect(self.accept)
+        buttons.addButton(save, QtWidgets.QDialogButtonBox.AcceptRole)
+
+        cancel = QtWidgets.QPushButton("Cancel")
+        cancel.clicked.connect(self.reject)
+        buttons.addButton(cancel, QtWidgets.QDialogButtonBox.RejectRole)
+
+        reset = QtWidgets.QPushButton("Reset to defaults")
+        reset.clicked.connect(self.reset)
+        buttons.addButton(reset, QtWidgets.QDialogButtonBox.ActionRole)
+
         return buttons
 
     def make_shortcuts_widget(self) -> QtWidgets.QWidget:
-        """Makes the widget will fields for all shortcuts."""
+        """Make the widget will fields for all shortcuts."""
         shortcuts = self.shortcuts
 
         widget = QtWidgets.QWidget()
@@ -75,7 +92,7 @@ class ShortcutDialog(QtWidgets.QDialog):
         return widget
 
     def make_column_widget(self, shortcuts: List) -> QtWidgets.QWidget:
-        """Makes a single column of shortcut fields.
+        """Make a single column of shortcut fields.
 
         Args:
             shortcuts: The list of shortcuts to include in this column.
