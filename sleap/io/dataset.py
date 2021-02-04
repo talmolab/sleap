@@ -1891,7 +1891,6 @@ class Labels(MutableSequence):
                 ret = progress_callback(n, n_total)
                 if ret == False:
                     vid.close()
-                    os.remove(output_path)
                     return []
 
             vid.close()
