@@ -1369,35 +1369,63 @@ def main():
     parser.add_argument(
         "training_job_path", help="Path to training job profile JSON file."
     )
-    parser.add_argument("labels_path", help="Path to labels file to use for training.")
+    parser.add_argument(
+        "labels_path",
+        nargs="?",
+        default="",
+        help=(
+            "Path to labels file to use for training. If specified, overrides the path "
+            "specified in the training job config."
+        ),
+    )
     parser.add_argument(
         "--video-paths",
         type=str,
         default="",
-        help="List of paths for finding videos in case paths inside labels file need fixing.",
+        help=(
+            "List of paths for finding videos in case paths inside labels file are "
+            "not accessible."
+        ),
     )
     parser.add_argument(
         "--val_labels",
         "--val",
-        help="Path to labels file to use for validation (overrides training job path if set).",
+        help=(
+            "Path to labels file to use for validation. If specified, overrides the "
+            "path specified in the training job config."
+        ),
     )
     parser.add_argument(
         "--test_labels",
         "--test",
-        help="Path to labels file to use for test (overrides training job path if set).",
+        help=(
+            "Path to labels file to use for test. If specified, overrides the path "
+            "specified in the training job config."
+        ),
     )
     parser.add_argument(
         "--tensorboard",
         action="store_true",
-        help="Enables TensorBoard logging to the run path.",
+        help=(
+            "Enable TensorBoard logging to the run path if not already specified in "
+            "the training job config."
+        ),
     )
     parser.add_argument(
         "--save_viz",
         action="store_true",
-        help="Enables saving of prediction visualizations to the run folder.",
+        help=(
+            "Enable saving of prediction visualizations to the run folder if not "
+            "already specified in the training job config."
+        ),
     )
     parser.add_argument(
-        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI)."
+        "--zmq",
+        action="store_true",
+        help=(
+            "Enable ZMQ logging (for GUI) if not already specified in the training "
+            "job config."
+        ),
     )
     parser.add_argument(
         "--run_name",
@@ -1424,9 +1452,9 @@ def main():
 
     # Override config settings for CLI-based training.
     job_config.outputs.save_outputs = True
-    job_config.outputs.tensorboard.write_logs = args.tensorboard
-    job_config.outputs.zmq.publish_updates = args.zmq
-    job_config.outputs.zmq.subscribe_to_controller = args.zmq
+    job_config.outputs.tensorboard.write_logs |= args.tensorboard
+    job_config.outputs.zmq.publish_updates |= args.zmq
+    job_config.outputs.zmq.subscribe_to_controller |= args.zmq
     if args.run_name != "":
         job_config.outputs.run_name = args.run_name
     if args.prefix != "":
@@ -1434,6 +1462,8 @@ def main():
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
     job_config.outputs.save_visualizations |= args.save_viz
+    if args.labels_path == "":
+        args.labels_path = None
 
     logger.info("Versions:")
     sleap.versions()
