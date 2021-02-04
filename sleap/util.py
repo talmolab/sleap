@@ -310,12 +310,14 @@ def get_config_file(
 def get_config_yaml(shortname: str, get_defaults: bool = False) -> dict:
     config_path = get_config_file(shortname, get_defaults=get_defaults)
     with open(config_path, "r") as f:
+        print(f"Loading config: {config_path}")
         return yaml.load(f, Loader=yaml.SafeLoader)
 
 
 def save_config_yaml(shortname: str, data: Any) -> dict:
     yaml_path = get_config_file(shortname, ignore_file_not_found=True)
     with open(yaml_path, "w") as f:
+        print(f"Saving config: {yaml_path}")
         yaml.dump(data, f)
 
 
