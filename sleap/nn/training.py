@@ -555,6 +555,9 @@ class Trainer(ABC):
         # Copy input config before we make any changes.
         initial_config = copy.deepcopy(config)
 
+        # Store SLEAP version on the training process.
+        config.sleap_version = sleap.__version__
+
         # Create data readers and store loaded skeleton.
         data_readers = DataReaders.from_config(
             config.data.labels,

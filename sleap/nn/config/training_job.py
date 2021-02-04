@@ -27,13 +27,14 @@ parameters are aggregated and documented for end users (as opposed to developers
 import os
 import attr
 import cattr
+import sleap
 from sleap.nn.config.data import DataConfig
 from sleap.nn.config.model import ModelConfig
 from sleap.nn.config.optimization import OptimizationConfig
 from sleap.nn.config.outputs import OutputsConfig
 import json
 from jsmin import jsmin
-from typing import Text, Dict, Any
+from typing import Text, Dict, Any, Optional
 
 
 @attr.s(auto_attribs=True)
@@ -45,13 +46,18 @@ class TrainingJobConfig:
         model: Configuration options related to the model architecture.
         optimization: Configuration options related to the training.
         outputs: Configuration options related to outputs during training.
+        name: Optional name for this configuration profile.
+        description: Optional description of the configuration.
+        sleap_version: Version of SLEAP that generated this configuration.
     """
 
     data: DataConfig = attr.ib(factory=DataConfig)
     model: ModelConfig = attr.ib(factory=ModelConfig)
     optimization: OptimizationConfig = attr.ib(factory=OptimizationConfig)
     outputs: OutputsConfig = attr.ib(factory=OutputsConfig)
-    # TODO: store fixed config format version + SLEAP version?
+    name: Optional[Text] = ""
+    description: Optional[Text] = ""
+    sleap_version: Optional[Text] = sleap.__version__
 
     @classmethod
     def from_json_dicts(cls, json_data_dicts: Dict[Text, Any]) -> "TrainingJobConfig":
