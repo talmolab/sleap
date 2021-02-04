@@ -733,7 +733,7 @@ class MainWindow(QMainWindow):
 
         helpMenu.addSeparator()
 
-        helpMenu.addAction("Check for updates...", self.commands.checkForUpdates)
+        helpMenu.addAction("Latest versions:", self.commands.checkForUpdates)
         self.state["stable_version_menu"] = helpMenu.addAction(
             "  Stable: N/A", self.commands.openStableVersion
         )
