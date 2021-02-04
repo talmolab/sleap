@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from time import time
 import logging
+import shutil
 
 import tensorflow as tf
 import numpy as np
@@ -643,6 +644,9 @@ class Trainer(ABC):
         logger.info("  Heads: ")
         for i, head in enumerate(self.model.heads):
             logger.info(f"  heads[{i}] = {head}")
+        logger.info("  Outputs: ")
+        for i, output in enumerate(self.model.keras_model.outputs):
+            logger.info(f"  outputs[{i}] = {output}")
 
     @property
     def keras_model(self) -> tf.keras.Model:
@@ -841,6 +845,20 @@ class Trainer(ABC):
                     model=self.model,
                     save=True,
                     split_name="test",
+                )
+
+            if (
+                self.config.outputs.save_visualizations
+                and self.config.outputs.delete_viz_images
+            ):
+                viz_path = os.path.join(self.run_path, "viz")
+                logger.info(f"Deleting visualization directory: {viz_path}")
+                shutil.rmtree(viz_path)
+
+            if self.config.outputs.zip_outputs:
+                logger.info(f"Packaging results to: {self.run_path}.zip")
+                shutil.make_archive(
+                    base_name=self.run_path, root_dir=self.run_path, format="zip"
                 )
 
 

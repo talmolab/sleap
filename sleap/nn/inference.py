@@ -26,6 +26,11 @@ import logging
 import warnings
 import os
 import time
+import tempfile
+import shutil
+import atexit
+from pathlib import Path
+
 from abc import ABC, abstractmethod
 from typing import Text, Optional, List, Dict, Union, Iterator
 
@@ -2890,6 +2895,22 @@ def load_model(
     """
     if isinstance(model_path, str):
         model_path = [model_path]
+
+    # Uncompress ZIP packaged models.
+    tmp_dirs = []
+    for i, model_path in enumerate(model_paths):
+        if model_path.endswith(".zip"):    
+            # Create temp dir on demand.
+            tmp_dir = tempfile.TemporaryDirectory()
+            tmp_dirs.append(tmp_dir)
+
+            # Remove the temp dir when program exits in case something goes wrong.
+            atexit.register(shutil.rmtree, tmp_dir.name, True)
+
+            # Extract and replace in the list.
+            shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
+            models_paths[i] = tmp_dir.name
+
     predictor = make_predictor_from_paths(
         model_path, batch_size=batch_size, integral_refinement=refinement == "integral"
     )
@@ -2900,6 +2921,11 @@ def load_model(
             post_connect_single_breaks=True,
             clean_instance_count=tracker_max_instances,
         )
+
+    # Remove temp dirs.
+    for tmp_dir in tmp_dirs:
+        tmp_dir.cleanup()
+
     return predictor
 
 
