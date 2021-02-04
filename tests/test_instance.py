@@ -59,10 +59,9 @@ def test_instance_node_multi_get_set_item(skeleton):
 
     assert np.allclose(x_values, [1, 2, 3])
     assert np.allclose(y_values, [4, 5, 6])
-    
+
     np.testing.assert_array_equal(
-        instance1[np.array([0, 2, 4])],
-        [[1, 4], [np.nan, np.nan], [3, 6]]
+        instance1[np.array([0, 2, 4])], [[1, 4], [np.nan, np.nan], [3, 6]]
     )
 
     instance1[np.array([0, 1])] = [[1, 2], [3, 4]]
