@@ -25,10 +25,13 @@ import attr
 import logging
 import warnings
 import os
-import time
 import tempfile
 import shutil
 import atexit
+import rich.progress
+from collections import deque
+import json
+from time import time
 from pathlib import Path
 
 from abc import ABC, abstractmethod
@@ -79,7 +82,7 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
     ds_iter = iter(ds)
 
     i = 0
-    wall_t0 = time.time()
+    wall_t0 = time()
     done = False
     while not done:
         try:
@@ -98,7 +101,7 @@ def safely_generate(ds: tf.data.Dataset, progress: bool = True):
             # Show the current progress (frames, time, fps)
             if progress:
                 if (i and i % 1000 == 0) or done:
-                    elapsed_time = time.time() - wall_t0
+                    elapsed_time = time() - wall_t0
                     logger.info(
                         f"Finished {i} examples in {elapsed_time:.2f} seconds "
                         "(inference + postprocessing)"
@@ -113,9 +116,32 @@ def get_keras_model_path(path: Text) -> Text:
     return os.path.join(path, "best_model.h5")
 
 
+class RateColumn(rich.progress.ProgressColumn):
+    """Renders the progress rate."""
+
+    def render(self, task: "Task") -> rich.progress.Text:
+        """Show progress rate."""
+        speed = task.speed
+        if speed is None:
+            return rich.progress.Text("?", style="progress.data.speed")
+        return rich.progress.Text(f"{speed:.1f} FPS", style="progress.data.speed")
+
+
 @attr.s(auto_attribs=True)
 class Predictor(ABC):
     """Base interface class for predictors."""
+
+    verbosity: str = attr.ib(
+        validator=attr.validators.in_(["none", "rich", "json"]),
+        default="rich",
+        kw_only=True,
+    )
+    report_rate: float = attr.ib(default=2.0, kw_only=True)
+
+    @property
+    def report_period(self) -> float:
+        """Time between progress reports in seconds."""
+        return 1.0 / self.report_rate
 
     @classmethod
     @abstractmethod
@@ -179,10 +205,11 @@ class Predictor(ABC):
         # Update the data provider source.
         self.pipeline.providers = [data_provider]
 
-        # Loop over data batches.
-        for ex in self.pipeline.make_dataset():
+        def process_batch(ex):
             # Run inference on current batch.
             preds = self.inference_model.predict_on_batch(ex)
+
+            # Add model outputs to the input data example.
             ex.update(preds)
 
             # Convert to numpy arrays if not already.
@@ -191,7 +218,76 @@ class Predictor(ABC):
             if isinstance(ex["frame_ind"], tf.Tensor):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
-            yield ex
+            return ex
+
+        # Loop over data batches with optional progress reporting.
+        if self.verbosity == "rich":
+            with rich.progress.Progress(
+                "{task.description}",
+                rich.progress.BarColumn(),
+                "[progress.percentage]{task.percentage:>3.0f}%",
+                "ETA:",
+                rich.progress.TimeRemainingColumn(),
+                RateColumn(),
+                auto_refresh=False,
+                refresh_per_second=self.report_rate,
+                speed_estimate_period=5,
+            ) as progress:
+                task = progress.add_task("Predicting...", total=len(data_provider))
+                last_report = time()
+                for ex in self.pipeline.make_dataset():
+                    ex = process_batch(ex)
+                    progress.update(task, advance=len(ex["frame_ind"]))
+
+                    # Handle refreshing manually to support notebooks.
+                    elapsed_since_last_report = time() - last_report
+                    if elapsed_since_last_report > self.report_period:
+                        progress.refresh()
+
+        elif self.verbosity == "json":
+            n_processed = 0
+            n_total = len(data_provider)
+            n_recent = deque(maxlen=30)
+            elapsed_recent = deque(maxlen=30)
+            last_report = time()
+            t0_all = time()
+            t0_batch = time()
+            for ex in self.pipeline.make_dataset():
+                # Process batch of examples.
+                ex = process_batch(ex)
+
+                # Track timing and progress.
+                elapsed_batch = time() - t0_batch
+                t0_batch = time()
+                n_batch = len(ex["frame_ind"])
+                n_processed += n_batch
+                elapsed_all = time() - t0_all
+
+                # Compute recent rate.
+                n_recent.append(n_batch)
+                elapsed_recent.append(elapsed_batch)
+                rate = sum(n_recent) / sum(elapsed_recent)
+                eta = (n_total - n_processed) / rate
+
+                # Report.
+                elapsed_since_last_report = time() - last_report
+                if elapsed_since_last_report > self.report_period:
+                    print(
+                        json.dumps(
+                            {
+                                "n_processed": n_processed,
+                                "n_total": n_total,
+                                "elapsed": elapsed_all,
+                                "rate": rate,
+                                "eta": eta,
+                            }
+                        ),
+                        flush=True,
+                    )
+                    last_report = time()
+        else:
+            for ex in self.pipeline.make_dataset():
+                yield process_batch(ex)
 
     def predict(
         self, data: Union[Provider, sleap.Labels, sleap.Video], make_labels: bool = True
@@ -1015,7 +1111,6 @@ class SingleInstancePredictor(Predictor):
         )
         obj._initialize_inference_model()
         return obj
-
 
     def _make_labeled_frames_from_generator(
         self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
@@ -2442,6 +2537,19 @@ def make_cli_parser():
         help="Path to labels dataset file (for inference on multiple videos or for re-tracking pre-existing predictions).",
     )
 
+    parser.add_argument(
+        "--verbosity",
+        type=str,
+        choices=["none", "rich", "json"],
+        default="rich",
+        help=(
+            "Verbosity of inference progress reporting. 'none' does not output "
+            "anything during inference, 'rich' displays an updating progress bar, "
+            "and 'json' outputs the progress as a JSON encoded response to the "
+            "console."
+        ),
+    )
+
     # TODO: better video parameters
 
     parser.add_argument(
@@ -2663,6 +2771,8 @@ def load_model(
     tracker: Optional[str] = None,
     tracker_window: int = 5,
     tracker_max_instances: Optional[int] = None,
+    disable_gpu_preallocation: bool = True,
+    progress_reporting: str = "rich",
 ) -> Predictor:
     """Load a trained SLEAP model.
 
@@ -2683,6 +2793,17 @@ def load_model(
             `tracker` is `None`.
         tracker_max_instances: If not `None`, discard instances beyond this count when
             tracking. No effect when `tracker` is `None`.
+        disable_gpu_preallocation: If `True` (the default), initialize the GPU and
+            disable preallocation of memory. This is necessary to prevent freezing on
+            some systems with low GPU memory and has negligible impact on performance.
+            If `False`, no GPU initialization is performed. No effect if running in
+            CPU-only mode.
+        progress_reporting: Mode of inference progress reporting. If `"rich"` (the
+            default), an updating progress bar is displayed in the console or notebook.
+            If `"json"`, a JSON-serialized message is printed out which can be captured
+            for programmatic progress monitoring. If `"none"`, nothing is displayed
+            during inference -- this is recommended when running on clusters or headless
+            machines where the output is captured to a log file.
 
     Returns:
         An instance of a `Predictor` based on which model type was detected.
@@ -2709,7 +2830,7 @@ def load_model(
     # Uncompress ZIP packaged models.
     tmp_dirs = []
     for i, model_path in enumerate(model_paths):
-        if model_path.endswith(".zip"):    
+        if model_path.endswith(".zip"):
             # Create temp dir on demand.
             tmp_dir = tempfile.TemporaryDirectory()
             tmp_dirs.append(tmp_dir)
@@ -2721,9 +2842,13 @@ def load_model(
             shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
             model_paths[i] = tmp_dir.name
 
+    if disable_gpu_preallocation:
+        sleap.disable_preallocation()
+
     predictor = make_predictor_from_paths(
         model_paths, batch_size=batch_size, integral_refinement=refinement == "integral"
     )
+    predictor.verbosity = progress_reporting
     if tracker is not None:
         predictor.tracker = Tracker.make_tracker_by_name(
             tracker=tracker,
@@ -2754,7 +2879,7 @@ def main():
             sleap.nn.system.use_last_gpu()
         else:
             sleap.nn.system.use_gpu(args.gpu)
-    sleap.nn.system.disable_preallocation()
+    sleap.disable_preallocation()
 
     print("Versions:")
     sleap.versions()
@@ -2776,13 +2901,14 @@ def main():
     predictor = make_predictor_from_models(
         model_paths_by_head, labels_path=args.labels, policy_args=policy_args
     )
+    predictor.verbosity = args.verbosity
 
     # Make the tracker
     tracker = make_tracker_from_cli(policy_args)
     predictor.tracker = tracker
 
     # Run inference!
-    t0 = time.time()
+    t0 = time()
     predicted_frames = []
 
     for video_reader in video_readers:
@@ -2800,7 +2926,7 @@ def main():
     prediction_metadata["sleap.version"] = sleap.__version__
 
     save_predictions_from_cli(args, predicted_frames, prediction_metadata)
-    print(f"Total Time: {time.time() - t0}")
+    print(f"Total Time: {time() - t0}")
 
 
 if __name__ == "__main__":
