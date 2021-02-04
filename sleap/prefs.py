@@ -20,6 +20,7 @@ class Preferences(object):
         "trail length": 0,
         "trail width": 4.0,
         "trail node count": 1,
+        "marker size": 4,
         "window state": b""
     }
     _filename = "preferences.yaml"

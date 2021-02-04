@@ -140,6 +140,8 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = "Line"
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+        self.state["marker size"] = prefs["marker size"]
+        self.state.connect("marker size", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
 
@@ -184,6 +186,7 @@ class MainWindow(QMainWindow):
         """Closes application window, prompting for saving as needed."""
         # Save window state.
         prefs["window state"] = self.saveState()
+        prefs["marker size"] = self.state["marker size"]
 
         # Save preferences.
         prefs.save()
@@ -507,8 +510,15 @@ class MainWindow(QMainWindow):
 
         add_submenu_choices(
             menu=viewMenu,
+            title="Node Marker Size",
+            options=(1, 4, 6, 8, 12),
+            key="marker size",
+        )
+
+        add_submenu_choices(
+            menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 20, 50, 100, 200, 500),
+            options=(0, 10, 50, 100, 250),
             key="trail_length",
         )
 
@@ -935,7 +945,6 @@ class MainWindow(QMainWindow):
 
         suggestions_layout.addWidget(self.suggestionsTable)
 
-        
         hb = QHBoxLayout()
 
         _add_button(
@@ -1625,7 +1634,7 @@ def main():
         help=(
             "Reset GUI state and preferences. Use this flag if the GUI appears "
             "incorrectly or fails to open."
-            ),
+        ),
         action="store_const",
         const=True,
         default=False,
