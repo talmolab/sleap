@@ -1565,7 +1565,4 @@ def load_video(
     if dataset is not None:
         kwargs["dataset"] = dataset
     kwargs["input_format"] = "channels_first" if channels_first else "channels_last"
-    return Video.from_filename(
-        filename,
-        **kwargs
-    )
+    return Video.from_filename(filename, **kwargs)

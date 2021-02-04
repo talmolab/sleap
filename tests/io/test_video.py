@@ -10,7 +10,7 @@ from tests.fixtures.videos import (
     TEST_SMALL_ROBOT_MP4_FILE,
     TEST_H5_DSET,
     TEST_H5_INPUT_FORMAT,
-    TEST_SMALL_CENTERED_PAIR_VID
+    TEST_SMALL_CENTERED_PAIR_VID,
 )
 
 # FIXME:

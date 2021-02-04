@@ -20,6 +20,7 @@ def versions():
     import tensorflow as tf
     import numpy as np
     import platform
+
     vers = {}
     vers["SLEAP"] = __version__
     vers["TensorFlow"] = tf.__version__

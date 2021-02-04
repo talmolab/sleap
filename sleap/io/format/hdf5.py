@@ -225,7 +225,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         frame_data_format: str = "png",
         all_labeled: bool = False,
         suggested: bool = False,
-        progress_callback: Optional[Callable[[int, int], None]] = None
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ):
 
         labels = source_object

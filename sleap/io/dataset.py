@@ -51,7 +51,7 @@ from typing import (
     Iterable,
     Any,
     Set,
-    Callable
+    Callable,
 )
 
 import attr
@@ -1826,7 +1826,7 @@ class Labels(MutableSequence):
         user_labeled: bool = True,
         all_labeled: bool = False,
         suggested: bool = False,
-        progress_callback: Optional[Callable[[int, int], None]] = None
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> List[HDF5Video]:
         """Write images for labeled frames from all videos to hdf5 file.
 

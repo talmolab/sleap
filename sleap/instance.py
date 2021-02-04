@@ -887,7 +887,7 @@ class Instance:
             return None
         else:
             return self.frame.video
-    
+
     @property
     def frame_idx(self) -> Optional[int]:
         """The frame index of the labeled frame this instance is associated with."""
