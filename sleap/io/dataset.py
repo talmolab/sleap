@@ -51,6 +51,7 @@ from typing import (
     Iterable,
     Any,
     Set,
+    Callable
 )
 
 import attr
@@ -1825,6 +1826,7 @@ class Labels(MutableSequence):
         user_labeled: bool = True,
         all_labeled: bool = False,
         suggested: bool = False,
+        progress_callback: Optional[Callable[[int, int], None]] = None
     ) -> List[HDF5Video]:
         """Write images for labeled frames from all videos to hdf5 file.
 
@@ -1840,12 +1842,21 @@ class Labels(MutableSequence):
                 Defaults to `False`.
             suggested: Include suggested frames even if they do not have instances.
                 Useful for inference after training. Defaults to `False`.
+            progress_callback: If provided, this function will be called to report the
+                progress of the frame data saving. This function should be a callable
+                of the form: `fn(n, n_total)` where `n` is the number of frames saved so
+                far and `n_total` is the total number of frames that will be saved. This
+                is called after each video is processed. If the function has a return
+                value and it returns `False`, saving will be canceled and the output
+                deleted.
 
         Returns:
             A list of :class:`HDF5Video` objects with the stored frames.
         """
-        new_vids = []
-        for v_idx, video in enumerate(self.videos):
+        # Build list of frames to save.
+        vids = []
+        frame_idxs = []
+        for video in self.videos:
             lfs_v = self.find(video)
             frame_nums = [
                 lf.frame_idx
@@ -1859,13 +1870,30 @@ class Labels(MutableSequence):
                     if suggestion.video == video
                 ]
             frame_nums = sorted(list(set(frame_nums)))
+            vids.append(video)
+            frame_idxs.append(frame_nums)
 
+        n_total = sum([len(x) for x in frame_idxs])
+        n = 0
+
+        # Save images for each video.
+        new_vids = []
+        for v_idx, (video, frame_nums) in enumerate(zip(vids, frame_idxs)):
             vid = video.to_hdf5(
                 path=output_path,
                 dataset=f"video{v_idx}",
                 format=format,
                 frame_numbers=frame_nums,
             )
+            n += len(frame_nums)
+            if progress_callback is not None:
+                # Notify update callback.
+                ret = progress_callback(n, n_total)
+                if ret == False:
+                    vid.close()
+                    os.remove(output_path)
+                    return []
+
             vid.close()
             new_vids.append(vid)
 

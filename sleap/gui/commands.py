@@ -41,7 +41,7 @@ import numpy as np
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
-from PySide2.QtWidgets import QMessageBox
+from PySide2.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.skeleton import Skeleton
@@ -1029,7 +1029,19 @@ class ExportDatasetWithImages(AppCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        win = MessageDialog("Exporting dataset with frame images...", context.app)
+        win = QProgressDialog("Exporting dataset with frame images...", "Cancel", 0, 1)
+
+        def update_progress(n, n_total):
+            if win.wasCanceled():
+                return False
+            win.setMaximum(n_total)
+            win.setValue(n)
+            win.setLabelText(
+                "Exporting dataset with frame images...\n"
+                f"Progress: {n}/{n_total} ({(n/n_total)*100:.1f}%)"
+            )
+            QtWidgets.QApplication.instance().processEvents()
+            return True
 
         Labels.save_file(
             context.state["labels"],
@@ -1038,7 +1050,12 @@ class ExportDatasetWithImages(AppCommand):
             save_frame_data=True,
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
+            progress_callback=update_progress,
         )
+
+        if win.wasCanceled():
+            # Delete output if saving was canceled.
+            os.remove(params["filename"])
 
         win.hide()
 
@@ -1886,9 +1903,8 @@ class GenerateSuggestions(EditCommand):
 
         # TODO: Progress bar
         win = MessageDialog(
-            "Generating list of suggested frames... "
-            "This may take a few minutes.",
-            context.app
+            "Generating list of suggested frames... " "This may take a few minutes.",
+            context.app,
         )
 
         new_suggestions = VideoFrameSuggestions.suggest(
@@ -1932,7 +1948,7 @@ class ClearSuggestions(EditCommand):
             return False
 
         # Warn that suggestions will be cleared
-        
+
         response = QMessageBox.warning(
             context.app,
             "Clearing all suggestions",
