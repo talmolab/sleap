@@ -1609,6 +1609,10 @@ class LabeledFrame:
         """Return the image for this frame of shape (height, width, channels)."""
         return self.video.get_frame(self.frame_idx)
 
+    def numpy(self) -> np.ndarray:
+        """Return the instances as an array of shape (instances, nodes, 2)."""
+        return np.stack([inst.numpy() for inst in self.instances], axis=0)
+
     def plot(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all instances.
 

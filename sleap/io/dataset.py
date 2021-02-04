@@ -1687,7 +1687,7 @@ class Labels(MutableSequence):
         """Export labels to analysis HDF5 format.
 
         This expects the labels to contain data for a single video (e.g., predictions).
-        
+
         Args:
             filename: Path to output HDF5 file.
 
@@ -1703,6 +1703,7 @@ class Labels(MutableSequence):
                     frame.
         """
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+
         SleapAnalysisAdaptor.write(filename, self)
 
     @classmethod
@@ -1910,6 +1911,57 @@ class Labels(MutableSequence):
 
         pipeline += pipelines.Prefetcher()
         return pipeline
+
+    def numpy(
+        self, video: Optional[Video] = None, all_frames: bool = True
+    ) -> np.ndarray:
+        """Construct a numpy array from tracked instance points.
+
+        Args:
+            video: Video to convert to numpy arrays. If `None` (the default), uses the
+                first video.
+            all_frames: If `True` (the default), allocate array of the same number of
+                frames as the video. If `False`, only return data between the first and
+                last frame with data.
+
+        Returns:
+            An array of tracks of shape `(n_frames, n_tracks, n_nodes, 2)`.
+
+            Missing data will be replaced with `np.nan`.
+
+        Notes:
+            This method assumes that instances have tracks assigned and is intended to
+            function primarily for single-video prediction results.
+        """
+        if video is None:
+            video = self.videos[0]
+        lfs = self.find(video=video)
+
+        if all_frames:
+            first_frame, last_frame = None, None
+            for lf in lfs:
+                if first_frame is None:
+                    first_frame = lf.frame_idx
+                if last_frame is None:
+                    last_frame = lf.frame_idx
+                first_frame = min(first_frame, lf.frame_idx)
+                last_frame = max(last_frame, lf.frame_idx)
+        else:
+            first_frame, last_frame = 0, video.shape[0] - 1
+
+        n_frames = last_frame - first_frame + 1
+        n_tracks = len(self.tracks)
+        n_nodes = len(self.skeleton.nodes)
+
+        tracks = np.full((n_frames, n_tracks, n_nodes, 2), np.nan, dtype="float32")
+        for lf in lfs:
+            i = lf.frame_idx - first_frame
+            for inst in lf:
+                if inst.track is not None:
+                    j = self.tracks.index(inst.track)
+                    tracks[i, j] = inst.numpy()
+
+        return tracks
 
     @classmethod
     def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:

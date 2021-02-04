@@ -310,7 +310,6 @@ def get_config_file(
 def get_config_yaml(shortname: str, get_defaults: bool = False) -> dict:
     config_path = get_config_file(shortname, get_defaults=get_defaults)
     with open(config_path, "r") as f:
-        print(f"Loading config: {config_path}")
         return yaml.load(f, Loader=yaml.Loader)
 
 
