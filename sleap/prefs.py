@@ -20,10 +20,7 @@ class Preferences(object):
         "trail length": 0,
         "trail width": 4.0,
         "trail node count": 1,
-        "hide videos dock": False,
-        "hide skeleton dock": False,
-        "hide instances dock": False,
-        "hide labeling suggestions dock": False,
+        "window state": b""
     }
     _filename = "preferences.yaml"
 

@@ -106,14 +106,14 @@ class MainWindow(QMainWindow):
             whether to show node labels, etc.
     """
 
-    def __init__(self, labels_path: Optional[str] = None, *args, **kwargs):
+    def __init__(
+        self, labels_path: Optional[str] = None, reset: bool = False, *args, **kwargs
+    ):
         """Initialize the app.
 
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
-
-        Returns:
-            None.
+            reset: If `True`, reset preferences to default (including window state).
         """
         super(MainWindow, self).__init__(*args, **kwargs)
 
@@ -145,6 +145,13 @@ class MainWindow(QMainWindow):
 
         self._initialize_gui()
 
+        if reset:
+            print("Reseting GUI state and preferences...")
+            prefs.reset_to_default()
+        elif len(prefs["window state"]) > 0:
+            print("Restoring GUI state...")
+            self.restoreState(prefs["window state"])
+
         if labels_path:
             self.loadProjectFile(labels_path)
         else:
@@ -175,6 +182,12 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Closes application window, prompting for saving as needed."""
+        # Save window state.
+        prefs["window state"] = self.saveState()
+
+        # Save preferences.
+        prefs.save()
+
         if not self.state["has_changes"]:
             # No unsaved changes, so accept event (close)
             event.accept()
@@ -759,14 +772,16 @@ class MainWindow(QMainWindow):
         return wrapped_function
 
     def _create_dock_windows(self):
-        """Create dock windows and connects them to gui."""
+        """Create dock windows and connect them to GUI."""
 
         def _make_dock(name, widgets=[], tab_with=None):
             dock = QDockWidget(name)
+            dock.setObjectName(name + "Dock")
 
             dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
 
             dock_widget = QWidget()
+            dock_widget.setObjectName(name + "Widget")
             layout = QVBoxLayout()
 
             for widget in widgets:
@@ -775,9 +790,10 @@ class MainWindow(QMainWindow):
             dock_widget.setLayout(layout)
             dock.setWidget(dock_widget)
 
-            key = f"hide {name.lower()} dock"
-            if key in prefs and prefs[key]:
-                dock.hide()
+            # key = f"hide {name.lower()} dock"
+            # print(f"prefs[{key}] = {prefs[key]}")
+            # if key in prefs and prefs[key]:
+            # dock.hide()
 
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
             self.viewMenu.addAction(dock.toggleViewAction())
@@ -1581,6 +1597,16 @@ def main():
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "--reset",
+        help=(
+            "Reset GUI state and preferences. Use this flag if the GUI appears "
+            "incorrectly or fails to open."
+            ),
+        action="store_const",
+        const=True,
+        default=False,
+    )
 
     args = parser.parse_args()
 
@@ -1596,7 +1622,7 @@ def main():
     app = QApplication([])
     app.setApplicationName(f"SLEAP Label v{sleap.version.__version__}")
 
-    window = MainWindow(labels_path=args.labels_path)
+    window = MainWindow(labels_path=args.labels_path, reset=args.reset)
     window.showMaximized()
 
     # Disable GPU in GUI process. This does not affect subprocesses.
