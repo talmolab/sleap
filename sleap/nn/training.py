@@ -822,44 +822,60 @@ class Trainer(ABC):
         )
         logger.info(f"Finished training loop. [{(time() - t0) / 60:.1f} min]")
 
-        # Save predictions and evaluations.
+        # Run post-training actions.
         if self.config.outputs.save_outputs:
-            sleap.nn.evals.evaluate_model(
-                cfg=self.config,
-                labels_reader=self.data_readers.training_labels_reader,
-                model=self.model,
-                save=True,
-                split_name="train",
-            )
-            sleap.nn.evals.evaluate_model(
-                cfg=self.config,
-                labels_reader=self.data_readers.validation_labels_reader,
-                model=self.model,
-                save=True,
-                split_name="val",
-            )
-            if self.data_readers.test_labels_reader is not None:
-                sleap.nn.evals.evaluate_model(
-                    cfg=self.config,
-                    labels_reader=self.data_readers.test_labels_reader,
-                    model=self.model,
-                    save=True,
-                    split_name="test",
-                )
-
             if (
                 self.config.outputs.save_visualizations
                 and self.config.outputs.delete_viz_images
             ):
-                viz_path = os.path.join(self.run_path, "viz")
-                logger.info(f"Deleting visualization directory: {viz_path}")
-                shutil.rmtree(viz_path)
+                self.cleanup()
+
+            self.evaluate()
 
             if self.config.outputs.zip_outputs:
-                logger.info(f"Packaging results to: {self.run_path}.zip")
-                shutil.make_archive(
-                    base_name=self.run_path, root_dir=self.run_path, format="zip"
-                )
+                self.package()
+
+    def evaluate(self):
+        """Compute evaluation metrics on data splits and save them."""
+        logger.info("Saving evaluation metrics to model folder...")
+        sleap.nn.evals.evaluate_model(
+            cfg=self.config,
+            labels_reader=self.data_readers.training_labels_reader,
+            model=self.model,
+            save=True,
+            split_name="train",
+        )
+        sleap.nn.evals.evaluate_model(
+            cfg=self.config,
+            labels_reader=self.data_readers.validation_labels_reader,
+            model=self.model,
+            save=True,
+            split_name="val",
+        )
+        if self.data_readers.test_labels_reader is not None:
+            sleap.nn.evals.evaluate_model(
+                cfg=self.config,
+                labels_reader=self.data_readers.test_labels_reader,
+                model=self.model,
+                save=True,
+                split_name="test",
+            )
+
+    def cleanup(self):
+        """Delete visualization images subdirectory."""
+        viz_path = os.path.join(self.run_path, "viz")
+        if os.path.exists(viz_path):
+            logger.info(f"Deleting visualization directory: {viz_path}")
+            shutil.rmtree(viz_path)
+
+    def package(self):
+        """Package model folder into a zip file for portability."""
+        if self.config.outputs.delete_viz_images:
+            self.delete_viz_images()
+        logger.info(f"Packaging results to: {self.run_path}.zip")
+        shutil.make_archive(
+            base_name=self.run_path, root_dir=self.run_path, format="zip"
+        )
 
 
 @attr.s(auto_attribs=True)
