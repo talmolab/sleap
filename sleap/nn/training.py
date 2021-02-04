@@ -725,9 +725,14 @@ class Trainer(ABC):
     def _setup_outputs(self):
         """Set up output-related functionality."""
         if self.config.outputs.save_outputs:
-            # Build path to run folder.
+            # Build path to run folder. Timestamp will be added automatically.
+            # Example: 210204_041707.centroid.n=300
+            model_type = self.config.model.heads.which_oneof_attrib_name()
+            n = len(self.data_readers.training_labels) + len(
+                self.data_readers.validation_labels
+            )
             self.run_path = setup_new_run_folder(
-                self.config.outputs, base_run_name=type(self.model.backbone).__name__
+                self.config.outputs, base_run_name=f"{model_type}.n={n}"
             )
 
         # Setup output callbacks.
