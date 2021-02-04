@@ -1718,6 +1718,18 @@ class Labels(MutableSequence):
         return read(filename, for_object="labels", as_format="deeplabcut")
 
     @classmethod
+    def load_deeplabcut_folder(cls, filename: str) -> "Labels":
+        csv_files = glob(f"{filename}/*/*.csv")
+        merged_labels = None
+        for csv_file in csv_files:
+            labels = cls.load_file(csv_file, as_format="deeplabcut")
+            if merged_labels is None:
+                merged_labels = labels
+            else:
+                merged_labels.extend_from(labels, unify=True)
+        return merged_labels
+
+    @classmethod
     def load_coco(
         cls, filename: str, img_dir: str, use_missing_gui: bool = False
     ) -> "Labels":
