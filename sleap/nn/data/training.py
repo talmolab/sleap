@@ -7,6 +7,48 @@ from sleap.nn.data.providers import LabelsReader
 from sleap.nn.data.utils import expand_to_rank, ensure_list
 import attr
 from typing import List, Text, Optional, Any, Union, Dict, Tuple, Sequence
+from sklearn.model_selection import train_test_split
+
+
+def split_labels_train_val(
+    labels: sleap.Labels, validation_fraction: float
+) -> Tuple[sleap.Labels, sleap.Labels]:
+    """Make a train/validation split from a labels dataset.
+
+    Args:
+        labels: A `sleap.Labels` dataset with labeled frames.
+        validation_fraction: Fraction of frames to use for validation.
+
+    Returns:
+        A tuple of `(labels_train, labels_val)`.
+
+        If there is only one labeled frame in `labels`, both of the labels will contain
+        the same frame.
+
+        If `validation_fraction` would result in fewer than one label for either split,
+        it will be rounded to ensure there is at least one label in each.
+    """
+    if len(labels) == 1:
+        return labels, labels
+
+    # Split indices.
+    n_val = round(len(labels) * validation_fraction)
+    n_val = max(min(n_val, len(labels) - 1), 1)
+
+    idx_train, idx_val = train_test_split(list(range(len(labels))), test_size=n_val)
+
+    # Create labels and keep original metadata.
+    labels_train = sleap.Labels(labels[idx_train])
+    labels_train.videos = labels.videos
+    labels_train.tracks = labels.tracks
+    labels_train.provenance = labels.provenance
+
+    labels_val = sleap.Labels(labels[idx_val])
+    labels_val.videos = labels.videos
+    labels_val.tracks = labels.tracks
+    labels_val.provenance = labels.provenance
+
+    return labels_train, labels_val
 
 
 def split_labels(

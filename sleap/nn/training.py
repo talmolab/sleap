@@ -44,7 +44,7 @@ from sleap.nn.data.pipelines import (
     BottomUpPipeline,
     KeyMapper,
 )
-from sleap.nn.data.training import split_labels
+from sleap.nn.data.training import split_labels_train_val
 
 # Optimization
 from sleap.nn.config import OptimizationConfig
@@ -157,7 +157,7 @@ class DataReaders:
                 validation, video_search=video_search_paths
             )
         elif isinstance(validation, float):
-            training, validation = split_labels(training, [-1, validation])
+            training, validation = split_labels_train_val(training, validation)
 
         if isinstance(test, str):
             test = sleap.Labels.load_file(test, video_search=video_search_paths)
