@@ -1963,7 +1963,7 @@ class ClearSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        context.labels.suggestions = []
+        context.labels.clear_suggestions()
 
 
 class MergeProject(EditCommand):
