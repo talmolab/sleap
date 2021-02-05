@@ -684,7 +684,7 @@ def run_gui_inference(
             waiting_callback=waiting_item,
             gui=gui,
         )
-        
+
         if gui:
             progress.close()
 
@@ -701,7 +701,7 @@ def run_gui_inference(
                         "terminal may have more information about the error."
                     )
                 ).exec_()
-            return -1    
+            return -1
 
 
 def train_subprocess(
