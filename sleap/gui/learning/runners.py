@@ -241,6 +241,8 @@ class InferenceTask:
         if gui:
             cli_args.extend(("--verbosity", "json"))
 
+        cli_args.extend(("--no-empty-frames",))
+
         return cli_args, output_path
 
     def predict_subprocess(
@@ -651,8 +653,9 @@ def run_gui_inference(
             #     msg += f" [{current_item + 1}/{total_items}]"
 
             if n_processed is not None and n_total is not None:
+
                 prc = (n_processed / n_total) * 100
-                msg += f"       {n_processed+1}/{n_total} (<b>{prc:.1f}%</b>)"
+                msg = f"Predicted: {n_processed+1}/{n_total} (<b>{prc:.1f}%</b>)"
 
             # Show time elapsed?
             if rate is not None and eta is not None:
@@ -663,7 +666,7 @@ def run_gui_inference(
                 else:
                     eta_str = f"{int(eta_mins)}:{int(eta_secs):02}"
                 msg += f"<br>ETA: <b>{eta_str}</b>       FPS: <b>{rate:.1f}</b>"
-                
+
             msg = msg.replace(" ", "&nbsp;")
 
             progress.setLabelText(msg)
