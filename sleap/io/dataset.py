@@ -381,7 +381,6 @@ class LabelsDataCache:
                 self._frame_count_cache[None][type_key].discard(idx_pair)
 
 
-
 @attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
     """

@@ -118,7 +118,7 @@ class TrainingJobConfig:
         # Open and read the JSON data.
         with open(filename, "r") as f:
             json_data = f.read()
-        
+
         obj = cls.from_json(json_data)
         obj.filename = filename
         return obj
