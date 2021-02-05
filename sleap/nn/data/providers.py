@@ -49,6 +49,31 @@ class LabelsReader:
         return cls(labels=user_labels)
 
     @classmethod
+    def from_user_labeled_frames(cls, labels: sleap.Labels) -> "LabelsReader":
+        """Create a `LabelsReader` using the user labeled frames in a `Labels` set.
+
+        Args:
+            labels: A `sleap.Labels` instance containing user labeled frames.
+
+        Returns:
+            A `LabelsReader` instance that can create a dataset for pipelining.
+        """
+        return cls(labels=labels, example_indices=labels.user_labeled_frame_inds)
+
+    @classmethod
+    def from_unlabeled_suggestions(cls, labels: sleap.Labels) -> "LabelsReader":
+        """Create a `LabelsReader` using the unlabeled suggestions in a `Labels` set.
+
+        Args:
+            labels: A `sleap.Labels` instance containing unlabeled suggestions.
+
+        Returns:
+            A `LabelsReader` instance that can create a dataset for pipelining.
+        """
+        inds = labels.get_unlabeled_suggestion_inds()
+        return cls(labels=labels, example_indices=inds)
+
+    @classmethod
     def from_filename(
         cls, filename: Text, user_instances: bool = True
     ) -> "LabelsReader":
@@ -142,17 +167,24 @@ class LabelsReader:
         first_image = tf.convert_to_tensor(self.labels[0].image)
         image_dtype = first_image.dtype
         image_num_channels = first_image.shape[-1]
+        n_nodes = len(self.labels.skeletons[0].nodes)
 
         def py_fetch_lf(ind):
             """Local function that will not be autographed."""
             lf = self.labels[int(ind.numpy())]
+
             video_ind = np.array(self.videos.index(lf.video)).astype("int32")
             frame_ind = np.array(lf.frame_idx).astype("int64")
+
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
-            instances = np.stack(
-                [inst.points_array.astype("float32") for inst in lf.instances], axis=0
-            )
+
+            n_instances = len(lf.instances)
+
+            instances = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")
+            for i, instance in enumerate(lf.instances):
+                instances[i] = instance.numpy()
+
             skeleton_inds = np.array(
                 [self.labels.skeletons.index(inst.skeleton) for inst in lf.instances]
             ).astype("int32")
