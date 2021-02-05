@@ -51,6 +51,6 @@ If you use **SLEAP** in your research, please cite:
 SLEAP is released under a `Clear BSD License`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
 
 .. _LEAP: https://github.com/talmo/leap
-.. _Clear BSD License: https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE
+.. _Clear BSD License: https://raw.githubusercontent.com/murthylab/sleap/main/LICENSE
 .. _Pereira et al., 2019: https://www.nature.com/articles/s41592-018-0234-5
 .. _sleap.ai: https://sleap.ai

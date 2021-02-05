@@ -5,7 +5,7 @@ name: Build website
 on:
   push:
     branches:
-      - master  # Branch that triggers updates to sleap.ai
+      - main  # Branch that triggers updates to sleap.ai
       - develop
     paths:
       - 'docs/**'
@@ -49,7 +49,7 @@ jobs:
 
       - name: Deploy (sleap.ai)
         uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
@@ -57,7 +57,7 @@ jobs:
 
       - name: Deploy (test)
         uses: peaceiris/actions-gh-pages@v3
-        if: github.ref != 'refs/heads/master'
+        if: github.ref != 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages-test
