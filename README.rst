@@ -8,8 +8,8 @@
    :alt: Appveyor build status
 
 .. |Coverage| image::
-   https://coveralls.io/repos/github/murthylab/sleap/badge.svg?branch=master
-   :target: https://coveralls.io/github/murthylab/sleap?branch=master
+   https://coveralls.io/repos/github/murthylab/sleap/badge.svg?branch=main
+   :target: https://coveralls.io/github/murthylab/sleap?branch=main
 
 
 .. |GitHub release| image:: https://img.shields.io/github/release/murthylab/sleap.svg
@@ -37,6 +37,6 @@ If you use **SLEAP** in your research, please cite:
 Pereira, Talmo D., Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. “SLEAP: Multi-Animal Pose Tracking.” bioRxiv. https://doi.org/10.1101/2020.08.31.276246.
 
 
-.. _Clear BSD License: https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE
+.. _Clear BSD License: https://raw.githubusercontent.com/murthylab/sleap/main/LICENSE
 .. _Pereira et al. Nature Methods 2019: https://www.nature.com/articles/s41592-018-0234-5
 .. _sleap.ai: https://sleap.ai
