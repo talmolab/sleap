@@ -91,9 +91,7 @@ class LearningDialog(QtWidgets.QDialog):
             "Export training job package...", QtWidgets.QDialogButtonBox.ActionRole
         )
         self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.run_button = buttons.addButton(
-            "Run", QtWidgets.QDialogButtonBox.ApplyRole
-        )
+        self.run_button = buttons.addButton("Run", QtWidgets.QDialogButtonBox.ApplyRole)
 
         self.save_button.setToolTip("Save scripts and configuration to run pipeline.")
         self.export_button.setToolTip(
