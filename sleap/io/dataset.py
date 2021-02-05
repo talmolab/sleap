@@ -204,7 +204,7 @@ class LabelsDataCache:
         return self._track_occupancy[video]
 
     def remove_frame(self, frame: LabeledFrame):
-        """Remvoe frame and update cache as needed."""
+        """Remove frame and update cache as needed."""
         self._lf_by_video[frame.video].remove(frame)
         # We'll assume that there's only a single LabeledFrame for this video and
         # frame_idx, and remove the frame_idx from the cache.
@@ -379,6 +379,7 @@ class LabelsDataCache:
         if None in self._frame_count_cache:
             if type_key in self._frame_count_cache[None]:
                 self._frame_count_cache[None][type_key].discard(idx_pair)
+
 
 
 @attr.s(auto_attribs=True, repr=False, str=False)
@@ -645,6 +646,8 @@ class Labels(MutableSequence):
             scalar key was provided.
         """
         if len(args) > 0:
+            if type(key) != tuple:
+                key = (key,)
             key = key + tuple(args)
 
         if isinstance(key, int):
@@ -745,6 +748,13 @@ class Labels(MutableSequence):
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
         self.update_cache()
 
+    def remove_empty_frames(self):
+        """Remove frames with no instances."""
+        self.labeled_frames = [
+            lf for lf in self.labeled_frames if len(lf.instances) > 0
+        ]
+        self.update_cache()
+
     def find(
         self,
         video: Video,
@@ -842,9 +852,14 @@ class Labels(MutableSequence):
                     return label
 
     @property
-    def user_labeled_frames(self):
+    def user_labeled_frames(self) -> List[LabeledFrame]:
         """Return all labeled frames with user (non-predicted) instances."""
         return [lf for lf in self.labeled_frames if lf.has_user_instances]
+
+    @property
+    def user_labeled_frame_inds(self) -> List[int]:
+        """Return a list of indices of frames with user labeled instances."""
+        return [i for i, lf in enumerate(self.labeled_frames) if lf.has_user_instances]
 
     def get_labeled_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
         return self._cache.get_frame_count(video, filter)
@@ -1210,6 +1225,47 @@ class Labels(MutableSequence):
     def delete_suggestions(self, video):
         """Delete suggestions for specified video."""
         self.suggestions = [item for item in self.suggestions if item.video != video]
+
+    def clear_suggestions(self):
+        """Delete all suggestions."""
+        self.suggestions = []
+
+    @property
+    def unlabeled_suggestions(self) -> List[SuggestionFrame]:
+        """Return suggestions without user labels."""
+        unlabeled_suggestions = []
+        for suggestion in self.suggestions:
+            lf = self.get(suggestion.video, suggestion.frame_idx)
+            if lf is None or not lf.has_user_instances:
+                unlabeled_suggestions.append(suggestion)
+        return unlabeled_suggestions
+
+    def get_unlabeled_suggestion_inds(self) -> List[int]:
+        """Find labeled frames for unlabeled suggestions and return their indices.
+
+        This is useful for generating a list of example indices for inference on
+        unlabeled suggestions.
+
+        Returns:
+            List of indices of the labeled frames that correspond to the suggestions
+            that do not have user instances.
+
+            If a labeled frame corresponding to a suggestion does not exist, an empty
+            one will be created.
+
+        See also: `Labels.remove_empty_frames`
+        """
+        inds = []
+        for suggestion in self.unlabeled_suggestions:
+            lf = self.get((suggestion.video, suggestion.frame_idx))
+            if lf is None:
+                self.append(
+                    LabeledFrame(video=suggestion.video, frame_idx=suggestion.frame_idx)
+                )
+                inds.append(len(self.labeled_frames) - 1)
+            else:
+                inds.append(self.index(lf))
+        return inds
 
     def add_video(self, video: Video):
         """Add a video to the labels if it is not already in it.
