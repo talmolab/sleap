@@ -760,7 +760,7 @@ def train_subprocess(
                 ret = waiting_callback()
                 if ret == "cancel":
                     print("Canceling training...")
-                    kill_process(proc)
+                    kill_process(proc.pid)
                     print(f"Killed PID: {proc.pid}")
                     return run_path, "canceled"
             time.sleep(0.1)
