@@ -392,7 +392,7 @@ class SingleInstanceConfmapsPipeline:
 
         if self.optimization_config.augmentation_config.random_flip:
             pipeline += RandomFlipper.from_skeleton(
-                self.data_config.skeletons[0],
+                self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
         pipeline += ImgaugAugmenter.from_config(
@@ -541,7 +541,11 @@ class CentroidConfmapsPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
-
+        if self.optimization_config.augmentation_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.labels.skeletons[0],
+                horizontal=self.optimization_config.augmentation_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
@@ -702,7 +706,7 @@ class TopdownConfmapsPipeline:
             )
         if self.optimization_config.augmentation_config.random_flip:
             pipeline += RandomFlipper.from_skeleton(
-                self.data_config.skeletons[0],
+                self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
         pipeline += ImgaugAugmenter.from_config(
@@ -848,7 +852,7 @@ class BottomUpPipeline:
         aug_config = self.optimization_config.augmentation_config
         if aug_config.random_flip:
             pipeline += RandomFlipper.from_skeleton(
-                self.data_config.skeletons[0],
+                self.data_config.labels.skeletons[0],
                 horizontal=aug_config.flip_horizontal,
             )
         pipeline += ImgaugAugmenter.from_config(aug_config)
