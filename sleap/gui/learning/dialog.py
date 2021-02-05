@@ -16,9 +16,6 @@ from typing import Dict, List, Optional, Text
 from PySide2 import QtWidgets, QtCore
 
 
-# Debug option to skip the training run
-SKIP_TRAINING = False
-
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
