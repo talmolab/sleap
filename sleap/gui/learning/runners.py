@@ -284,7 +284,7 @@ class InferenceTask:
                         kill_process(proc.pid)
                         print(f"Killed PID: {proc.pid}")
                         return "", "canceled"
-                time.sleep(0.1)
+                time.sleep(0.05)
 
             print(f"Process return code: {proc.returncode}")
             success = proc.returncode == 0
@@ -647,12 +647,12 @@ def run_gui_inference(
                 progress.setValue(n_processed)
 
             msg = "Predicting..."
-            if current_item is not None and total_items is not None:
-                msg += f" [{current_item + 1}/{total_items}]"
+            # if current_item is not None and total_items is not None:
+            #     msg += f" [{current_item + 1}/{total_items}]"
 
             if n_processed is not None and n_total is not None:
                 prc = (n_processed / n_total) * 100
-                msg += f"\n{n_processed+1}/{n_total} ({prc:.1f}%)"
+                msg += f"       {n_processed+1}/{n_total} (<b>{prc:.1f}%</b>)"
 
             # Show time elapsed?
             if rate is not None and eta is not None:
@@ -662,7 +662,9 @@ def run_gui_inference(
                     eta_str = f"{int(eta_hours)}:{int(eta_mins):02}:{int(eta_secs):02}"
                 else:
                     eta_str = f"{int(eta_mins)}:{int(eta_secs):02}"
-                msg += f"\nETA: {eta_str} ({rate:.1f} FPS)"
+                msg += f"<br>ETA: <b>{eta_str}</b>       FPS: <b>{rate:.1f}</b>"
+                
+            msg = msg.replace(" ", "&nbsp;")
 
             progress.setLabelText(msg)
             QtWidgets.QApplication.instance().processEvents()
