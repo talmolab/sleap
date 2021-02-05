@@ -699,6 +699,34 @@ class Labels(MutableSequence):
         except KeyError:
             return None
 
+    def extract(self, inds) -> "Labels":
+        """Extract labeled frames from indices and return a new `Labels` object.
+
+        Args:
+            inds: Any valid indexing keys, e.g., a range, slice, list of label indices,
+                numpy array, `Video`, etc. See `__getitem__` for full list.
+
+        Returns:
+            A new `Labels` object with the specified labeled frames.
+
+            This will preserve the other data structures even if they are not found in
+            the extracted labels, including:
+                - `Labels.videos`
+                - `Labels.skeletons`
+                - `Labels.tracks`
+                - `Labels.suggestions`
+                - `Labels.provenance`
+        """
+        lfs = self.__getitem__(inds)
+        new_labels = type(self)(
+            labeled_frames=lfs,
+            videos=self.videos,
+            skeletons=self.skeletons,
+            tracks=self.tracks,
+            suggestions=self.suggestions,
+            provenance=self.provenance,
+        )
+
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
         # TODO: Maybe we should remove this method altogether?
