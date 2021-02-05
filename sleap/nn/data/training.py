@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 
 def split_labels_train_val(
     labels: sleap.Labels, validation_fraction: float
-) -> Tuple[sleap.Labels, sleap.Labels]:
+) -> Tuple[sleap.Labels, List[int], sleap.Labels, List[int]]:
     """Make a train/validation split from a labels dataset.
 
     Args:
@@ -20,7 +20,17 @@ def split_labels_train_val(
         validation_fraction: Fraction of frames to use for validation.
 
     Returns:
-        A tuple of `(labels_train, labels_val)`.
+        A tuple of `(labels_train, idx_train, labels_val, idx_val)`.
+
+        `labels_train` and `labels_val` are `sleap.Label` objects containing the
+        selected frames for each split. Their `videos`, `tracks` and `provenance`
+        attributes are identical to `labels` even if the split does not contain 
+        instances with a particular video or track.
+
+        `idx_train` and `idx_val` are list indices of the labeled frames within the
+        input labels that were assigned to each split, i.e.:
+
+            `labels[idx_train] == labels_train[:]`
 
         If there is only one labeled frame in `labels`, both of the labels will contain
         the same frame.
@@ -48,7 +58,7 @@ def split_labels_train_val(
     labels_val.tracks = labels.tracks
     labels_val.provenance = labels.provenance
 
-    return labels_train, labels_val
+    return labels_train, idx_train, labels_val, idx_val
 
 
 def split_labels(

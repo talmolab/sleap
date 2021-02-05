@@ -23,10 +23,13 @@ class LabelsReader:
             the entire labels dataset will be read. These indices will be applicable to
             the labeled frames in `labels` attribute, which may have changed in ordering
             or filtered.
+        user_instances_only: If `True`, load only user labeled instances. If `False`,
+            all instances will be loaded.
     """
 
     labels: sleap.Labels
     example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
+    user_instances_only: bool = False
 
     @classmethod
     def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
@@ -36,17 +39,11 @@ class LabelsReader:
             labels: A `sleap.Labels` instance containing user instances.
 
         Returns:
-            A `LabelsReader` instance that can create a dataset for pipelining. Note
-            that the examples may change in ordering relative to the input `labels`, so
-            be sure to use the `labels` attribute in the returned instance.
+            A `LabelsReader` instance that can create a dataset for pipelining.
         """
-        user_labels = sleap.Labels(
-            [
-                sleap.LabeledFrame(lf.video, lf.frame_idx, lf.training_instances)
-                for lf in labels.user_labeled_frames
-            ]
-        )
-        return cls(labels=user_labels)
+        obj = cls.from_user_labeled_frames(labels)
+        obj.user_instances_only = True
+        return obj
 
     @classmethod
     def from_user_labeled_frames(cls, labels: sleap.Labels) -> "LabelsReader":
@@ -57,6 +54,10 @@ class LabelsReader:
 
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
+
+            Note that this constructor will load ALL instances in frames that have user
+            instances. To load only user labeled indices, use
+            `LabelsReader.from_user_instances`.
         """
         return cls(labels=labels, example_indices=labels.user_labeled_frame_inds)
 
@@ -120,12 +121,14 @@ class LabelsReader:
 
     @property
     def max_height_and_width(self) -> Tuple[int, int]:
+        """Return `(height, width)` that is the maximum of all videos."""
         return max(video.shape[1] for video in self.videos), max(
             video.shape[2] for video in self.videos
         )
 
     @property
     def is_from_multi_size_videos(self) -> bool:
+        """Return `True` if labels contain videos with different sizes."""
         return (
             len(set(v.shape[1] for v in self.videos)) > 1
             or len(set(v.shape[2] for v in self.videos)) > 1
@@ -179,14 +182,18 @@ class LabelsReader:
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
 
-            n_instances = len(lf.instances)
+            if self.user_instances_only:
+                insts = lf.user_instances
+            else:
+                insts = lf.instances
+            n_instances = len(insts)
 
             instances = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")
-            for i, instance in enumerate(lf.instances):
+            for i, instance in enumerate(insts):
                 instances[i] = instance.numpy()
 
             skeleton_inds = np.array(
-                [self.labels.skeletons.index(inst.skeleton) for inst in lf.instances]
+                [self.labels.skeletons.index(inst.skeleton) for inst in insts]
             ).astype("int32")
             return (
                 raw_image,
@@ -213,7 +220,8 @@ class LabelsReader:
                 [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
             )
 
-            # Ensure shape with constant or variable height/width, based on whether or not the videos have mixed sizes
+            # Ensure shape with constant or variable height/width, based on whether or
+            # not the videos have mixed sizes.
             if self.is_from_multi_size_videos:
                 image = tf.ensure_shape(image, (None, None, image_num_channels))
             else:

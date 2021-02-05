@@ -117,6 +117,11 @@ class DataReaders:
         if test is None:
             test = labels_config.test_labels
 
+        if video_search_paths is None:
+            video_search_paths = []
+        if labels_config.search_path_hints is not None:
+            video_search_paths.extend(labels_config.search_path_hints)
+
         # Update the config fields with arguments (if not a full sleap.Labels instance).
         if update_config:
             if isinstance(training, Text):
@@ -127,14 +132,16 @@ class DataReaders:
                 labels_config.validation_fraction = validation
             if isinstance(test, Text):
                 labels_config.test_labels = test
+            labels_config.search_path_hints = video_search_paths
 
         # Build class.
-        # TODO: use labels_config.search_path_hints for loading
         return cls.from_labels(
             training=training,
             validation=validation,
             test=test,
             video_search_paths=video_search_paths,
+            labels_config=labels_config,
+            update_config=update_config,
         )
 
     @classmethod
@@ -144,26 +151,72 @@ class DataReaders:
         validation: Union[Text, sleap.Labels, float],
         test: Optional[Union[Text, sleap.Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
+        labels_config: Optional[LabelsConfig] = None,
+        update_config: bool = False,
     ) -> "DataReaders":
         """Create data readers from sleap.Labels datasets as data providers."""
-
         if isinstance(training, str):
-            print("video search paths: ", video_search_paths)
+            logger.info(f"Loading training labels from: {training}")
             training = sleap.Labels.load_file(training, video_search=video_search_paths)
-            print(training.videos)
+
+        if labels_config is not None and labels_config.split_by_inds:
+            # First try to split by indices if specified in config.
+            if (
+                labels_config.validation_inds is not None
+                and len(labels_config.validation_inds) > 0
+            ):
+                logger.info(
+                    "Creating validation split from explicit indices "
+                    f"(n = {len(labels_config.validation_inds)})."
+                )
+                validation = training[labels_config.validation_inds]
+
+            if labels_config.test_inds is not None and len(labels_config.test_inds) > 0:
+                logger.info(
+                    "Creating test split from explicit indices "
+                    f"(n = {len(labels_config.test_inds)})."
+                )
+                test = training[labels_config.test_inds]
+
+            if (
+                labels_config.training_inds is not None
+                and len(labels_config.training_inds) > 0
+            ):
+                logger.info(
+                    "Creating training split from explicit indices "
+                    f"(n = {len(labels_config.training_inds)})."
+                )
+                training = training[labels_config.training_inds]
 
         if isinstance(validation, str):
+            # If validation is still a path, load it.
+            logger.info(f"Loading validation labels from: {validation}")
             validation = sleap.Labels.load_file(
                 validation, video_search=video_search_paths
             )
         elif isinstance(validation, float):
-            training, validation = split_labels_train_val(training, validation)
+            logger.info(
+                "Creating training and validation splits from "
+                f"validation fraction: {validation}"
+            )
+            # If validation is still a float, create the split from training.
+            (
+                training,
+                training_inds,
+                validation,
+                validation_inds,
+            ) = split_labels_train_val(training, validation)
+            if update_config and labels_config is not None:
+                labels_config.training_inds = training_inds
+                labels_config.validation_inds = validation_inds
 
         if isinstance(test, str):
+            # If test is still a path, load it.
             test = sleap.Labels.load_file(test, video_search=video_search_paths)
 
         test_reader = None
         if test is not None:
+            logger.info(f"Loading test labels from: {test}")
             test_reader = LabelsReader.from_user_instances(test)
 
         return cls(
@@ -208,7 +261,9 @@ def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer
     return optimizer
 
 
-def setup_losses(config: OptimizationConfig) -> Callable[[tf.Tensor], tf.Tensor]:
+def setup_losses(
+    config: OptimizationConfig
+) -> Callable[[tf.Tensor, tf.Tensor], tf.Tensor]:
     """Set up model loss function from config."""
     losses = [tf.keras.losses.MeanSquaredError()]
 
@@ -646,10 +701,10 @@ class Trainer(ABC):
         logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
         logger.info("  Heads: ")
         for i, head in enumerate(self.model.heads):
-            logger.info(f"  heads[{i}] = {head}")
+            logger.info(f"    [{i}] = {head}")
         logger.info("  Outputs: ")
         for i, output in enumerate(self.model.keras_model.outputs):
-            logger.info(f"  outputs[{i}] = {output}")
+            logger.info(f"    [{i}] = {output}")
 
     @property
     def keras_model(self) -> tf.keras.Model:
