@@ -30,6 +30,8 @@ import attr
 import operator
 import os
 import re
+import sys
+import subprocess
 
 from abc import ABC
 from enum import Enum
@@ -1023,41 +1025,64 @@ class ExportLabeledClip(AppCommand):
         return True
 
 
+def export_dataset_gui(
+    labels: Labels, filename: str, all_labeled: bool = False, suggested: bool = False
+) -> str:
+    """Export dataset with image data and display progress GUI dialog.
+
+    Args:
+        labels: `sleap.Labels` dataset to export.
+        filename: Output filename. Should end in `.pkg.slp`.
+        all_labeled: If `True`, export all labeled frames, including frames with no user
+            instances.
+        suggested: If `True`, include image data for suggested frames.
+    """
+    win = QProgressDialog("Exporting dataset with frame images...", "Cancel", 0, 1)
+
+    def update_progress(n, n_total):
+        if win.wasCanceled():
+            return False
+        win.setMaximum(n_total)
+        win.setValue(n)
+        win.setLabelText(
+            "Exporting dataset with frame images...<br>"
+            f"{n}/{n_total} (<b>{(n/n_total)*100:.1f}%</b>)"
+        )
+        QtWidgets.QApplication.instance().processEvents()
+        return True
+
+    Labels.save_file(
+        labels,
+        filename,
+        default_suffix="slp",
+        save_frame_data=True,
+        all_labeled=all_labeled,
+        suggested=suggested,
+        progress_callback=update_progress,
+    )
+
+    if win.wasCanceled():
+        # Delete output if saving was canceled.
+        os.remove(filename)
+        return "canceled"
+
+    win.hide()
+
+    return filename
+
+
 class ExportDatasetWithImages(AppCommand):
     all_labeled = False
     suggested = False
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        win = QProgressDialog("Exporting dataset with frame images...", "Cancel", 0, 1)
-
-        def update_progress(n, n_total):
-            if win.wasCanceled():
-                return False
-            win.setMaximum(n_total)
-            win.setValue(n)
-            win.setLabelText(
-                "Exporting dataset with frame images...\n"
-                f"Progress: {n}/{n_total} ({(n/n_total)*100:.1f}%)"
-            )
-            QtWidgets.QApplication.instance().processEvents()
-            return True
-
-        Labels.save_file(
-            context.state["labels"],
-            params["filename"],
-            default_suffix="slp",
-            save_frame_data=True,
+        export_dataset_gui(
+            labels=context.state["labels"],
+            filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
-            progress_callback=update_progress,
         )
-
-        if win.wasCanceled():
-            # Delete output if saving was canceled.
-            os.remove(params["filename"])
-
-        win.hide()
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -2343,10 +2368,19 @@ class AddUserInstancesFromPredictions(EditCommand):
             context.labels.add_instance(context.state["labeled_frame"], new_instance)
 
 
+def open_website(url: str):
+    """Open website in default browser.
+
+    Args:
+        url: URL to open.
+    """
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
+
+
 class OpenWebsite(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        QtGui.QDesktopServices.openUrl(QtCore.QUrl(params["url"]))
+        open_website(params["url"])
 
 
 class CheckForUpdates(AppCommand):
@@ -2380,3 +2414,30 @@ class OpenPrereleaseVersion(AppCommand):
         rls = context.app.release_checker.latest_prerelease
         if rls is not None:
             context.openWebsite(rls.url)
+
+
+def copy_to_clipboard(text: str):
+    """Copy a string to the system clipboard.
+
+    Args:
+        text: String to copy to clipboard.
+    """
+    clipboard = QtWidgets.QApplication.clipboard()
+    clipboard.clear(mode=clipboard.Clipboard)
+    clipboard.setText(text, mode=clipboard.Clipboard)
+
+
+def open_file(filename: str):
+    """Opens file in native system file browser or registered application.
+
+    Args:
+        filename: Path to file or folder.
+
+    Notes:
+        Source: https://stackoverflow.com/a/16204023
+    """
+    if sys.platform == "win32":
+        os.startfile(filename)
+    else:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
