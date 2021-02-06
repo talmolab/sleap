@@ -2052,7 +2052,8 @@ class AddInstance(EditCommand):
         if context.state["labeled_frame"] is None:
             return
 
-        # FIXME: filter by skeleton type
+        if len(context.state["skeleton"]) == 0:
+            return
 
         from_predicted = copy_instance
         from_prev_frame = False
