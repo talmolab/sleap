@@ -15,12 +15,14 @@ class Preferences(object):
         "medium step size": 10,
         "large step size": 100,
         "color predicted": False,
+        "propagate track labels": True,
         "palette": "standard",
         "bold lines": False,
         "trail length": 0,
         "trail width": 4.0,
         "trail node count": 1,
         "marker size": 4,
+        "edge style": "Line",
         "window state": b"",
     }
     _filename = "preferences.yaml"

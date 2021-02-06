@@ -1865,11 +1865,9 @@ class SetSelectedInstanceTrack(EditCommand):
         if selected_instance is None:
             return
 
-        old_track = selected_instance.track
-
         # When setting track for an instance that doesn't already have a track set,
         # just set for selected instance.
-        if old_track is None:
+        if selected_instance.track is None or not context.state["propagate track labels"]:
             # Move anything already in the new track out of it
             new_track_instances = context.labels.find_track_occupancy(
                 video=context.state["video"],
@@ -1889,6 +1887,7 @@ class SetSelectedInstanceTrack(EditCommand):
         # When the instance does already have a track, then we want to update
         # the track for a range of frames.
         else:
+            old_track = selected_instance.track
 
             # Determine range that should be affected
             if context.state["has_frame_range"]:

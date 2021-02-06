@@ -137,10 +137,11 @@ class MainWindow(QMainWindow):
         self.state["filename"] = None
         self.state["show labels"] = True
         self.state["show edges"] = True
-        self.state["edge style"] = "Line"
+        self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
         self.state["marker size"] = prefs["marker size"]
+        self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state.connect("marker size", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
@@ -183,10 +184,13 @@ class MainWindow(QMainWindow):
         return super().event(e)
 
     def closeEvent(self, event):
-        """Closes application window, prompting for saving as needed."""
+        """Close application window, prompting for saving as needed."""
         # Save window state.
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
+        prefs["edge style"] = self.state["edge style"]
+        prefs["propagate track labels"] = self.state["propagate track labels"]
+        prefs["color predicted"] = self.state["color predicted"]
 
         # Save preferences.
         prefs.save()
@@ -289,8 +293,9 @@ class MainWindow(QMainWindow):
 
         # add checkable menu item connected to state variable
         def add_menu_check_item(menu, key: str, name: str):
-            add_menu_item(menu, key, name, lambda: self.state.toggle(key))
+            menu_item = add_menu_item(menu, key, name, lambda: self.state.toggle(key))
             connect_check(key)
+            return menu_item
 
         # check and uncheck submenu items
         def _menu_check_single(menu, item_text):
@@ -653,17 +658,26 @@ class MainWindow(QMainWindow):
             self.commands.deleteFrameLimitPredictions,
         )
 
-        labelMenu.addSeparator()
+        # labelMenu.addSeparator()
 
-        self.track_menu = labelMenu.addMenu("Set Instance Track")
+        ### Tracks Menu ###
+
+        tracksMenu = self.menuBar().addMenu("Tracks")
+        self.track_menu = tracksMenu.addMenu("Set Instance Track")
+        add_menu_check_item(
+            tracksMenu, "propagate track labels", "Propagate Track Labels"
+        ).setToolTip(
+            "If enabled, setting a track will also apply to subsequent instances of "
+            "the same track."
+        )
         add_menu_item(
-            labelMenu,
+            tracksMenu,
             "transpose",
             "Transpose Instance Tracks",
             self.commands.transposeInstance,
         )
         add_menu_item(
-            labelMenu,
+            tracksMenu,
             "delete track",
             "Delete Instance and Track",
             self.commands.deleteSelectedInstanceTrack,
@@ -996,8 +1010,7 @@ class MainWindow(QMainWindow):
         suggestions_layout.addWidget(hbw)
 
         self.suggestions_form_widget = YamlFormWidget.from_name(
-            "suggestions",
-            title="Generate Suggestions",
+            "suggestions", title="Generate Suggestions",
         )
         self.suggestions_form_widget.mainAction.connect(
             self.process_events_then(self.commands.generateSuggestions)
@@ -1493,9 +1506,7 @@ class MainWindow(QMainWindow):
 
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = LearningDialog(
-                mode,
-                self.state["filename"],
-                self.labels,
+                mode, self.state["filename"], self.labels,
             )
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
