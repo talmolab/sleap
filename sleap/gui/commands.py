@@ -501,6 +501,10 @@ class CommandContext:
         """Sets track for selected instance."""
         self.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+    def deleteTrack(self, track: "Track"):
+        """Delete a track and remove from all instances."""
+        self.execute(DeleteTrack, track=track)
+
     def setTrackName(self, track: "Track", name: str):
         """Sets name for track."""
         self.execute(SetTrackName, track=track, name=name)
@@ -643,9 +647,7 @@ class ImportLEAP(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_leap_matlab(
-            filename=params["filename"],
-        )
+        labels = Labels.load_leap_matlab(filename=params["filename"],)
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -1867,7 +1869,10 @@ class SetSelectedInstanceTrack(EditCommand):
 
         # When setting track for an instance that doesn't already have a track set,
         # just set for selected instance.
-        if selected_instance.track is None or not context.state["propagate track labels"]:
+        if (
+            selected_instance.track is None
+            or not context.state["propagate track labels"]
+        ):
             # Move anything already in the new track out of it
             new_track_instances = context.labels.find_track_occupancy(
                 video=context.state["video"],
@@ -1907,6 +1912,15 @@ class SetSelectedInstanceTrack(EditCommand):
 
         # Make sure the originally selected instance is still selected
         context.state["instance"] = selected_instance
+
+
+class DeleteTrack(EditCommand):
+    topics = [UpdateTopic.tracks]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        track = params["track"]
+        context.labels.remove_track(track)
 
 
 class SetTrackName(EditCommand):

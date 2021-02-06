@@ -664,6 +664,8 @@ class MainWindow(QMainWindow):
 
         tracksMenu = self.menuBar().addMenu("Tracks")
         self.track_menu = tracksMenu.addMenu("Set Instance Track")
+        self.delete_tracks_menu = tracksMenu.addMenu("Delete Track")
+        self.delete_tracks_menu.setEnabled(False)
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
         ).setToolTip(
@@ -1098,6 +1100,7 @@ class MainWindow(QMainWindow):
         # Update menus
 
         self.track_menu.setEnabled(has_selected_instance)
+        self.delete_tracks_menu.setEnabled(has_tracks)
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
@@ -1361,14 +1364,18 @@ class MainWindow(QMainWindow):
     def _update_track_menu(self):
         """Updates track menu options."""
         self.track_menu.clear()
-        for track in self.labels.tracks:
+        self.delete_tracks_menu.clear()
+        for track_ind, track in enumerate(self.labels.tracks):
             key_command = ""
-            if self.labels.tracks.index(track) < 9:
+            if track_ind < 9:
                 key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
             self.track_menu.addAction(
                 f"{track.name}",
                 lambda x=track: self.commands.setInstanceTrack(x),
                 key_command,
+            )
+            self.delete_tracks_menu.addAction(
+                f"{track.name}", lambda x=track: self.commands.deleteTrack(x)
             )
         self.track_menu.addAction(
             "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
