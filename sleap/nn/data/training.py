@@ -24,7 +24,7 @@ def split_labels_train_val(
 
         `labels_train` and `labels_val` are `sleap.Label` objects containing the
         selected frames for each split. Their `videos`, `tracks` and `provenance`
-        attributes are identical to `labels` even if the split does not contain 
+        attributes are identical to `labels` even if the split does not contain
         instances with a particular video or track.
 
         `idx_train` and `idx_val` are list indices of the labeled frames within the

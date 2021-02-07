@@ -647,7 +647,9 @@ class ImportLEAP(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_leap_matlab(filename=params["filename"],)
+        labels = Labels.load_leap_matlab(
+            filename=params["filename"],
+        )
 
         new_window = context.app.__class__()
         new_window.showMaximized()

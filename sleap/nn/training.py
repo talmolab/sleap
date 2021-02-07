@@ -262,7 +262,7 @@ def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer
 
 
 def setup_losses(
-    config: OptimizationConfig
+    config: OptimizationConfig,
 ) -> Callable[[tf.Tensor, tf.Tensor], tf.Tensor]:
     """Set up model loss function from config."""
     losses = [tf.keras.losses.MeanSquaredError()]

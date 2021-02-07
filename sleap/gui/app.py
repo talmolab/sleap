@@ -1012,7 +1012,8 @@ class MainWindow(QMainWindow):
         suggestions_layout.addWidget(hbw)
 
         self.suggestions_form_widget = YamlFormWidget.from_name(
-            "suggestions", title="Generate Suggestions",
+            "suggestions",
+            title="Generate Suggestions",
         )
         self.suggestions_form_widget.mainAction.connect(
             self.process_events_then(self.commands.generateSuggestions)
@@ -1513,7 +1514,9 @@ class MainWindow(QMainWindow):
 
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = LearningDialog(
-                mode, self.state["filename"], self.labels,
+                mode,
+                self.state["filename"],
+                self.labels,
             )
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
