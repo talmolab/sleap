@@ -39,7 +39,7 @@ def split_labels_train_val(
         it will be rounded to ensure there is at least one label in each.
     """
     if len(labels) == 1:
-        return labels, labels
+        return labels, [0], labels, [0]
 
     # Split indices.
     n_val = round(len(labels) * validation_fraction)

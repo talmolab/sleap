@@ -10,19 +10,19 @@ def test_split_labels_train_val():
     vid = sleap.Video(backend=sleap.io.video.MediaVideo)
     labels = sleap.Labels([sleap.LabeledFrame(video=vid, frame_idx=0)])
 
-    train, val = split_labels_train_val(labels, 0)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0)
     assert len(train) == 1
     assert len(val) == 1
 
-    train, val = split_labels_train_val(labels, 0.1)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0.1)
     assert len(train) == 1
     assert len(val) == 1
 
-    train, val = split_labels_train_val(labels, 0.5)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0.5)
     assert len(train) == 1
     assert len(val) == 1
 
-    train, val = split_labels_train_val(labels, 1.0)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 1.0)
     assert len(train) == 1
     assert len(val) == 1
 
@@ -32,22 +32,22 @@ def test_split_labels_train_val():
             sleap.LabeledFrame(video=vid, frame_idx=1),
         ]
     )
-    train, val = split_labels_train_val(labels, 0)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0)
     assert len(train) == 1
     assert len(val) == 1
     assert train[0].frame_idx != val[0].frame_idx
 
-    train, val = split_labels_train_val(labels, 0.1)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0.1)
     assert len(train) == 1
     assert len(val) == 1
     assert train[0].frame_idx != val[0].frame_idx
 
-    train, val = split_labels_train_val(labels, 0.5)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0.5)
     assert len(train) == 1
     assert len(val) == 1
     assert train[0].frame_idx != val[0].frame_idx
 
-    train, val = split_labels_train_val(labels, 1.0)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 1.0)
     assert len(train) == 1
     assert len(val) == 1
     assert train[0].frame_idx != val[0].frame_idx
@@ -59,17 +59,17 @@ def test_split_labels_train_val():
             sleap.LabeledFrame(video=vid, frame_idx=2),
         ]
     )
-    train, val = split_labels_train_val(labels, 0)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0)
     assert len(train) == 2
     assert len(val) == 1
 
-    train, val = split_labels_train_val(labels, 0.1)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0.1)
     assert len(train) == 2
     assert len(val) == 1
 
-    train, val = split_labels_train_val(labels, 0.5)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 0.5)
     assert len(train) + len(val) == 3
 
-    train, val = split_labels_train_val(labels, 1.0)
+    train, train_inds, val, val_inds = split_labels_train_val(labels, 1.0)
     assert len(train) == 1
     assert len(val) == 2
