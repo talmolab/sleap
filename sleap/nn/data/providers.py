@@ -186,6 +186,7 @@ class LabelsReader:
                 insts = lf.user_instances
             else:
                 insts = lf.instances
+            insts = [inst for inst in insts if len(inst) > 0]
             n_instances = len(insts)
 
             instances = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")

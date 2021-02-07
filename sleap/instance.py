@@ -343,8 +343,7 @@ class Track:
 
 @attr.s(eq=False, order=False, slots=True, repr=False, str=False)
 class Instance:
-    """
-    The class :class:`Instance` represents a labelled instance of a skeleton.
+    """This class represents a labeled instance.
 
     Args:
         skeleton: The skeleton that this instance is associated with.
@@ -859,8 +858,12 @@ class Instance:
 
     @property
     def n_visible_points(self) -> int:
-        """Return the count of points that are visible in this instance."""
+        """Return the number of visible points in this instance."""
         return sum(~np.isnan(self.points_array[:, 0]))
+
+    def __len__(self) -> int:
+        """Return the number of visible points in this instance."""
+        return self.n_visible_points
 
     @property
     def video(self) -> Optional[Video]:
