@@ -375,8 +375,7 @@ class Instance:
     def _validate_from_predicted_(
         self, attribute, from_predicted: Optional["PredictedInstance"]
     ):
-        """
-        Validation method called by attrs.
+        """Validation method called by attrs.
 
         Checks that from_predicted is None or :class:`PredictedInstance`
 
@@ -397,8 +396,7 @@ class Instance:
 
     @_points.validator
     def _validate_all_points(self, attribute, points: Union[dict, PointArray]):
-        """
-        Validation method called by attrs.
+        """Validation method called by attrs.
 
         Checks that all the _points defined for the skeleton are found
         in the skeleton.
@@ -431,8 +429,7 @@ class Instance:
                 )
 
     def __attrs_post_init__(self):
-        """
-        Method called by attrs after __init__()
+        """Method called by attrs after __init__().
 
         Initializes points if none were specified when creating object,
         caches list of nodes so what we can still find points in array
@@ -443,12 +440,8 @@ class Instance:
 
         Raises:
             ValueError: If object has no `Skeleton`.
-
-        Returns:
-            None
         """
-
-        if not self.skeleton:
+        if self.skeleton is None:
             raise ValueError("No skeleton set for Instance")
 
         # If the user did not pass a points list initialize a point array for future
@@ -474,8 +467,7 @@ class Instance:
     def _points_dict_to_array(
         points: Dict[Union[str, Node], Point], parray: PointArray, skeleton: Skeleton
     ):
-        """
-        Sets values in given :class:`PointsArray` from dictionary.
+        """Set values in given :class:`PointsArray` from dictionary.
 
         Args:
             points: The dictionary of points. Keys can be either node
@@ -487,11 +479,7 @@ class Instance:
         Raises:
             ValueError: If dictionary keys are not either all strings
                 or all :class:`Node`s.
-
-        Returns:
-            None
         """
-
         # Check if the dict contains all strings
         is_string_dict = set(map(type, points)) == {str}
 
@@ -524,8 +512,7 @@ class Instance:
                 pass
 
     def _node_to_index(self, node: Union[str, Node]) -> int:
-        """
-        Helper method to get the index of a node from its name.
+        """Helper method to get the index of a node from its name.
 
         Args:
             node: Node name or :class:`Node` object.
@@ -539,8 +526,7 @@ class Instance:
         self,
         node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray],
     ) -> Union[List[Point], Point, np.ndarray]:
-        """
-        Get the Points associated with particular skeleton node(s).
+        """Get the Points associated with particular skeleton node(s).
 
         Args:
             node: A single node or list of nodes within the skeleton
@@ -577,8 +563,7 @@ class Instance:
         return self._points[node]
 
     def __contains__(self, node: Union[str, Node, int]) -> bool:
-        """
-        Whether this instance has a point with the specified node.
+        """Whether this instance has a point with the specified node.
 
         Args:
             node: Node name or :class:`Node` object.
@@ -604,8 +589,7 @@ class Instance:
         node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray],
         value: Union[List[Point], Point, np.ndarray],
     ):
-        """
-        Set the point(s) for given node(s).
+        """Set the point(s) for given node(s).
 
         Args:
             node: Either node (by name or `Node`) or list of nodes.
@@ -615,9 +599,6 @@ class Instance:
             IndexError: If lengths of lists don't match, or if exactly
                 one of the inputs is a list.
             KeyError: If skeleton does not have (one of) the node(s).
-
-        Returns:
-            None
         """
         # Make sure node and value, if either are lists, are of compatible size
         if isinstance(node, (list, np.ndarray)):
@@ -649,8 +630,7 @@ class Instance:
             self._points[node_idx] = value
 
     def __delitem__(self, node: Union[str, Node]):
-        """
-        Delete node key and points associated with that node.
+        """Delete node key and points associated with that node.
 
         Args:
             node: Node name or :class:`Node` object.
@@ -671,7 +651,7 @@ class Instance:
             )
 
     def __repr__(self) -> str:
-        """String representation of this object."""
+        """Return string representation of this object."""
         pts = []
         for node, pt in self.nodes_points:
             pts.append(f"{node.name}: ({pt.x:.1f}, {pt.y:.1f})")
@@ -687,8 +667,7 @@ class Instance:
         )
 
     def matches(self, other: "Instance") -> bool:
-        """
-        Whether two instances match by value.
+        """Whether two instances match by value.
 
         Checks the types, points, track, and frame index.
 
@@ -721,9 +700,7 @@ class Instance:
 
     @property
     def nodes(self) -> Tuple[Node, ...]:
-        """
-        The tuple of nodes that have been labelled for this instance.
-        """
+        """Return nodes that have been labelled for this instance."""
         self._fix_array()
         return tuple(
             self._nodes[i]
@@ -733,32 +710,23 @@ class Instance:
 
     @property
     def nodes_points(self) -> List[Tuple[Node, Point]]:
-        """
-        The list of (node, point) tuples for all labeled points.
-        """
+        """Return a list of (node, point) tuples for all labeled points."""
         names_to_points = dict(zip(self.nodes, self.points))
         return names_to_points.items()
 
     @property
     def points(self) -> Tuple[Point, ...]:
-        """
-        The tuple of labelled points, in order they were labelled.
-        """
+        """Return a tuple of labelled points, in the order they were labelled."""
         self._fix_array()
         return tuple(point for point in self._points if not point.isnan())
 
     def _fix_array(self):
-        """
-        Fixes PointArray after nodes have been added or removed.
+        """Fix PointArray after nodes have been added or removed.
 
         This updates the PointArray as required by comparing the cached
         list of nodes to the nodes in the `Skeleton` object (which may
         have changed).
-
-        Returns:
-            None
         """
-
         # Check if cached skeleton nodes are different than current nodes
         if self._nodes != self.skeleton.nodes:
             # Create new PointArray (or PredictedPointArray)
@@ -777,8 +745,7 @@ class Instance:
     def get_points_array(
         self, copy: bool = True, invisible_as_nan: bool = False, full: bool = False
     ) -> Union[np.ndarray, np.recarray]:
-        """
-        Return the instance's points in array form.
+        """Return the instance's points in array form.
 
         Args:
             copy: If True, the return a copy of the points array as an ndarray.
@@ -821,14 +788,13 @@ class Instance:
 
     @property
     def points_array(self) -> np.ndarray:
-        """
-        Nx2 array of x and y for visible points.
+        """Return array of x and y coordinates for visible points.
 
-        Row in array corresponds to order of points in skeleton.
-        Invisible points will have nans.
+        Row in array corresponds to order of points in skeleton. Invisible points will
+        be denoted by NaNs.
 
         Returns:
-            ndarray of visible point coordinates.
+            A numpy array of of shape `(n_nodes, 2)` point coordinates.
         """
         return self.get_points_array(invisible_as_nan=True)
 
@@ -838,13 +804,19 @@ class Instance:
         Alias for `points_array`.
 
         Returns:
-            Array of shape (n_nodes, 2) of dtype float32 containing the coordinates of
-            the instance's nodes. Missing/not visible nodes will be replaced with NaNs.
+            Array of shape `(n_nodes, 2)` of dtype `float32` containing the coordinates
+            of the instance's nodes. Missing/not visible nodes will be replaced with
+            `NaN`.
         """
         return self.points_array
 
     def transform_points(self, transformation_matrix):
-        """Applies transformation matrix to points."""
+        """Apply affine transformation matrix to points in the instance.
+
+        Args:
+            transformation_matrix: Affine transformation matrix as a numpy array of
+                shape `(3, 3)`.
+        """
         points = self.get_points_array(copy=True, full=False, invisible_as_nan=False)
 
         if transformation_matrix.shape[1] == 3:
@@ -861,14 +833,18 @@ class Instance:
 
     @property
     def centroid(self) -> np.ndarray:
-        """Returns instance centroid as (x,y) numpy row vector."""
+        """Return instance centroid as an array of `(x, y)` coordinates
+
+        Notes:
+            This computes the centroid as the median of the visible points.
+        """
         points = self.points_array
         centroid = np.nanmedian(points, axis=0)
         return centroid
 
     @property
     def bounding_box(self) -> np.ndarray:
-        """Returns the instance's containing bounding box in [y1, x1, y2, x2] format."""
+        """Return bounding box containing all points in `[y1, x1, y2, x2]` format."""
         points = self.points_array
         bbox = np.concatenate(
             [np.nanmin(points, axis=0)[::-1], np.nanmax(points, axis=0)[::-1]]
@@ -876,13 +852,19 @@ class Instance:
         return bbox
 
     @property
+    def midpoint(self) -> np.ndarray:
+        """Return the center of the bounding box of the instance points."""
+        y1, x1, y2, x2 = self.bounding_box
+        return np.array([(x2 - x1) / 2, (y2 - y1) / 2])
+
+    @property
     def n_visible_points(self) -> int:
-        """Returns the count of points that are visible in this instance."""
+        """Return the count of points that are visible in this instance."""
         return sum(~np.isnan(self.points_array[:, 0]))
 
     @property
     def video(self) -> Optional[Video]:
-        """The video of the labeled frame this instance is associated with."""
+        """Return the video of the labeled frame this instance is associated with."""
         if self.frame is None:
             return None
         else:
@@ -890,7 +872,7 @@ class Instance:
 
     @property
     def frame_idx(self) -> Optional[int]:
-        """The frame index of the labeled frame this instance is associated with."""
+        """Return the index of the labeled frame this instance is associated with."""
         if self.frame is None:
             return None
         else:
@@ -903,7 +885,7 @@ class Instance:
         skeleton: Skeleton,
         track: Optional[Track] = None,
     ) -> "Instance":
-        """Create an instance from pointsarray.
+        """Create an instance from an array of points.
 
         Args:
             points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
@@ -974,7 +956,7 @@ class PredictedInstance(Instance):
             raise ValueError("PredictedInstance should not have from_predicted.")
 
     def __repr__(self) -> str:
-        """String representation of this object."""
+        """Return string representation of this object."""
         pts = []
         for node, pt in self.nodes_points:
             pts.append(f"{node.name}: ({pt.x:.1f}, {pt.y:.1f}, {pt.score:.2f})")
@@ -993,14 +975,12 @@ class PredictedInstance(Instance):
 
     @property
     def points_and_scores_array(self) -> np.ndarray:
-        """
-        (N, 3) array of (x, y, score) for predicted points.
+        """Return the instance points and scores as an array.
 
-        Row in arrow corresponds to order of points in skeleton.
-        Invisible points will have NaNs.
+        This will be a `(n_nodes, 3)` array of `(x, y, score)` for each predicted point.
 
-        Returns:
-            ndarray of visible point coordinates and scores.
+        Rows in the array correspond to the order of points in skeleton. Invisible
+        points will be represented as NaNs.
         """
         pts = self.get_points_array(full=True, copy=True, invisible_as_nan=True)
         return pts[:, (0, 1, 4)]  # (x, y, score)
@@ -1012,19 +992,18 @@ class PredictedInstance(Instance):
 
     @classmethod
     def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":
-        """
-        Create a :class:`PredictedInstance` from an :class:`Instance`.
+        """Create a `PredictedInstance` from an `Instance`.
 
-        The fields are copied in a shallow manner with the exception of
-        points. For each point in the instance a :class:`PredictedPoint`
-        is created with score set to default value.
+        The fields are copied in a shallow manner with the exception of points. For each
+        point in the instance a `PredictedPoint` is created with score set to default
+        value.
 
         Args:
-            instance: The Instance object to shallow copy data from.
+            instance: The `Instance` object to shallow copy data from.
             score: The score for this instance.
 
         Returns:
-            A PredictedInstance for the given Instance.
+            A `PredictedInstance` for the given `Instance`.
         """
         kw_args = attr.asdict(
             instance,
@@ -1047,11 +1026,11 @@ class PredictedInstance(Instance):
         """Create a predicted instance from data arrays.
 
         Args:
-            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains
-                the points in (x, y) coordinates of each node. Missing nodes should be
-                represented as NaNs.
-            point_confidences: A numpy array of shape (n_nodes,) and dtype float32 that
-                contains the confidence/score of the points.
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in `(x, y)` coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            point_confidences: A numpy array of shape `(n_nodes,)` and dtype `float32`
+                that contains the confidence/score of the points.
             instance_score: Scalar float representing the overall instance score, e.g.,
                 the PAF grouping score.
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
@@ -1081,18 +1060,15 @@ class PredictedInstance(Instance):
 
 
 def make_instance_cattr() -> cattr.Converter:
-    """
-    Create a cattr converter for Lists of Instances/PredictedInstances.
+    """Create a cattr converter for Lists of Instances/PredictedInstances.
 
-    This is required because cattrs doesn't automatically detect the
-    class when the attributes of one class are a subset of another.
+    This is required because cattrs doesn't automatically detect the class when the
+    attributes of one class are a subset of another.
 
     Returns:
-        A cattr converter with hooks registered for structuring and
-            unstructuring :class:`Instance` objects and
-            :class:`PredictedInstance`s.
+        A cattr converter with hooks registered for structuring and unstructuring
+        `Instance` and `PredictedInstance` objects.
     """
-
     converter = cattr.Converter()
 
     #### UNSTRUCTURE HOOKS
