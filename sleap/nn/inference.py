@@ -152,7 +152,7 @@ class Predictor(ABC):
                 batch_size=batch_size,
             )
 
-        elif "centroid" in model_types or "centered_instance" in model_types:
+        elif "centroid" in model_types or "centered_instance" in model_types or "multi_class_topdown" in model_types:
             centroid_model_path = None
             if "centroid" in model_types:
                 centroid_model_path = model_paths[model_types.index("centroid")]
@@ -161,18 +161,43 @@ class Predictor(ABC):
             if "centered_instance" in model_types:
                 confmap_model_path = model_paths[model_types.index("centered_instance")]
 
-            predictor = TopDownPredictor.from_trained_models(
-                centroid_model_path=centroid_model_path,
-                confmap_model_path=confmap_model_path,
-                batch_size=batch_size,
-                peak_threshold=peak_threshold,
-                integral_refinement=integral_refinement,
-                integral_patch_size=integral_patch_size,
-            )
+            td_multiclass_model_path = None
+            if "multi_class_topdown" in model_types:
+                td_multiclass_model_path = model_paths[model_types.index("multi_class_topdown")]
+
+            if td_multiclass_model_path is not None:
+                pass
+                # TODO:
+                # predictor = TopDownMultiClassPredictor.from_trained_models(
+                #     centroid_model_path=centroid_model_path,
+                #     confmap_model_path=td_multiclass_model_path,
+                #     batch_size=batch_size,
+                #     peak_threshold=peak_threshold,
+                #     integral_refinement=integral_refinement,
+                #     integral_patch_size=integral_patch_size,
+                # )
+            else:
+                predictor = TopDownPredictor.from_trained_models(
+                    centroid_model_path=centroid_model_path,
+                    confmap_model_path=confmap_model_path,
+                    batch_size=batch_size,
+                    peak_threshold=peak_threshold,
+                    integral_refinement=integral_refinement,
+                    integral_patch_size=integral_patch_size,
+                )
 
         elif "multi_instance" in model_types:
             predictor = BottomUpPredictor.from_trained_models(
                 model_path=model_paths[model_types.index("multi_instance")],
+                peak_threshold=peak_threshold,
+                integral_refinement=integral_refinement,
+                integral_patch_size=integral_patch_size,
+                batch_size=batch_size,
+            )
+
+        elif "multi_class_bottomup" in model_types:
+            predictor = BottomUpMultiClassPredictor.from_trained_models(
+                model_path=model_paths[model_types.index("multi_class_bottomup")],
                 peak_threshold=peak_threshold,
                 integral_refinement=integral_refinement,
                 integral_patch_size=integral_patch_size,
@@ -2940,6 +2965,104 @@ class BottomUpMultiClassPredictor(Predictor):
                 )
 
         return predicted_frames
+
+
+def load_model(
+    model_path: Union[str, List[str]],
+    batch_size: int = 4,
+    peak_threshold: float = 0.2,
+    refinement: str = "integral",
+    tracker: Optional[str] = None,
+    tracker_window: int = 5,
+    tracker_max_instances: Optional[int] = None,
+    disable_gpu_preallocation: bool = True,
+    progress_reporting: str = "rich",
+) -> Predictor:
+    """Load a trained SLEAP model.
+    Args:
+        model_path: Path to model or list of path to models that were trained by SLEAP.
+            These should be the directories that contain `training_job.json` and
+            `best_model.h5`.
+        batch_size: Number of frames to predict at a time. Larger values result in
+            faster inference speeds, but require more memory.
+        peak_threshold: Minimum confidence map value to consider a peak as valid.
+        refinement: If `"integral"`, peak locations will be refined with integral
+            regression. If `"local"`, peaks will be refined with quarter pixel local
+            gradient offset. This has no effect if the model has an offset regression
+            head.
+        tracker: Name of the tracker to use with the inference model. Must be one of
+            `"simple"` or `"flow"`. If `None`, no identity tracking across frames will
+            be performed.
+        tracker_window: Number of frames of history to use when tracking. No effect when
+            `tracker` is `None`.
+        tracker_max_instances: If not `None`, discard instances beyond this count when
+            tracking. No effect when `tracker` is `None`.
+        disable_gpu_preallocation: If `True` (the default), initialize the GPU and
+            disable preallocation of memory. This is necessary to prevent freezing on
+            some systems with low GPU memory and has negligible impact on performance.
+            If `False`, no GPU initialization is performed. No effect if running in
+            CPU-only mode.
+        progress_reporting: Mode of inference progress reporting. If `"rich"` (the
+            default), an updating progress bar is displayed in the console or notebook.
+            If `"json"`, a JSON-serialized message is printed out which can be captured
+            for programmatic progress monitoring. If `"none"`, nothing is displayed
+            during inference -- this is recommended when running on clusters or headless
+            machines where the output is captured to a log file.
+    Returns:
+        An instance of a `Predictor` based on which model type was detected.
+        If this is a top-down model, paths to the centroids model as well as the
+        centered instance model must be provided. A `TopDownPredictor` instance will be
+        returned.
+        If this is a bottom-up model, a `BottomUpPredictor` will be returned.
+        If this is a single-instance model, a `SingleInstancePredictor` will be
+        returned.
+        If a `tracker` is specified, the predictor will also run identity tracking over
+        time.
+    See also: TopDownPredictor, BottomUpPredictor, SingleInstancePredictor
+    """
+    if isinstance(model_path, str):
+        model_paths = [model_path]
+    else:
+        model_paths = model_path
+
+    # Uncompress ZIP packaged models.
+    tmp_dirs = []
+    for i, model_path in enumerate(model_paths):
+        if model_path.endswith(".zip"):
+            # Create temp dir on demand.
+            tmp_dir = tempfile.TemporaryDirectory()
+            tmp_dirs.append(tmp_dir)
+
+            # Remove the temp dir when program exits in case something goes wrong.
+            atexit.register(shutil.rmtree, tmp_dir.name, ignore_errors=True)
+
+            # Extract and replace in the list.
+            shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
+            model_paths[i] = tmp_dir.name
+
+    if disable_gpu_preallocation:
+        sleap.disable_preallocation()
+
+    predictor = Predictor.from_model_paths(
+        model_paths,
+        peak_threshold=peak_threshold,
+        integral_refinement=refinement == "integral",
+        batch_size=batch_size,
+    )
+    predictor.verbosity = progress_reporting
+    if tracker is not None:
+        predictor.tracker = Tracker.make_tracker_by_name(
+            tracker=tracker,
+            track_window=tracker_window,
+            post_connect_single_breaks=True,
+            clean_instance_count=tracker_max_instances,
+        )
+
+    # Remove temp dirs.
+    for tmp_dir in tmp_dirs:
+        tmp_dir.cleanup()
+
+    return predictor
 
 
 def _make_cli_parser() -> argparse.ArgumentParser:

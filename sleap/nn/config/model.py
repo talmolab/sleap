@@ -417,7 +417,8 @@ class HeadsConfig:
         centroid: An instance of `CentroidsHeadConfig`.
         centered_instance: An instance of `CenteredInstanceConfmapsHeadConfig`.
         multi_instance: An instance of `MultiInstanceConfig`.
-        multi_class: An instance of `MultiClassConfig`.
+        multi_class_bottomup: An instance of `MultiClassBottomUpConfig`.
+        multi_class_topdown: An instance of `MultiClassTopDownConfig`.
     """
 
     single_instance: Optional[SingleInstanceConfmapsHeadConfig] = None
