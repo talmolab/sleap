@@ -883,10 +883,7 @@ class Instance:
 
     @classmethod
     def from_pointsarray(
-        cls,
-        points: np.ndarray,
-        skeleton: Skeleton,
-        track: Optional[Track] = None,
+        cls, points: np.ndarray, skeleton: Skeleton, track: Optional[Track] = None
     ) -> "Instance":
         """Create an instance from an array of points.
 
@@ -912,10 +909,7 @@ class Instance:
 
     @classmethod
     def from_numpy(
-        cls,
-        points: np.ndarray,
-        skeleton: Skeleton,
-        track: Optional[Track] = None,
+        cls, points: np.ndarray, skeleton: Skeleton, track: Optional[Track] = None
     ) -> "Instance":
         """Create an instance from a numpy array.
 
@@ -1289,9 +1283,7 @@ class LabeledFrame:
     @property
     def user_instances(self) -> List[Instance]:
         """Return list of user instances associated with this frame."""
-        return [
-            inst for inst in self._instances if type(inst) == Instance
-        ]
+        return [inst for inst in self._instances if type(inst) == Instance]
 
     @property
     def training_instances(self) -> List[Instance]:

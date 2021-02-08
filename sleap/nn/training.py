@@ -207,9 +207,9 @@ class DataReaders:
                 validation_inds,
             ) = split_labels_train_val(training.with_user_labels_only(), validation)
             logger.info(
-                    f"  Splits: Training = {len(training_inds)} /"
-                    f" Validation = {len(validation_inds)}."
-                )
+                f"  Splits: Training = {len(training_inds)} /"
+                f" Validation = {len(validation_inds)}."
+            )
             if update_config and labels_config is not None:
                 labels_config.training_inds = training_inds
                 labels_config.validation_inds = validation_inds
@@ -740,14 +740,18 @@ class Trainer(ABC):
             )
             + key_mapper
         )
-        logger.info(f"Training set: n = {len(self.data_readers.training_labels_reader)}")
+        logger.info(
+            f"Training set: n = {len(self.data_readers.training_labels_reader)}"
+        )
         self.validation_pipeline = (
             self.pipeline_builder.make_training_pipeline(
                 self.data_readers.validation_labels_reader
             )
             + key_mapper
         )
-        logger.info(f"Validation set: n = {len(self.data_readers.validation_labels_reader)}")
+        logger.info(
+            f"Validation set: n = {len(self.data_readers.validation_labels_reader)}"
+        )
 
     def _setup_optimization(self):
         """Set up optimizer, loss functions and compile the model."""
