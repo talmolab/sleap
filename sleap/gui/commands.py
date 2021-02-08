@@ -950,8 +950,6 @@ class ExportLabeledClip(AppCommand):
 
         if params["open_when_done"]:
             # Open the file using default video playing app
-            from sleap.util import open_file
-
             open_file(params["filename"])
 
     @staticmethod

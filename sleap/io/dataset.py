@@ -245,7 +245,7 @@ class LabelsDataCache:
         self._track_occupancy[video][new_track].insert_list(within_old)
 
     def add_track(self, video: Video, track: Track):
-        """Add track a track to the labels."""
+        """Add a track to the labels."""
         self._track_occupancy[video][track] = RangeList()
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
@@ -1019,6 +1019,14 @@ class Labels(MutableSequence):
         """Add track to labels, updating occupancy."""
         self.tracks.append(track)
         self._cache.add_track(video, track)
+
+    def remove_track(self, track: Track):
+        """Remove a track from the labels, updating instances."""
+        self._cache.remove_track(track)
+        for inst in self.instances():
+            if inst.track == track:
+                inst.track = None
+        self.tracks.remove(track)
 
     def track_set_instance(
         self, frame: LabeledFrame, instance: Instance, new_track: Track
