@@ -974,7 +974,6 @@ class MainWindow(QMainWindow):
             ),
             resize="contents",
         )
-        # self.suggestionsTable.setAutoFitColumns()
 
         suggestions_layout.addWidget(self.suggestionsTable)
 
@@ -1015,6 +1014,7 @@ class MainWindow(QMainWindow):
         )
 
         self.suggested_count_label = QLabel()
+        self.suggested_count_label.setAlignment(QtCore.Qt.AlignHCenter)
         hb.addWidget(self.suggested_count_label)
 
         _add_button(
@@ -1023,6 +1023,10 @@ class MainWindow(QMainWindow):
             self.process_events_then(self.commands.nextSuggestedFrame),
             "goto next suggestion",
         )
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        suggestions_layout.addWidget(hbw)
 
         def goto_suggestion(*args):
             selected_frame = self.suggestionsTable.getSelectedRowItem()
