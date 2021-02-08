@@ -535,34 +535,6 @@ class MainWindow(QMainWindow):
             self.commands.exportLabeledClip,
         )
 
-        viewMenu.addSeparator()
-
-        seekbar_header_options = (
-            "None",
-            "Point Displacement (sum)",
-            "Point Displacement (max)",
-            "Primary Point Displacement (sum)",
-            "Primary Point Displacement (max)",
-            "Instance Score (sum)",
-            "Instance Score (min)",
-            "Point Score (sum)",
-            "Point Score (min)",
-            "Number of predicted points",
-            "Min Centroid Proximity",
-        )
-
-        add_submenu_choices(
-            menu=viewMenu,
-            title="Seekbar Header",
-            options=seekbar_header_options,
-            key="seekbar_header",
-        )
-
-        self.state["seekbar_header"] = "None"
-        self.state.connect("seekbar_header", self._set_seekbar_header)
-
-        viewMenu.addSeparator()
-
         ### Label Menu ###
 
         instance_adding_methods = dict(
@@ -684,6 +656,32 @@ class MainWindow(QMainWindow):
             "Delete Instance and Track",
             self.commands.deleteSelectedInstanceTrack,
         )
+
+        tracksMenu.addSeparator()
+
+        seekbar_header_options = (
+            "None",
+            "Point Displacement (sum)",
+            "Point Displacement (max)",
+            "Primary Point Displacement (sum)",
+            "Primary Point Displacement (max)",
+            "Instance Score (sum)",
+            "Instance Score (min)",
+            "Point Score (sum)",
+            "Point Score (min)",
+            "Number of predicted points",
+            "Min Centroid Proximity",
+        )
+
+        add_submenu_choices(
+            menu=tracksMenu,
+            title="Seekbar Header",
+            options=seekbar_header_options,
+            key="seekbar_header",
+        )
+
+        self.state["seekbar_header"] = "None"
+        self.state.connect("seekbar_header", self._set_seekbar_header)
 
         ### Predict Menu ###
 
