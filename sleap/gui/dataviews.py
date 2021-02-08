@@ -275,6 +275,7 @@ class GenericTableView(QtWidgets.QTableView):
         name_prefix: Optional[str] = None,
         is_sortable: bool = False,
         is_activatable: bool = False,
+        resize: Optional[str] = None,
     ):
         super(GenericTableView, self).__init__()
 
@@ -293,6 +294,17 @@ class GenericTableView(QtWidgets.QTableView):
         self.doubleClicked.connect(self.activateSelected)
         if self.row_name:
             self.state.connect(self.name_prefix + self.row_name, self.selectRowItem)
+
+        if resize == "contents":
+            self.horizontalHeader().setSectionResizeMode(
+                QtWidgets.QHeaderView.ResizeToContents
+            )
+        elif resize == "stretch":
+            self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        else:
+            self.horizontalHeader().setSectionResizeMode(
+                QtWidgets.QHeaderView.Interactive
+            )
 
     def selectionChanged(self, new, old):
         """Custom event handler."""
@@ -454,7 +466,7 @@ class LabeledFrameTableModel(GenericTableModel):
 
 
 class SuggestionsTableModel(GenericTableModel):
-    properties = ("video", "frame", "group", "labeled", "mean score")
+    properties = ("labeled", "mean score", "group", "video", "frame")
 
     def item_to_data(self, obj, item):
         labels = self.context.labels

@@ -840,6 +840,8 @@ class MainWindow(QMainWindow):
         )
         videos_layout.addWidget(self.videosTable)
 
+        panels_parent = videos_layout.parent().parent()
+
         hb = QHBoxLayout()
         _add_button(hb, "Show Video", self.videosTable.activateSelected)
         _add_button(hb, "Add Videos", self.commands.addVideo)
@@ -850,9 +852,7 @@ class MainWindow(QMainWindow):
         videos_layout.addWidget(hbw)
 
         ####### Skeleton #######
-        skeleton_layout = _make_dock(
-            "Skeleton", tab_with=videos_layout.parent().parent()
-        )
+        skeleton_layout = _make_dock("Skeleton", tab_with=panels_parent)
 
         gb = QGroupBox("Nodes")
         vb = QVBoxLayout()
@@ -862,6 +862,7 @@ class MainWindow(QMainWindow):
             model=SkeletonNodesTableModel(
                 items=self.state["skeleton"], context=self.commands
             ),
+            resize="stretch",
         )
 
         vb.addWidget(self.skeletonNodesTable)
@@ -886,6 +887,7 @@ class MainWindow(QMainWindow):
             model=SkeletonEdgesTableModel(
                 items=self.state["skeleton"], context=self.commands
             ),
+            resize="stretch",
         )
 
         vb.addWidget(self.skeletonEdgesTable)
@@ -947,15 +949,32 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
 
-        ####### Suggestions #######
-        suggestions_layout = _make_dock("Labeling Suggestions")
+        ####### Generate suggestions #######
+
+        generate_suggestions_layout = _make_dock(
+            "Generate Suggestions", tab_with=panels_parent
+        )
+
+        self.suggestions_form_widget = YamlFormWidget.from_name(
+            "suggestions",
+            # title="Generate Suggestions",
+        )
+        self.suggestions_form_widget.mainAction.connect(
+            self.process_events_then(self.commands.generateSuggestions)
+        )
+        generate_suggestions_layout.addWidget(self.suggestions_form_widget)
+
+        ####### Labeling queue #######
+        suggestions_layout = _make_dock("Labeling Queue", tab_with=panels_parent)
         self.suggestionsTable = GenericTableView(
             state=self.state,
             is_sortable=True,
             model=SuggestionsTableModel(
                 items=self.labels.suggestions, context=self.commands
             ),
+            resize="contents",
         )
+        # self.suggestionsTable.setAutoFitColumns()
 
         suggestions_layout.addWidget(self.suggestionsTable)
 
@@ -990,7 +1009,7 @@ class MainWindow(QMainWindow):
 
         _add_button(
             hb,
-            "Prev",
+            "Previous",
             self.process_events_then(self.commands.prevSuggestedFrame),
             "goto previous suggestion",
         )
@@ -1004,19 +1023,6 @@ class MainWindow(QMainWindow):
             self.process_events_then(self.commands.nextSuggestedFrame),
             "goto next suggestion",
         )
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        suggestions_layout.addWidget(hbw)
-
-        self.suggestions_form_widget = YamlFormWidget.from_name(
-            "suggestions",
-            title="Generate Suggestions",
-        )
-        self.suggestions_form_widget.mainAction.connect(
-            self.process_events_then(self.commands.generateSuggestions)
-        )
-        suggestions_layout.addWidget(self.suggestions_form_widget)
 
         def goto_suggestion(*args):
             selected_frame = self.suggestionsTable.getSelectedRowItem()
