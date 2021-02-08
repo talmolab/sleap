@@ -205,18 +205,22 @@ class DataReaders:
                 training_inds,
                 validation,
                 validation_inds,
-            ) = split_labels_train_val(training, validation)
+            ) = split_labels_train_val(training.with_user_labels_only(), validation)
+            logger.info(
+                    f"  Splits: Training = {len(training_inds)} /"
+                    f" Validation = {len(validation_inds)}."
+                )
             if update_config and labels_config is not None:
                 labels_config.training_inds = training_inds
                 labels_config.validation_inds = validation_inds
 
         if isinstance(test, str):
             # If test is still a path, load it.
+            logger.info(f"Loading test labels from: {test}")
             test = sleap.Labels.load_file(test, video_search=video_search_paths)
 
         test_reader = None
         if test is not None:
-            logger.info(f"Loading test labels from: {test}")
             test_reader = LabelsReader.from_user_instances(test)
 
         return cls(
@@ -736,14 +740,14 @@ class Trainer(ABC):
             )
             + key_mapper
         )
-        logger.info(f"Training set: n = {len(self.data_readers.training_labels)}")
+        logger.info(f"Training set: n = {len(self.data_readers.training_labels_reader)}")
         self.validation_pipeline = (
             self.pipeline_builder.make_training_pipeline(
                 self.data_readers.validation_labels_reader
             )
             + key_mapper
         )
-        logger.info(f"Validation set: n = {len(self.data_readers.validation_labels)}")
+        logger.info(f"Validation set: n = {len(self.data_readers.validation_labels_reader)}")
 
     def _setup_optimization(self):
         """Set up optimizer, loss functions and compile the model."""
@@ -783,8 +787,8 @@ class Trainer(ABC):
             # Build path to run folder. Timestamp will be added automatically.
             # Example: 210204_041707.centroid.n=300
             model_type = self.config.model.heads.which_oneof_attrib_name()
-            n = len(self.data_readers.training_labels) + len(
-                self.data_readers.validation_labels
+            n = len(self.data_readers.training_labels_reader) + len(
+                self.data_readers.validation_labels_reader
             )
             self.run_path = setup_new_run_folder(
                 self.config.outputs, base_run_name=f"{model_type}.n={n}"
@@ -934,7 +938,7 @@ class Trainer(ABC):
     def package(self):
         """Package model folder into a zip file for portability."""
         if self.config.outputs.delete_viz_images:
-            self.delete_viz_images()
+            self.cleanup()
         logger.info(f"Packaging results to: {self.run_path}.zip")
         shutil.make_archive(
             base_name=self.run_path, root_dir=self.run_path, format="zip"
