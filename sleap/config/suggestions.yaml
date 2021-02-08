@@ -1,28 +1,53 @@
 main:
 
+- name: Instructions
+  type: text
+  text: "<strong>Select a method for generating frames to fill the labeling queue.</strong>
+  
+  <p>Optimal labeling will span the diversity of your data, ensuring there are enough
+  examples of different <em>imaging conditions</em>, <em>animal appearances</em>, and
+  <em>poses</em> that are present in the data.</p>
+  
+  <p>Some methods can speed up labeling by identifying the minimal set of frames that
+  are representative of the variability in your data.</p><br>"
+
 - name: method
   label: Method
   type: stacked
-  default: "sample"
-  options: "image features,sample,prediction score,velocity"
+  default: "Sampling"
+  options: "Sampling,Image features,Prediction score,Velocity"
 
-  sample:
-    - name: per_video
-      label: Samples Per Video
+  Sampling:
+    - name: Description
+      type: text
+      text: "<p>Simple sampling is fast and will add frames distributed across all
+      videos in the dataset.</p>
+
+      <p>Labeling frames sampled at random or with a fixed stride adds more variability
+      than labeling consecutive frames.</p><br>"
+    - name: n_samples
+      label: Number of samples
       type: int
-      default: 50
-      range: 1,3000
+      default: 300
+      range: 1,5000
     - name: sampling_method
       label: Sampling method
       type: list
       options: random,stride
       default: stride
 
-  "image features":
+  "Image features":
+    - name: Description
+      type: text
+      text: "<p>Sampling by image features will cluster detected interest points in the
+      images as a proxy for diversity in poses and appearance.</p>
+
+      <p><em>Warning:</em> This can take several minutes to generate for large
+      videos.</p><br>"
     - name: per_video
       label: Initial Samples Per Video
       type: int
-      default: 200
+      default: 300
       range: 1,3000
     - name: sample_method
       label: Sampling method
@@ -58,51 +83,50 @@ main:
     - name: n_clusters
       label: K-Means Clusters
       type: int
-      default: 5
+      default: 10
     - name: per_cluster
       label: Samples Per Cluster
       type: int
-      default: 5
+      default: 30
 
+  "Prediction score":
+    - name: Description
+      type: text
+      text: "<p>Sampling by prediction score can help to identify situations in which
+      the trained models are performing poorly. This is indicative of images that may
+      benefit from additional labeled examples.</p>
 
-  strides:
+      <p><strong>This has no effect when there are no predictions in your
+      data.</strong></p><br>"
+    - name: score_limit
+      label: Low score (lt)
+      type: double
+      default: 3.0
+      range: 0,100
+    - name: instance_limit
+      label: Instance count (gte)
+      type: int
+      default: 2
+      range: 1,10
 
-  - name: per_video
-    label: Suggestions per video
-    type: int
-    default: 10
-    range: 1,1000
+  Velocity:
+    - name: Description
+      type: text
+      text: "<p>Sampling by velocity can help to identify situations in which poses are
+      difficult to detect due to fast motion. This is can be indicative of times that
+      the animals adopt rare poses or images that are blurrier than most of the
+      labels.</p>
 
-  random:
-
-  - name: per_video
-    label: Suggestions per video
-    type: int
-    default: 10
-    range: 1,1000
-
-  "prediction score":
-
-  - name: score_limit
-    label: Low score (lt)
-    type: double
-    default: 3.0
-    range: 0,100
-  - name: instance_limit
-    label: Instance count (gte)
-    type: int
-    default: 2
-    range: 1,10
-
-  velocity:
-  - name: node
-    label: Node
-    type: list
-  - name: threshold
-    label: Velocity Threshold
-    type: double
-    default: 0.1
-    range: 0.1,1.0
+      <p><strong>This has no effect when there are no <em>tracked</em> predictions in your
+      data.</strong></p><br>"
+    - name: node
+      label: Node
+      type: list
+    - name: threshold
+      label: Velocity Threshold
+      type: double
+      default: 0.1
+      range: 0.1,1.0
 
 - name: generate_button
   label: Generate Suggestions
