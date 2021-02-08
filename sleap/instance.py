@@ -1152,12 +1152,12 @@ def make_instance_cattr() -> cattr.Converter:
 
 @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
 class LabeledFrame:
-    """
-    Holds labeled data for a single frame of a video.
+    """Holds labeled data for a single frame of a video.
 
     Args:
         video: The :class:`Video` associated with this frame.
         frame_idx: The index of frame in video.
+        instances: List of instances associated with the frame.
     """
 
     video: Video = attr.ib()
@@ -1167,8 +1167,7 @@ class LabeledFrame:
     )
 
     def __attrs_post_init__(self):
-        """
-        Called by attrs.
+        """Called by attrs.
 
         Updates :attribute:`Instance.frame` for each instance associated
         with this :class:`LabeledFrame`.
@@ -1179,19 +1178,19 @@ class LabeledFrame:
             instance.frame = self
 
     def __len__(self) -> int:
-        """Returns number of instances associated with frame."""
+        """Return number of instances associated with frame."""
         return len(self.instances)
 
     def __getitem__(self, index) -> Instance:
-        """Returns instance (retrieved by index)."""
+        """Return instance (retrieved by index)."""
         return self.instances.__getitem__(index)
 
     def index(self, value: Instance) -> int:
-        """Returns index of given :class:`Instance`."""
+        """Return index of given :class:`Instance`."""
         return self.instances.index(value)
 
     def __delitem__(self, index):
-        """Removes instance (by index) from frame."""
+        """Remove instance (by index) from frame."""
         value = self.instances.__getitem__(index)
 
         self.instances.__delitem__(index)
@@ -1209,8 +1208,7 @@ class LabeledFrame:
         )
 
     def insert(self, index: int, value: Instance):
-        """
-        Adds instance to frame.
+        """Add instance to frame.
 
         Args:
             index: The index in list of frame instances where we should
@@ -1226,8 +1224,7 @@ class LabeledFrame:
         value.frame = self
 
     def __setitem__(self, index, value: Instance):
-        """
-        Sets nth instance in frame to the given instance.
+        """Set nth instance in frame to the given instance.
 
         Args:
             index: The index of instance to replace with new instance.
@@ -1244,8 +1241,7 @@ class LabeledFrame:
     def find(
         self, track: Optional[Union[Track, int]] = -1, user: bool = False
     ) -> List[Instance]:
-        """
-        Retrieves instances (if any) matching specifications.
+        """Retrieve instances (if any) matching specifications.
 
         Args:
             track: The :class:`Track` to match. Note that None will only
@@ -1265,13 +1261,12 @@ class LabeledFrame:
 
     @property
     def instances(self) -> List[Instance]:
-        """Returns list of all instances associated with this frame."""
+        """Return list of all instances associated with this frame."""
         return self._instances
 
     @instances.setter
     def instances(self, instances: List[Instance]):
-        """
-        Sets the list of instances associated with this frame.
+        """Set the list of instances associated with this frame.
 
         Updates the `frame` attribute on each instance to the
         :class:`LabeledFrame` which will contain the instance.
@@ -1293,14 +1288,14 @@ class LabeledFrame:
 
     @property
     def user_instances(self) -> List[Instance]:
-        """Returns list of user instances associated with this frame."""
+        """Return list of user instances associated with this frame."""
         return [
-            inst for inst in self._instances if not isinstance(inst, PredictedInstance)
+            inst for inst in self._instances if type(inst) == Instance
         ]
 
     @property
     def training_instances(self) -> List[Instance]:
-        """Returns list of user instances with points for training."""
+        """Return list of user instances with points for training."""
         return [
             inst
             for inst in self._instances
@@ -1309,23 +1304,22 @@ class LabeledFrame:
 
     @property
     def predicted_instances(self) -> List[PredictedInstance]:
-        """Returns list of predicted instances associated with frame."""
-        return [inst for inst in self._instances if isinstance(inst, PredictedInstance)]
+        """Return list of predicted instances associated with frame."""
+        return [inst for inst in self._instances if type(inst) == PredictedInstance]
 
     @property
     def has_user_instances(self) -> bool:
-        """Whether the frame contains any user instances."""
+        """Return whether the frame contains any user instances."""
         return len(self.user_instances) > 0
 
     @property
     def has_predicted_instances(self) -> bool:
-        """Whether the frame contains any predicted instances."""
+        """Return whether the frame contains any predicted instances."""
         return len(self.predicted_instances) > 0
 
     @property
     def unused_predictions(self) -> List[Instance]:
-        """
-        Returns list of "unused" :class:`PredictedInstance` objects in frame.
+        """Return a list of "unused" :class:`PredictedInstance` objects in frame.
 
         This is all the :class:`PredictedInstance` objects which do not have
         a corresponding :class:`Instance` in the same track in frame.
@@ -1363,8 +1357,7 @@ class LabeledFrame:
 
     @property
     def instances_to_show(self) -> List[Instance]:
-        """
-        Return a list of instances to show in GUI for this frame.
+        """Return a list of instances to show in GUI for this frame.
 
         This list will not include any predicted instances for which
         there's a corresponding regular instance.
@@ -1389,7 +1382,7 @@ class LabeledFrame:
     def merge_frames(
         labeled_frames: List["LabeledFrame"], video: "Video", remove_redundant=True
     ) -> List["LabeledFrame"]:
-        """Merged LabeledFrames for same video and frame index.
+        """Return merged LabeledFrames for same video and frame index.
 
         Args:
             labeled_frames: List of :class:`LabeledFrame` objects to merge.
@@ -1437,8 +1430,7 @@ class LabeledFrame:
     def complex_merge_between(
         cls, base_labels: "Labels", new_frames: List["LabeledFrame"]
     ) -> Tuple[Dict[Video, Dict[int, List[Instance]]], List[Instance], List[Instance]]:
-        """
-        Merge data from new frames into a :class:`Labels` object.
+        """Merge data from new frames into a :class:`Labels` object.
 
         Everything that can be merged cleanly is merged, any conflicts
         are returned.
@@ -1491,8 +1483,7 @@ class LabeledFrame:
     def complex_frame_merge(
         cls, base_frame: "LabeledFrame", new_frame: "LabeledFrame"
     ) -> Tuple[List[Instance], List[Instance], List[Instance]]:
-        """
-        Merge two frames, return conflicts if any.
+        """Merge two frames, return conflicts if any.
 
         A conflict occurs when
         * each frame has Instances which don't perfectly match those
