@@ -319,7 +319,7 @@ class Track:
         name: A name given to this track for identifying purposes.
     """
 
-    spawned_on: int = attr.ib(converter=int)
+    spawned_on: int = attr.ib(default=0, converter=int)
     name: str = attr.ib(default="", converter=str)
 
     def matches(self, other: "Track"):
@@ -341,10 +341,9 @@ class Track:
 # that are created in post init so they are not serialized.
 
 
-@attr.s(eq=False, order=False, slots=True)
+@attr.s(eq=False, order=False, slots=True, repr=False, str=False)
 class Instance:
-    """
-    The class :class:`Instance` represents a labelled instance of a skeleton.
+    """This class represents a labeled instance.
 
     Args:
         skeleton: The skeleton that this instance is associated with.
@@ -375,8 +374,7 @@ class Instance:
     def _validate_from_predicted_(
         self, attribute, from_predicted: Optional["PredictedInstance"]
     ):
-        """
-        Validation method called by attrs.
+        """Validation method called by attrs.
 
         Checks that from_predicted is None or :class:`PredictedInstance`
 
@@ -391,13 +389,13 @@ class Instance:
         """
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
-                f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})"
+                f"Instance.from_predicted type must be PredictedInstance (not "
+                "{type(from_predicted)})"
             )
 
     @_points.validator
     def _validate_all_points(self, attribute, points: Union[dict, PointArray]):
-        """
-        Validation method called by attrs.
+        """Validation method called by attrs.
 
         Checks that all the _points defined for the skeleton are found
         in the skeleton.
@@ -425,12 +423,12 @@ class Instance:
         elif isinstance(points, PointArray):
             if len(points) != len(self.skeleton.nodes):
                 raise ValueError(
-                    "PointArray does not have the same number of rows as skeleton nodes."
+                    "PointArray does not have the same number of rows as skeleton "
+                    "nodes."
                 )
 
     def __attrs_post_init__(self):
-        """
-        Method called by attrs after __init__()
+        """Method called by attrs after __init__().
 
         Initializes points if none were specified when creating object,
         caches list of nodes so what we can still find points in array
@@ -441,12 +439,8 @@ class Instance:
 
         Raises:
             ValueError: If object has no `Skeleton`.
-
-        Returns:
-            None
         """
-
-        if not self.skeleton:
+        if self.skeleton is None:
             raise ValueError("No skeleton set for Instance")
 
         # If the user did not pass a points list initialize a point array for future
@@ -472,8 +466,7 @@ class Instance:
     def _points_dict_to_array(
         points: Dict[Union[str, Node], Point], parray: PointArray, skeleton: Skeleton
     ):
-        """
-        Sets values in given :class:`PointsArray` from dictionary.
+        """Set values in given :class:`PointsArray` from dictionary.
 
         Args:
             points: The dictionary of points. Keys can be either node
@@ -485,11 +478,7 @@ class Instance:
         Raises:
             ValueError: If dictionary keys are not either all strings
                 or all :class:`Node`s.
-
-        Returns:
-            None
         """
-
         # Check if the dict contains all strings
         is_string_dict = set(map(type, points)) == {str}
 
@@ -522,8 +511,7 @@ class Instance:
                 pass
 
     def _node_to_index(self, node: Union[str, Node]) -> int:
-        """
-        Helper method to get the index of a node from its name.
+        """Helper method to get the index of a node from its name.
 
         Args:
             node: Node name or :class:`Node` object.
@@ -537,8 +525,7 @@ class Instance:
         self,
         node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray],
     ) -> Union[List[Point], Point, np.ndarray]:
-        """
-        Get the Points associated with particular skeleton node(s).
+        """Get the Points associated with particular skeleton node(s).
 
         Args:
             node: A single node or list of nodes within the skeleton
@@ -575,8 +562,7 @@ class Instance:
         return self._points[node]
 
     def __contains__(self, node: Union[str, Node, int]) -> bool:
-        """
-        Whether this instance has a point with the specified node.
+        """Whether this instance has a point with the specified node.
 
         Args:
             node: Node name or :class:`Node` object.
@@ -602,8 +588,7 @@ class Instance:
         node: Union[List[Union[str, Node, int]], Union[str, Node, int], np.ndarray],
         value: Union[List[Point], Point, np.ndarray],
     ):
-        """
-        Set the point(s) for given node(s).
+        """Set the point(s) for given node(s).
 
         Args:
             node: Either node (by name or `Node`) or list of nodes.
@@ -613,9 +598,6 @@ class Instance:
             IndexError: If lengths of lists don't match, or if exactly
                 one of the inputs is a list.
             KeyError: If skeleton does not have (one of) the node(s).
-
-        Returns:
-            None
         """
         # Make sure node and value, if either are lists, are of compatible size
         if isinstance(node, (list, np.ndarray)):
@@ -647,8 +629,7 @@ class Instance:
             self._points[node_idx] = value
 
     def __delitem__(self, node: Union[str, Node]):
-        """
-        Delete node key and points associated with that node.
+        """Delete node key and points associated with that node.
 
         Args:
             node: Node name or :class:`Node` object.
@@ -668,9 +649,24 @@ class Instance:
                 f"The underlying skeleton ({self.skeleton}) has no node '{node}'"
             )
 
+    def __repr__(self) -> str:
+        """Return string representation of this object."""
+        pts = []
+        for node, pt in self.nodes_points:
+            pts.append(f"{node.name}: ({pt.x:.1f}, {pt.y:.1f})")
+        pts = ", ".join(pts)
+
+        return (
+            "Instance("
+            f"video={self.video}, "
+            f"frame_idx={self.frame_idx}, "
+            f"points=[{pts}], "
+            f"track={self.track}"
+            ")"
+        )
+
     def matches(self, other: "Instance") -> bool:
-        """
-        Whether two instances match by value.
+        """Whether two instances match by value.
 
         Checks the types, points, track, and frame index.
 
@@ -703,9 +699,7 @@ class Instance:
 
     @property
     def nodes(self) -> Tuple[Node, ...]:
-        """
-        The tuple of nodes that have been labelled for this instance.
-        """
+        """Return nodes that have been labelled for this instance."""
         self._fix_array()
         return tuple(
             self._nodes[i]
@@ -715,32 +709,23 @@ class Instance:
 
     @property
     def nodes_points(self) -> List[Tuple[Node, Point]]:
-        """
-        The list of (node, point) tuples for all labelled points.
-        """
+        """Return a list of (node, point) tuples for all labeled points."""
         names_to_points = dict(zip(self.nodes, self.points))
         return names_to_points.items()
 
     @property
     def points(self) -> Tuple[Point, ...]:
-        """
-        The tuple of labelled points, in order they were labelled.
-        """
+        """Return a tuple of labelled points, in the order they were labelled."""
         self._fix_array()
         return tuple(point for point in self._points if not point.isnan())
 
     def _fix_array(self):
-        """
-        Fixes PointArray after nodes have been added or removed.
+        """Fix PointArray after nodes have been added or removed.
 
         This updates the PointArray as required by comparing the cached
         list of nodes to the nodes in the `Skeleton` object (which may
         have changed).
-
-        Returns:
-            None
         """
-
         # Check if cached skeleton nodes are different than current nodes
         if self._nodes != self.skeleton.nodes:
             # Create new PointArray (or PredictedPointArray)
@@ -759,8 +744,7 @@ class Instance:
     def get_points_array(
         self, copy: bool = True, invisible_as_nan: bool = False, full: bool = False
     ) -> Union[np.ndarray, np.recarray]:
-        """
-        Return the instance's points in array form.
+        """Return the instance's points in array form.
 
         Args:
             copy: If True, the return a copy of the points array as an ndarray.
@@ -803,14 +787,13 @@ class Instance:
 
     @property
     def points_array(self) -> np.ndarray:
-        """
-        Nx2 array of x and y for visible points.
+        """Return array of x and y coordinates for visible points.
 
-        Row in array corresponds to order of points in skeleton.
-        Invisible points will have nans.
+        Row in array corresponds to order of points in skeleton. Invisible points will
+        be denoted by NaNs.
 
         Returns:
-            ndarray of visible point coordinates.
+            A numpy array of of shape `(n_nodes, 2)` point coordinates.
         """
         return self.get_points_array(invisible_as_nan=True)
 
@@ -820,13 +803,19 @@ class Instance:
         Alias for `points_array`.
 
         Returns:
-            Array of shape (n_nodes, 2) of dtype float32 containing the coordinates of
-            the instance's nodes. Missing/not visible nodes will be replaced with NaNs.
+            Array of shape `(n_nodes, 2)` of dtype `float32` containing the coordinates
+            of the instance's nodes. Missing/not visible nodes will be replaced with
+            `NaN`.
         """
         return self.points_array
 
     def transform_points(self, transformation_matrix):
-        """Applies transformation matrix to points."""
+        """Apply affine transformation matrix to points in the instance.
+
+        Args:
+            transformation_matrix: Affine transformation matrix as a numpy array of
+                shape `(3, 3)`.
+        """
         points = self.get_points_array(copy=True, full=False, invisible_as_nan=False)
 
         if transformation_matrix.shape[1] == 3:
@@ -843,14 +832,18 @@ class Instance:
 
     @property
     def centroid(self) -> np.ndarray:
-        """Returns instance centroid as (x,y) numpy row vector."""
+        """Return instance centroid as an array of `(x, y)` coordinates
+
+        Notes:
+            This computes the centroid as the median of the visible points.
+        """
         points = self.points_array
         centroid = np.nanmedian(points, axis=0)
         return centroid
 
     @property
     def bounding_box(self) -> np.ndarray:
-        """Returns the instance's containing bounding box in [y1, x1, y2, x2] format."""
+        """Return bounding box containing all points in `[y1, x1, y2, x2]` format."""
         points = self.points_array
         bbox = np.concatenate(
             [np.nanmin(points, axis=0)[::-1], np.nanmax(points, axis=0)[::-1]]
@@ -858,21 +851,31 @@ class Instance:
         return bbox
 
     @property
+    def midpoint(self) -> np.ndarray:
+        """Return the center of the bounding box of the instance points."""
+        y1, x1, y2, x2 = self.bounding_box
+        return np.array([(x2 - x1) / 2, (y2 - y1) / 2])
+
+    @property
     def n_visible_points(self) -> int:
-        """Returns the count of points that are visible in this instance."""
+        """Return the number of visible points in this instance."""
         return sum(~np.isnan(self.points_array[:, 0]))
+
+    def __len__(self) -> int:
+        """Return the number of visible points in this instance."""
+        return self.n_visible_points
+
+    @property
+    def video(self) -> Optional[Video]:
+        """Return the video of the labeled frame this instance is associated with."""
+        if self.frame is None:
+            return None
+        else:
+            return self.frame.video
 
     @property
     def frame_idx(self) -> Optional[int]:
-        """
-        Get the index of the frame that this instance was found on.
-
-        This is a convenience method for Instance.frame.frame_idx.
-
-        Returns:
-            The frame number this instance was found on, or None if the
-            instance is not associated with frame.
-        """
+        """Return the index of the labeled frame this instance is associated with."""
         if self.frame is None:
             return None
         else:
@@ -880,22 +883,20 @@ class Instance:
 
     @classmethod
     def from_pointsarray(
-        cls,
-        points: np.ndarray,
-        skeleton: Skeleton,
-        track: Optional[Track] = None,
+        cls, points: np.ndarray, skeleton: Skeleton, track: Optional[Track] = None
     ) -> "Instance":
-        """Create an instance from pointsarray.
+        """Create an instance from an array of points.
 
         Args:
-            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains
-                the points in (x, y) coordinates of each node. Missing nodes should be
-                represented as NaNs.
-            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
-                predicted instance.
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in (x, y) coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            skeleton: A `sleap.Skeleton` instance with `n_nodes` nodes to associate with
+                the instance.
+            track: Optional `sleap.Track` object to associate with the instance.
 
         Returns:
-            A new Instance.
+            A new `Instance` object.
         """
         predicted_points = dict()
         for point, node_name in zip(points, skeleton.node_names):
@@ -906,8 +907,30 @@ class Instance:
 
         return cls(points=predicted_points, skeleton=skeleton, track=track)
 
+    @classmethod
+    def from_numpy(
+        cls, points: np.ndarray, skeleton: Skeleton, track: Optional[Track] = None
+    ) -> "Instance":
+        """Create an instance from a numpy array.
 
-@attr.s(eq=False, order=False, slots=True)
+        Args:
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in (x, y) coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            skeleton: A `sleap.Skeleton` instance with `n_nodes` nodes to associate with
+                the instance.
+            track: Optional `sleap.Track` object to associate with the instance.
+
+        Returns:
+            A new `Instance` object.
+
+        Notes:
+            This is an alias for `Instance.from_pointsarray()`.
+        """
+        return cls.from_pointsarray(points, skeleton, track=track)
+
+
+@attr.s(eq=False, order=False, slots=True, repr=False, str=False)
 class PredictedInstance(Instance):
     """
     A predicted instance is an output of the inference procedure.
@@ -929,35 +952,55 @@ class PredictedInstance(Instance):
         if self.from_predicted is not None:
             raise ValueError("PredictedInstance should not have from_predicted.")
 
+    def __repr__(self) -> str:
+        """Return string representation of this object."""
+        pts = []
+        for node, pt in self.nodes_points:
+            pts.append(f"{node.name}: ({pt.x:.1f}, {pt.y:.1f}, {pt.score:.2f})")
+        pts = ", ".join(pts)
+
+        return (
+            "PredictedInstance("
+            f"video={self.video}, "
+            f"frame_idx={self.frame_idx}, "
+            f"points=[{pts}], "
+            f"score={self.score:.2f}, "
+            f"track={self.track}, "
+            f"tracking_score={self.tracking_score:.2f}"
+            ")"
+        )
+
     @property
     def points_and_scores_array(self) -> np.ndarray:
-        """
-        (N, 3) array of (x, y, score) for predicted points.
+        """Return the instance points and scores as an array.
 
-        Row in arrow corresponds to order of points in skeleton.
-        Invisible points will have NaNs.
+        This will be a `(n_nodes, 3)` array of `(x, y, score)` for each predicted point.
 
-        Returns:
-            ndarray of visible point coordinates and scores.
+        Rows in the array correspond to the order of points in skeleton. Invisible
+        points will be represented as NaNs.
         """
         pts = self.get_points_array(full=True, copy=True, invisible_as_nan=True)
         return pts[:, (0, 1, 4)]  # (x, y, score)
 
+    @property
+    def scores(self) -> np.ndarray:
+        """Return point scores for each predicted node."""
+        return self.points_and_scores_array[:, 2]
+
     @classmethod
     def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":
-        """
-        Create a :class:`PredictedInstance` from an :class:`Instance`.
+        """Create a `PredictedInstance` from an `Instance`.
 
-        The fields are copied in a shallow manner with the exception of
-        points. For each point in the instance a :class:`PredictedPoint`
-        is created with score set to default value.
+        The fields are copied in a shallow manner with the exception of points. For each
+        point in the instance a `PredictedPoint` is created with score set to default
+        value.
 
         Args:
-            instance: The Instance object to shallow copy data from.
+            instance: The `Instance` object to shallow copy data from.
             score: The score for this instance.
 
         Returns:
-            A PredictedInstance for the given Instance.
+            A `PredictedInstance` for the given `Instance`.
         """
         kw_args = attr.asdict(
             instance,
@@ -980,18 +1023,19 @@ class PredictedInstance(Instance):
         """Create a predicted instance from data arrays.
 
         Args:
-            points: A numpy array of shape (n_nodes, 2) and dtype float32 that contains
-                the points in (x, y) coordinates of each node. Missing nodes should be
-                represented as NaNs.
-            point_confidences: A numpy array of shape (n_nodes,) and dtype float32 that
-                contains the confidence/score of the points.
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in `(x, y)` coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            point_confidences: A numpy array of shape `(n_nodes,)` and dtype `float32`
+                that contains the confidence/score of the points.
             instance_score: Scalar float representing the overall instance score, e.g.,
                 the PAF grouping score.
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
+            track: Optional `sleap.Track` to associate with the instance.
 
         Returns:
-            A new PredictedInstance.
+            A new `PredictedInstance`.
         """
         predicted_points = dict()
         for point, confidence, node_name in zip(
@@ -1013,18 +1057,15 @@ class PredictedInstance(Instance):
 
 
 def make_instance_cattr() -> cattr.Converter:
-    """
-    Create a cattr converter for Lists of Instances/PredictedInstances.
+    """Create a cattr converter for Lists of Instances/PredictedInstances.
 
-    This is required because cattrs doesn't automatically detect the
-    class when the attributes of one class are a subset of another.
+    This is required because cattrs doesn't automatically detect the class when the
+    attributes of one class are a subset of another.
 
     Returns:
-        A cattr converter with hooks registered for structuring and
-            unstructuring :class:`Instance` objects and
-            :class:`PredictedInstance`s.
+        A cattr converter with hooks registered for structuring and unstructuring
+        `Instance` and `PredictedInstance` objects.
     """
-
     converter = cattr.Converter()
 
     #### UNSTRUCTURE HOOKS
@@ -1105,12 +1146,12 @@ def make_instance_cattr() -> cattr.Converter:
 
 @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
 class LabeledFrame:
-    """
-    Holds labeled data for a single frame of a video.
+    """Holds labeled data for a single frame of a video.
 
     Args:
         video: The :class:`Video` associated with this frame.
         frame_idx: The index of frame in video.
+        instances: List of instances associated with the frame.
     """
 
     video: Video = attr.ib()
@@ -1120,8 +1161,7 @@ class LabeledFrame:
     )
 
     def __attrs_post_init__(self):
-        """
-        Called by attrs.
+        """Called by attrs.
 
         Updates :attribute:`Instance.frame` for each instance associated
         with this :class:`LabeledFrame`.
@@ -1132,19 +1172,19 @@ class LabeledFrame:
             instance.frame = self
 
     def __len__(self) -> int:
-        """Returns number of instances associated with frame."""
+        """Return number of instances associated with frame."""
         return len(self.instances)
 
     def __getitem__(self, index) -> Instance:
-        """Returns instance (retrieved by index)."""
+        """Return instance (retrieved by index)."""
         return self.instances.__getitem__(index)
 
     def index(self, value: Instance) -> int:
-        """Returns index of given :class:`Instance`."""
+        """Return index of given :class:`Instance`."""
         return self.instances.index(value)
 
     def __delitem__(self, index):
-        """Removes instance (by index) from frame."""
+        """Remove instance (by index) from frame."""
         value = self.instances.__getitem__(index)
 
         self.instances.__delitem__(index)
@@ -1162,8 +1202,7 @@ class LabeledFrame:
         )
 
     def insert(self, index: int, value: Instance):
-        """
-        Adds instance to frame.
+        """Add instance to frame.
 
         Args:
             index: The index in list of frame instances where we should
@@ -1179,8 +1218,7 @@ class LabeledFrame:
         value.frame = self
 
     def __setitem__(self, index, value: Instance):
-        """
-        Sets nth instance in frame to the given instance.
+        """Set nth instance in frame to the given instance.
 
         Args:
             index: The index of instance to replace with new instance.
@@ -1197,8 +1235,7 @@ class LabeledFrame:
     def find(
         self, track: Optional[Union[Track, int]] = -1, user: bool = False
     ) -> List[Instance]:
-        """
-        Retrieves instances (if any) matching specifications.
+        """Retrieve instances (if any) matching specifications.
 
         Args:
             track: The :class:`Track` to match. Note that None will only
@@ -1218,13 +1255,12 @@ class LabeledFrame:
 
     @property
     def instances(self) -> List[Instance]:
-        """Returns list of all instances associated with this frame."""
+        """Return list of all instances associated with this frame."""
         return self._instances
 
     @instances.setter
     def instances(self, instances: List[Instance]):
-        """
-        Sets the list of instances associated with this frame.
+        """Set the list of instances associated with this frame.
 
         Updates the `frame` attribute on each instance to the
         :class:`LabeledFrame` which will contain the instance.
@@ -1246,14 +1282,12 @@ class LabeledFrame:
 
     @property
     def user_instances(self) -> List[Instance]:
-        """Returns list of user instances associated with this frame."""
-        return [
-            inst for inst in self._instances if not isinstance(inst, PredictedInstance)
-        ]
+        """Return list of user instances associated with this frame."""
+        return [inst for inst in self._instances if type(inst) == Instance]
 
     @property
     def training_instances(self) -> List[Instance]:
-        """Returns list of user instances with points for training."""
+        """Return list of user instances with points for training."""
         return [
             inst
             for inst in self._instances
@@ -1262,23 +1296,22 @@ class LabeledFrame:
 
     @property
     def predicted_instances(self) -> List[PredictedInstance]:
-        """Returns list of predicted instances associated with frame."""
-        return [inst for inst in self._instances if isinstance(inst, PredictedInstance)]
+        """Return list of predicted instances associated with frame."""
+        return [inst for inst in self._instances if type(inst) == PredictedInstance]
 
     @property
     def has_user_instances(self) -> bool:
-        """Whether the frame contains any user instances."""
+        """Return whether the frame contains any user instances."""
         return len(self.user_instances) > 0
 
     @property
     def has_predicted_instances(self) -> bool:
-        """Whether the frame contains any predicted instances."""
+        """Return whether the frame contains any predicted instances."""
         return len(self.predicted_instances) > 0
 
     @property
     def unused_predictions(self) -> List[Instance]:
-        """
-        Returns list of "unused" :class:`PredictedInstance` objects in frame.
+        """Return a list of "unused" :class:`PredictedInstance` objects in frame.
 
         This is all the :class:`PredictedInstance` objects which do not have
         a corresponding :class:`Instance` in the same track in frame.
@@ -1316,8 +1349,7 @@ class LabeledFrame:
 
     @property
     def instances_to_show(self) -> List[Instance]:
-        """
-        Return a list of instances to show in GUI for this frame.
+        """Return a list of instances to show in GUI for this frame.
 
         This list will not include any predicted instances for which
         there's a corresponding regular instance.
@@ -1342,7 +1374,7 @@ class LabeledFrame:
     def merge_frames(
         labeled_frames: List["LabeledFrame"], video: "Video", remove_redundant=True
     ) -> List["LabeledFrame"]:
-        """Merged LabeledFrames for same video and frame index.
+        """Return merged LabeledFrames for same video and frame index.
 
         Args:
             labeled_frames: List of :class:`LabeledFrame` objects to merge.
@@ -1390,8 +1422,7 @@ class LabeledFrame:
     def complex_merge_between(
         cls, base_labels: "Labels", new_frames: List["LabeledFrame"]
     ) -> Tuple[Dict[Video, Dict[int, List[Instance]]], List[Instance], List[Instance]]:
-        """
-        Merge data from new frames into a :class:`Labels` object.
+        """Merge data from new frames into a :class:`Labels` object.
 
         Everything that can be merged cleanly is merged, any conflicts
         are returned.
@@ -1444,8 +1475,7 @@ class LabeledFrame:
     def complex_frame_merge(
         cls, base_frame: "LabeledFrame", new_frame: "LabeledFrame"
     ) -> Tuple[List[Instance], List[Instance], List[Instance]]:
-        """
-        Merge two frames, return conflicts if any.
+        """Merge two frames, return conflicts if any.
 
         A conflict occurs when
         * each frame has Instances which don't perfectly match those
@@ -1542,34 +1572,40 @@ class LabeledFrame:
         """Return the image for this frame of shape (height, width, channels)."""
         return self.video.get_frame(self.frame_idx)
 
-    def plot(self, image: bool = True):
+    def numpy(self) -> np.ndarray:
+        """Return the instances as an array of shape (instances, nodes, 2)."""
+        return np.stack([inst.numpy() for inst in self.instances], axis=0)
+
+    def plot(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all instances.
 
         Args:
             image: If False, only the instances will be plotted without loading the
                 original image.
+            scale: Relative scaling for the figure.
 
         Notes:
-            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
-            options.
+            See `sleap.nn.viz.plot_img` and `sleap.nn.viz.plot_instances` for more
+            plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image)
+            sleap.nn.viz.plot_img(self.image, scale=scale)
         sleap.nn.viz.plot_instances(self.instances)
 
-    def plot_predicted(self, image: bool = True):
+    def plot_predicted(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all predicted instances.
 
         Args:
             image: If False, only the instances will be plotted without loading the
                 original image.
+            scale: Relative scaling for the figure.
 
         Notes:
-            See sleap.nn.viz.plot_img and sleap.nn.viz.plot_instances for more plotting
-            options.
+            See `sleap.nn.viz.plot_img` and `sleap.nn.viz.plot_instances` for more
+            plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image)
+            sleap.nn.viz.plot_img(self.image, scale=scale)
         sleap.nn.viz.plot_instances(
             self.predicted_instances,
             color_by_track=(len(self.predicted_instances) > 0)

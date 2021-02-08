@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from time import time
 import logging
+import shutil
 
 import tensorflow as tf
 import numpy as np
@@ -43,7 +44,7 @@ from sleap.nn.data.pipelines import (
     BottomUpPipeline,
     KeyMapper,
 )
-from sleap.nn.data.training import split_labels
+from sleap.nn.data.training import split_labels_train_val
 
 # Optimization
 from sleap.nn.config import OptimizationConfig
@@ -116,6 +117,11 @@ class DataReaders:
         if test is None:
             test = labels_config.test_labels
 
+        if video_search_paths is None:
+            video_search_paths = []
+        if labels_config.search_path_hints is not None:
+            video_search_paths.extend(labels_config.search_path_hints)
+
         # Update the config fields with arguments (if not a full sleap.Labels instance).
         if update_config:
             if isinstance(training, Text):
@@ -126,14 +132,16 @@ class DataReaders:
                 labels_config.validation_fraction = validation
             if isinstance(test, Text):
                 labels_config.test_labels = test
+            labels_config.search_path_hints = video_search_paths
 
         # Build class.
-        # TODO: use labels_config.search_path_hints for loading
         return cls.from_labels(
             training=training,
             validation=validation,
             test=test,
             video_search_paths=video_search_paths,
+            labels_config=labels_config,
+            update_config=update_config,
         )
 
     @classmethod
@@ -143,22 +151,72 @@ class DataReaders:
         validation: Union[Text, sleap.Labels, float],
         test: Optional[Union[Text, sleap.Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
+        labels_config: Optional[LabelsConfig] = None,
+        update_config: bool = False,
     ) -> "DataReaders":
         """Create data readers from sleap.Labels datasets as data providers."""
-
         if isinstance(training, str):
-            print("video search paths: ", video_search_paths)
+            logger.info(f"Loading training labels from: {training}")
             training = sleap.Labels.load_file(training, video_search=video_search_paths)
-            print(training.videos)
+
+        if labels_config is not None and labels_config.split_by_inds:
+            # First try to split by indices if specified in config.
+            if (
+                labels_config.validation_inds is not None
+                and len(labels_config.validation_inds) > 0
+            ):
+                logger.info(
+                    "Creating validation split from explicit indices "
+                    f"(n = {len(labels_config.validation_inds)})."
+                )
+                validation = training[labels_config.validation_inds]
+
+            if labels_config.test_inds is not None and len(labels_config.test_inds) > 0:
+                logger.info(
+                    "Creating test split from explicit indices "
+                    f"(n = {len(labels_config.test_inds)})."
+                )
+                test = training[labels_config.test_inds]
+
+            if (
+                labels_config.training_inds is not None
+                and len(labels_config.training_inds) > 0
+            ):
+                logger.info(
+                    "Creating training split from explicit indices "
+                    f"(n = {len(labels_config.training_inds)})."
+                )
+                training = training[labels_config.training_inds]
 
         if isinstance(validation, str):
+            # If validation is still a path, load it.
+            logger.info(f"Loading validation labels from: {validation}")
             validation = sleap.Labels.load_file(
                 validation, video_search=video_search_paths
             )
         elif isinstance(validation, float):
-            training, validation = split_labels(training, [-1, validation])
+            logger.info(
+                "Creating training and validation splits from "
+                f"validation fraction: {validation}"
+            )
+            # If validation is still a float, create the split from training.
+            (
+                training,
+                training_inds,
+                validation,
+                validation_inds,
+            ) = split_labels_train_val(training.with_user_labels_only(), validation)
+            logger.info(
+                f"  Splits: Training = {len(training_inds)} /"
+                f" Validation = {len(validation_inds)}."
+            )
+            if update_config and labels_config is not None:
+                labels_config.training_inds = training_inds
+                labels_config.validation_inds = validation_inds
 
         if isinstance(test, str):
+            # If test is still a path, load it.
+            logger.info(f"Loading test labels from: {test}")
             test = sleap.Labels.load_file(test, video_search=video_search_paths)
 
         test_reader = None
@@ -207,7 +265,9 @@ def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer
     return optimizer
 
 
-def setup_losses(config: OptimizationConfig) -> Callable[[tf.Tensor], tf.Tensor]:
+def setup_losses(
+    config: OptimizationConfig,
+) -> Callable[[tf.Tensor, tf.Tensor], tf.Tensor]:
     """Set up model loss function from config."""
     losses = [tf.keras.losses.MeanSquaredError()]
 
@@ -554,6 +614,9 @@ class Trainer(ABC):
         # Copy input config before we make any changes.
         initial_config = copy.deepcopy(config)
 
+        # Store SLEAP version on the training process.
+        config.sleap_version = sleap.__version__
+
         # Create data readers and store loaded skeleton.
         data_readers = DataReaders.from_config(
             config.data.labels,
@@ -642,7 +705,10 @@ class Trainer(ABC):
         logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
         logger.info("  Heads: ")
         for i, head in enumerate(self.model.heads):
-            logger.info(f"  heads[{i}] = {head}")
+            logger.info(f"    [{i}] = {head}")
+        logger.info("  Outputs: ")
+        for i, output in enumerate(self.model.keras_model.outputs):
+            logger.info(f"    [{i}] = {output}")
 
     @property
     def keras_model(self) -> tf.keras.Model:
@@ -674,14 +740,18 @@ class Trainer(ABC):
             )
             + key_mapper
         )
-        logger.info(f"Training set: n = {len(self.data_readers.training_labels)}")
+        logger.info(
+            f"Training set: n = {len(self.data_readers.training_labels_reader)}"
+        )
         self.validation_pipeline = (
             self.pipeline_builder.make_training_pipeline(
                 self.data_readers.validation_labels_reader
             )
             + key_mapper
         )
-        logger.info(f"Validation set: n = {len(self.data_readers.validation_labels)}")
+        logger.info(
+            f"Validation set: n = {len(self.data_readers.validation_labels_reader)}"
+        )
 
     def _setup_optimization(self):
         """Set up optimizer, loss functions and compile the model."""
@@ -718,9 +788,14 @@ class Trainer(ABC):
     def _setup_outputs(self):
         """Set up output-related functionality."""
         if self.config.outputs.save_outputs:
-            # Build path to run folder.
+            # Build path to run folder. Timestamp will be added automatically.
+            # Example: 210204_041707.centroid.n=300
+            model_type = self.config.model.heads.which_oneof_attrib_name()
+            n = len(self.data_readers.training_labels_reader) + len(
+                self.data_readers.validation_labels_reader
+            )
             self.run_path = setup_new_run_folder(
-                self.config.outputs, base_run_name=type(self.model.backbone).__name__
+                self.config.outputs, base_run_name=f"{model_type}.n={n}"
             )
 
         # Setup output callbacks.
@@ -818,30 +893,60 @@ class Trainer(ABC):
         )
         logger.info(f"Finished training loop. [{(time() - t0) / 60:.1f} min]")
 
-        # Save predictions and evaluations.
+        # Run post-training actions.
         if self.config.outputs.save_outputs:
+            if (
+                self.config.outputs.save_visualizations
+                and self.config.outputs.delete_viz_images
+            ):
+                self.cleanup()
+
+            self.evaluate()
+
+            if self.config.outputs.zip_outputs:
+                self.package()
+
+    def evaluate(self):
+        """Compute evaluation metrics on data splits and save them."""
+        logger.info("Saving evaluation metrics to model folder...")
+        sleap.nn.evals.evaluate_model(
+            cfg=self.config,
+            labels_reader=self.data_readers.training_labels_reader,
+            model=self.model,
+            save=True,
+            split_name="train",
+        )
+        sleap.nn.evals.evaluate_model(
+            cfg=self.config,
+            labels_reader=self.data_readers.validation_labels_reader,
+            model=self.model,
+            save=True,
+            split_name="val",
+        )
+        if self.data_readers.test_labels_reader is not None:
             sleap.nn.evals.evaluate_model(
                 cfg=self.config,
-                labels_reader=self.data_readers.training_labels_reader,
+                labels_reader=self.data_readers.test_labels_reader,
                 model=self.model,
                 save=True,
-                split_name="train",
+                split_name="test",
             )
-            sleap.nn.evals.evaluate_model(
-                cfg=self.config,
-                labels_reader=self.data_readers.validation_labels_reader,
-                model=self.model,
-                save=True,
-                split_name="val",
-            )
-            if self.data_readers.test_labels_reader is not None:
-                sleap.nn.evals.evaluate_model(
-                    cfg=self.config,
-                    labels_reader=self.data_readers.test_labels_reader,
-                    model=self.model,
-                    save=True,
-                    split_name="test",
-                )
+
+    def cleanup(self):
+        """Delete visualization images subdirectory."""
+        viz_path = os.path.join(self.run_path, "viz")
+        if os.path.exists(viz_path):
+            logger.info(f"Deleting visualization directory: {viz_path}")
+            shutil.rmtree(viz_path)
+
+    def package(self):
+        """Package model folder into a zip file for portability."""
+        if self.config.outputs.delete_viz_images:
+            self.cleanup()
+        logger.info(f"Packaging results to: {self.run_path}.zip")
+        shutil.make_archive(
+            base_name=self.run_path, root_dir=self.run_path, format="zip"
+        )
 
 
 @attr.s(auto_attribs=True)
@@ -1332,35 +1437,63 @@ def main():
     parser.add_argument(
         "training_job_path", help="Path to training job profile JSON file."
     )
-    parser.add_argument("labels_path", help="Path to labels file to use for training.")
+    parser.add_argument(
+        "labels_path",
+        nargs="?",
+        default="",
+        help=(
+            "Path to labels file to use for training. If specified, overrides the path "
+            "specified in the training job config."
+        ),
+    )
     parser.add_argument(
         "--video-paths",
         type=str,
         default="",
-        help="List of paths for finding videos in case paths inside labels file need fixing.",
+        help=(
+            "List of paths for finding videos in case paths inside labels file are "
+            "not accessible."
+        ),
     )
     parser.add_argument(
         "--val_labels",
         "--val",
-        help="Path to labels file to use for validation (overrides training job path if set).",
+        help=(
+            "Path to labels file to use for validation. If specified, overrides the "
+            "path specified in the training job config."
+        ),
     )
     parser.add_argument(
         "--test_labels",
         "--test",
-        help="Path to labels file to use for test (overrides training job path if set).",
+        help=(
+            "Path to labels file to use for test. If specified, overrides the path "
+            "specified in the training job config."
+        ),
     )
     parser.add_argument(
         "--tensorboard",
         action="store_true",
-        help="Enables TensorBoard logging to the run path.",
+        help=(
+            "Enable TensorBoard logging to the run path if not already specified in "
+            "the training job config."
+        ),
     )
     parser.add_argument(
         "--save_viz",
         action="store_true",
-        help="Enables saving of prediction visualizations to the run folder.",
+        help=(
+            "Enable saving of prediction visualizations to the run folder if not "
+            "already specified in the training job config."
+        ),
     )
     parser.add_argument(
-        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI)."
+        "--zmq",
+        action="store_true",
+        help=(
+            "Enable ZMQ logging (for GUI) if not already specified in the training "
+            "job config."
+        ),
     )
     parser.add_argument(
         "--run_name",
@@ -1387,16 +1520,21 @@ def main():
 
     # Override config settings for CLI-based training.
     job_config.outputs.save_outputs = True
-    job_config.outputs.tensorboard.write_logs = args.tensorboard
-    job_config.outputs.zmq.publish_updates = args.zmq
-    job_config.outputs.zmq.subscribe_to_controller = args.zmq
+    job_config.outputs.tensorboard.write_logs |= args.tensorboard
+    job_config.outputs.zmq.publish_updates |= args.zmq
+    job_config.outputs.zmq.subscribe_to_controller |= args.zmq
     if args.run_name != "":
         job_config.outputs.run_name = args.run_name
     if args.prefix != "":
         job_config.outputs.run_name_prefix = args.prefix
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
-    job_config.outputs.save_visualizations = args.save_viz
+    job_config.outputs.save_visualizations |= args.save_viz
+    if args.labels_path == "":
+        args.labels_path = None
+
+    logger.info("Versions:")
+    sleap.versions()
 
     logger.info(f"Training labels file: {args.labels_path}")
     logger.info(f"Training profile: {job_filename}")

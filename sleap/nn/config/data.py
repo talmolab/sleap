@@ -26,6 +26,15 @@ class LabelsConfig:
             can be computed from these data during model optimization. This is also
             useful to explicitly keep track of the test set that should be used when
             multiple splits are created for training.
+        split_by_inds: If `True`, splits used for training will be determined by the
+            lists below by indexing into the labels in `training_labels`. If this is
+            `False`, the indices below will not be used even if specified. This is
+            useful for specifying the fixed split sets from examples within a single
+            labels file. If splits are generated automatically (using
+            `validation_fraction`), the selected indices are stored below for reference.
+        training_inds: List of indices of the training split labels.
+        validation_inds: List of indices of the validation split labels.
+        test_inds: List of indices of the test split labels.
         search_path_hints: List of paths to use for searching for missing data. This is
             useful when labels and data are moved across computers, network storage, or
             operating systems that may have different absolute paths than those stored
@@ -40,6 +49,10 @@ class LabelsConfig:
     validation_labels: Optional[Text] = None
     validation_fraction: float = 0.1
     test_labels: Optional[Text] = None
+    split_by_inds: bool = False
+    training_inds: Optional[List[int]] = None
+    validation_inds: Optional[List[int]] = None
+    test_inds: Optional[List[int]] = None
     search_path_hints: List[Text] = attr.ib(factory=list)
     skeletons: List[sleap.Skeleton] = attr.ib(factory=list)
 
@@ -76,13 +89,14 @@ class PreprocessingConfig:
             max stride (typically 32). This padding will be ignored when instance
             cropping inputs since the crop size should already be divisible by the
             model's max stride.
-        resize_and_pad_to_target: If True, will resize and pad all images in the dataset to match target dimensions.
-            This is useful when preprocessing datasets with mixed image dimensions (from different video resolutions).
-            Aspect ratio is preserved, and padding applied (if needed) to bottom or right of image only.
-        target_height: Target image height for 'resize_and_pad_to_target'. When not explicitly provided, inferred as the
-            max image height from the dataset.
-        target_width: Target image width for 'resize_and_pad_to_target'. When not explicitly provided, inferred as the
-            max image width from the dataset.
+        resize_and_pad_to_target: If True, will resize and pad all images in the dataset
+            to match target dimensions. This is useful when preprocessing datasets with
+            mixed image dimensions (from different video resolutions). Aspect ratio is
+            preserved, and padding applied (if needed) to bottom or right of image only.
+        target_height: Target image height for 'resize_and_pad_to_target'. When not
+            explicitly provided, inferred as the max image height from the dataset.
+        target_width: Target image width for 'resize_and_pad_to_target'. When not
+            explicitly provided, inferred as the max image width from the dataset.
     """
 
     ensure_rgb: bool = False

@@ -303,8 +303,7 @@ class GenericTableView(QtWidgets.QTableView):
             self.state[self.name_prefix + self.row_name] = item
 
     def activateSelected(self, *args):
-        """
-        Activates item currently selected in table.
+        """Activate item currently selected in table.
 
         "Activate" means that the relevant :py:class:`GuiState` state variable
         is set to the currently selected item.
@@ -313,8 +312,7 @@ class GenericTableView(QtWidgets.QTableView):
             self.state[self.row_name] = self.getSelectedRowItem()
 
     def selectRowItem(self, item: Any):
-        """
-        Selects row corresponding to item.
+        """Select row corresponding to item.
 
         If the table model converts items to dictionaries (using `item_to_data`
         method), then `item` argument should be the original item, not the
@@ -330,9 +328,12 @@ class GenericTableView(QtWidgets.QTableView):
         if self.row_name:
             self.state[self.name_prefix + self.row_name] = item
 
+    def selectRow(self, idx: int):
+        """Select row corresponding to index."""
+        self.selectRowItem(self.model().original_items[idx])
+
     def getSelectedRowItem(self) -> Any:
-        """
-        Returns item corresponding to currently selected row.
+        """Return item corresponding to currently selected row.
 
         Note that if the table model converts items to dictionaries (using
         `item_to_data` method), then returned item will be the original item,
@@ -461,7 +462,10 @@ class SuggestionsTableModel(GenericTableModel):
 
         item_dict["SuggestionFrame"] = item
 
-        video_string = f"{labels.videos.index(item.video)+1}: {os.path.basename(item.video.filename)}"
+        video_string = (
+            f"{labels.videos.index(item.video)+1}: "
+            f"{os.path.basename(item.video.filename)}"
+        )
 
         item_dict["group"] = str(item.group + 1) if item.group is not None else ""
         item_dict["group_int"] = item.group if item.group is not None else -1
@@ -469,7 +473,8 @@ class SuggestionsTableModel(GenericTableModel):
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
         # show how many labeled instances are in this frame
-        val = labels.instance_count(item.video, item.frame_idx)
+        lf = labels.get((item.video, item.frame_idx))
+        val = 0 if lf is None else len(lf.user_instances)
         val = str(val) if val > 0 else ""
         item_dict["labeled"] = val
 
