@@ -726,6 +726,7 @@ class Labels(MutableSequence):
             suggestions=self.suggestions,
             provenance=self.provenance,
         )
+        return new_labels
 
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
@@ -887,6 +888,10 @@ class Labels(MutableSequence):
     def user_labeled_frame_inds(self) -> List[int]:
         """Return a list of indices of frames with user labeled instances."""
         return [i for i, lf in enumerate(self.labeled_frames) if lf.has_user_instances]
+
+    def with_user_labels_only(self) -> "Labels":
+        """Return a new `Labels` object with only user labels."""
+        return self.extract(self.user_labeled_frame_inds)
 
     def get_labeled_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
         return self._cache.get_frame_count(video, filter)
