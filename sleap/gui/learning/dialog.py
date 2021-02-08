@@ -692,8 +692,8 @@ class LearningDialog(QtWidgets.QDialog):
         self.accept()
 
         if gui:
-            msgBox = QtWidgets.QMessageBox(text=f"Created training job package:")
-            msgBox.setDetailedText(output_path)
+            msgBox = QtWidgets.QMessageBox(text="Created training job package.")
+            msgBox.setDetailedText("Path:\n" + output_path)
             msgBox.setWindowTitle("Training Job Package")
             okButton = msgBox.addButton(QtWidgets.QMessageBox.Ok)
             openFolderButton = msgBox.addButton(
