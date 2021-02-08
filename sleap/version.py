@@ -12,7 +12,7 @@ Must be a semver string, "aN" should be appended for alpha releases.
 """
 
 
-__version__ = "1.1.0a9"
+__version__ = "1.1.0a10"
 
 
 def versions():
