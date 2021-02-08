@@ -170,7 +170,6 @@ class LabelsReader:
         first_image = tf.convert_to_tensor(self.labels[0].image)
         image_dtype = first_image.dtype
         image_num_channels = first_image.shape[-1]
-        n_nodes = len(self.labels.skeletons[0].nodes)
 
         def py_fetch_lf(ind):
             """Local function that will not be autographed."""
@@ -188,6 +187,7 @@ class LabelsReader:
                 insts = lf.instances
             insts = [inst for inst in insts if len(inst) > 0]
             n_instances = len(insts)
+            n_nodes = len(insts[0].skeleton) if n_instances > 0 else 0
 
             instances = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")
             for i, instance in enumerate(insts):
