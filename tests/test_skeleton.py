@@ -144,6 +144,14 @@ def test_symmetry():
     s1.add_symmetry("1", "5")
     s1.add_symmetry("3", "6")
 
+    assert (s1.nodes[0], s1.nodes[4]) in s1.symmetries
+    assert (s1.nodes[2], s1.nodes[5]) in s1.symmetries
+    assert len(s1.symmetries) == 2
+
+    assert (0, 4) in s1.symmetric_inds
+    assert (2, 5) in s1.symmetric_inds
+    assert len(s1.symmetric_inds) == 2
+
     assert s1.get_symmetry("1").name == "5"
     assert s1.get_symmetry("5").name == "1"
 
@@ -388,13 +396,3 @@ def test_arborescence():
     assert len(skeleton.cycles) == 0
     assert len(skeleton.root_nodes) == 1
     assert len(skeleton.in_degree_over_one) == 1
-
-
-def test_repr_str():
-    skel = Skeleton(name="skel")
-    skel.add_node("A")
-    skel.add_node("B")
-    skel.add_edge("A", "B")
-
-    assert repr(skel) == "Skeleton(name='skel', nodes=['A', 'B'], edges=[('A', 'B')])"
-    assert str(skel) == "Skeleton(nodes=2, edges=1)"

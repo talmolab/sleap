@@ -1,7 +1,7 @@
 add instance: Ctrl+I
 add videos: Ctrl+A
 clear selection: Esc
-close: QKeySequence.Close
+close: Ctrl+Q
 color predicted: 
 delete area: Ctrl+K
 delete clip:
@@ -11,19 +11,19 @@ export clip:
 fit: Ctrl+=
 goto frame: Ctrl+J
 goto marked: Ctrl+Shift+M
-goto next suggestion: QKeySequence.FindNext
+goto next suggestion: Space
 goto next track spawn: Ctrl+E
-goto next user: Ctrl+>
-goto next labeled: Ctrl+.
-goto prev suggestion: QKeySequence.FindPrevious
-goto prev labeled: 
+goto next user: Ctrl+U
+goto next labeled: Alt+Right
+goto prev suggestion: Shift+Space
+goto prev labeled: Alt+Left
 learning: Ctrl+L
 mark frame: Ctrl+M
 new: Ctrl+N
 next video: QKeySequence.Forward
 open: Ctrl+O
 prev video: QKeySequence.Back
-save as: QKeySequence.SaveAs
+save as: Ctrl+Shift+S
 save: Ctrl+S
 select next: '`'
 select to frame: Ctrl+Shift+J
@@ -33,7 +33,7 @@ show trails:
 transpose: Ctrl+T
 frame next: Right
 frame prev: Left
-frame next medium step: Down
-frame prev medium step: Up
-frame next large step: Space
-frame prev large step: /
+frame next medium step: Ctrl+Right
+frame prev medium step: Ctrl+Left
+frame next large step: Ctrl+Alt+Right
+frame prev large step: Ctrl+Alt+Left

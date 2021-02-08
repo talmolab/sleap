@@ -310,12 +310,13 @@ def get_config_file(
 def get_config_yaml(shortname: str, get_defaults: bool = False) -> dict:
     config_path = get_config_file(shortname, get_defaults=get_defaults)
     with open(config_path, "r") as f:
-        return yaml.load(f, Loader=yaml.SafeLoader)
+        return yaml.load(f, Loader=yaml.Loader)
 
 
 def save_config_yaml(shortname: str, data: Any) -> dict:
     yaml_path = get_config_file(shortname, ignore_file_not_found=True)
     with open(yaml_path, "w") as f:
+        print(f"Saving config: {yaml_path}")
         yaml.dump(data, f)
 
 
@@ -379,16 +380,3 @@ def find_files_by_suffix(
             )
 
     return matching_files
-
-
-def open_file(filename):
-    """
-    Opens file (as if double-clicked by user).
-
-    https://stackoverflow.com/questions/17317219/is-there-an-platform-independent-equivalent-of-os-startfile/17317468#17317468
-    """
-    if sys.platform == "win32":
-        os.startfile(filename)
-    else:
-        opener = "open" if sys.platform == "darwin" else "xdg-open"
-        subprocess.call([opener, filename])

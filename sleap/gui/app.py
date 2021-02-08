@@ -106,14 +106,14 @@ class MainWindow(QMainWindow):
             whether to show node labels, etc.
     """
 
-    def __init__(self, labels_path: Optional[str] = None, *args, **kwargs):
+    def __init__(
+        self, labels_path: Optional[str] = None, reset: bool = False, *args, **kwargs
+    ):
         """Initialize the app.
 
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
-
-        Returns:
-            None.
+            reset: If `True`, reset preferences to default (including window state).
         """
         super(MainWindow, self).__init__(*args, **kwargs)
 
@@ -137,13 +137,23 @@ class MainWindow(QMainWindow):
         self.state["filename"] = None
         self.state["show labels"] = True
         self.state["show edges"] = True
-        self.state["edge style"] = "Line"
+        self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+        self.state["marker size"] = prefs["marker size"]
+        self.state["propagate track labels"] = prefs["propagate track labels"]
+        self.state.connect("marker size", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
 
         self._initialize_gui()
+
+        if reset:
+            print("Reseting GUI state and preferences...")
+            prefs.reset_to_default()
+        elif len(prefs["window state"]) > 0:
+            print("Restoring GUI state...")
+            self.restoreState(prefs["window state"])
 
         if labels_path:
             self.loadProjectFile(labels_path)
@@ -174,7 +184,17 @@ class MainWindow(QMainWindow):
         return super().event(e)
 
     def closeEvent(self, event):
-        """Closes application window, prompting for saving as needed."""
+        """Close application window, prompting for saving as needed."""
+        # Save window state.
+        prefs["window state"] = self.saveState()
+        prefs["marker size"] = self.state["marker size"]
+        prefs["edge style"] = self.state["edge style"]
+        prefs["propagate track labels"] = self.state["propagate track labels"]
+        prefs["color predicted"] = self.state["color predicted"]
+
+        # Save preferences.
+        prefs.save()
+
         if not self.state["has_changes"]:
             # No unsaved changes, so accept event (close)
             event.accept()
@@ -273,8 +293,9 @@ class MainWindow(QMainWindow):
 
         # add checkable menu item connected to state variable
         def add_menu_check_item(menu, key: str, name: str):
-            add_menu_item(menu, key, name, lambda: self.state.toggle(key))
+            menu_item = add_menu_item(menu, key, name, lambda: self.state.toggle(key))
             connect_check(key)
+            return menu_item
 
         # check and uncheck submenu items
         def _menu_check_single(menu, item_text):
@@ -359,13 +380,16 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
-
-        fileMenu.addSeparator()
         add_menu_item(
             fileMenu,
             "export analysis",
             "Export Analysis HDF5...",
             self.commands.exportAnalysisFile,
+        )
+
+        fileMenu.addSeparator()
+        add_menu_item(
+            fileMenu, "reset prefs", "Reset preferences to defaults...", self.resetPrefs
         )
 
         fileMenu.addSeparator()
@@ -491,8 +515,15 @@ class MainWindow(QMainWindow):
 
         add_submenu_choices(
             menu=viewMenu,
+            title="Node Marker Size",
+            options=(1, 4, 6, 8, 12),
+            key="marker size",
+        )
+
+        add_submenu_choices(
+            menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 20, 50, 100, 200, 500),
+            options=(0, 10, 50, 100, 250),
             key="trail_length",
         )
 
@@ -627,17 +658,28 @@ class MainWindow(QMainWindow):
             self.commands.deleteFrameLimitPredictions,
         )
 
-        labelMenu.addSeparator()
+        # labelMenu.addSeparator()
 
-        self.track_menu = labelMenu.addMenu("Set Instance Track")
+        ### Tracks Menu ###
+
+        tracksMenu = self.menuBar().addMenu("Tracks")
+        self.track_menu = tracksMenu.addMenu("Set Instance Track")
+        self.delete_tracks_menu = tracksMenu.addMenu("Delete Track")
+        self.delete_tracks_menu.setEnabled(False)
+        add_menu_check_item(
+            tracksMenu, "propagate track labels", "Propagate Track Labels"
+        ).setToolTip(
+            "If enabled, setting a track will also apply to subsequent instances of "
+            "the same track."
+        )
         add_menu_item(
-            labelMenu,
+            tracksMenu,
             "transpose",
             "Transpose Instance Tracks",
             self.commands.transposeInstance,
         )
         add_menu_item(
-            labelMenu,
+            tracksMenu,
             "delete track",
             "Delete Instance and Track",
             self.commands.deleteSelectedInstanceTrack,
@@ -678,10 +720,21 @@ class MainWindow(QMainWindow):
         )
 
         predictionMenu.addSeparator()
+
+        training_package_menu = predictionMenu.addMenu("Export Training Package...")
         add_menu_item(
-            predictionMenu,
+            training_package_menu,
+            "export user labels package",
+            "Labeled frames",
+            self.commands.exportUserLabelsPackage,
+        ).setToolTip(
+            "Export user-labeled frames with image data into a single SLP file.\n\n"
+            "Use this for archiving a dataset with labeled frames only."
+        )
+        add_menu_item(
+            training_package_menu,
             "export training package",
-            "Export Training Package...",
+            "Labeled + suggested frames (recommended)",
             self.commands.exportTrainingPackage,
         ).setToolTip(
             "Export user-labeled frames and suggested frames with image data into a "
@@ -690,18 +743,9 @@ class MainWindow(QMainWindow):
             "unlabeled frames."
         )
         add_menu_item(
-            predictionMenu,
-            "export user labels package",
-            "Export Package with User Labels Only...",
-            self.commands.exportUserLabelsPackage,
-        ).setToolTip(
-            "Export user-labeled frames with image data into a single SLP file.\n\n"
-            "Use this for archiving a dataset with labeled frames only."
-        )
-        add_menu_item(
-            predictionMenu,
+            training_package_menu,
             "export full package",
-            "Export Package with All Labels...",
+            "Labeled + predicted + suggested frames",
             self.commands.exportFullPackage,
         ).setToolTip(
             "Export all frames (including predictions) and suggested frames with image "
@@ -730,7 +774,7 @@ class MainWindow(QMainWindow):
 
         helpMenu.addSeparator()
 
-        helpMenu.addAction("Check for updates...", self.commands.checkForUpdates)
+        helpMenu.addAction("Latest versions:", self.commands.checkForUpdates)
         self.state["stable_version_menu"] = helpMenu.addAction(
             "  Stable: N/A", self.commands.openStableVersion
         )
@@ -754,14 +798,16 @@ class MainWindow(QMainWindow):
         return wrapped_function
 
     def _create_dock_windows(self):
-        """Create dock windows and connects them to gui."""
+        """Create dock windows and connect them to GUI."""
 
         def _make_dock(name, widgets=[], tab_with=None):
             dock = QDockWidget(name)
+            dock.setObjectName(name + "Dock")
 
             dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
 
             dock_widget = QWidget()
+            dock_widget.setObjectName(name + "Widget")
             layout = QVBoxLayout()
 
             for widget in widgets:
@@ -769,10 +815,6 @@ class MainWindow(QMainWindow):
 
             dock_widget.setLayout(layout)
             dock.setWidget(dock_widget)
-
-            key = f"hide {name.lower()} dock"
-            if key in prefs and prefs[key]:
-                dock.hide()
 
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
             self.viewMenu.addAction(dock.toggleViewAction())
@@ -923,6 +965,33 @@ class MainWindow(QMainWindow):
 
         _add_button(
             hb,
+            "Add current frame",
+            self.process_events_then(self.commands.addCurrentFrameAsSuggestion),
+            "add current frame as suggestion",
+        )
+
+        _add_button(
+            hb,
+            "Remove",
+            self.process_events_then(self.commands.removeSuggestion),
+            "remove suggestion",
+        )
+
+        _add_button(
+            hb,
+            "Clear all",
+            self.process_events_then(self.commands.clearSuggestions),
+            "clear suggestions",
+        )
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        suggestions_layout.addWidget(hbw)
+
+        hb = QHBoxLayout()
+
+        _add_button(
+            hb,
             "Prev",
             self.process_events_then(self.commands.prevSuggestedFrame),
             "goto previous suggestion",
@@ -943,7 +1012,8 @@ class MainWindow(QMainWindow):
         suggestions_layout.addWidget(hbw)
 
         self.suggestions_form_widget = YamlFormWidget.from_name(
-            "suggestions", title="Generate Suggestions",
+            "suggestions",
+            title="Generate Suggestions",
         )
         self.suggestions_form_widget.mainAction.connect(
             self.process_events_then(self.commands.generateSuggestions)
@@ -1031,6 +1101,7 @@ class MainWindow(QMainWindow):
         # Update menus
 
         self.track_menu.setEnabled(has_selected_instance)
+        self.delete_tracks_menu.setEnabled(has_tracks)
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
@@ -1124,13 +1195,14 @@ class MainWindow(QMainWindow):
             suggestion_status_text = ""
             suggestion_list = self.labels.get_suggestions()
             if suggestion_list:
-                suggestion_label_counts = [
-                    self.labels.instance_count(item.video, item.frame_idx)
-                    for item in suggestion_list
-                ]
-                labeled_count = len(suggestion_list) - suggestion_label_counts.count(0)
+                labeled_count = 0
+                for suggestion in suggestion_list:
+                    lf = self.labels.get((suggestion.video, suggestion.frame_idx))
+                    if lf is not None and lf.has_user_instances:
+                        labeled_count += 1
+                prc = (labeled_count / len(suggestion_list)) * 100
                 suggestion_status_text = (
-                    f"{labeled_count}/{len(suggestion_list)} labeled"
+                    f"{labeled_count}/{len(suggestion_list)} labeled ({prc:.1f}%)"
                 )
             self.suggested_count_label.setText(suggestion_status_text)
 
@@ -1176,13 +1248,17 @@ class MainWindow(QMainWindow):
         spacer = "        "
 
         if message is None:
-            message = f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+            message = ""
+            if len(self.labels.videos) > 1:
+                message += f"Video {self.labels.videos.index(current_video)+1}/"
+                message += f"{len(self.labels.videos)}"
+                message += spacer
+
+            message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
-                message += f" (selection: {start+1:,}-{end:,})"
-
-            if len(self.labels.videos) > 1:
-                message += f" of video {self.labels.videos.index(current_video)+1}"
+                message += spacer
+                message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
@@ -1210,6 +1286,15 @@ class MainWindow(QMainWindow):
                     message += " in video"
 
         self.statusBar().showMessage(message)
+
+    def resetPrefs(self):
+        """Reset preferences to defaults."""
+        prefs.reset_to_default()
+        msg = QMessageBox()
+        msg.setText(
+            "Note: Some preferences may not take effect until application is restarted."
+        )
+        msg.exec_()
 
     def loadProjectFile(self, filename: Optional[str] = None):
         """
@@ -1280,14 +1365,18 @@ class MainWindow(QMainWindow):
     def _update_track_menu(self):
         """Updates track menu options."""
         self.track_menu.clear()
-        for track in self.labels.tracks:
+        self.delete_tracks_menu.clear()
+        for track_ind, track in enumerate(self.labels.tracks):
             key_command = ""
-            if self.labels.tracks.index(track) < 9:
+            if track_ind < 9:
                 key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
             self.track_menu.addAction(
                 f"{track.name}",
                 lambda x=track: self.commands.setInstanceTrack(x),
                 key_command,
+            )
+            self.delete_tracks_menu.addAction(
+                f"{track.name}", lambda x=track: self.commands.deleteTrack(x)
             )
         self.track_menu.addAction(
             "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
@@ -1425,7 +1514,9 @@ class MainWindow(QMainWindow):
 
         if self._child_windows.get(mode, None) is None:
             self._child_windows[mode] = LearningDialog(
-                mode, self.state["filename"], self.labels,
+                mode,
+                self.state["filename"],
+                self.labels,
             )
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
@@ -1559,6 +1650,16 @@ def main():
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "--reset",
+        help=(
+            "Reset GUI state and preferences. Use this flag if the GUI appears "
+            "incorrectly or fails to open."
+        ),
+        action="store_const",
+        const=True,
+        default=False,
+    )
 
     args = parser.parse_args()
 
@@ -1574,15 +1675,23 @@ def main():
     app = QApplication([])
     app.setApplicationName(f"SLEAP Label v{sleap.version.__version__}")
 
-    window = MainWindow(labels_path=args.labels_path)
+    window = MainWindow(labels_path=args.labels_path, reset=args.reset)
     window.showMaximized()
 
-    # if not args.labels_path:
-    #     window.commands.openProject(first_open=True)
+    # Disable GPU in GUI process. This does not affect subprocesses.
+    sleap.use_cpu_only()
+
+    # Print versions.
+    print()
+    print("Software versions:")
+    sleap.versions()
+    print()
+    print("Happy SLEAPing! :)")
 
     if args.profiling:
         import cProfile
-        cProfile.runctx('app.exec_()', globals=globals(), locals=locals())
+
+        cProfile.runctx("app.exec_()", globals=globals(), locals=locals())
     else:
         app.exec_()
 

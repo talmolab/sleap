@@ -225,6 +225,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         frame_data_format: str = "png",
         all_labeled: bool = False,
         suggested: bool = False,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ):
 
         labels = source_object
@@ -245,6 +246,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                 user_labeled=True,
                 all_labeled=all_labeled,
                 suggested=suggested,
+                progress_callback=progress_callback,
             )
 
             # Replace path to video file with "." (which indicates that the
@@ -265,7 +267,6 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                 else:
                     new_videos.append(video)
             d["videos"] = Video.cattr().unstructure(new_videos)
-
 
         with h5py.File(filename, "a") as f:
 

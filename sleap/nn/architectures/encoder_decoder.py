@@ -290,7 +290,7 @@ class SimpleUpsamplingBlock(DecoderBlock):
             prefix: String that will be added to the name of every layer in the block.
                 If not specified, instantiating this block multiple times may result in
                 name conflicts if existing layers have the same name.
-        
+
         Returns:
             The output tensor after applying all operations in the block.
         """
@@ -475,12 +475,11 @@ class EncoderDecoder:
     def maximum_stride(self) -> int:
         """Return the maximum stride that the input must be divisible by."""
         return self.encoder_features_stride
-    
+
     @property
     def output_stride(self) -> int:
         """Return stride of the output of the backbone."""
         return self.decoder_features_stride
-    
 
     def make_stem(self, x_in: tf.Tensor, prefix: Text = "stem") -> tf.Tensor:
         """Instantiate the stem layers defined by the stem block configuration.

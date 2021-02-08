@@ -16,10 +16,7 @@ def test_tf_linear_sum_assignment():
 
 
 def test_match_points():
-    inds1, inds2 = match_points(
-        [[0, 0], [1, 2]],
-        [[1, 2], [0, 0]]
-    )
+    inds1, inds2 = match_points([[0, 0], [1, 2]], [[1, 2], [0, 0]])
 
     assert_array_equal(inds1, [0, 1])
     assert_array_equal(inds2, [1, 0])

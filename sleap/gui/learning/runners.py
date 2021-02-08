@@ -4,9 +4,12 @@ Run training/inference in background process via CLI.
 import abc
 import attr
 import os
-import subprocess as sub
+import psutil
+import json
+import subprocess
 import tempfile
 import time
+import shutil
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 
@@ -17,7 +20,17 @@ from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.nn import training
 from sleap.nn.config import TrainingJobConfig
 
-SKIP_TRAINING = False
+
+def kill_process(pid: int):
+    """Force kill a running process and any child processes.
+
+    Args:
+        proc: A process ID.
+    """
+    proc_ = psutil.Process(pid)
+    for subproc_ in proc_.children(recursive=True):
+        subproc_.kill()
+    proc_.kill()
 
 
 @attr.s(auto_attribs=True)
@@ -151,7 +164,10 @@ class InferenceTask:
     results: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
 
     def make_predict_cli_call(
-        self, item_for_inference: ItemForInference, output_path: Optional[str] = None
+        self,
+        item_for_inference: ItemForInference,
+        output_path: Optional[str] = None,
+        gui: bool = True,
     ) -> List[Text]:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = ["sleap-track"]
@@ -222,6 +238,11 @@ class InferenceTask:
 
         cli_args.extend(("-o", output_path))
 
+        if gui:
+            cli_args.extend(("--verbosity", "json"))
+
+        cli_args.extend(("--no-empty-frames",))
+
         return cli_args, output_path
 
     def predict_subprocess(
@@ -229,23 +250,43 @@ class InferenceTask:
         item_for_inference: ItemForInference,
         append_results: bool = False,
         waiting_callback: Optional[Callable] = None,
+        gui: bool = True,
     ) -> Tuple[Text, bool]:
         """Runs inference in a subprocess."""
-        cli_args, output_path = self.make_predict_cli_call(item_for_inference)
+        cli_args, output_path = self.make_predict_cli_call(item_for_inference, gui=gui)
 
         print("Command line call:")
-        print(" \\\n".join(cli_args))
+        print(" ".join(cli_args))
         print()
 
-        with sub.Popen(cli_args) as proc:
+        # Run inference CLI capturing output.
+        with subprocess.Popen(cli_args, stdout=subprocess.PIPE) as proc:
+
+            # Poll until finished.
             while proc.poll() is None:
+
+                # Read line.
+                line = proc.stdout.readline()
+                line = line.decode().rstrip()
+
+                if line.startswith("{"):
+                    # Parse line.
+                    line_data = json.loads(line)
+                else:
+                    # Pass through non-json output.
+                    print(line)
+                    line_data = {}
+
                 if waiting_callback is not None:
+                    # Pass line data to callback.
+                    ret = waiting_callback(**line_data)
 
-                    if waiting_callback() == -1:
-                        # -1 signals user cancellation
-                        return "", False
-
-                time.sleep(0.1)
+                    if ret == "cancel":
+                        # Stop if callback returned cancel signal.
+                        kill_process(proc.pid)
+                        print(f"Killed PID: {proc.pid}")
+                        return "", "canceled"
+                time.sleep(0.05)
 
             print(f"Process return code: {proc.returncode}")
             success = proc.returncode == 0
@@ -255,7 +296,9 @@ class InferenceTask:
             new_inference_labels = Labels.load_file(output_path, match_to=self.labels)
             self.results.extend(new_inference_labels.labeled_frames)
 
-        return output_path, success
+        # Return "success" or return code if failed.
+        ret = "success" if success else proc.returncode
+        return output_path, ret
 
     def merge_results(self):
         """Merges result frames into labels dataset."""
@@ -370,7 +413,8 @@ def write_pipeline_files(
 
         # Get list of cli args
         cli_args, _ = inference_task.make_predict_cli_call(
-            item_for_inference=item_for_inference, output_path=prediction_output_path,
+            item_for_inference=item_for_inference,
+            output_path=prediction_output_path,
         )
         # And join them into a single call to inference
         inference_script += " ".join(cli_args) + "\n"
@@ -497,7 +541,8 @@ def run_gui_training(
                 os.path.dirname(labels_filename), "models"
             )
             training.setup_new_run_folder(
-                job.outputs, base_run_name=f"{model_type}.{len(labels)}"
+                job.outputs,
+                base_run_name=f"{model_type}.n={len(labels.user_labeled_frames)}",
             )
 
             if gui:
@@ -517,9 +562,11 @@ def run_gui_training(
             def waiting():
                 if gui:
                     QtWidgets.QApplication.instance().processEvents()
+                    if win.canceled:
+                        return "cancel"
 
             # Run training
-            trained_job_path, success = train_subprocess(
+            trained_job_path, ret = train_subprocess(
                 job_config=job,
                 labels_filename=labels_filename,
                 video_paths=video_path_list,
@@ -527,10 +574,17 @@ def run_gui_training(
                 save_viz=save_viz,
             )
 
-            if success:
+            if ret == "success":
                 # get the path to the resulting TrainingJob file
                 trained_job_paths[model_type] = trained_job_path
                 print(f"Finished training {str(model_type)}.")
+            elif ret == "canceled":
+                if gui:
+                    win.close()
+                print("Deleting canceled run data:", trained_job_path)
+                shutil.rmtree(trained_job_path, ignore_errors=True)
+                trained_job_paths[model_type] = None
+                break
             else:
                 if gui:
                     win.close()
@@ -567,47 +621,92 @@ def run_gui_inference(
     """
 
     if gui:
-        # show message while running inference
         progress = QtWidgets.QProgressDialog(
-            f"Running inference on {len(items_for_inference)} videos...",
+            "Initializing...",
             "Cancel",
             0,
-            len(items_for_inference),
+            1,
         )
         progress.show()
         QtWidgets.QApplication.instance().processEvents()
 
     # Make callback to process events while running inference
-    def waiting(done_count):
+    def waiting(
+        n_processed: Optional[int] = None,
+        n_total: Optional[int] = None,
+        elapsed: Optional[float] = None,
+        rate: Optional[float] = None,
+        eta: Optional[float] = None,
+        current_item: Optional[int] = None,
+        total_items: Optional[int] = None,
+        **kwargs,
+    ) -> str:
         if gui:
             QtWidgets.QApplication.instance().processEvents()
-            progress.setValue(done_count)
+            if n_total is not None:
+                progress.setMaximum(n_total)
+            if n_processed is not None:
+                progress.setValue(n_processed)
+
+            msg = "Predicting..."
+            # if current_item is not None and total_items is not None:
+            #     msg += f" [{current_item + 1}/{total_items}]"
+
+            if n_processed is not None and n_total is not None:
+
+                prc = (n_processed / n_total) * 100
+                msg = f"Predicted: {n_processed+1}/{n_total} (<b>{prc:.1f}%</b>)"
+
+            # Show time elapsed?
+            if rate is not None and eta is not None:
+                eta_mins, eta_secs = divmod(eta, 60)
+                if eta_mins > 60:
+                    eta_hours, eta_mins = divmod(eta, 60)
+                    eta_str = f"{int(eta_hours)}:{int(eta_mins):02}:{int(eta_secs):02}"
+                else:
+                    eta_str = f"{int(eta_mins)}:{int(eta_secs):02}"
+                msg += f"<br>ETA: <b>{eta_str}</b>       FPS: <b>{rate:.1f}</b>"
+
+            msg = msg.replace(" ", "&nbsp;")
+
+            progress.setLabelText(msg)
+            QtWidgets.QApplication.instance().processEvents()
+
             if progress.wasCanceled():
-                return -1
+                return "cancel"
 
     for i, item_for_inference in enumerate(items_for_inference.items):
-        # Run inference for desired frames in this video
-        predictions_path, success = inference_task.predict_subprocess(
-            item_for_inference, append_results=True, waiting_callback=lambda: waiting(i)
+
+        def waiting_item(**kwargs):
+            kwargs["current_item"] = i
+            kwargs["total_items"] = len(items_for_inference.items)
+            return waiting(**kwargs)
+
+        # Run inference for desired frames in this video.
+        predictions_path, ret = inference_task.predict_subprocess(
+            item_for_inference,
+            append_results=True,
+            waiting_callback=waiting_item,
+            gui=gui,
         )
 
-        if not success:
+        if gui:
+            progress.close()
+
+        if ret == "success":
+            inference_task.merge_results()
+            return len(inference_task.results)
+        elif ret == "canceled":
+            return -1
+        else:
             if gui:
-                progress.close()
                 QtWidgets.QMessageBox(
-                    text="An error occcured during inference. Your command line "
-                    "terminal may have more information about the error."
+                    text=(
+                        "An error occcured during inference. Your command line "
+                        "terminal may have more information about the error."
+                    )
                 ).exec_()
             return -1
-
-    inference_task.merge_results()
-
-    # close message window
-    if gui:
-        progress.close()
-
-    # return total_new_lf_count
-    return len(inference_task.results)
 
 
 def train_subprocess(
@@ -618,8 +717,6 @@ def train_subprocess(
     save_viz: bool = False,
 ):
     """Runs training inside subprocess."""
-
-    # run_name = job_config.outputs.run_name
     run_path = job_config.outputs.run_path
 
     success = False
@@ -654,20 +751,26 @@ def train_subprocess(
 
         print(cli_args)
 
-        if not SKIP_TRAINING:
-            # Run training in a subprocess
-            with sub.Popen(cli_args) as proc:
+        # Run training in a subprocess.
+        proc = subprocess.Popen(cli_args)
 
-                # Wait till training is done, calling a callback if given.
-                while proc.poll() is None:
-                    if waiting_callback is not None:
-                        if waiting_callback() == -1:
-                            # -1 signals user cancellation
-                            return "", False
-                    time.sleep(0.1)
+        # Wait till training is done, calling a callback if given.
+        while proc.poll() is None:
+            if waiting_callback is not None:
+                ret = waiting_callback()
+                if ret == "cancel":
+                    print("Canceling training...")
+                    kill_process(proc.pid)
+                    print(f"Killed PID: {proc.pid}")
+                    return run_path, "canceled"
+            time.sleep(0.1)
 
-                success = proc.returncode == 0
+        # Check return code.
+        if proc.returncode == 0:
+            ret = "success"
+        else:
+            ret = proc.returncode
 
     print("Run Path:", run_path)
 
-    return run_path, success
+    return run_path, ret

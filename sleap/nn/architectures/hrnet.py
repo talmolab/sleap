@@ -492,9 +492,13 @@ def make_first_stage(
     return x
 
 
-def make_hrnet_backbone(x_in, C=32, initial_downsampling_steps=2, stem_filters=64, bottleneck=False):
+def make_hrnet_backbone(
+    x_in, C=32, initial_downsampling_steps=2, stem_filters=64, bottleneck=False
+):
 
-    x = make_stem(x_in, filters=stem_filters, downsampling_steps=initial_downsampling_steps)
+    x = make_stem(
+        x_in, filters=stem_filters, downsampling_steps=initial_downsampling_steps
+    )
 
     x = make_first_stage(
         x, bottleneck=False, block_filters=64, blocks=4, output_filters=C

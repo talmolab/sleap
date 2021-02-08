@@ -145,7 +145,10 @@ def test_normalizer_from_config():
 
 
 def test_ensure_grayscale_from_provider(small_robot_mp4_vid):
-    video = providers.VideoReader(video=small_robot_mp4_vid, example_indices=[0],)
+    video = providers.VideoReader(
+        video=small_robot_mp4_vid,
+        example_indices=[0],
+    )
 
     normalizer = normalization.Normalizer(image_key="image", ensure_grayscale=True)
 
@@ -157,7 +160,10 @@ def test_ensure_grayscale_from_provider(small_robot_mp4_vid):
 
 
 def test_ensure_rgb_from_provider(centered_pair_vid):
-    video = providers.VideoReader(video=centered_pair_vid, example_indices=[0],)
+    video = providers.VideoReader(
+        video=centered_pair_vid,
+        example_indices=[0],
+    )
 
     normalizer = normalization.Normalizer(image_key="image", ensure_rgb=True)
 

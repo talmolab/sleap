@@ -172,7 +172,8 @@ class MockGlobalPeakFinder:
             centroid = example["centroid"] / example["scale"]
             all_peaks = example[self.all_peaks_in_key]  # (n_instances, n_nodes, 2)
             dists = tf.reduce_min(
-                tf.norm(all_peaks - tf.reshape(centroid, [1, 1, 2]), axis=-1), axis=1,
+                tf.norm(all_peaks - tf.reshape(centroid, [1, 1, 2]), axis=-1),
+                axis=1,
             )  # (n_instances,)
             instance_ind = tf.argmin(dists)
             center_instance = tf.gather(all_peaks, instance_ind)

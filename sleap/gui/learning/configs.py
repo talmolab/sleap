@@ -249,7 +249,11 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
     @property
     def _menu_cfg_idx_offset(self):
-        if hasattr(self, "options_list") and self.options_list and self.options_list[0] == "":
+        if (
+            hasattr(self, "options_list")
+            and self.options_list
+            and self.options_list[0] == ""
+        ):
             return 1
         return 0
 
@@ -360,7 +364,9 @@ class TrainingConfigsGetter:
         # Collect all configs from specified directories, sorted from most recently modified to least
         for config_dir in filter(lambda d: os.path.exists(d), self.dir_paths):
             # Find all json files in dir and subdirs to specified depth
-            json_files = sleap_utils.find_files_by_suffix(config_dir, ".json", depth=self.search_depth)
+            json_files = sleap_utils.find_files_by_suffix(
+                config_dir, ".json", depth=self.search_depth
+            )
 
             # Sort files, starting with most recently modified
             json_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
@@ -372,8 +378,9 @@ class TrainingConfigsGetter:
                     configs.append(cfg_info)
 
         # Push old configs to the end of the list, while preserving the time-based order otherwise
-        configs = [c for c in configs if not c.filename.startswith('old.')] +\
-                  [c for c in configs if c.filename.startswith('old.')]
+        configs = [c for c in configs if not c.filename.startswith("old.")] + [
+            c for c in configs if c.filename.startswith("old.")
+        ]
 
         return configs
 

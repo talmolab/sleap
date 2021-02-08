@@ -14,6 +14,7 @@ import json
 import h5py
 import copy
 
+import operator
 from enum import Enum
 from itertools import count
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Text
@@ -22,12 +23,14 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from scipy.io import loadmat
 
+
 NodeRef = Union[str, "Node"]
 H5FileRef = Union[str, h5py.File]
 
 
 class EdgeType(Enum):
-    """
+    """Type of edge in the skeleton graph.
+
     The skeleton graph can store different types of edges to represent
     different things. All edges must specify one or more of the
     following types:
@@ -44,9 +47,13 @@ class EdgeType(Enum):
 
 @attr.s(auto_attribs=True, slots=True, eq=False, order=False)
 class Node:
-    """
-    The class :class:`Node` represents a potential skeleton node.
-    (But note that nodes can exist without being part of a skeleton.)
+    """This class represents node in the skeleton graph, i.e., a body part.
+
+    Note: Nodes can exist without being part of a skeleton.
+
+    Attributes:
+        name: String name of the node.
+        weight: Weight of the node (not currently used).
     """
 
     name: str
@@ -92,8 +99,7 @@ class Skeleton:
     _skeleton_idx = count(0)
 
     def __init__(self, name: str = None):
-        """
-        Initialize an empty skeleton object.
+        """Initialize an empty skeleton object.
 
         Skeleton objects, once created, can be modified by adding nodes
         and edges.
@@ -101,7 +107,6 @@ class Skeleton:
         Args:
             name: A name for this skeleton.
         """
-
         # If no skeleton was create, try to create a unique name for this Skeleton.
         if name is None or not isinstance(name, str) or not name:
             name = "Skeleton-" + str(next(self._skeleton_idx))
@@ -114,23 +119,35 @@ class Skeleton:
 
     def __repr__(self) -> str:
         """Return full description of the skeleton."""
-        return (f"Skeleton(name='{self.name}', "
-                f"nodes={self.node_names}, edges={self.edge_names})")
+        return (
+            f"Skeleton(name='{self.name}', "
+            f"nodes={self.node_names}, "
+            f"edges={self.edge_names}, "
+            f"symmetries={self.symmetry_names}"
+            ")"
+        )
 
     def __str__(self) -> str:
         """Return short readable description of the skeleton."""
-        return f"Skeleton(nodes={len(self.nodes)}, edges={len(self.edges)})"
+        nodes = ", ".join(self.node_names)
+        edges = ", ".join([f"{s}->{d}" for (s, d) in self.edge_names])
+        symm = ", ".join([f"{s}<->{d}" for (s, d) in self.symmetry_names])
+        return (
+            "Skeleton("
+            f"nodes=[{nodes}], "
+            f"edges=[{edges}], "
+            f"symmetries=[{symm}]"
+            ")"
+        )
 
     def matches(self, other: "Skeleton") -> bool:
-        """
-        Compare this `Skeleton` to another, ignoring skeleton name and
-        the identities of the `Node` objects in each graph.
+        """Compare this `Skeleton` to another, ignoring name and node identities.
 
         Args:
             other: The other skeleton.
 
         Returns:
-            True if match, False otherwise.
+            `True` if the skeleton graphs are isomorphic and node names.
         """
 
         def dict_match(dict1, dict2):
@@ -144,17 +161,16 @@ class Skeleton:
         if not is_isomorphic:
             return False
 
-        # Now check that the nodes have the same labels and order. They can have
-        # different weights I guess?!
+        # Now check that the nodes have the same labels and order.
         for node1, node2 in zip(self._graph.nodes, other._graph.nodes):
             if node1.name != node2.name:
                 return False
 
-        # Check if the two graphs are equal
         return True
 
     @property
     def is_arborescence(self) -> bool:
+        """Return whether this skeleton graph forms an arborescence."""
         return nx.algorithms.tree.recognition.is_arborescence(self._graph)
 
     @property
@@ -171,7 +187,7 @@ class Skeleton:
 
     @property
     def graph(self):
-        """Returns subgraph of BODY edges for skeleton."""
+        """Return subgraph of BODY edges for skeleton."""
         edges = [
             (src, dst, key)
             for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
@@ -184,7 +200,7 @@ class Skeleton:
 
     @property
     def graph_symmetry(self):
-        """Returns subgraph of symmetric edges for skeleton."""
+        """Return subgraph of symmetric edges for skeleton."""
         edges = [
             (src, dst, key)
             for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
@@ -194,8 +210,7 @@ class Skeleton:
 
     @staticmethod
     def find_unique_nodes(skeletons: List["Skeleton"]) -> List[Node]:
-        """
-        Find all unique nodes from a list of skeletons.
+        """Find all unique nodes from a list of skeletons.
 
         Args:
             skeletons: The list of skeletons.
@@ -207,8 +222,7 @@ class Skeleton:
 
     @staticmethod
     def make_cattr(idx_to_node: Dict[int, Node] = None) -> cattr.Converter:
-        """
-        Make cattr.Convert() for `Skeleton`.
+        """Make cattr.Convert() for `Skeleton`.
 
         Make a cattr.Converter() that registers structure/unstructure
         hooks for Skeleton objects to handle serialization of skeletons.
@@ -246,7 +260,8 @@ class Skeleton:
 
     @name.setter
     def name(self, name: str):
-        """
+        """Set skeleton name (no-op).
+
         A skeleton object cannot change its name.
 
         This property is immutable because it is used to hash skeletons.
@@ -271,8 +286,7 @@ class Skeleton:
 
     @classmethod
     def rename_skeleton(cls, skeleton: "Skeleton", name: str) -> "Skeleton":
-        """
-        Make copy of skeleton with new name.
+        """Make copy of skeleton with new name.
 
         This property is immutable because it is used to hash skeletons.
         If you want to rename a Skeleton you must use this class method.
@@ -358,7 +372,6 @@ class Skeleton:
             A list of (src_node_ind, dst_node_ind), where indices are subscripts into
             the Skeleton.nodes list.
         """
-
         return [
             (self.nodes.index(src_node), self.nodes.index(dst_node))
             for src_node, dst_node in self.edges
@@ -391,8 +404,15 @@ class Skeleton:
             if edge_type == EdgeType.SYMMETRY
         ]
         # Get rid of duplicates
-        symmetries = list(set([tuple(set(e)) for e in symmetries]))
+        symmetries = list(
+            set([tuple(sorted(e, key=operator.attrgetter("name"))) for e in symmetries])
+        )
         return symmetries
+
+    @property
+    def symmetry_names(self) -> List[Tuple[str, str]]:
+        """List of symmetry edges as tuples of node names."""
+        return [(s.name, d.name) for (s, d) in self.symmetries]
 
     @property
     def symmetries_full(self) -> List[Tuple[Node, Node, Any, Any]]:
@@ -411,9 +431,18 @@ class Skeleton:
             if attr["type"] == EdgeType.SYMMETRY
         ]
 
+    @property
+    def symmetric_inds(self) -> np.ndarray:
+        """Return the symmetric nodes as an array of indices."""
+        return np.array(
+            [
+                [self.nodes.index(node1), self.nodes.index(node2)]
+                for node1, node2 in self.symmetries
+            ]
+        )
+
     def node_to_index(self, node: NodeRef) -> int:
-        """
-        Return the index of the node, accepts either `Node` or name.
+        """Return the index of the node, accepts either `Node` or name.
 
         Args:
             node: The name of the node or the Node object.
@@ -430,8 +459,8 @@ class Skeleton:
         except ValueError:
             return node_list.index(self.find_node(node))
 
-    def edge_to_index(self, source: NodeRef, destination: NodeRef):
-        """Returns the index of edge from source to destination."""
+    def edge_to_index(self, source: NodeRef, destination: NodeRef) -> int:
+        """Return the index of edge from source to destination."""
         source = self.find_node(source)
         destination = self.find_node(destination)
         edge = (source, destination)
@@ -449,9 +478,6 @@ class Skeleton:
 
         Raises:
             ValueError: If name is not unique.
-
-        Returns:
-            None
         """
         if not isinstance(name, str):
             raise TypeError("Cannot add nodes to the skeleton that are not str")
@@ -462,14 +488,10 @@ class Skeleton:
         self._graph.add_node(Node(name))
 
     def add_nodes(self, name_list: List[str]):
-        """
-        Add a list of nodes representing animal parts to the skeleton.
+        """Add a list of nodes representing animal parts to the skeleton.
 
         Args:
             name_list: List of strings representing the nodes.
-
-        Returns:
-            None
         """
         for node in name_list:
             self.add_node(node)
@@ -617,8 +639,7 @@ class Skeleton:
         self._graph.remove_edge(source_node, destination_node)
 
     def clear_edges(self):
-        """Deletes all edges in skeleton."""
-
+        """Delete all edges in skeleton."""
         for src, dst in self.edges:
             self.delete_edge(src, dst)
 
@@ -642,8 +663,9 @@ class Skeleton:
         """
         node1_node, node2_node = self.find_node(node1), self.find_node(node2)
 
-        # We will represent symmetric pairs in the skeleton via additional edges in the _graph
-        # These edges will have a special attribute signifying they are not part of the skeleton itself
+        # We will represent symmetric pairs in the skeleton via additional edges in the
+        # _graph. These edges will have a special attribute signifying they are not part
+        # of the skeleton itself
 
         if node1 == node2:
             raise ValueError("Cannot add symmetry to the same node.")
@@ -662,8 +684,7 @@ class Skeleton:
         self._graph.add_edge(node2_node, node1_node, type=EdgeType.SYMMETRY)
 
     def delete_symmetry(self, node1: NodeRef, node2: NodeRef):
-        """
-        Deletes a previously established symmetry between two nodes.
+        """Delete a previously established symmetry between two nodes.
 
         Args:
             node1: One node (by `Node` object or name) in symmetric pair.
@@ -694,8 +715,7 @@ class Skeleton:
         self._graph.remove_edges_from(edges)
 
     def get_symmetry(self, node: NodeRef) -> Optional[Node]:
-        """
-        Returns the node symmetric with the specified node.
+        """Return the node symmetric with the specified node.
 
         Args:
             node: Node (by `Node` object or name) to query.
@@ -722,8 +742,7 @@ class Skeleton:
             raise ValueError(f"{node} has more than one symmetry.")
 
     def get_symmetry_name(self, node: NodeRef) -> Optional[str]:
-        """
-        Returns the name of the node symmetric with the specified node.
+        """Return the name of the node symmetric with the specified node.
 
         Args:
             node: Node (by `Node` object or name) to query.
@@ -735,8 +754,7 @@ class Skeleton:
         return None if symmetric_node is None else symmetric_node.name
 
     def __getitem__(self, node_name: str) -> dict:
-        """
-        Retrieves the node data associated with skeleton node.
+        """Retrieve the node data associated with skeleton node.
 
         Args:
             node_name: The name from which to retrieve data.
@@ -755,8 +773,7 @@ class Skeleton:
         return self._graph.nodes.data()[node]
 
     def __contains__(self, node_name: str) -> bool:
-        """
-        Checks if specified node exists in skeleton.
+        """Check if specified node exists in skeleton.
 
         Args:
             node_name: the node name to query
@@ -765,6 +782,10 @@ class Skeleton:
             True if node is in the skeleton.
         """
         return self.has_node(node_name)
+
+    def __len__(self) -> int:
+        """Return the number of nodes in the skeleton."""
+        return len(self.nodes)
 
     def relabel_node(self, old_name: str, new_name: str):
         """

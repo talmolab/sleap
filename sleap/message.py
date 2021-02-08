@@ -21,6 +21,7 @@ from typing import Any, Callable, List, Optional, Text
 @attr.s(auto_attribs=True)
 class BaseMessageParticipant:
     """Base class for simple Sender and Receiver."""
+
     address: Text = "tcp://127.0.0.1:9001"
     context: Optional[zmq.Context] = None
     _socket: Optional[zmq.Socket] = None
@@ -87,7 +88,7 @@ class Receiver(BaseMessageParticipant):
     def check_messages(self, timeout: int = 10, times_to_check: int = 10) -> List[dict]:
         """
         Attempt to receive multiple messages.
-        
+
         This method allows us to keep up with the messages by getting
         multiple messages that have been sent since the last check.
         It keeps checking until limit is reached *or* we check without
@@ -139,7 +140,7 @@ class Sender(BaseMessageParticipant):
         """Sends dictionary + numpy ndarray."""
         if self._socket is None:
             self.setup()
-        
+
         header_data["dtype"] = str(A.dtype)
         header_data["shape"] = A.shape
 

@@ -3,7 +3,9 @@
 import tensorflow as tf
 
 
-def make_offsets(points: tf.Tensor, xv: tf.Tensor, yv: tf.Tensor, stride: int = 1) -> tf.Tensor:
+def make_offsets(
+    points: tf.Tensor, xv: tf.Tensor, yv: tf.Tensor, stride: int = 1
+) -> tf.Tensor:
     """Make point offset maps on a grid.
 
     Args:

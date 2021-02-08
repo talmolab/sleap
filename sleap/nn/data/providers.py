@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 import attr
-from typing import Text, Optional, List, Sequence, Union
+from typing import Text, Optional, List, Sequence, Union, Tuple
 import sleap
 
 
@@ -23,10 +23,13 @@ class LabelsReader:
             the entire labels dataset will be read. These indices will be applicable to
             the labeled frames in `labels` attribute, which may have changed in ordering
             or filtered.
+        user_instances_only: If `True`, load only user labeled instances. If `False`,
+            all instances will be loaded.
     """
 
     labels: sleap.Labels
     example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
+    user_instances_only: bool = False
 
     @classmethod
     def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
@@ -36,17 +39,40 @@ class LabelsReader:
             labels: A `sleap.Labels` instance containing user instances.
 
         Returns:
-            A `LabelsReader` instance that can create a dataset for pipelining. Note
-            that the examples may change in ordering relative to the input `labels`, so
-            be sure to use the `labels` attribute in the returned instance.
+            A `LabelsReader` instance that can create a dataset for pipelining.
         """
-        user_labels = sleap.Labels(
-            [
-                sleap.LabeledFrame(lf.video, lf.frame_idx, lf.training_instances)
-                for lf in labels.user_labeled_frames
-            ]
-        )
-        return cls(labels=user_labels)
+        obj = cls.from_user_labeled_frames(labels)
+        obj.user_instances_only = True
+        return obj
+
+    @classmethod
+    def from_user_labeled_frames(cls, labels: sleap.Labels) -> "LabelsReader":
+        """Create a `LabelsReader` using the user labeled frames in a `Labels` set.
+
+        Args:
+            labels: A `sleap.Labels` instance containing user labeled frames.
+
+        Returns:
+            A `LabelsReader` instance that can create a dataset for pipelining.
+
+            Note that this constructor will load ALL instances in frames that have user
+            instances. To load only user labeled indices, use
+            `LabelsReader.from_user_instances`.
+        """
+        return cls(labels=labels, example_indices=labels.user_labeled_frame_inds)
+
+    @classmethod
+    def from_unlabeled_suggestions(cls, labels: sleap.Labels) -> "LabelsReader":
+        """Create a `LabelsReader` using the unlabeled suggestions in a `Labels` set.
+
+        Args:
+            labels: A `sleap.Labels` instance containing unlabeled suggestions.
+
+        Returns:
+            A `LabelsReader` instance that can create a dataset for pipelining.
+        """
+        inds = labels.get_unlabeled_suggestion_inds()
+        return cls(labels=labels, example_indices=inds)
 
     @classmethod
     def from_filename(
@@ -86,8 +112,6 @@ class LabelsReader:
             "scale",
             "instances",
             "skeleton_inds",
-            "track_inds",
-            "n_tracks",
         ]
 
     @property
@@ -96,9 +120,19 @@ class LabelsReader:
         return self.labels.videos
 
     @property
-    def tracks(self) -> List[sleap.Track]:
-        """Return the list of tracks that `track_inds` in examples match up with."""
-        return self.labels.tracks
+    def max_height_and_width(self) -> Tuple[int, int]:
+        """Return `(height, width)` that is the maximum of all videos."""
+        return max(video.shape[1] for video in self.videos), max(
+            video.shape[2] for video in self.videos
+        )
+
+    @property
+    def is_from_multi_size_videos(self) -> bool:
+        """Return `True` if labels contain videos with different sizes."""
+        return (
+            len(set(v.shape[1] for v in self.videos)) > 1
+            or len(set(v.shape[2] for v in self.videos)) > 1
+        )
 
     def make_dataset(
         self, ds_index: Optional[tf.data.Dataset] = None
@@ -131,35 +165,37 @@ class LabelsReader:
                     containing all of the instances in the frame.
                 "skeleton_inds": Tensor of shape (n_instances,) of dtype tf.int32 that
                     specifies the index of the skeleton used for each instance.
-                "track_inds": Tensor of shape (n_instance,) of dtype tf.int32 that
-                    specifies the index of the instance track identity. If not
-                    specified, in the labels, this is set to -1.
         """
-        # Grab an image to test for the dtype.
-        test_lf = self.labels[0]
-        test_image = tf.convert_to_tensor(test_lf.image)
-        image_dtype = test_image.dtype
+        # Grab the first image to capture dtype and number of color channels.
+        first_image = tf.convert_to_tensor(self.labels[0].image)
+        image_dtype = first_image.dtype
+        image_num_channels = first_image.shape[-1]
 
         def py_fetch_lf(ind):
             """Local function that will not be autographed."""
             lf = self.labels[int(ind.numpy())]
+
             video_ind = np.array(self.videos.index(lf.video)).astype("int32")
             frame_ind = np.array(lf.frame_idx).astype("int64")
+
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
-            instances = np.stack(
-                [inst.points_array.astype("float32") for inst in lf.instances], axis=0
-            )
+
+            if self.user_instances_only:
+                insts = lf.user_instances
+            else:
+                insts = lf.instances
+            insts = [inst for inst in insts if len(inst) > 0]
+            n_instances = len(insts)
+            n_nodes = len(insts[0].skeleton) if n_instances > 0 else 0
+
+            instances = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")
+            for i, instance in enumerate(insts):
+                instances[i] = instance.numpy()
+
             skeleton_inds = np.array(
-                [self.labels.skeletons.index(inst.skeleton) for inst in lf.instances]
+                [self.labels.skeletons.index(inst.skeleton) for inst in insts]
             ).astype("int32")
-            track_inds = np.array(
-                [
-                    self.tracks.index(inst.track) if inst.track is not None else -1
-                    for inst in lf.instances
-                ]
-            ).astype("int32")
-            n_tracks = np.array(len(self.tracks)).astype("int32")
             return (
                 raw_image,
                 raw_image_size,
@@ -167,8 +203,6 @@ class LabelsReader:
                 video_ind,
                 frame_ind,
                 skeleton_inds,
-                track_inds,
-                n_tracks,
             )
 
         def fetch_lf(ind):
@@ -181,26 +215,21 @@ class LabelsReader:
                 video_ind,
                 frame_ind,
                 skeleton_inds,
-                track_inds,
-                n_tracks,
             ) = tf.py_function(
                 py_fetch_lf,
                 [ind],
-                [
-                    image_dtype,
-                    tf.int32,
-                    tf.float32,
-                    tf.int32,
-                    tf.int64,
-                    tf.int32,
-                    tf.int32,
-                    tf.int32,
-                ],
+                [image_dtype, tf.int32, tf.float32, tf.int32, tf.int64, tf.int32],
             )
-            image = tf.ensure_shape(image, test_image.shape)
+
+            # Ensure shape with constant or variable height/width, based on whether or
+            # not the videos have mixed sizes.
+            if self.is_from_multi_size_videos:
+                image = tf.ensure_shape(image, (None, None, image_num_channels))
+            else:
+                image = tf.ensure_shape(image, first_image.shape)
+
             instances = tf.ensure_shape(instances, tf.TensorShape([None, None, 2]))
             skeleton_inds = tf.ensure_shape(skeleton_inds, tf.TensorShape([None]))
-            track_inds = tf.ensure_shape(track_inds, tf.TensorShape([None]))
 
             return {
                 "image": image,
@@ -211,8 +240,6 @@ class LabelsReader:
                 "scale": tf.ones([2], dtype=tf.float32),
                 "instances": instances,
                 "skeleton_inds": skeleton_inds,
-                "track_inds": track_inds,
-                "n_tracks": n_tracks,
             }
 
         if self.example_indices is None:

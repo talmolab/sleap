@@ -3,21 +3,21 @@ Dialogs for running training and/or inference in GUI.
 """
 import cattr
 import os
+import shutil
+import atexit
+import tempfile
+from pathlib import Path
 
-import networkx as nx
-
+import sleap
 from sleap import Labels, Video
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
 
-from typing import Dict, List, Optional, Text
+from typing import Dict, List, Optional, Text, Optional
 
 from PySide2 import QtWidgets, QtCore
 
-
-# Debug option to skip the training run
-SKIP_TRAINING = False
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -84,13 +84,20 @@ class LearningDialog(QtWidgets.QDialog):
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
-        self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.save_button = buttons.addButton(
-            "Save configuration files...", QtWidgets.QDialogButtonBox.ApplyRole
+            "Save configuration files...", QtWidgets.QDialogButtonBox.ActionRole
         )
-        self.run_button = buttons.addButton(
-            "Run", QtWidgets.QDialogButtonBox.AcceptRole
+        self.export_button = buttons.addButton(
+            "Export training job package...", QtWidgets.QDialogButtonBox.ActionRole
         )
+        self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.run_button = buttons.addButton("Run", QtWidgets.QDialogButtonBox.ApplyRole)
+
+        self.save_button.setToolTip("Save scripts and configuration to run pipeline.")
+        self.export_button.setToolTip(
+            "Export data, configuration, and scripts for remote training and inference."
+        )
+        self.run_button.setToolTip("Run pipeline locally (GPU recommended).")
 
         buttons_layout = QtWidgets.QHBoxLayout()
         buttons_layout.addWidget(buttons, alignment=QtCore.Qt.AlignTop)
@@ -132,9 +139,10 @@ class LearningDialog(QtWidgets.QDialog):
         self.connect_signals()
 
         # Connect actions for buttons
-        buttons.accepted.connect(self.run)
-        buttons.rejected.connect(self.reject)
-        buttons.clicked.connect(self.on_button_click)
+        self.save_button.clicked.connect(self.save)
+        self.export_button.clicked.connect(self.export_package)
+        self.cancel_button.clicked.connect(self.reject)
+        self.run_button.clicked.connect(self.run)
 
         # Connect button for previewing the training data
         if "_view_datagen" in self.pipeline_form_widget.buttons:
@@ -450,8 +458,6 @@ class LearningDialog(QtWidgets.QDialog):
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
 
         if predict_frames_choice.startswith("user"):
-            # For inference on user labeled frames, we'll have a single
-            # inference item.
             items_for_inference = runners.ItemsForInference(
                 items=[
                     runners.DatasetItemForInference(
@@ -461,8 +467,6 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
             )
         elif predict_frames_choice.startswith("suggested"):
-            # For inference on all suggested frames, we'll have a single
-            # inference item.
             items_for_inference = runners.ItemsForInference(
                 items=[
                     runners.DatasetItemForInference(
@@ -472,7 +476,6 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
             )
         else:
-            # Otherwise, make an inference item for each video with list of frames.
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
                 frame_selection, total_frame_count=frame_count
             )
@@ -491,24 +494,37 @@ class LearningDialog(QtWidgets.QDialog):
             ]
             if untrained:
                 can_run = False
-                message = f"Cannot run inference with untrained models ({', '.join(untrained)})."
+                message = (
+                    "Cannot run inference with untrained models "
+                    f"({', '.join(untrained)})."
+                )
 
         # Make sure skeleton will be valid for bottom-up inference.
         if self.mode == "training" and self.current_pipeline == "bottom-up":
             skeleton = self.labels.skeletons[0]
 
             if not skeleton.is_arborescence:
-                message += "Cannot run bottom-up pipeline when skeleton is not an arborescence."
+                message += (
+                    "Cannot run bottom-up pipeline when skeleton is not an "
+                    "arborescence."
+                )
 
                 root_names = [n.name for n in skeleton.root_nodes]
                 over_max_in_degree = [n.name for n in skeleton.in_degree_over_one]
                 cycles = skeleton.cycles
 
                 if len(root_names) > 1:
-                    message += f" There are multiple root nodes: {', '.join(root_names)} (there should be exactly one node which is not a target)."
+                    message += (
+                        f" There are multiple root nodes: {', '.join(root_names)} "
+                        "(there should be exactly one node which is not a target)."
+                    )
 
                 if over_max_in_degree:
-                    message += f" There are nodes which are target in multiple edges: {', '.join(over_max_in_degree)} (maximum in-degree should be 1).</li>"
+                    message += (
+                        " There are nodes which are target in multiple edges: "
+                        f"{', '.join(over_max_in_degree)} (maximum in-degree should be "
+                        "1).</li>"
+                    )
 
                 if cycles:
                     cycle_strings = []
@@ -577,26 +593,127 @@ class LearningDialog(QtWidgets.QDialog):
             win.setWindowTitle("Inference Results")
             win.exec_()
 
-    def save(self):
-        models_dir = os.path.join(os.path.dirname(self.labels_filename), "/models")
-        output_dir = FileDialog.openDir(
-            None, directory=models_dir, caption="Select directory to save scripts"
-        )
+    def save(
+        self, output_dir: Optional[str] = None, labels_filename: Optional[str] = None
+    ):
+        """Save scripts and configs to run pipeline."""
+        if output_dir is None:
+            models_dir = os.path.join(os.path.dirname(self.labels_filename), "/models")
+            output_dir = FileDialog.openDir(
+                None, directory=models_dir, caption="Select directory to save scripts"
+            )
 
-        if not output_dir:
-            return
+            if not output_dir:
+                return
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
 
+        if labels_filename is None:
+            labels_filename = self.labels_filename
+
         runners.write_pipeline_files(
             output_dir=output_dir,
-            labels_filename=self.labels_filename,
+            labels_filename=labels_filename,
             config_info_list=config_info_list,
             inference_params=pipeline_form_data,
             items_for_inference=items_for_inference,
         )
+
+    def export_package(self, output_path: Optional[str] = None, gui: bool = True):
+        """Export training job package."""
+        # TODO: Warn if self.mode != "training"?
+        if output_path is None:
+            # Prompt for output path.
+            output_path, _ = FileDialog.save(
+                caption="Export Training Job Package...",
+                dir=f"{self.labels_filename}.training_job.zip",
+                filter="Training Job Package (*.zip)",
+            )
+            if len(output_path) == 0:
+                return
+
+        # Create temp dir before packaging.
+        tmp_dir = tempfile.TemporaryDirectory()
+
+        # Remove the temp dir when program exits in case something goes wrong.
+        # atexit.register(shutil.rmtree, tmp_dir.name, ignore_errors=True)
+
+        # Check if we need to include suggestions.
+        include_suggestions = False
+        items_for_inference = self.get_items_for_inference(
+            self.pipeline_form_widget.get_form_data()
+        )
+        for item in items_for_inference.items:
+            if (
+                isinstance(item, runners.DatasetItemForInference)
+                and item.frame_filter == "suggested"
+            ):
+                include_suggestions = True
+
+        # Save dataset with images.
+        labels_pkg_filename = str(
+            Path(self.labels_filename).with_suffix(".pkg.slp").name
+        )
+        if gui:
+            ret = sleap.gui.commands.export_dataset_gui(
+                self.labels,
+                tmp_dir.name + "/" + labels_pkg_filename,
+                all_labeled=False,
+                suggested=include_suggestions,
+            )
+            if ret == "canceled":
+                # Quit if user canceled during export.
+                tmp_dir.cleanup()
+                return
+        else:
+            self.labels.save(
+                tmp_dir.name + "/" + labels_pkg_filename,
+                with_images=True,
+                embed_all_labeled=False,
+                embed_suggested=include_suggestions,
+            )
+
+        # Save config and scripts.
+        self.save(tmp_dir.name, labels_filename=labels_pkg_filename)
+
+        # Package everything.
+        shutil.make_archive(
+            base_name=str(Path(output_path).with_suffix("")),
+            format="zip",
+            root_dir=tmp_dir.name,
+        )
+
+        msg = f"Saved training job package to: {output_path}"
+        print(msg)
+
+        # Close training editor.
+        self.accept()
+
+        if gui:
+            msgBox = QtWidgets.QMessageBox(text=f"Created training job package:")
+            msgBox.setDetailedText(output_path)
+            msgBox.setWindowTitle("Training Job Package")
+            okButton = msgBox.addButton(QtWidgets.QMessageBox.Ok)
+            openFolderButton = msgBox.addButton(
+                "Open containing folder", QtWidgets.QMessageBox.ActionRole
+            )
+            colabButton = msgBox.addButton(
+                "Go to Colab", QtWidgets.QMessageBox.ActionRole
+            )
+            msgBox.exec_()
+
+            if msgBox.clickedButton() == openFolderButton:
+                sleap.gui.commands.open_file(str(Path(output_path).resolve().parent))
+            elif msgBox.clickedButton() == colabButton:
+                # TODO: Update this to more workflow-tailored notebook.
+                sleap.gui.commands.copy_to_clipboard(output_path)
+                sleap.gui.commands.open_website(
+                    "https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb"
+                )
+
+        tmp_dir.cleanup()
 
 
 class TrainingPipelineWidget(QtWidgets.QWidget):
@@ -619,7 +736,8 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 self.form_widget.set_field_options(
-                    field_name, skeleton.node_names,
+                    field_name,
+                    skeleton.node_names,
                 )
 
         # Connect actions for change to pipeline
@@ -733,7 +851,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
                 self.form_widgets[form_name].set_field_options(
-                    field_name, skeleton.node_names,
+                    field_name,
+                    skeleton.node_names,
                 )
 
         if self._video:
@@ -806,7 +925,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     @classmethod
     def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
-        widget = cls(require_trained=True)
+        widget = cls(require_trained=True, head=cfg_info.head_name)
         widget.acceptSelectedConfigInfo(cfg_info)
         widget.setWindowTitle(cfg_info.path_dir)
         return widget
@@ -890,7 +1009,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     def _set_head(self):
         if self.head:
             self.set_fields_from_key_val_dict(
-                {"_heads_name": self.head,}
+                {
+                    "_heads_name": self.head,
+                }
             )
 
             self.form_widgets["model"].set_field_enabled("_heads_name", False)

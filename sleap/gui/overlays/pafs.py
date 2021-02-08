@@ -82,13 +82,11 @@ class MultiQuiverPlot(QtWidgets.QGraphicsObject):
                 self.affinity_field.append(aff_field_item)
 
     def boundingRect(self) -> QtCore.QRectF:
-        """Method required by Qt.
-        """
+        """Method required by Qt."""
         return QtCore.QRectF()
 
     def paint(self, painter, option, widget=None):
-        """Method required by Qt.
-        """
+        """Method required by Qt."""
         pass
 
 
