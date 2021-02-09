@@ -921,6 +921,22 @@ class Labels(MutableSequence):
         """Return list of all predicted instances."""
         return [inst for inst in self.all_instances if type(inst) == PredictedInstance]
 
+    @property
+    def has_user_instances(self) -> bool:
+        """Return whether the labels contain user instances."""
+        for lf in self.labeled_frames:
+            if lf.has_user_instances:
+                return True
+        return False
+
+    @property
+    def has_predicted_instances(self) -> bool:
+        """Return whether the labels contain predicted instances."""
+        for lf in self.labeled_frames:
+            if lf.has_predicted_instances:
+                return True
+        return False
+
     def describe(self):
         """Print basic statistics about the labels dataset."""
         print(f"Skeleton: {self.skeleton}")
