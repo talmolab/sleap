@@ -29,4 +29,7 @@
    :alt: Latest version
 
 
-.. include:: docs/about.rst
+.. toctree::
+    :maxdepth: 2
+
+    docs/about.rst
