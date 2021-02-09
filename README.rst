@@ -43,7 +43,7 @@
 It supports multi-animal pose estimation and tracking, and includes an advanced labeling/training GUI for active
 learning and proofreading.
 SLEAP is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.
-It is the successor to LEAP_ (`Pereira et al., 2019`_).
+It is the successor to `LEAP <https://github.com/talmo/leap>_` (`Pereira et al., 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
 
 
 References
@@ -54,22 +54,13 @@ If you use **SLEAP** in your research, please cite:
 
 License
 -------
-SLEAP is released under a `Clear BSD License`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
-.. _LEAP: https://github.com/talmo/leap
-.. _Clear BSD License: https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE
-.. _Pereira et al., 2019: https://www.nature.com/articles/s41592-018-0234-5
-.. _sleap.ai: https://sleap.ai
+SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
 
 .. end-inclusion-marker-do-not-remove
 
 Documentation
 ----------------
-* `SLEAP Overview`_
-* `Installation`_
-* `Getting Started`_
-* `Guides and Examples`_
-
-.. _SLEAP Overview: https://sleap.ai/overview.html
-.. _Installation: https://sleap.ai/installation.html
-.. _Getting Started: https://sleap.ai/getting_started.html
-.. _Guides and Examples: https://sleap.ai/guides.html
+* `SLEAP Overview <https://sleap.ai/overview.html>`_
+* `Installation <https://sleap.ai/installation.html>`_
+* `Getting Started <https://sleap.ai/getting_started.html>`_
+* `Guides and Examples <https://sleap.ai/guides.html>`_
