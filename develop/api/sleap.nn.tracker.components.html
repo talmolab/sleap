@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.tracker.kalman" href="sleap.nn.tracker.kalman.html" /><link rel="prev" title="sleap.nn.viz" href="sleap.nn.viz.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.tracker.kalman" href="sleap.nn.tracker.kalman.html" /><link rel="prev" title="sleap.nn.architectures.upsampling" href="sleap.nn.architectures.upsampling.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
         <title>sleap.nn.tracker.components - SLEAP (develop)</title>
@@ -146,11 +146,27 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">1. Example analysis data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#loading-the-data">2. Loading the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#fill-missing-values">3. Fill missing values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#visualize-thorax-movement-across-video">4. Visualize thorax movement across video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#more-advanced-visualizations">5. More advanced visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#clustering">6. Clustering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
@@ -186,8 +202,12 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
@@ -197,6 +217,8 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -213,19 +235,6 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">GitHub</a></li>
@@ -256,7 +265,7 @@ matrix.</p></li>
 </ol>
 <dl class="py class">
 <dt id="sleap.nn.tracker.components.FrameMatches">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">FrameMatches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">matches</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.nn.tracker.components.Match" title="sleap.nn.tracker.components.Match">sleap.nn.tracker.components.Match</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">unmatched_instances</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/tracker/components.py#L371-L507"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">FrameMatches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">matches</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.nn.tracker.components.Match" title="sleap.nn.tracker.components.Match">sleap.nn.tracker.components.Match</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">unmatched_instances</span><span class="p">:</span> <span class="n">List<span class="p">[</span>InstanceType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/tracker/components.py#L371-L510"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.FrameMatches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates (and stores) matches for a frame.</p>
 <p>This class encapsulates the logic to generate matches (using a custom
 matching function) from a cost matrix. One key feature is that it retains
@@ -373,7 +382,7 @@ only use score to determine which instances to remove.</p></li>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.tracker.components.first_choice_matching">
-<code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">first_choice_matching</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> → List<span class="p">[</span>Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/tracker/components.py#L510-L520"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.first_choice_matching" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sleap.nn.tracker.components.</code><code class="sig-name descname">first_choice_matching</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cost_matrix</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> → List<span class="p">[</span>Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><span class="p">]</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/tracker/components.py#L513-L523"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracker.components.first_choice_matching" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns match indices where each row gets matched to best column.</p>
 <p>The means that multiple rows might be matched to the same column.</p>
 </dd></dl>
@@ -417,14 +426,14 @@ only use score to determine which instances to remove.</p></li>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="sleap.nn.viz.html">
+          <a class="prev-page" href="sleap.nn.architectures.upsampling.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">sleap.nn.viz</div>
+                <div class="title">sleap.nn.architectures.upsampling</div>
                 
               </div>
             </a>

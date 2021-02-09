@@ -73,6 +73,7 @@ Documentation
     tutorials/tutorial
     guides/index
     guides/reference
+    notebooks/index
     API <api>
     GitHub <https://github.com/murthylab/sleap>
     Releases <https://github.com/murthylab/sleap/releases>
