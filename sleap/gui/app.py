@@ -93,6 +93,7 @@ from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
+from sleap.gui.overlays.instance_list import InstanceListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.release_checker import ReleaseChecker
@@ -1143,6 +1144,7 @@ class MainWindow(QMainWindow):
         self.overlays["instance"] = InstanceOverlay(
             self.labels, self.player, self.state
         )
+        self.overlays["instance_list"] = InstanceListOverlay(self.labels, self.player)
 
         # When gui state changes, we also want to set corresponding attribute
         # on overlay (or color manager shared by overlays) so that they can
