@@ -1,4 +1,5 @@
-.. include:: about.rst
+.. include:: ../README.rst
+  :start-after: inclusion-marker-do-not-remove
 
 Getting started
 --------------------------
