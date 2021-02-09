@@ -59,7 +59,8 @@ SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/
 .. end-inclusion-marker-do-not-remove
 
 Documentation
-----------------
+-------------
+* `Homepage <https://sleap.ai>`_
 * `SLEAP Overview <https://sleap.ai/overview.html>`_
 * `Installation <https://sleap.ai/installation.html>`_
 * `Getting Started <https://sleap.ai/getting_started.html>`_
