@@ -44,7 +44,7 @@ It supports multi-animal pose estimation and tracking, and includes an advanced 
 learning and proofreading.
 SLEAP is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.
 It is the successor to `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al., 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
-
+To learn more about SLEAP and multi-animal pose tracking download our `preprint on bioRxiv <https://doi.org/10.1101/2020.08.31.276246>`_ or watch the `tutorial on SLEAP <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_.
 
 References
 ----------
@@ -55,6 +55,32 @@ If you use **SLEAP** in your research, please cite:
 License
 -------
 SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
+
+Contact
+-------
+
+Follow `@MurthyLab <https://twitter.com/MurthyLab>`_ on Twitter for news and updates!
+
+**Technical issue with the software?** `Open an issue on GitHub. <https://github.com/murthylab/sleap/issues>`_
+
+**Press inquiries? Interested in using SLEAP in a commercial application?** Reach out at `sleap@princeton.edu`_.
+
+.. _sleap@princeton.edu: sleap@princeton.edu
+
+
+.. _Contributors:
+
+Contributors
+------------
+
+* **Talmo Pereira**, Princeton Neuroscience Institute, Princeton University
+* **Arie Matsliah**, Princeton Neuroscience Institute, Princeton University
+* **Nat Tabris**, Princeton Neuroscience Institute, Princeton University
+* **David Turner**, Research Computing and Princeton Neuroscience Institute, Princeton University
+* **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
+* **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
+
+SLEAP was developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
 
 .. end-inclusion-marker-do-not-remove
 
