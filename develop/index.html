@@ -253,8 +253,27 @@
         <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="getting-started">
-<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+        <div class="section" id="social-leap-estimates-animal-pose-sleap">
+<h1>Social LEAP Estimates Animal Pose (SLEAP)<a class="headerlink" href="#social-leap-estimates-animal-pose-sleap" title="Permalink to this headline">¶</a></h1>
+<a class="reference internal image-reference" href="https://sleap.ai/docs/_static/sleap_movie.gif"><img alt="https://sleap.ai/docs/_static/sleap_movie.gif" src="https://sleap.ai/docs/_static/sleap_movie.gif" style="width: 600px;"/></a>
+<div class="line-block">
+<div class="line"><br/></div>
+</div>
+<p><strong>S</strong>ocial <strong>L</strong>EAP <strong>E</strong>stimates <strong>A</strong>nimal <strong>P</strong>ose (<strong>SLEAP</strong>) is a framework for multi-animal
+body part position estimation via deep learning. It is the successor to <a href="#id5"><span class="problematic" id="id6">LEAP_</span></a> (<a href="#id7"><span class="problematic" id="id8">`Pereira et al., 2019`_</span></a>). <strong>SLEAP</strong> is written entirely in
+Python, supports multi-animal pose estimation, animal instance tracking, and comes with a labeling/training GUI that
+supports active learning.</p>
+<p>If you use <strong>SLEAP</strong> in your research, please cite:</p>
+<blockquote>
+<div><p>Talmo D. Pereira, Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. “SLEAP: Multi-Animal Pose Tracking.” <em>bioRxiv</em>. <a class="reference external" href="https://doi.org/10.1101/2020.08.31.276246">https://doi.org/10.1101/2020.08.31.276246</a>.</p>
+</div></blockquote>
+<p>SLEAP is released under a <a href="#id9"><span class="problematic" id="id10">`Clear BSD License`_</span></a> and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
+.. _LEAP: <a class="reference external" href="https://github.com/talmo/leap">https://github.com/talmo/leap</a>
+.. _Clear BSD License: <a class="reference external" href="https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE">https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE</a>
+.. _Pereira et al., 2019: <a class="reference external" href="https://www.nature.com/articles/s41592-018-0234-5">https://www.nature.com/articles/s41592-018-0234-5</a>
+.. _sleap.ai: <a class="reference external" href="https://sleap.ai">https://sleap.ai</a></p>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
 <p>Once you install SLEAP (see our <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> instructions) you should start by following the step-by-step <a class="reference internal" href="tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>. This will guide you through the process of creating a project, adding videos, creating a skeleton for each animal in the video, labeling a few frames, and then training a model.</p>
 <p>After installation you can also try running SLEAP on our <a class="reference external" href="https://github.com/murthylab/sleap-datasets">sample datasets</a>—this allows you to try out training and inference before you’ve labeled your own data for training.</p>
 <p>When you’re ready to train you will have three choices for models: single animal, multi-animal top-down, or multi-animal bottom-up. To deal with more than one animal (multiple instances), we implement both “top-down” and “bottom-up” approaches.</p>
@@ -268,18 +287,18 @@
 <p>After you have accurate frame-by-frame prediction, you’re ready to predict for entire video clips and to track animal identities. We use a variety of heuristic algorithms for tracking identities across time (see <a class="reference internal" href="guides/proofreading.html#tracking-method-details"><span class="std std-ref">Tracking methods</span></a> for more details). SLEAP also includes a graphical proof-reading tool for quickly assessing the accuracy of tracking and correcting problems.</p>
 </div>
 <div class="section" id="learn-more">
-<span id="id1"></span><h1>Learn more<a class="headerlink" href="#learn-more" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h2>Learn more<a class="headerlink" href="#learn-more" title="Permalink to this headline">¶</a></h2>
 <p>Want to learn more about SLEAP and multi-animal pose tracking?</p>
 <p>Check out our <a class="reference external" href="https://doi.org/10.1101/2020.08.31.276246">preprint on bioRxiv</a> or watch our <a class="reference external" href="https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking">tutorial on SLEAP</a>.</p>
 </div>
 <div class="section" id="contact">
-<span id="id2"></span><h1>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h1>
+<span id="id2"></span><h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
 <p>Follow <a class="reference external" href="https://twitter.com/MurthyLab">@MurthyLab</a> on Twitter for news and updates!</p>
 <p><strong>Technical issue with the software?</strong> <a class="reference external" href="https://github.com/murthylab/sleap/issues">Open an issue on GitHub.</a></p>
 <p><strong>Press inquiries? Interested in using SLEAP in a commercial application?</strong> Reach out at <a class="reference external" href="mailto:sleap%40princeton.edu">sleap<span>@</span>princeton<span>.</span>edu</a>.</p>
 </div>
 <div class="section" id="contributors">
-<span id="id3"></span><h1>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h1>
+<span id="id3"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Talmo Pereira</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
 <li><p><strong>Nat Tabris</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
@@ -290,7 +309,7 @@
 <p>SLEAP was developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.</p>
 </div>
 <div class="section" id="documentation">
-<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound" id="sleap">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
@@ -419,12 +438,13 @@
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<span id="id4"></span><h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<span id="id4"></span><h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
+</div>
 </div>
 
       </article>
@@ -471,12 +491,15 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Getting started</a></li>
+<li><a class="reference internal" href="#">Social LEAP Estimates Animal Pose (SLEAP)</a><ul>
+<li><a class="reference internal" href="#getting-started">Getting started</a></li>
 <li><a class="reference internal" href="#learn-more">Learn more</a></li>
 <li><a class="reference internal" href="#contact">Contact</a></li>
 <li><a class="reference internal" href="#contributors">Contributors</a></li>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
 </ul>
 
           </div>
