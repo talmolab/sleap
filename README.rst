@@ -43,7 +43,7 @@
 It supports multi-animal pose estimation and tracking, and includes an advanced labeling/training GUI for active
 learning and proofreading.
 SLEAP is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.
-It is the successor to `LEAP <https://github.com/talmo/leap>_` (`Pereira et al., 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
+It is the successor to `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al., 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
 
 
 References
