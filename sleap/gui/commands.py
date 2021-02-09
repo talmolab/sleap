@@ -1962,7 +1962,6 @@ class AddSuggestion(EditCommand):
         context.labels.add_suggestion(
             context.state["video"], context.state["frame_idx"]
         )
-        context.app.suggestionsTable.selectRow(len(context.labels) - 1)
 
 
 class RemoveSuggestion(EditCommand):

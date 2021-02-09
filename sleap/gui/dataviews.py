@@ -342,7 +342,8 @@ class GenericTableView(QtWidgets.QTableView):
 
     def selectRow(self, idx: int):
         """Select row corresponding to index."""
-        self.selectRowItem(self.model().original_items[idx])
+        if len(self.model().original_items) > idx:
+            self.selectRowItem(self.model().original_items[idx])
 
     def getSelectedRowItem(self) -> Any:
         """Return item corresponding to currently selected row.
@@ -466,7 +467,7 @@ class LabeledFrameTableModel(GenericTableModel):
 
 
 class SuggestionsTableModel(GenericTableModel):
-    properties = ("labeled", "mean score", "group", "video", "frame")
+    properties = ("labeled", "score", "group", "frame", "video")
 
     def item_to_data(self, obj, item):
         labels = self.context.labels
