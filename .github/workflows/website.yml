@@ -10,7 +10,7 @@ on:
       - arie/docs
     paths:
       - 'docs/**'
-      - 'README.md'
+      - 'README.rst'
       - '.github/workflows/website.yml'
 
 jobs:

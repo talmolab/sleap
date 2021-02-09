@@ -171,8 +171,7 @@ napoleon_attr_annotations = True
 
 # -- Extension configuration -------------------------------------------------
 # We copy some the files in _static to an alternative location
-# of docs/_static in order to have paths work for README.rst and index.rst
-# (which includes readme.rst)
+# of docs/_static in order to have paths work for about.rst and index.rst
 
 _docs_static_path = f"{os.environ['BUILDDIR']}/html/docs/_static"
 if os.path.exists(_docs_static_path):
