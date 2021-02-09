@@ -15,7 +15,6 @@ Next Steps
     guides/index
     guides/reference
     notebooks/index
-    :ref:`genindex`
     Developer API <api>
     GitHub <https://github.com/murthylab/sleap>
     Releases <https://github.com/murthylab/sleap/releases>
