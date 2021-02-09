@@ -8,7 +8,7 @@ SOURCEDIR     = .
 BUILDDIR      = ./build
 
 # Export the BUILDDIR so we can pick it up in conf.py. We need this to
-# be able to copy some the files in _static to an alternative location
+# be able to copy some of the files in _static to an alternative location
 # of docs/_static in order to have paths work for README.rst and index.rst
 # (which includes readme.rst)
 export BUILDDIR
