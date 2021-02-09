@@ -1,5 +1,6 @@
 .. include:: ../README.rst
-  :start-after: inclusion-marker-do-not-remove
+  :start-after: start-inclusion-marker-do-not-remove
+  :end-before: end-inclusion-marker-do-not-remove
 
 Getting started
 --------------------------
