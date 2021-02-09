@@ -107,7 +107,7 @@ class LoadImageWorker(QtCore.QObject):
         # event to event queue from the request handler.
         self.process.connect(self.doProcessing)
 
-        # Start timer which will trigger processing events every 20 msec. when we're free
+        # Start timer which will trigger processing events every 20 ms when we're free
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.doProcessing)
         self.timer.start(20)
@@ -936,7 +936,6 @@ class GraphicsView(QGraphicsView):
         if event.button() == Qt.LeftButton:
 
             if event.modifiers() == Qt.NoModifier:
-
                 if self.click_mode == "area":
                     self.setDragMode(QGraphicsView.RubberBandDrag)
                 elif self.click_mode == "point":
@@ -1427,6 +1426,9 @@ class QtNode(QGraphicsEllipseItem):
         self.setCursor(Qt.ArrowCursor)
 
         if event.button() == Qt.LeftButton:
+            # Select instance this nodes belong to.
+            self.parentObject().player.state["instance"] = self.parentObject().instance
+
             # Alt-click to drag instance
             if event.modifiers() == Qt.AltModifier:
                 self.dragParent = True
@@ -1444,6 +1446,9 @@ class QtNode(QGraphicsEllipseItem):
 
             self.point.complete = True  # FIXME: move to command
         elif event.button() == Qt.RightButton:
+            # Select instance this nodes belong to.
+            self.parentObject().player.state["instance"] = self.parentObject().instance
+
             # Right-click to toggle node as missing from this instance
             self.toggleVisibility()
             # Disable contextual menu for right clicks on node
@@ -1456,7 +1461,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, event):
         """Custom event handler for mouse move."""
-        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
@@ -1465,9 +1469,11 @@ class QtNode(QGraphicsEllipseItem):
                 user_change=False
             )  # don't count change until mouse release
 
+        # Update selection box.
+        self.parentObject().updateBox()
+
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
-        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
@@ -1823,12 +1829,14 @@ class QtInstance(QGraphicsObject):
 
     def getPointsBoundingRect(self) -> QRectF:
         """Returns a rect which contains all the nodes in the skeleton."""
-        points = [node.point for node in self.nodes.values()]
+        points = [
+            (node.scenePos().x(), node.scenePos().y()) for node in self.nodes.values()
+        ]
         top_left = QPointF(
-            min((point.x for point in points)), min((point.y for point in points))
+            min((point[0] for point in points)), min((point[1] for point in points))
         )
         bottom_right = QPointF(
-            max((point.x for point in points)), max((point.y for point in points))
+            max((point[0] for point in points)), max((point[1] for point in points))
         )
         rect = QRectF(top_left, bottom_right)
         return rect
