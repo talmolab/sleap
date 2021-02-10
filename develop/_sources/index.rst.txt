@@ -14,8 +14,8 @@ Documentation and Resources
     installation
     tutorials/tutorial
     guides/index
-    guides/reference
     notebooks/index
     Developer API <api>
-    GitHub <https://github.com/murthylab/sleap>
+    Sourcecode <https://github.com/murthylab/sleap>
     Releases <https://github.com/murthylab/sleap/releases>
+    Sample Datasets <https://github.com/murthylab/sleap-datasets>

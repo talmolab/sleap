@@ -1,7 +1,7 @@
 .. _notebooks:
 
 Notebooks
-========
+---------
 
 Check out these notebooks.
 
