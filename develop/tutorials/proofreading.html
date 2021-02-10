@@ -1,10 +1,10 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="7. Export Data For Analysis" href="analysis.html" /><link rel="prev" title="4. Prediction-assisted labeling" href="assisted-labeling.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Export Data For Analysis" href="analysis.html" /><link rel="prev" title="Prediction-assisted labeling" href="assisted-labeling.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
-        <title>6. Tracking instances across frames - SLEAP (develop)</title>
+        <title>Tracking instances across frames - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -120,16 +120,15 @@
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="tutorial.html">Tutorial</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="new-project.html">1. Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">2. Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-training.html">3. Quick Training and Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">4. Prediction-assisted labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">6. Tracking instances across frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analysis.html">7. Export Data For Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -256,7 +255,7 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <div class="section" id="tracking-instances-across-frames">
-<span id="proofreading-tutorial"></span><h1><span class="section-number">6. </span>Tracking instances across frames<a class="headerlink" href="#tracking-instances-across-frames" title="Permalink to this headline">¶</a></h1>
+<span id="proofreading-tutorial"></span><h1>Tracking instances across frames<a class="headerlink" href="#tracking-instances-across-frames" title="Permalink to this headline">¶</a></h1>
 <p>When you’re satisfied with the predictions you’re getting, you can use your models to predict on more frames by selecting
 “<strong>Run Inference…</strong>” from the “Predict” menu. This will use the most
 recently trained set of models.</p>
@@ -270,7 +269,7 @@ of models), but if you want to choose another trained model, you can do this
 by using the dropdown menu on the tab for the relevant model type.</p>
 <p><img alt="model-selection" src="../_images/model-selection.jpg"/></p>
 <div class="section" id="track-proofreading">
-<span id="id1"></span><h2><span class="section-number">6.1. </span>Track proofreading<a class="headerlink" href="#track-proofreading" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Track proofreading<a class="headerlink" href="#track-proofreading" title="Permalink to this headline">¶</a></h2>
 <p>Once you have predicted tracks, you’ll need to proofread these to ensure
 that the identities of instances across frames are correct. By default,
 predicted instances all appear in grey and yellow. Select “Color
@@ -318,7 +317,7 @@ which a new track is spawned.</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title"><span class="section-number">7. </span>Export Data For Analysis</div>
+                <div class="title">Export Data For Analysis</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -329,7 +328,7 @@ which a new track is spawned.</p>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title"><span class="section-number">4. </span>Prediction-assisted labeling</div>
+                <div class="title">Prediction-assisted labeling</div>
                 
               </div>
             </a>
@@ -363,8 +362,8 @@ which a new track is spawned.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">6. Tracking instances across frames</a><ul>
-<li><a class="reference internal" href="#track-proofreading">6.1. Track proofreading</a></li>
+<li><a class="reference internal" href="#">Tracking instances across frames</a><ul>
+<li><a class="reference internal" href="#track-proofreading">Track proofreading</a></li>
 </ul>
 </li>
 </ul>

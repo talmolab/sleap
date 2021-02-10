@@ -1,10 +1,10 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="3. Quick Training and Inference" href="initial-training.html" /><link rel="prev" title="1. Creating a project" href="new-project.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Training and Inference" href="initial-training.html" /><link rel="prev" title="Creating a project" href="new-project.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
-        <title>2. Initial Labeling - SLEAP (develop)</title>
+        <title>Initial Labeling - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -120,16 +120,15 @@
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="tutorial.html">Tutorial</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="new-project.html">1. Creating a project</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">2. Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-training.html">3. Quick Training and Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">4. Prediction-assisted labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proofreading.html">6. Tracking instances across frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analysis.html">7. Export Data For Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -256,7 +255,7 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <div class="section" id="initial-labeling">
-<span id="id1"></span><h1><span class="section-number">2. </span>Initial Labeling<a class="headerlink" href="#initial-labeling" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>Initial Labeling<a class="headerlink" href="#initial-labeling" title="Permalink to this headline">¶</a></h1>
 <p>We start by assembling a candidate group of images to label. You can
 either pick your own frames or let the system suggest a set of frames
 using the “Labeling Suggestions” panel. SLEAP can give you random or
@@ -267,7 +266,7 @@ frames by taking the image features into account.</p>
 <p>(See <a class="reference internal" href="../guides/reference.html#suggestion-methods"><span class="std std-ref">Labeling Suggestions</span></a> for more information about the suggestion methods.)</p>
 <p>You can then move between suggested frames by double-clicking the frame information in the table or by clicking the “Prev” or “Next” buttons.</p>
 <div class="section" id="labeling-the-first-frame">
-<h2><span class="section-number">2.1. </span>Labeling the first frame<a class="headerlink" href="#labeling-the-first-frame" title="Permalink to this headline">¶</a></h2>
+<h2>Labeling the first frame<a class="headerlink" href="#labeling-the-first-frame" title="Permalink to this headline">¶</a></h2>
 <p>Start by adding an <strong>instance</strong> of the skeleton to the current image by
 clicking the “<strong>New Instance</strong>” button in the Instances panel. The
 first instance will have its points located at random. Move the points
@@ -288,7 +287,7 @@ your animal in the frame. Otherwise, the models may learn to not
 identify things that look like the instances you didn’t label.</p>
 </div>
 <div class="section" id="saving">
-<h2><span class="section-number">2.2. </span>Saving<a class="headerlink" href="#saving" title="Permalink to this headline">¶</a></h2>
+<h2>Saving<a class="headerlink" href="#saving" title="Permalink to this headline">¶</a></h2>
 <p>Since this is a new project, you’ll need to select a location and name
 the first time you save. SLEAP will ask you to save before closing any
 project that has been changed to avoid losing any work. Note: There is
@@ -297,7 +296,7 @@ temporary changes to a project, use the “<strong>Save As…</strong>” comman
 a copy of your project.</p>
 </div>
 <div class="section" id="labeling-more-frames">
-<h2><span class="section-number">2.3. </span>Labeling more frames<a class="headerlink" href="#labeling-more-frames" title="Permalink to this headline">¶</a></h2>
+<h2>Labeling more frames<a class="headerlink" href="#labeling-more-frames" title="Permalink to this headline">¶</a></h2>
 <p>After labeling the first frame and saving the project, it’s time to label
 more frames. Since you generated a list of suggested frames, you can go to the next frame in the labeling set by clicking “<strong>Next</strong>” under the list of suggested frames. You can also always pick a frame to label by using the seekbar under
 the video. Suggested and labeled frames will be shown as empty and filled blue bars, respectively.</p>
@@ -321,7 +320,7 @@ predicting body part locations.</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title"><span class="section-number">3. </span>Quick Training and Inference</div>
+                <div class="title">Quick Training and Inference</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -332,7 +331,7 @@ predicting body part locations.</p>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title"><span class="section-number">1. </span>Creating a project</div>
+                <div class="title">Creating a project</div>
                 
               </div>
             </a>
@@ -366,10 +365,10 @@ predicting body part locations.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">2. Initial Labeling</a><ul>
-<li><a class="reference internal" href="#labeling-the-first-frame">2.1. Labeling the first frame</a></li>
-<li><a class="reference internal" href="#saving">2.2. Saving</a></li>
-<li><a class="reference internal" href="#labeling-more-frames">2.3. Labeling more frames</a></li>
+<li><a class="reference internal" href="#">Initial Labeling</a><ul>
+<li><a class="reference internal" href="#labeling-the-first-frame">Labeling the first frame</a></li>
+<li><a class="reference internal" href="#saving">Saving</a></li>
+<li><a class="reference internal" href="#labeling-more-frames">Labeling more frames</a></li>
 </ul>
 </li>
 </ul>

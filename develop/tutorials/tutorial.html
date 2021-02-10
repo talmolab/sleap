@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="1. Creating a project" href="new-project.html" /><link rel="prev" title="Installation" href="../installation.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Creating a project" href="new-project.html" /><link rel="prev" title="Installation" href="../installation.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
         <title>Tutorial - SLEAP (develop)</title>
@@ -120,16 +120,15 @@
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Tutorial</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="new-project.html">1. Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">2. Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-training.html">3. Quick Training and Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">4. Prediction-assisted labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proofreading.html">6. Tracking instances across frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analysis.html">7. Export Data For Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -257,41 +256,30 @@
         </label>
         <div class="section" id="tutorial">
 <span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
-<p>Before you can use SLEAP, you’ll need to install it. Follow the
-instructions at <a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Installation</span></a> to install SLEAP and
-start the GUI app.</p>
-<p>There are three main stages of using SLEAP:</p>
-<ol class="arabic simple">
-<li><p>Creating a project, opening a movie and defining the skeleton;</p></li>
-<li><p>Labeling and learning, labeling of video frames assisted by network
-predictions;</p></li>
-<li><p>Prediction and proofreading, final network predictions of body-part
-positions and proofreading of track identities in full videos.</p></li>
-</ol>
-<p>The tutorial will walk you through this entire process. You can read through the tutorial and then try running SLEAP on our <a class="reference external" href="https://github.com/murthylab/sleap-datasets">sample datasets</a>—this will allow you to try out training and inference before you’ve labeled your own data for training.</p>
+<p>The tutorial will walk you through the entire SLEAP workflow as described in the <a class="reference internal" href="../overview.html#high-level-overview"><span class="std std-ref">High-level Overview</span></a>. You can read through this tutorial and try running SLEAP on one of our <a class="reference external" href="https://github.com/murthylab/sleap-datasets">sample datasets</a>. Then you will be ready to start using SLEAP on your own data.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="new-project.html">1. Creating a project</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="new-project.html#opening-a-video">1.1. Opening a video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="new-project.html#creating-the-skeleton">1.2. Creating the Skeleton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-project.html">Creating a project</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html#opening-a-video">Opening a video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html#creating-the-skeleton">Creating the Skeleton</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="initial-labeling.html">2. Initial Labeling</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html#labeling-the-first-frame">2.1. Labeling the first frame</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html#saving">2.2. Saving</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html#labeling-more-frames">2.3. Labeling more frames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="initial-labeling.html">Initial Labeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html#labeling-the-first-frame">Labeling the first frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html#saving">Saving</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html#labeling-more-frames">Labeling more frames</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="initial-training.html">3. Quick Training and Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="assisted-labeling.html">4. Prediction-assisted labeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="proofreading.html">6. Tracking instances across frames</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="proofreading.html#track-proofreading">6.1. Track proofreading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html#track-proofreading">Track proofreading</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="analysis.html">7. Export Data For Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="analysis.html#matlab">7.1. MATLAB</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analysis.html#python">7.2. Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Export Data For Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#matlab">MATLAB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#python">Python</a></li>
 </ul>
 </li>
 </ul>
@@ -307,7 +295,7 @@ positions and proofreading of track identities in full videos.</p></li>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title"><span class="section-number">1. </span>Creating a project</div>
+                <div class="title">Creating a project</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>

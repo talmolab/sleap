@@ -10,7 +10,6 @@ Documentation and Resources
     :maxdepth: 1
 
     overview
-    getting_started
     installation
     tutorials/tutorial
     guides/index

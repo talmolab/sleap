@@ -1,10 +1,10 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Guides" href="../guides/index.html" /><link rel="prev" title="6. Tracking instances across frames" href="proofreading.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Guides" href="../guides/index.html" /><link rel="prev" title="Tracking instances across frames" href="proofreading.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
-        <title>7. Export Data For Analysis - SLEAP (develop)</title>
+        <title>Export Data For Analysis - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -120,16 +120,15 @@
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="tutorial.html">Tutorial</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="new-project.html">1. Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">2. Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-training.html">3. Quick Training and Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">4. Prediction-assisted labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proofreading.html">6. Tracking instances across frames</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">7. Export Data For Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Export Data For Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -256,11 +255,11 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <div class="section" id="export-data-for-analysis">
-<span id="export-analysis"></span><h1><span class="section-number">7. </span>Export Data For Analysis<a class="headerlink" href="#export-data-for-analysis" title="Permalink to this headline">¶</a></h1>
+<span id="export-analysis"></span><h1>Export Data For Analysis<a class="headerlink" href="#export-data-for-analysis" title="Permalink to this headline">¶</a></h1>
 <p>The easiest way to work with the data from SLEAP is to export an HDF5 file by choosing “<strong>Export Analysis HDF5…</strong>” in the “File” menu.</p>
 <p>See <a class="reference internal" href="../api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for an explanation of the datasets inside the file.</p>
 <div class="section" id="matlab">
-<h2><span class="section-number">7.1. </span>MATLAB<a class="headerlink" href="#matlab" title="Permalink to this headline">¶</a></h2>
+<h2>MATLAB<a class="headerlink" href="#matlab" title="Permalink to this headline">¶</a></h2>
 <p>You can read this file in MATLAB like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">occupancy_matrix</span> <span class="o">=</span> <span class="n">h5read</span><span class="p">(</span><span class="s1">'path/to/analysis.h5'</span><span class="p">,</span><span class="s1">'/track_occupancy'</span><span class="p">)</span>
 <span class="n">tracks_matrix</span> <span class="o">=</span> <span class="n">h5read</span><span class="p">(</span><span class="s1">'path/to/analysis.h5'</span><span class="p">,</span><span class="s1">'/tracks'</span><span class="p">)</span>
@@ -269,7 +268,7 @@
 <p>See <a class="reference external" href="https://www.mathworks.com/help/matlab/ref/h5read.html">here</a> for more information about working with HDF5 files in MATLAB.</p>
 </div>
 <div class="section" id="python">
-<h2><span class="section-number">7.2. </span>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
+<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
 <p>To read the file in Python you’ll first need to install the <a class="reference external" href="http://docs.h5py.org/en/stable/">h5py package</a>. You can then read data from the file like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5py</span>
 <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s1">'path/to/analysis.h5'</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -304,7 +303,7 @@
                   <span>Previous</span>
                 </div>
                 
-                <div class="title"><span class="section-number">6. </span>Tracking instances across frames</div>
+                <div class="title">Tracking instances across frames</div>
                 
               </div>
             </a>
@@ -338,9 +337,9 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">7. Export Data For Analysis</a><ul>
-<li><a class="reference internal" href="#matlab">7.1. MATLAB</a></li>
-<li><a class="reference internal" href="#python">7.2. Python</a></li>
+<li><a class="reference internal" href="#">Export Data For Analysis</a><ul>
+<li><a class="reference internal" href="#matlab">MATLAB</a></li>
+<li><a class="reference internal" href="#python">Python</a></li>
 </ul>
 </li>
 </ul>

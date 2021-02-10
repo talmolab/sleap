@@ -1,10 +1,10 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="6. Tracking instances across frames" href="proofreading.html" /><link rel="prev" title="3. Quick Training and Inference" href="initial-training.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tracking instances across frames" href="proofreading.html" /><link rel="prev" title="Quick Training and Inference" href="initial-training.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
-        <title>4. Prediction-assisted labeling - SLEAP (develop)</title>
+        <title>Prediction-assisted labeling - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -120,16 +120,15 @@
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="tutorial.html">Tutorial</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="new-project.html">1. Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">2. Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-training.html">3. Quick Training and Inference</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">4. Prediction-assisted labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proofreading.html">6. Tracking instances across frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analysis.html">7. Export Data For Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -256,7 +255,7 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <div class="section" id="prediction-assisted-labeling">
-<span id="assisted-labeling"></span><h1><span class="section-number">4. </span>Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permalink to this headline">¶</a></h1>
+<span id="assisted-labeling"></span><h1>Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permalink to this headline">¶</a></h1>
 <p><em>Prediction-assisted labeling</em> has two main goals. First, it speeds up the labeling
 process as it is faster to correct a predicted instance which is mostly
 correct than it is to add a new instance from scratch. Second, it
@@ -270,7 +269,7 @@ predicted. Suggested frames with predicted instances will be marked in
 red on the seekbar.</p>
 </div>
 <div class="section" id="reviewing-and-fixing-predictions">
-<h1><span class="section-number">5. </span>Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permalink to this headline">¶</a></h1>
+<h1>Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permalink to this headline">¶</a></h1>
 <p>After you’ve successfully trained models and predicted some instances,
 you’ll get a message that inference has finished.
 Predictions will be marked with a thin black line on the seekbar, while frames
@@ -300,7 +299,7 @@ since active learning will return predictions for just these frames.</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title"><span class="section-number">6. </span>Tracking instances across frames</div>
+                <div class="title">Tracking instances across frames</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -311,7 +310,7 @@ since active learning will return predictions for just these frames.</p>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title"><span class="section-number">3. </span>Quick Training and Inference</div>
+                <div class="title">Quick Training and Inference</div>
                 
               </div>
             </a>
@@ -345,8 +344,8 @@ since active learning will return predictions for just these frames.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">4. Prediction-assisted labeling</a></li>
-<li><a class="reference internal" href="#reviewing-and-fixing-predictions">5. Reviewing and fixing predictions</a></li>
+<li><a class="reference internal" href="#">Prediction-assisted labeling</a></li>
+<li><a class="reference internal" href="#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
 </ul>
 
           </div>
