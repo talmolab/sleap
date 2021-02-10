@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Getting started" href="getting_started.html" /><link rel="prev" title="SLEAP - Social LEAP Estimates Animal Pose" href="index.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
-        <title>Workflow Overview - SLEAP (develop)</title>
+        <title>High-level Overview - SLEAP (develop)</title>
       <link rel="stylesheet" href="_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="_static/pygments_dark.css">
@@ -119,7 +119,7 @@
   <input type="hidden" name="area" value="default">
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Workflow Overview</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">High-level Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -255,8 +255,8 @@
         <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="workflow-overview">
-<h1>Workflow Overview<a class="headerlink" href="#workflow-overview" title="Permalink to this headline">¶</a></h1>
+        <div class="section" id="high-level-overview">
+<h1>High-level Overview<a class="headerlink" href="#high-level-overview" title="Permalink to this headline">¶</a></h1>
 <p>In a nutshell, SLEAP can be used to analyze animal behaviour from recorded video clips.
 A typical end-to-end SLEAP workflow consists of the following steps:</p>
 <ol class="arabic simple">
@@ -271,12 +271,12 @@ A typical end-to-end SLEAP workflow consists of the following steps:</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Selecting frames from imported video(s) for initial labeling</dt><dd><p>To get started, you will need to select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features. See details :here:</p>
+<dt>Selecting frames from imported video(s) for initial labeling</dt><dd><p>Next you will select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features. See details :here:</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Manually labeling animal pose(s) in selected frames (mapping skeletons to body parts using)</dt><dd><p>Labeling is the activity of mapping skeleton body parts to animal instances in the selected frames. This is the most laborious part, however SLEAP can help accelerated it by iteratively training machine learning models on the labeled frames and manually correcting its predictions. See details :here:</p>
+<dt>Manually labeling animal pose(s) in selected frames</dt><dd><p>Labeling is the activity of mapping skeleton body parts to animal instances in the selected frames. This is the most laborious part, however SLEAP helps accelerate the process with a purpose-built user interface and iterative human-in-the-loop process that involves training machine learning models on partially labeled data and manually correcting its predictions. See details :here:</p>
 </dd>
 </dl>
 </li>
@@ -286,29 +286,35 @@ A typical end-to-end SLEAP workflow consists of the following steps:</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Applying the trained model to predict animal poses in unlabeled frames (inference)</dt><dd><p>Once the training is complete, the trained model is applied to all unlabeled frames to infer animal pose. The accuracy of these predictions depends on many parameters, among them the quality of the labeling work, amount of labeled frames, and the configuration of the training job. See details :here:</p>
+<dt>Applying the trained model to predict animal poses in unlabeled frames (inference)</dt><dd><p>Once the training is complete, the trained model is applied to all unlabeled frames to predict animal pose (this step is also called <em>inference</em>). The accuracy of these predictions depends on many parameters, among them the quality of the labeling work, amount of labeled frames, and the configuration of the training job. See details :here:</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Refining the predicted labels manually, and repeating from step 5. until desired model accuracy is achieved</dt><dd><p>In this step you can inspect the predictions and correct them - this is similar to the labeling step, but should be easier since the predictions place the skeletons approximately right. See details :here:</p>
+<dt>Refining the predicted labels manually, and repeating the training step until desired model accuracy is achieved</dt><dd><p>In this step you can inspect the predictions and correct them - this is similar to the labeling step, but should be easier since the predictions place the skeletons approximately right. See details :here:</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Optionally importing additional videos from the same experiment, and applying the trained model to predict animal poses</dt><dd><p>Once the machine learning model performance is satisfactory (w.r.t pose estimation), the next step is to predict the animal poses across all video frames from the experiment. This step is only needed if not all video(s) were imported in step 1.</p>
+<dt>[Optional] Importing additional videos from your experiment, and applying the trained model to predict animal poses</dt><dd><p>Once the machine learning model performance is satisfactory (w.r.t. pose estimation quality), the next step is to predict the animal poses across all video frames from your experiment. This step is only needed if not all video(s) were imported in the first step.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Applying the tracking algorithm to track animal instances across frames</dt><dd><p>Tracking associates animal instances in consequent frames. Here too SLEAP provides several algorithms for tracking with their own configuration. See :tracking:.</p>
+<dt>Applying the tracking algorithm to track animal instances across frames</dt><dd><p>Tracking associates animal instances in consequent frames. Here too SLEAP provides several algorithms for tracking with their own configuration parameters. See :tracking:.</p>
 </dd>
 </dl>
 </li>
-<li><p>Proofreading and potentially correcting instance tracks
-This is a manual step where you can use SLEAP GUI to verify that the tracking is accurate, and make corrections as needed. See :proofreading: for types of erros that may occur and how to correct them. See details :here:</p></li>
-<li><p>Exporting data for analysis
-Finally you can export the generated data (including animal instance occupancy matrices and tracks) for further analysis (e.g. in Matlab or Python). See guides and sample notebooks :here:</p></li>
+<li><dl class="simple">
+<dt>Proofreading and potentially correcting instance tracks</dt><dd><p>This is a manual step where you can use SLEAP GUI to verify that the tracking is accurate, and make corrections as needed. See :proofreading: for types of erros that may occur and how to correct them.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Exporting data for analysis</dt><dd><p>Finally you can export the generated data (including animal instance occupancy matrices and tracks) for further analysis (e.g. in Matlab or Python). See guides and sample notebooks :here:</p>
+</dd>
+</dl>
+</li>
 </ol>
 </div>
 
