@@ -1,7 +1,7 @@
 .. _guides:
 
-Guides
-=======
+Detailed Guides
+===============
 
 Getting better results
 ----------------------

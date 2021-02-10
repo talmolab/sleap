@@ -6,12 +6,14 @@ High-level Overview
 .. image:: _static/workflow.png
 
 In a nutshell, SLEAP can be used to analyze animal behaviour from recorded video clips.
-A typical end-to-end SLEAP workflow consists of the following steps:
+This is a high-level overview of a typical end-to-end SLEAP workflow. You can later follow this workflow in the :ref:`Tutorial` section.
 
 1. Creating a new project and importing video file(s)
-    You may import all or part of the video clips from your experiment footage. These video files will be used to build a ground-truth dataset and train the machine learning model that estimates animal pose. See details :here:
+    You may import all or part of the video clips from your experiment footage. These video files will be used to build a ground-truth dataset and train the machine learning model that estimates animal pose.
+
+    Refer to the :ref:`new-project` step in the tutorial.
 2. Defining animal skeleton(s)
-    In this step you will define the animal skeleton by listing its body parts and their connections. See details :here:
+    In this step you will define the animal skeleton by listing its body parts and their connections. Refer to the :ref:`new-skeleton` step in the tutorial.
 3. Selecting frames from imported video(s) for initial labeling
     Next you will select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features. See details :here:
 4. Manually labeling animal pose(s) in selected frames
