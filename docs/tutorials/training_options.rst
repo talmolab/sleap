@@ -1,9 +1,5 @@
-Getting started
+Training Options
 --------------------------
-
-Once you install SLEAP (see our :ref:`Installation` instructions) you should start by following the step-by-step :ref:`Tutorial`. This will guide you through the process of creating a project, adding videos, creating a skeleton for each animal in the video, labeling a few frames, and then training a model.
-
-After installation you can also try running SLEAP on our `sample datasets <https://github.com/murthylab/sleap-datasets>`_—this allows you to try out training and inference before you’ve labeled your own data for training.
 
 When you're ready to train you will have three choices for models: single animal, multi-animal top-down, or multi-animal bottom-up. To deal with more than one animal (multiple instances), we implement both “top-down” and “bottom-up” approaches.
 
