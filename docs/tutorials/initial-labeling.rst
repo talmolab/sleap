@@ -1,6 +1,6 @@
 .. _initial-labeling:
 
-Initial Labeling
+Selecting frames to label
 --------------------------
 
 We start by assembling a candidate group of images to label. You can
@@ -16,6 +16,8 @@ For now, let's just get 20 random frames. Choose "sample" as the method and "ran
 (See :ref:`suggestion-methods` for more information about the suggestion methods.)
 
 You can then move between suggested frames by double-clicking the frame information in the table or by clicking the "Prev" or "Next" buttons.
+
+.. _labeling-first-frame:
 
 Labeling the first frame
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,6 +55,8 @@ project that has been changed to avoid losing any work. Note: There is
 not yet an “undo” feature built into SLEAP. If you want to make
 temporary changes to a project, use the “**Save As…**” command first to save
 a copy of your project.
+
+.. _labeling-more-frames:
 
 Labeling more frames
 ~~~~~~~~~~~~~~~~~~~~
