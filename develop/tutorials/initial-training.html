@@ -1,10 +1,10 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Prediction-assisted labeling" href="assisted-labeling.html" /><link rel="prev" title="Initial Labeling" href="initial-labeling.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Prediction-assisted labeling" href="assisted-labeling.html" /><link rel="prev" title="Selecting frames to label" href="initial-labeling.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
-        <title>Quick Training and Inference - SLEAP (develop)</title>
+        <title>Training and Inference - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -100,7 +100,7 @@
       <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
     </div>
     <div class="header-right">
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
     </div>
@@ -123,8 +123,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="tutorial.html">Tutorial</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="new-project.html">Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">Initial Labeling</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial-labeling.html">Selecting frames to label</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training-options">Training Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#start-training">Start Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inference">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html">Prediction-assisted labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking instances across frames</a></li>
@@ -251,27 +254,42 @@
   <main class="main">
     <div class="content">
       <article role="main">
-        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="quick-training-and-inference">
-<span id="initial-training"></span><h1>Quick Training and Inference<a class="headerlink" href="#quick-training-and-inference" title="Permalink to this headline">¶</a></h1>
-<p>Let’s see how quickly we can train models and start getting some predictions.</p>
-<p>Start by labeling about 10 frames—this should be enough to at least get some initial results. Once you have the frames labeled, save your project.</p>
-<p>Now you’re ready to train some models!</p>
+        <div class="section" id="training-and-inference">
+<span id="initial-training"></span><h1>Training and Inference<a class="headerlink" href="#training-and-inference" title="Permalink to this headline">¶</a></h1>
+<p>After labeling about 10 frames and saving the project you can train your first model and start getting initial predictions.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This tutorial assumes you have a GPU in your local machine and that TensorFlow is able to use your GPU. If you don’t have a GPU or you’re having trouble getting it to work, you can run training and inference in the cloud. See our <a class="reference internal" href="../guides/colab.html#colab"><span class="std std-ref">Run training and/or inference on Colab</span></a> guide! Or take a look at our other <a class="reference internal" href="../guides/index.html#guides"><span class="std std-ref">Detailed Guides</span></a> about running SLEAP on remote machines.</p>
 </div>
+</div>
+<div class="section" id="training-options">
+<span id="id1"></span><h1>Training Options<a class="headerlink" href="#training-options" title="Permalink to this headline">¶</a></h1>
+<p>When you’re ready to train you will have three choices for models: <em>single animal</em>, multi-animal <strong>top-down</strong>, or multi-animal <strong>bottom-up</strong>.</p>
+<p>In <strong>top-down</strong> mode for multiple animals, a network first finds each animal and then a separate network estimates the pose of each found animal:</p>
+<img alt="../_images/topdown_approach.jpg" src="../_images/topdown_approach.jpg"/>
+<p>In <strong>bottom-up</strong> mode, a network first finds all of the body parts in an image, and then another network groups them into animal instances using part affinity fields (<a class="reference external" href="https://arxiv.org/abs/1611.08050">Cao et al., 2017</a>):</p>
+<img alt="../_images/bottomup_approach.jpg" src="../_images/bottomup_approach.jpg"/>
+<p>We find that top-down mode works better for some multi-animal datasets while bottom-up works better for others - to maximize the accuracy of predictions we recommend you to try both and see which one works best for your dataset.</p>
+<p>In addition, SLEAP uses UNET as its default backbone, but you can choose other backbones (LEAP, resnet, etc.) from a drop down menu.</p>
+<p>For more information about the types of models you can train, see <a class="reference internal" href="../guides/choosing-models.html#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
+</div>
+<div class="section" id="start-training">
+<h1>Start Training<a class="headerlink" href="#start-training" title="Permalink to this headline">¶</a></h1>
 <p>To run training on your local machine, select “<strong>Run Training…</strong>” from the “Predict”
 menu. For this tutorial, let’s use the default settings for training with the “top-down” pipeline and predict on 20 random frames.</p>
 <p><img alt="image6" src="../_images/training-dialog1.jpg"/></p>
-<p>The “<strong>topdown</strong>” approach will train two models: one for locating each instance in the frame confidence maps, and one for locating the parts for each of those instances. The models will be trained in that order.</p>
-<p>For more information about the types of models you can train, see <a class="reference internal" href="../guides/choosing-models.html#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
+<p>Recall that the “topdown” approach will train two models: one for locating each instance in the frame, and one for locating the parts for each of those instances. The models will be trained in that order.</p>
 <p>When using the topdown approach, it’s a good idea to choose an <strong>anchor</strong> part which has a relatively stable position near the center of your animal. You may also want to turn on the option to “<strong>Visualize Predictions During Training</strong>” (although this will make training run a bit more slowly).</p>
-<p>Once you hit the <strong>Run</strong> button, you should see a window which shows you a graph of training and validation loss for each model as it trains. Remember that the topdown approach trains two models, so once you’re done training the centroid model the graph will reset to show you loss while training the centered instance model.</p>
+<p>Once you hit the <strong>Run</strong> button, you should see a window which shows you a graph of training and validation loss for each model as it trains. Since the topdown approach trains two models, once you’re done training the centroid model the graph will reset to show you loss while training the centered instance model.</p>
 <p>Just for this tutorial, let’s stop each training session after about 10 epochs. This should take a minute or two for each model (assuming you have a usable GPU!), and should be good enough to get some initial predictions.</p>
+</div>
+<div class="section" id="inference">
+<span id="initial-inference"></span><h1>Inference<a class="headerlink" href="#inference" title="Permalink to this headline">¶</a></h1>
 <p>After each model is trained, inference will run and if everything is successful, you should get a dialog telling you how many frames got predictions. Frames with labels will be marked in the seekbar, so try clicking on the newly marked frames or use the “<strong>Next Labeled Frame</strong>” command in the “Go” menu to step through frames with labels.</p>
+<p>Once you got the initial predictions from the trained models you enter into a human-in-the-loop training cycle, in which you receive predictions and use them to continue to label more examples. You will continue to iterate this process until you have achieved the desired pose labeling accuracy for your dataset. The goal at this stage is to get accurate pose predictions on individual frames. This means that the points for each body part are predicted in the correct locations and that the points are correctly grouped into distinct animal instances.</p>
 <p>Continue to <a class="reference internal" href="assisted-labeling.html#assisted-labeling"><span class="std std-ref">Prediction-assisted labeling</span></a>.</p>
 </div>
 
@@ -295,7 +313,7 @@ menu. For this tutorial, let’s use the default settings for training with the 
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Initial Labeling</div>
+                <div class="title">Selecting frames to label</div>
                 
               </div>
             </a>
@@ -317,8 +335,27 @@ menu. For this tutorial, let’s use the default settings for training with the 
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Training and Inference</a></li>
+<li><a class="reference internal" href="#training-options">Training Options</a></li>
+<li><a class="reference internal" href="#start-training">Start Training</a></li>
+<li><a class="reference internal" href="#inference">Inference</a></li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

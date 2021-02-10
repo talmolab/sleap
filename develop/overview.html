@@ -123,8 +123,11 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/new-project.html">Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-labeling.html">Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-labeling.html">Selecting frames to label</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html">Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html#training-options">Training Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html#start-training">Start Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html#inference">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/assisted-labeling.html">Prediction-assisted labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/proofreading.html">Tracking instances across frames</a></li>
@@ -258,41 +261,40 @@
 <span id="id1"></span><h1>High-level Overview<a class="headerlink" href="#high-level-overview" title="Permalink to this headline">¶</a></h1>
 <img alt="_images/workflow.png" src="_images/workflow.png"/>
 <p>In a nutshell, SLEAP can be used to analyze animal behaviour from recorded video clips.
-This is a high-level overview of a typical end-to-end SLEAP workflow. You can later follow this workflow in the <a class="reference internal" href="tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a> section.</p>
-<ol class="arabic">
-<li><dl>
-<dt>Creating a new project and importing video file(s)</dt><dd><p>You may import all or part of the video clips from your experiment footage. These video files will be used to build a ground-truth dataset and train the machine learning model that estimates animal pose.</p>
-<p>Refer to the <a class="reference internal" href="tutorials/new-project.html#new-project"><span class="std std-ref">Creating a project</span></a> step in the tutorial.</p>
+This is a high-level overview of a typical end-to-end SLEAP workflow. You can also go thru this workflow yourself in the <a class="reference internal" href="tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a> section.</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Creating a new project and importing video file(s)</dt><dd><p>You may import all or part of the video clips from your experiment footage. These video files will be used to build a ground-truth dataset and train the machine learning model that estimates animal pose. Link to tutorial: <a class="reference internal" href="tutorials/new-project.html#new-project"><span class="std std-ref">Creating a project</span></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Defining animal skeleton(s)</dt><dd><p>In this step you will define the animal skeleton by listing its body parts and their connections. Refer to the <a class="reference internal" href="tutorials/new-project.html#new-skeleton"><span class="std std-ref">Creating the Skeleton</span></a> step in the tutorial.</p>
+<dt>Defining animal skeleton(s)</dt><dd><p>In this step you will define the animal skeleton by listing its body parts and their connections. Link to tutorial: <a class="reference internal" href="tutorials/new-project.html#new-skeleton"><span class="std std-ref">Creating the Skeleton</span></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Selecting frames from imported video(s) for initial labeling</dt><dd><p>Next you will select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features. See details :here:</p>
+<dt>Selecting frames from imported video(s) for initial labeling</dt><dd><p>Next you will select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features. Link to tutorial: <a class="reference internal" href="tutorials/initial-labeling.html#initial-labeling"><span class="std std-ref">Selecting frames to label</span></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Manually labeling animal pose(s) in selected frames</dt><dd><p>Labeling is the activity of mapping skeleton body parts to animal instances in the selected frames. This is the most laborious part, however SLEAP helps accelerate the process with a purpose-built user interface and iterative human-in-the-loop process that involves training machine learning models on partially labeled data and manually correcting its predictions. See details :here:</p>
+<dt>Manually labeling animal pose(s) in selected frames</dt><dd><p>Labeling is the activity of mapping skeleton body parts to animal instances in the selected frames. This is the most laborious part, however SLEAP helps accelerate the process with a purpose-built user interface and iterative human-in-the-loop process that involves training machine learning models on partially labeled data and manually correcting its predictions. Link to tutorial: <a class="reference internal" href="tutorials/initial-labeling.html#labeling-first-frame"><span class="std std-ref">Labeling the first frame</span></a> and <a class="reference internal" href="tutorials/initial-labeling.html#labeling-more-frames"><span class="std std-ref">Labeling more frames</span></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Training a machine learning model using the labeled frames</dt><dd><p>After we labeled a few frames we can train a machine learning model. SLEAP supports several approaches for training, each with it’s own set of parameters that can be configured. See :training:.</p>
+<dt>Training a machine learning model using the labeled frames</dt><dd><p>After you labeled a few frames you can train a machine learning model. SLEAP supports several approaches for training, each with it’s own set of parameters that can be configured. Link to tutorial: <a class="reference internal" href="tutorials/initial-training.html#initial-training"><span class="std std-ref">Training and Inference</span></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Applying the trained model to predict animal poses in unlabeled frames (inference)</dt><dd><p>Once the training is complete, the trained model is applied to all unlabeled frames to predict animal pose (this step is also called <em>inference</em>). The accuracy of these predictions depends on many parameters, among them the quality of the labeling work, amount of labeled frames, and the configuration of the training job. See details :here:</p>
+<dt>Applying the trained model to predict animal poses in unlabeled frames (inference)</dt><dd><p>Once the training is complete, the trained model is applied to all unlabeled frames to predict animal pose (this step is also called <em>inference</em>). The accuracy of these predictions depends on many parameters, among them the quality of the labeling work, amount of labeled frames, and the configuration of the training job. Link to tutorial: <a class="reference internal" href="tutorials/initial-training.html#initial-inference"><span class="std std-ref">Inference</span></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Refining the predicted labels manually, and repeating the training step until desired model accuracy is achieved</dt><dd><p>In this step you can inspect the predictions and correct them - this is similar to the labeling step, but should be easier since the predictions place the skeletons approximately right. See details :here:</p>
+<dt>Refining the predicted labels manually, and repeating the training step until desired model accuracy is achieved</dt><dd><p>In this step you can inspect the predictions and correct them - this is similar to the labeling step, but should be easier since the predictions place the skeletons approximately right. Link to tutorial: <a class="reference internal" href="tutorials/assisted-labeling.html#assisted-labeling"><span class="std std-ref">Prediction-assisted labeling</span></a></p>
 </dd>
 </dl>
 </li>

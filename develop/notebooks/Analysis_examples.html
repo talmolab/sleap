@@ -123,8 +123,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">Quick Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">Selecting frames to label</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html#training-options">Training Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html#start-training">Start Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html#inference">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html">Prediction-assisted labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">Tracking instances across frames</a></li>
@@ -269,15 +272,20 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2021-02-10 15:52:20--  https://github.com/murthylab/sleap-notebooks/raw/master/analysis_example/predictions.analysis.h5
-Resolving github.com (github.com)... 140.82.113.4
-Connecting to github.com (github.com)|140.82.113.4|:443... connected.
-HTTP request sent, awaiting response... 
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2021-02-10 18:49:46--  https://github.com/murthylab/sleap-notebooks/raw/master/analysis_example/predictions.analysis.h5
+Resolving github.com (github.com)... 
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>140.82.113.3
+Connecting to github.com (github.com)|140.82.113.3|:443... connected.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>HTTP request sent, awaiting response... 
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>302 Found
 Location: https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5 [following]
---2021-02-10 15:52:20--  https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5
+--2021-02-10 18:49:46--  https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5
 Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.110.133, 185.199.111.133, 185.199.108.133, ...
 Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.110.133|:443... connected.
 HTTP request sent, awaiting response... 
@@ -291,9 +299,9 @@ Saving to: ‘predictions.analysis.h5’
 predictions.analysi   0%[                    ]       0  --.-KB/s               
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.02s   
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.03s   
 
-2021-02-10 15:52:20 (23.8 MB/s) - ‘predictions.analysis.h5’ saved [551501/551501]
+2021-02-10 18:49:46 (15.3 MB/s) - ‘predictions.analysis.h5’ saved [551501/551501]
 </pre></div>
 </div>
 </div>
