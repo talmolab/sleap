@@ -542,6 +542,7 @@ class MainWindow(QMainWindow):
             "Render Video Clip with Instances...",
             self.commands.exportLabeledClip,
         )
+        viewMenu.addSeparator()
 
         ### Label Menu ###
 
