@@ -9,6 +9,7 @@ Next Steps
 .. toctree::
     :maxdepth: 1
 
+    overview
     getting_started
     installation
     tutorials/tutorial
