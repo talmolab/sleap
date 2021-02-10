@@ -25,6 +25,6 @@ A typical end-to-end SLEAP workflow consists of the following steps:
 9. Applying the tracking algorithm to track animal instances across frames
     Tracking associates animal instances in consequent frames. Here too SLEAP provides several algorithms for tracking with their own configuration parameters. See :tracking:.
 10. Proofreading and potentially correcting instance tracks
-     This is a manual step where you can use SLEAP GUI to verify that the tracking is accurate, and make corrections as needed. See :proofreading: for types of erros that may occur and how to correct them.
+     This is a manual step where you can use SLEAP GUI to verify that the tracking is accurate, and make corrections as needed. See :ref:`Tracking and proofreading` for types of erros that may occur and how to correct them.
 11. Exporting data for analysis
-     Finally you can export the generated data (including animal instance occupancy matrices and tracks) for further analysis (e.g. in Matlab or Python). See guides and sample notebooks :here:
+     Finally you can export the generated data (including animal instance occupancy matrices and tracks) for further analysis (e.g. in Matlab or Python). See :ref:`Export Data For Analysis` and example :ref:`Notebooks` for details.
