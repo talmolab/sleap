@@ -2,8 +2,8 @@
   :start-after: start-inclusion-marker-do-not-remove
   :end-before: end-inclusion-marker-do-not-remove
 
-Next Steps
-----------
+Documentation and Resources
+------------------------------
 
 .. _sleap:
 .. toctree::
