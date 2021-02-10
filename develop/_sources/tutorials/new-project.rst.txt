@@ -23,7 +23,7 @@ channels first or last.
 
 .. _new-skeleton:
 
-Creating the Skeleton
+Creating a Skeleton
 ~~~~~~~~~~~~~~~~~~~~~
 
 Create a new **skeleton** using the “Skeleton” panel on the right side
