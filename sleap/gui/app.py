@@ -172,7 +172,7 @@ class MainWindow(QMainWindow):
         """Sets window title (if value is not None)."""
         if value is not None:
             super(MainWindow, self).setWindowTitle(
-                f"{value} - SLEAP Label v{sleap.version.__version__}"
+                f"{value} - SLEAP v{sleap.version.__version__}"
             )
 
     def event(self, e: QEvent) -> bool:
@@ -1805,7 +1805,8 @@ def main():
         os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
     app = QApplication([])
-    app.setApplicationName(f"SLEAP Label v{sleap.version.__version__}")
+    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
+    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
 
     window = MainWindow(labels_path=args.labels_path, reset=args.reset)
     window.showMaximized()

@@ -1,7 +1,5 @@
 """This module defines the guide widget for navigating the core workflow."""
 
-from typing import List, Optional
-
 from PySide2.QtCore import Qt, Signal
 from PySide2.QtWidgets import QWidget, QLabel
 from PySide2.QtWidgets import QVBoxLayout
