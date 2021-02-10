@@ -48,6 +48,18 @@ It is the successor to `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al.,
 
 To learn more about SLEAP and multi-animal pose tracking download our `preprint on bioRxiv <https://doi.org/10.1101/2020.08.31.276246>`_ or watch the `tutorial on SLEAP <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_.
 
+Key Features
+------------
+
+* Purpose built GUI and human-in-the-loop workflow for rapidly labeling large datasets
+* Multi-animal pose estimation with top-down and bottom-up training strategies
+* State-of-the-art pretrained and customizable Neural Network architectures - **accurate predictions** with **very few** labels
+* Fast training: 15 to 60 mins on a single GPU for a typical dataset
+* Fast inference: 400+ FPS for batch, 10ms latency for realtime
+* Support for remote training/inference workflow (in leu of GPU support)
+* Flexible developer API for customization and building custom apps
+
+
 References
 ----------
 If you use **SLEAP** in your research, please cite:
@@ -86,10 +98,13 @@ SLEAP was developed in the Murthy and Shaevitz labs at Princeton University. Fun
 
 .. end-inclusion-marker-do-not-remove
 
-Documentation
--------------
-* `Homepage <https://sleap.ai>`_
-* `SLEAP Overview <https://sleap.ai/overview.html>`_
+Getting Started with SLEAP
+----------------------------
+* `Documentation Homepage <https://sleap.ai>`_
+* `Workflow Overview <https://sleap.ai/overview.html>`_
 * `Installation <https://sleap.ai/installation.html>`_
-* `Getting Started <https://sleap.ai/getting_started.html>`_
-* `Guides and Examples <https://sleap.ai/guides.html>`_
+* `End-to-end Tutorial <https://sleap.ai/tutorials/tutorial.html>`_
+* `Detailed Guides <https://sleap.ai/guides/index.html>`_
+* `Notebooks <https://sleap.ai/notebooks/index.html>`_
+* `Developer API <https://sleap.ai/api.html>`_
+
