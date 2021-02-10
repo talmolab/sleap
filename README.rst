@@ -55,7 +55,7 @@ Key Features
 * Fast training: 15 to 60 mins on a single GPU for a typical dataset
 * Fast inference: 400+ FPS for batch, 10ms latency for realtime
 * Support for remote training/inference workflow (for users without access to GPUs)
-* Flexible developer API for customization and building custom apps
+* Flexible developer API for customization and building integrated apps
 
 
 References
