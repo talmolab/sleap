@@ -1,7 +1,12 @@
 .. _initial-labeling:
 
+Initial Labeling
+-----------------
+
+.. _selecting-frames:
+
 Selecting frames to label
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We start by assembling a candidate group of images to label. You can
 either pick your own frames or let the system suggest a set of frames

@@ -12,7 +12,7 @@ After labeling about 10 frames and saving the project you can train your first m
 .. _training-options:
 
 Training Options
---------------------------
+~~~~~~~~~~~~~~~~~~~
 
 When you're ready to train you will have three choices for models: *single animal*, multi-animal **top-down**, or multi-animal **bottom-up**.
 
@@ -32,7 +32,7 @@ For more information about the types of models you can train, see :ref:`choosing
 
 
 Start Training
---------------------
+~~~~~~~~~~~~~~~~
 
 To run training on your local machine, select “**Run Training…**” from the “Predict”
 menu. For this tutorial, let's use the default settings for training with the "top-down" pipeline and predict on 20 random frames.
@@ -50,7 +50,7 @@ Just for this tutorial, let's stop each training session after about 10 epochs. 
 .. _initial-inference:
 
 Inference
---------------------------
+~~~~~~~~~~~~
 After each model is trained, inference will run and if everything is successful, you should get a dialog telling you how many frames got predictions. Frames with labels will be marked in the seekbar, so try clicking on the newly marked frames or use the "**Next Labeled Frame**" command in the "Go" menu to step through frames with labels.
 
 Once you got the initial predictions from the trained models you enter into a human-in-the-loop training cycle, in which you receive predictions and use them to continue to label more examples. You will continue to iterate this process until you have achieved the desired pose labeling accuracy for your dataset. The goal at this stage is to get accurate pose predictions on individual frames. This means that the points for each body part are predicted in the correct locations and that the points are correctly grouped into distinct animal instances.
