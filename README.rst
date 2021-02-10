@@ -52,11 +52,11 @@ Key Features
 ------------
 
 * Purpose built GUI and human-in-the-loop workflow for rapidly labeling large datasets
-* Multi-animal pose estimation with top-down and bottom-up training strategies
-* State-of-the-art pretrained and customizable Neural Network architectures - **accurate predictions** with **very few** labels
+* Multi-animal pose estimation with **top-down** and **bottom-up** training strategies
+* State-of-the-art pretrained and customizable Neural Network architectures that deliver **accurate predictions** with **very few** labels
 * Fast training: 15 to 60 mins on a single GPU for a typical dataset
 * Fast inference: 400+ FPS for batch, 10ms latency for realtime
-* Support for remote training/inference workflow (in leu of GPU support)
+* Support for remote training/inference workflow (for users without access to GPUs)
 * Flexible developer API for customization and building custom apps
 
 
