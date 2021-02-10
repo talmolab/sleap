@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="1. Example analysis data" href="Analysis_examples.html" /><link rel="prev" title="Export a training package" href="../guides/training-package.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example analysis data" href="Analysis_examples.html" /><link rel="prev" title="Export a training package" href="../guides/training-package.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
         <title>Notebooks - SLEAP (develop)</title>
@@ -150,12 +150,12 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html">1. Example analysis data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#loading-the-data">2. Loading the data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#fill-missing-values">3. Fill missing values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#visualize-thorax-movement-across-video">4. Visualize thorax movement across video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#more-advanced-visualizations">5. More advanced visualizations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#clustering">6. Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html">Example analysis data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#loading-the-data">Loading the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#more-advanced-visualizations">More advanced visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#clustering">Clustering</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -259,20 +259,31 @@
         </label>
         <div class="section" id="notebooks">
 <span id="id1"></span><h1>Notebooks<a class="headerlink" href="#notebooks" title="Permalink to this headline">¶</a></h1>
-<p>Check out these notebooks.</p>
+<p>Here are Jupyter notebooks you can run to try SLEAP on <a class="reference external" href="https://colab.research.google.com">Google Colaboratory</a> (Colab). Colab is great for running training and inference on your data if you don’t have access to a local machine with a supported GPU.</p>
+<dl class="simple">
+<dt><a class="reference external" href="./Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></dt><dd><p>In this notebook we’ll show you how to install SLEAP on Colab, download a dataset from the <a class="reference external" href="https://github.com/murthylab/sleap-datasets">repository of sample datasets</a>, run training and inference on that dataset using the SLEAP command-line interface, and then download the predictions.
+This notebook can be a good place to start since you’ll be able to see how training and inference work without any of your own data and without having to edit anything in the notebook to get it to run correctly.</p>
+</dd>
+<dt><a class="reference external" href="./Training_and_inference_using_Google_Drive.html">Using your own data on Google Drive</a></dt><dd><p>Once you’re ready to run training and inference on your own SLEAP dataset, this notebook walks you through the process of using <a class="reference external" href="https://www.google.com/drive">Google Drive</a> to copy data to and from Colab (as well as running training and inference on your dataset).</p>
+</dd>
+<dt><a class="reference external" href="./Training_with_custom_hyperparameters.html">Training with custom hyper-parameters</a></dt><dd><p>After you’re able to run training and inference on your own SLEAP dataset using Colab, you’re ready to learn how to train with custom hyperparameters. This notebook will walk you through that process.</p>
+</dd>
+<dt><a class="reference external" href="./Analysis_examples.html">Analysis examples</a></dt><dd><p>Once you’ve used SLEAP to successfully estimate animal pose and track animals in your videos, you’ll want to use the resulting data. This notebook walks you through some analysis examples which illustrate how to read and interpret the data in the analysis HDF5 files which you can export from SLEAP.</p>
+</dd>
+</dl>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html">1. Example analysis data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#loading-the-data">2. Loading the data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#fill-missing-values">3. Fill missing values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#visualize-thorax-movement-across-video">4. Visualize thorax movement across video</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#more-advanced-visualizations">5. More advanced visualizations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">5.1. Visualizing thorax x-y dynamics and velocity for fly 0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#visualize-thorax-colored-by-magnitude-of-fly-speed">5.2. Visualize thorax colored by magnitude of fly speed</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">5.3. Find covariance in thorax velocities between fly-0 and fly-1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html">Example analysis data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#loading-the-data">Loading the data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#more-advanced-visualizations">More advanced visualizations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">Visualizing thorax x-y dynamics and velocity for fly 0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#visualize-thorax-colored-by-magnitude-of-fly-speed">Visualize thorax colored by magnitude of fly speed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">Find covariance in thorax velocities between fly-0 and fly-1</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#clustering">6. Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#clustering">Clustering</a></li>
 </ul>
 </div>
 </div>
@@ -286,7 +297,7 @@
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title"><span class="section-number">1. </span>Example analysis data</div>
+                <div class="title">Example analysis data</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>

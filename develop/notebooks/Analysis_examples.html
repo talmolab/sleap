@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Developer API" href="../api.html" /><link rel="prev" title="Notebooks" href="index.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
-        <title>1. Example analysis data - SLEAP (develop)</title>
+        <title>Example analysis data - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -150,12 +150,12 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">1. Example analysis data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#loading-the-data">2. Loading the data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#fill-missing-values">3. Fill missing values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#visualize-thorax-movement-across-video">4. Visualize thorax movement across video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#more-advanced-visualizations">5. More advanced visualizations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#clustering">6. Clustering</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Example analysis data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-the-data">Loading the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fill-missing-values">Fill missing values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#more-advanced-visualizations">More advanced visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clustering">Clustering</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -262,7 +262,7 @@
 <p>We advise building your post-SLEAP analysis pipeline around these HDF5 files rather than trying to work directly with the <code class="docutils literal notranslate"><span class="pre">.slp</span></code> files used by SLEAP.</p>
 <p><strong>Note</strong>: You can work with these HDF5 directly in Python (as we’ll do here) or MATLAB without having SLEAP itself installed.</p>
 <div class="section" id="example-analysis-data">
-<h1><span class="section-number">1. </span>Example analysis data<a class="headerlink" href="#example-analysis-data" title="Permalink to this headline">¶</a></h1>
+<h1>Example analysis data<a class="headerlink" href="#example-analysis-data" title="Permalink to this headline">¶</a></h1>
 <p>Let’s start by download a sample HDF5. These predictions were created with models trained on our <a class="reference external" href="https://github.com/murthylab/sleap-datasets">sample Drosophila melanogaster courtship dataset</a>. Using these models we can inference on a video clip with 3000 frames. The video clip, resulting predictions, and exported HDF5 are all available <a class="reference external" href="https://github.com/murthylab/sleap-notebooks/tree/master/analysis_example">here</a>.</p>
 <p>We’ll just download the <code class="docutils literal notranslate"><span class="pre">predictions.analysis.h5</span></code> file:</p>
 <div class="cell docutils container">
@@ -272,23 +272,18 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2021-02-10 19:18:16--  https://github.com/murthylab/sleap-notebooks/raw/master/analysis_example/predictions.analysis.h5
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2021-02-10 19:57:39--  https://github.com/murthylab/sleap-notebooks/raw/master/analysis_example/predictions.analysis.h5
 Resolving github.com (github.com)... 140.82.113.4
-Connecting to github.com (github.com)|140.82.113.4|:443... 
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>connected.
+Connecting to github.com (github.com)|140.82.113.4|:443... connected.
 HTTP request sent, awaiting response... 
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>302 Found
 Location: https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5 [following]
---2021-02-10 19:18:16--  https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5
-Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.110.133, 185.199.108.133, 185.199.109.133, ...
-Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.110.133|:443... connected.
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>HTTP request sent, awaiting response... 
+--2021-02-10 19:57:40--  https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.108.133, 185.199.109.133, 185.199.110.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.108.133|:443... connected.
+HTTP request sent, awaiting response... 
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>200 OK
@@ -299,9 +294,9 @@ Saving to: ‘predictions.analysis.h5’
 predictions.analysi   0%[                    ]       0  --.-KB/s               
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.05s   
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.02s   
 
-2021-02-10 19:18:17 (11.2 MB/s) - ‘predictions.analysis.h5’ saved [551501/551501]
+2021-02-10 19:57:40 (23.5 MB/s) - ‘predictions.analysis.h5’ saved [551501/551501]
 </pre></div>
 </div>
 </div>
@@ -316,7 +311,7 @@ predictions.analysi   0%[                    ]       0  --.-KB/s
 </div>
 </div>
 <div class="section" id="loading-the-data">
-<h1><span class="section-number">2. </span>Loading the data<a class="headerlink" href="#loading-the-data" title="Permalink to this headline">¶</a></h1>
+<h1>Loading the data<a class="headerlink" href="#loading-the-data" title="Permalink to this headline">¶</a></h1>
 <p>We use the <a class="reference external" href="https://www.h5py.org">h5py</a> package to load data from the HDF5. This is already installed in Colab. If your running analysis code on your local machine and have SLEAP installed, then <code class="docutils literal notranslate"><span class="pre">h5py</span></code> and other packages we use are already installed in your SLEAP conda environment. Otherwise, you may need to use <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install <code class="docutils literal notranslate"><span class="pre">h5py</span></code> as well as <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>, <code class="docutils literal notranslate"><span class="pre">seaborn</span></code>, and any other packages you want use in your analysis code.</p>
 <p>Let’s load the file and take a peek.</p>
 <div class="cell docutils container">
@@ -406,7 +401,7 @@ instance count: 2
 <p>Now that we’ve loaded the data, let’s see some different things we can do with it…</p>
 </div>
 <div class="section" id="fill-missing-values">
-<h1><span class="section-number">3. </span>Fill missing values<a class="headerlink" href="#fill-missing-values" title="Permalink to this headline">¶</a></h1>
+<h1>Fill missing values<a class="headerlink" href="#fill-missing-values" title="Permalink to this headline">¶</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
@@ -456,7 +451,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="visualize-thorax-movement-across-video">
-<h1><span class="section-number">4. </span>Visualize thorax movement across video<a class="headerlink" href="#visualize-thorax-movement-across-video" title="Permalink to this headline">¶</a></h1>
+<h1>Visualize thorax movement across video<a class="headerlink" href="#visualize-thorax-movement-across-video" title="Permalink to this headline">¶</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">HEAD_INDEX</span> <span class="o">=</span> <span class="mi">0</span>
@@ -524,7 +519,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="more-advanced-visualizations">
-<h1><span class="section-number">5. </span>More advanced visualizations<a class="headerlink" href="#more-advanced-visualizations" title="Permalink to this headline">¶</a></h1>
+<h1>More advanced visualizations<a class="headerlink" href="#more-advanced-visualizations" title="Permalink to this headline">¶</a></h1>
 <p>For some additional analysis, we’ll first smooth and differentiate the data with a Savitzky-Golay filter to extract velocities of each joint.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -562,7 +557,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">
-<h2><span class="section-number">5.1. </span>Visualizing thorax x-y dynamics and velocity for fly 0<a class="headerlink" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0" title="Permalink to this headline">¶</a></h2>
+<h2>Visualizing thorax x-y dynamics and velocity for fly 0<a class="headerlink" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0" title="Permalink to this headline">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
@@ -589,7 +584,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="visualize-thorax-colored-by-magnitude-of-fly-speed">
-<h2><span class="section-number">5.2. </span>Visualize thorax colored by magnitude of fly speed<a class="headerlink" href="#visualize-thorax-colored-by-magnitude-of-fly-speed" title="Permalink to this headline">¶</a></h2>
+<h2>Visualize thorax colored by magnitude of fly speed<a class="headerlink" href="#visualize-thorax-colored-by-magnitude-of-fly-speed" title="Permalink to this headline">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
@@ -624,7 +619,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">
-<h2><span class="section-number">5.3. </span>Find covariance in thorax velocities between fly-0 and fly-1<a class="headerlink" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1" title="Permalink to this headline">¶</a></h2>
+<h2>Find covariance in thorax velocities between fly-0 and fly-1<a class="headerlink" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1" title="Permalink to this headline">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -672,7 +667,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="clustering">
-<h1><span class="section-number">6. </span>Clustering<a class="headerlink" href="#clustering" title="Permalink to this headline">¶</a></h1>
+<h1>Clustering<a class="headerlink" href="#clustering" title="Permalink to this headline">¶</a></h1>
 <p>For an example of clustering the data, we’ll</p>
 <ol class="simple">
 <li><p>extract joint velocities for each joint,</p></li>
@@ -828,17 +823,17 @@ instance count: 2
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">1. Example analysis data</a></li>
-<li><a class="reference internal" href="#loading-the-data">2. Loading the data</a></li>
-<li><a class="reference internal" href="#fill-missing-values">3. Fill missing values</a></li>
-<li><a class="reference internal" href="#visualize-thorax-movement-across-video">4. Visualize thorax movement across video</a></li>
-<li><a class="reference internal" href="#more-advanced-visualizations">5. More advanced visualizations</a><ul>
-<li><a class="reference internal" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">5.1. Visualizing thorax x-y dynamics and velocity for fly 0</a></li>
-<li><a class="reference internal" href="#visualize-thorax-colored-by-magnitude-of-fly-speed">5.2. Visualize thorax colored by magnitude of fly speed</a></li>
-<li><a class="reference internal" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">5.3. Find covariance in thorax velocities between fly-0 and fly-1</a></li>
+<li><a class="reference internal" href="#">Example analysis data</a></li>
+<li><a class="reference internal" href="#loading-the-data">Loading the data</a></li>
+<li><a class="reference internal" href="#fill-missing-values">Fill missing values</a></li>
+<li><a class="reference internal" href="#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
+<li><a class="reference internal" href="#more-advanced-visualizations">More advanced visualizations</a><ul>
+<li><a class="reference internal" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">Visualizing thorax x-y dynamics and velocity for fly 0</a></li>
+<li><a class="reference internal" href="#visualize-thorax-colored-by-magnitude-of-fly-speed">Visualize thorax colored by magnitude of fly speed</a></li>
+<li><a class="reference internal" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">Find covariance in thorax velocities between fly-0 and fly-1</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#clustering">6. Clustering</a></li>
+<li><a class="reference internal" href="#clustering">Clustering</a></li>
 </ul>
 
           </div>
