@@ -1,0 +1,218 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Training with custom hyperparameters",
+      "provenance": [],
+      "collapsed_sections": [],
+      "toc_visible": true,
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "accelerator": "GPU"
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_with_custom_hyperparameters.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "K5xp-A8Oc80Q",
+        "colab_type": "text"
+      },
+      "source": [
+        "This notebook shows you how to use SLEAP on Colab to train a model with **custom hyperpameters**. Hyperparameters define things like the model architecture, the learning rate, and data augmentation methods. See our page about [choosing a set of models](https://sleap.ai/guides/choosing-models.html) for more information.\n",
+        "\n",
+        "This notebook assumes that you're already confortable using Google Drive to move your data to and from Colab. If you haven't done this already, take a look at our [other notebook](https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb) which walks you through that process in more detail."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "yX9noEb8m8re",
+        "colab_type": "text"
+      },
+      "source": [
+        "# Installation\n",
+        "\n",
+        "Before we install SLEAP we need to set Colab to use TensorFlow 2."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "1hJvyI24KXlu",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "%tensorflow_version 2.x"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "C5WL10cao-sc",
+        "colab_type": "text"
+      },
+      "source": [
+        "Let's confirm that we have a GPU available. This next line should return something like \"/device:GPU:0\". If you instead see an empty string as the result, go to \"Notebook settings\" in the \"Edit\" menu and select \"GPU\" as the hardware accelerator."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "9I12Lk6TKZnn",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "import tensorflow as tf\n",
+        "tf.test.gpu_device_name()"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "pMjYpcVFqWgV",
+        "colab_type": "text"
+      },
+      "source": [
+        "Now let's use `pip` to install SLEAP from PyPI."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "DUfnkxMtLcK3",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "!pip install sleap==1.0.10"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "iq7jrgUksLtR",
+        "colab_type": "text"
+      },
+      "source": [
+        "## Getting your training data into Colab\n",
+        "\n",
+        "Mount your Google Drive so that it can be accessed from Colab. You'll be prompted to log into your Google account, give Colab access, and then copy an authorization code into a field below."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "GBWjF4jpMG2N",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "from google.colab import drive\n",
+        "drive.mount('/content/drive/')"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "KQhv_gsdJzaq",
+        "colab_type": "text"
+      },
+      "source": [
+        "I'll assume you already know how to train using a training package on Colab. If you haven't done this already, you should take a look at our [other notebook](https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb) which walks you through that process in more detail.\n",
+        "\n",
+        "For this notebook you'll use a custom **training profile**. Training profiles are JSON files which define the hyperparameters used for training. Go follow our guide to [creating custom training profiles](https://sleap.ai/guides/custom-training.html).\n",
+        "\n",
+        "For this demo, I'll assume you have a `sleap-custom-training` directory in the root of your Google drive. You should copy your training package and your custom training profile(s) into that directory."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "colab_type": "text",
+        "id": "xZ-sr67av5uu"
+      },
+      "source": [
+        "# Training\n",
+        "\n",
+        "Once you have the training package and custom training profile(s) ready, you can use the command-line interface to run training.\n",
+        "\n",
+        "If you haven't done this already, you should take a look at our [other notebook](https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb) which walks you through the basic training process in more detail.\n",
+        "\n",
+        "When training with a custom profile, the key difference when running training with a custom training profile is that the second parameter to `sleap-train` should be the filename of your custom training profile (you can specify it with a local path if it's in the same directory as your training package since we have a `cd` to use this as the working directory).\n",
+        "\n",
+        "If you used the \"**Save configuration files...**\" button in the Training dialog to export custom profile(s), the filename(s) will be:\n",
+        "\n",
+        "- for a **bottom-up** pipeline approach: `multi_instance.json`,\n",
+        "\n",
+        "- for a **top-down** pipeline, you'll have a different profile for each of the models: `centroid.json` and `centered_instance.json`,\n",
+        "\n",
+        "- for a **single animal** pipeline: `single_instance.json`.\n",
+        "\n",
+        "If you created the profile by hand, it will have whatever filename you gave it.\n",
+        "\n",
+        "Again, you should follow our guide to [creating custom training profiles](https://sleap.ai/guides/custom-training.html) in order to generate these custom training profiles."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "zDbIRjlw_fOF",
+        "colab_type": "text"
+      },
+      "source": [
+        "The line below assumes your custom training profile is called `multi_instance.json` and that you've copied it into the `sleap-custom-training` directory in your Google Drive, along side your training package called `dataset.pkg.slp`. Edit the filenames in the command to match your files."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "QKf6qzMqNBUi",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "!cd \"/content/drive/My Drive/sleap-custom-training/\"; \\\n",
+        "sleap-train multi_instance.json dataset.pkg.slp"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "whOf8PaFxYbt",
+        "colab_type": "text"
+      },
+      "source": [
+        "Training should run just as it does when using a default training profile. The trained model will be in a subdirectory, and the name of the subdirectory is determined by the `run_name`, `run_name_prefix` and `run_name_suffix` specified in the training profile.\n",
+        "\n",
+        "Take a look at your Google Drive and you should see it. You can copy this subdirectory and use it for running inference on Colab, your local machine, or anywhere else you have SLEAP installed."
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Developer API" href="../api.html" /><link rel="prev" title="Notebooks" href="index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Developer API" href="../api.html" /><link rel="prev" title="Installation" href="Training_with_custom_hyperparameters.html" />
 
     <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
         <title>Example analysis data - SLEAP (develop)</title>
@@ -150,6 +150,13 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html#inference">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_with_custom_hyperparameters.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_with_custom_hyperparameters.html#training">Training</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Example analysis data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#loading-the-data">Loading the data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fill-missing-values">Fill missing values</a></li>
@@ -272,18 +279,25 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2021-02-10 20:29:35--  https://github.com/murthylab/sleap-notebooks/raw/master/analysis_example/predictions.analysis.h5
-Resolving github.com (github.com)... 140.82.114.4
-Connecting to github.com (github.com)|140.82.114.4|:443... connected.
-HTTP request sent, awaiting response... 
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2021-02-10 20:31:10--  https://github.com/murthylab/sleap-notebooks/raw/master/analysis_example/predictions.analysis.h5
+Resolving github.com (github.com)... 140.82.114.3
+Connecting to github.com (github.com)|140.82.114.3|:443... connected.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>HTTP request sent, awaiting response... 
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>302 Found
 Location: https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5 [following]
---2021-02-10 20:29:35--  https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5
-Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.108.133, 185.199.109.133, 185.199.110.133, ...
-Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.108.133|:443... connected.
-HTTP request sent, awaiting response... 
+--2021-02-10 20:31:10--  https://raw.githubusercontent.com/murthylab/sleap-notebooks/master/analysis_example/predictions.analysis.h5
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>185.199.109.133, 185.199.108.133, 185.199.110.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.109.133|:443... connected.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>HTTP request sent, awaiting response... 
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>200 OK
@@ -292,9 +306,11 @@ Saving to: ‘predictions.analysis.h5’
 
 
 predictions.analysi   0%[                    ]       0  --.-KB/s               
-predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.008s  
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.06s   
 
-2021-02-10 20:29:35 (64.2 MB/s) - ‘predictions.analysis.h5’ saved [551501/551501]
+2021-02-10 20:31:11 (9.27 MB/s) - ‘predictions.analysis.h5’ saved [551501/551501]
 </pre></div>
 </div>
 </div>
@@ -780,14 +796,14 @@ instance count: 2
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="index.html">
+          <a class="prev-page" href="Training_with_custom_hyperparameters.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Notebooks</div>
+                <div class="title">Installation</div>
                 
               </div>
             </a>
