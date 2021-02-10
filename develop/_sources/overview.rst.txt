@@ -1,6 +1,8 @@
 High-level Overview
 --------------------------
 
+.. image:: _static/workflow.png
+
 In a nutshell, SLEAP can be used to analyze animal behaviour from recorded video clips.
 A typical end-to-end SLEAP workflow consists of the following steps:
 
