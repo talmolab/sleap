@@ -21,6 +21,8 @@ channels first or last.
 
 |image1|
 
+.. _new-skeleton:
+
 Creating the Skeleton
 ~~~~~~~~~~~~~~~~~~~~~
 

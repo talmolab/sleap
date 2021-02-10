@@ -2,7 +2,7 @@
   :start-after: start-inclusion-marker-do-not-remove
   :end-before: end-inclusion-marker-do-not-remove
 
-Documentation and Resources
+Getting Started with SLEAP
 ------------------------------
 
 .. _sleap:
@@ -15,6 +15,6 @@ Documentation and Resources
     guides/index
     notebooks/index
     Developer API <api>
+    Sample Datasets <https://github.com/murthylab/sleap-datasets>
     Sourcecode <https://github.com/murthylab/sleap>
     Releases <https://github.com/murthylab/sleap/releases>
-    Sample Datasets <https://github.com/murthylab/sleap-datasets>
