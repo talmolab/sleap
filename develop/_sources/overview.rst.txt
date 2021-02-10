@@ -15,7 +15,7 @@ This is a high-level overview of a typical end-to-end SLEAP workflow. You can al
     In this step you will define the animal skeleton by listing its body parts and their connections. Link to tutorial: :ref:`new-skeleton`
 
 3. Selecting frames from imported video(s) for initial labeling
-    Next you will select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features. Link to tutorial: :ref:`initial-labeling`
+    Next you will select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features. Link to tutorial: :ref:`selecting-frames`
 
 4. Manually labeling animal pose(s) in selected frames
     Labeling is the activity of mapping skeleton body parts to animal instances in the selected frames. This is the most laborious part, however SLEAP helps accelerate the process with a purpose-built user interface and iterative human-in-the-loop process that involves training machine learning models on partially labeled data and manually correcting its predictions. Link to tutorial: :ref:`labeling-first-frame` and :ref:`labeling-more-frames`
