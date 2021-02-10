@@ -13,7 +13,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
-import re
 import sys
 import shutil
 import docs.utils
@@ -41,7 +40,7 @@ release = "develop"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
-
+html_favicon = './_static/favicon.ico'
 html_baseurl = "/develop/"
 
 # -- General configuration ---------------------------------------------------
@@ -79,7 +78,7 @@ master_doc = "index"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "_templates", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "build", "_templates", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
