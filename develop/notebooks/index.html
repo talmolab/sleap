@@ -100,7 +100,7 @@
       <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
     </div>
     <div class="header-right">
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
     </div>
@@ -262,23 +262,16 @@
   <main class="main">
     <div class="content">
       <article role="main">
-        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <div class="section" id="notebooks">
 <span id="id1"></span><h1>Notebooks<a class="headerlink" href="#notebooks" title="Permalink to this headline">¶</a></h1>
 <p>Here are Jupyter notebooks you can run to try SLEAP on <a class="reference external" href="https://colab.research.google.com">Google Colaboratory</a> (Colab). Colab is great for running training and inference on your data if you don’t have access to a local machine with a supported GPU.</p>
-<dl class="simple">
-<dt><a class="reference external" href="./Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></dt><dd><p>In this notebook we’ll show you how to install SLEAP on Colab, download a dataset from the <a class="reference external" href="https://github.com/murthylab/sleap-datasets">repository of sample datasets</a>, run training and inference on that dataset using the SLEAP command-line interface, and then download the predictions.
+<div class="section" id="id2">
+<h2><a class="reference external" href="./Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>In this notebook we’ll show you how to install SLEAP on Colab, download a dataset from the <a class="reference external" href="https://github.com/murthylab/sleap-datasets">repository of sample datasets</a>, run training and inference on that dataset using the SLEAP command-line interface, and then download the predictions.
 This notebook can be a good place to start since you’ll be able to see how training and inference work without any of your own data and without having to edit anything in the notebook to get it to run correctly.</p>
-</dd>
-<dt><a class="reference external" href="./Training_and_inference_using_Google_Drive.html">Using your own data on Google Drive</a></dt><dd><p>Once you’re ready to run training and inference on your own SLEAP dataset, this notebook walks you through the process of using <a class="reference external" href="https://www.google.com/drive">Google Drive</a> to copy data to and from Colab (as well as running training and inference on your dataset).</p>
-</dd>
-<dt><a class="reference external" href="./Training_with_custom_hyperparameters.html">Training with custom hyper-parameters</a></dt><dd><p>After you’re able to run training and inference on your own SLEAP dataset using Colab, you’re ready to learn how to train with custom hyperparameters. This notebook will walk you through that process.</p>
-</dd>
-<dt><a class="reference external" href="./Analysis_examples.html">Analysis examples</a></dt><dd><p>Once you’ve used SLEAP to successfully estimate animal pose and track animals in your videos, you’ll want to use the resulting data. This notebook walks you through some analysis examples which illustrate how to read and interpret the data in the analysis HDF5 files which you can export from SLEAP.</p>
-</dd>
-</dl>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Installation</a><ul>
@@ -287,6 +280,14 @@ This notebook can be a good place to start since you’ll be able to see how tra
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#training">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id3">
+<h2><a class="reference external" href="./Training_and_inference_using_Google_Drive.html">Using your own data on Google Drive</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>Once you’re ready to run training and inference on your own SLEAP dataset, this notebook walks you through the process of using <a class="reference external" href="https://www.google.com/drive">Google Drive</a> to copy data to and from Colab (as well as running training and inference on your dataset).</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html#getting-your-training-data-into-colab">Getting your training data into Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html#training">Training</a></li>
@@ -298,11 +299,27 @@ This notebook can be a good place to start since you’ll be able to see how tra
 <li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html#inference-with-top-down-models">Inference with top-down models</a></li>
 </ul>
 </li>
+</ul>
+</div>
+</div>
+<div class="section" id="id4">
+<h2><a class="reference external" href="./Training_with_custom_hyperparameters.html">Training with custom hyper-parameters</a><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>After you’re able to run training and inference on your own SLEAP dataset using Colab, you’re ready to learn how to train with custom hyperparameters. This notebook will walk you through that process.</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="Training_with_custom_hyperparameters.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="Training_with_custom_hyperparameters.html#getting-your-training-data-into-colab">Getting your training data into Colab</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Training_with_custom_hyperparameters.html#training">Training</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id5">
+<h2><a class="reference external" href="./Analysis_examples.html">Analysis examples</a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>Once you’ve used SLEAP to successfully estimate animal pose and track animals in your videos, you’ll want to use the resulting data. This notebook walks you through some analysis examples which illustrate how to read and interpret the data in the analysis HDF5 files which you can export from SLEAP.</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html">Example analysis data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#loading-the-data">Loading the data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
@@ -315,6 +332,7 @@ This notebook can be a good place to start since you’ll be able to see how tra
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Analysis_examples.html#clustering">Clustering</a></li>
 </ul>
+</div>
 </div>
 </div>
 
@@ -360,8 +378,30 @@ This notebook can be a good place to start since you’ll be able to see how tra
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Notebooks</a><ul>
+<li><a class="reference internal" href="#id2">Training and inference on an example dataset</a></li>
+<li><a class="reference internal" href="#id3">Using your own data on Google Drive</a></li>
+<li><a class="reference internal" href="#id4">Training with custom hyper-parameters</a></li>
+<li><a class="reference internal" href="#id5">Analysis examples</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

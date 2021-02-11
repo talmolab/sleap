@@ -273,12 +273,7 @@
 <p>Before we install SLEAP we need to set Colab to use TensorFlow 2.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">tensorflow_version</span> 2.x
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>UsageError: Line magic function `%tensorflow_version` not found.
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">tensorflow_version</span> <span class="mf">2.</span><span class="n">x</span>
 </pre></div>
 </div>
 </div>
@@ -286,7 +281,7 @@
 <p>Let’s confirm that we have a GPU available. This next line should return something like “/device:GPU:0”. If you instead see an empty string as the result, go to “Notebook settings” in the “Edit” menu and select “GPU” as the hardware accelerator.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="n">tf</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">gpu_device_name</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -295,7 +290,7 @@
 <p>Now let’s use <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install SLEAP from PyPI.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.0.10
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install sleap==1.0.10
 </pre></div>
 </div>
 </div>
@@ -305,7 +300,7 @@
 <p>Mount your Google Drive so that it can be accessed from Colab. You’ll be prompted to log into your Google account, give Colab access, and then copy an authorization code into a field below.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">drive</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">drive</span>
 <span class="n">drive</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s1">'/content/drive/'</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -332,7 +327,7 @@
 <p>The line below assumes your custom training profile is called <code class="docutils literal notranslate"><span class="pre">multi_instance.json</span></code> and that you’ve copied it into the <code class="docutils literal notranslate"><span class="pre">sleap-custom-training</span></code> directory in your Google Drive, along side your training package called <code class="docutils literal notranslate"><span class="pre">dataset.pkg.slp</span></code>. Edit the filenames in the command to match your files.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!cd "/content/drive/My Drive/sleap-custom-training/"; \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!cd "/content/drive/My Drive/sleap-custom-training/"; \
 sleap-train multi_instance.json dataset.pkg.slp
 </pre></div>
 </div>

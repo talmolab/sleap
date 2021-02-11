@@ -273,12 +273,7 @@
 <p>Before we install SLEAP we need to set Colab to use TensorFlow 2.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">tensorflow_version</span> 2.x
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>UsageError: Line magic function `%tensorflow_version` not found.
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">tensorflow_version</span> <span class="mf">2.</span><span class="n">x</span>
 </pre></div>
 </div>
 </div>
@@ -286,7 +281,7 @@
 <p>Let’s confirm that we have a GPU available. This next line should return something like “/device:GPU:0”. If you instead see an empty string as the result, go to “Notebook settings” in the “Edit” menu and select “GPU” as the hardware accelerator.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="n">tf</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">gpu_device_name</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -296,7 +291,7 @@
 <p>Note: This installation method should also work on other Linux machines, such as an HPC cluster, or on any system where you aren’t planning to use a GPU. To use a GPU on a Windows machine you’ll need to install using <code class="docutils literal notranslate"><span class="pre">conda</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.0.10
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install sleap==1.0.10
 </pre></div>
 </div>
 </div>
@@ -307,7 +302,7 @@
 <p>Let’s first mount your Google Drive so that it can be accessed from Colab. You’ll be prompted to log into your Google account, give Colab access, and the copy an authorization code into a field below.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">drive</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">drive</span>
 <span class="n">drive</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s1">'/content/drive/'</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -320,7 +315,7 @@
 <p><strong>Important</strong>: For this demo, I’ll assume you have a <code class="docutils literal notranslate"><span class="pre">sleap</span></code> directory in the root of your Google drive and you place the exported training package in that directory with the filename <code class="docutils literal notranslate"><span class="pre">colab.pkg.slp</span></code>. If you placed your training pckage somewhere else, you’ll need to adjust the path below.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">"/content/drive/My Drive/sleap"</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -335,7 +330,7 @@
 <p><strong>Important</strong>: If your training package isn’t named <code class="docutils literal notranslate"><span class="pre">colab.pkg.slp</span></code>, you’ll need to adjust the name below.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train baseline_medium_rf.bottomup.json colab.pkg.slp --run_name <span class="s2">"colab_demo.bottomup"</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-train baseline_medium_rf.bottomup.json colab.pkg.slp --run_name "colab_demo.bottomup"
 </pre></div>
 </div>
 </div>
@@ -349,14 +344,14 @@
 <p>Here’s how to train centroid and centered instance models using the default training settings:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train baseline_medium_rf.topdown.json --run_name <span class="s2">"colab_demo.topdown_confmaps"</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-train baseline_medium_rf.topdown.json --run_name "colab_demo.topdown_confmaps"
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train baseline.centroid.json colab.pkg.slp --run_name <span class="s2">"colab_demo.centroid"</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-train baseline.centroid.json colab.pkg.slp --run_name "colab_demo.centroid"
 </pre></div>
 </div>
 </div>
@@ -368,7 +363,7 @@
 <p>At this point you should have SLEAP installed, your Google Drive mounted, and trained models saved on your Google Drive. If you’ve been working through the notebook, you should have a <code class="docutils literal notranslate"><span class="pre">models</span></code> subdirectory inside your current working directory. Let’s take a look:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>ls models
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!ls models
 </pre></div>
 </div>
 </div>
@@ -378,7 +373,7 @@
 <p><strong>Important</strong>: If your video is not named <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>, change this in the following cell to match the name of your video. If you trained top-down models and not a bottom-up model, see the end of the notebook for how to run inference with the pair of top-down models.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.mp4 \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.mp4 \
     --frames 0-200 \
     --tracking.tracker simple \
     -m models/colab_demo.bottomup
@@ -390,7 +385,7 @@
 <p>Let’s inspect the predictions file:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect colab_demo.mp4.predictions.slp
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-inspect colab_demo.mp4.predictions.slp
 </pre></div>
 </div>
 </div>
@@ -402,7 +397,7 @@
 <p>You can see all of the command-line arguments by calling <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> with the <code class="docutils literal notranslate"><span class="pre">--help</span></code> argument, like so:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-track --help
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-track --help
 </pre></div>
 </div>
 </div>
@@ -413,7 +408,7 @@
 <p>If you trained the pair of models needed for top-down inference, you can call <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> with <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">path/to/model</span></code> for each model, like so:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.video.mp4 \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.video.mp4 \
     --frames 0-200 \
     --tracking.tracker simple \
     -m models/colab_demo.topdown_confmaps \
