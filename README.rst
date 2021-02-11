@@ -40,10 +40,10 @@
 
 **SLEAP** is an open source deep-learning based framework for estimating positions of animal body parts. It supports *multi-animal pose estimation* and *tracking*, and includes an advanced labeling/training GUI for active learning and proofreading.
 
-SLEAP is developed by the `Princeton Neuroscience Institute <pni.princeton.edu>`_. It is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.
+SLEAP is developed in the `Princeton Neuroscience Institute <pni.princeton.edu>`_. It is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.
 
 
-Key Features
+Features
 ------------
 
 * Purpose-built GUI and human-in-the-loop workflow for rapidly labeling large datasets
@@ -51,8 +51,8 @@ Key Features
 * State-of-the-art pretrained and customizable Neural Network architectures that deliver *accurate predictions* with *very few* labels
 * Fast training: 15 to 60 mins on a single GPU for a typical dataset
 * Fast inference: 400+ FPS for batch, 10ms latency for realtime
-* Support for remote training/inference workflow (for users without access to GPUs)
-* Flexible developer API for customization and building integrated apps
+* Support for remote training/inference workflow (for using without GPUs)
+* Flexible developer API for building integrated apps and customization
 
 
 References
@@ -89,7 +89,7 @@ Contributors
 * **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
 * **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
 
-SLEAP was developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
+SLEAP is developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
 SLEAP is the successor to `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al., 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
 To learn more about SLEAP and multi-animal pose tracking download our `preprint on bioRxiv <https://doi.org/10.1101/2020.08.31.276246>`_ or watch the `tutorial on SLEAP <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_.
 

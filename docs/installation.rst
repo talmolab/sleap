@@ -10,7 +10,8 @@ GPU Support
 
 **SLEAP** relies on `TensorFlow <https://www.tensorflow.org>`_ for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the `TensorFlow GPU support <https://www.tensorflow.org/install/gpu>`_ documentation.
 
-(It's possible you can run TensorFlow on AMD GPUs using `AMD ROCm <https://rocmdocs.amd.com/en/latest/Deep_learning/Deep-learning.html#tensorflow-installation>`_. We haven't tried this but if you're brave enough to try and you get it to work, let us know!)
+.. note::
+    It's possible you can run TensorFlow on AMD GPUs using `AMD ROCm <https://rocmdocs.amd.com/en/latest/Deep_learning/Deep-learning.html#tensorflow-installation>`_. We haven't tried this but if you're brave enough to try and you get it to work, let us know!
 
 Without a supported GPU you'll still be able to use **SLEAP** although training on your local machine will be very, very slow; inference will be  slower than it would be with a GPU but may be tolerable.
 
@@ -41,7 +42,7 @@ Once the environment is finished installing, it can be activated using the follo
     (sleap_env) C:\>
 
 Any Python installation commands (:code:`conda install` or :code:`pip install`) issued after activating an
-environment will only effect the environment. Thus it is important to make sure the environment is active when issuing
+environment will only affect the active environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.
 
 **SLEAP** is now installed in the :code:`sleap_env` conda environment. With the environment active,
@@ -66,7 +67,10 @@ We recommend installing SLEAP into an environment with Python 3.6. If you are us
     conda create -n sleap_env python=3.6 -y
     conda activate sleap_env
 
-If you are on Linux and have a GPU supported by TensorFlow which you which to use, you should follow official directions for installing `TensorFlow with GPU support <https://www.tensorflow.org/install/gpu>`_. There is no TensorFlow GPU support on MacOS X.
+If you are on Linux and have a GPU supported by TensorFlow, you should follow official directions for installing `TensorFlow with GPU support <https://www.tensorflow.org/install/gpu>`_.
+
+.. note::
+    There is no TensorFlow GPU support on MacOS X.
 
 You can then install SLEAP by running:
 
@@ -74,7 +78,7 @@ You can then install SLEAP by running:
 
     pip install sleap==1.0
 
-**SLEAP** is now installed you can run the labeling GUI by entering the following command:
+**SLEAP** is now installed, you can run the labeling GUI:
 
 ::
 
