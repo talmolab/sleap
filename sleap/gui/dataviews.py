@@ -569,7 +569,10 @@ class SkeletonNodesTableModel(GenericTableModel):
         if key == "name" and value:
             self.context.setNodeName(skeleton=self.obj, node=item, name=value)
         elif key == "symmetry":
-            self.context.setNodeSymmetry(skeleton=self.obj, node=item, symmetry=value)
+            if value in self.obj.node_names or value == "":
+                self.context.setNodeSymmetry(
+                    skeleton=self.obj, node=item, symmetry=value
+                )
 
     def get_item_color(self, item: Any, key: str):
         if self.skeleton:

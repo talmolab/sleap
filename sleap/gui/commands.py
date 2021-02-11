@@ -1496,13 +1496,13 @@ class SetNodeSymmetry(EditCommand):
         node = params["node"]
         symmetry = params["symmetry"]
         skeleton = params["skeleton"]
-
-        if symmetry:
+        if symmetry and node.name != symmetry:
             skeleton.add_symmetry(node, symmetry)
         else:
             # Value was cleared by user, so delete symmetry
             symmetric_to = skeleton.get_symmetry(node)
-            skeleton.delete_symmetry(node, symmetric_to)
+            if symmetric_to is not None:
+                skeleton.delete_symmetry(node, symmetric_to)
 
 
 class NewEdge(EditCommand):
