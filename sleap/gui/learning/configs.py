@@ -59,8 +59,9 @@ class ConfigFileInfo:
         return self._get_file_path("best_model.h5") is not None
 
     @property
-    def path_dir(self):
-        return os.path.dirname(self.path) if self.path.endswith("json") else self.path
+    def folder_path(self) -> str:
+        """Return normalized path to model folder."""
+        return str(Path(os.path.dirname(self.path) if self.path.endswith("json") else self.path))
 
     def _get_file_path(self, shortname) -> Optional[Text]:
         """
@@ -74,7 +75,7 @@ class ConfigFileInfo:
         if not self.config.outputs.run_name:
             return None
 
-        for dir in [self.config.outputs.run_path, self.path_dir]:
+        for dir in [self.config.outputs.run_path, self.folder_path]:
             full_path = os.path.join(dir, shortname)
             if os.path.exists(full_path):
                 return full_path
@@ -82,11 +83,11 @@ class ConfigFileInfo:
 
     @property
     def initial_config_path(self):
-        return os.path.join(self.path_dir, "initial_config.json")
+        return os.path.join(self.folder_path, "initial_config.json")
 
     @property
     def training_config_path(self):
-        return os.path.join(self.path_dir, "training_config.json")
+        return os.path.join(self.folder_path, "training_config.json")
 
     @property
     def metrics(self):

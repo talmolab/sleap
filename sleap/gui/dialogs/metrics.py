@@ -207,7 +207,7 @@ class MetricsTableModel(GenericTableModel):
         item_data = {
             "Timestamp": str(cfg.timestamp),
             # "Run Name": cfg.config.outputs.run_name,
-            "Path": cfg.path_dir,
+            "Path": cfg.folder_path,
             "Model Type": cfg.head_name,
             "Architecture": arch_str,
             "Training Instances": n_train_str,
@@ -264,7 +264,7 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
     def __init__(self, cfg_info: ConfigFileInfo):
         super(DetailedMetricsDialog, self).__init__()
 
-        self.setWindowTitle(cfg_info.path_dir)
+        self.setWindowTitle(cfg_info.folder_path)
         self.setMinimumWidth(800)
 
         self.cfg_info = cfg_info

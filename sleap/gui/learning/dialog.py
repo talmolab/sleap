@@ -927,7 +927,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
         widget = cls(require_trained=True, head=cfg_info.head_name)
         widget.acceptSelectedConfigInfo(cfg_info)
-        widget.setWindowTitle(cfg_info.path_dir)
+        widget.setWindowTitle(cfg_info.folder_path)
         return widget
 
     @staticmethod
