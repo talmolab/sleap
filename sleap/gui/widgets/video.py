@@ -54,6 +54,7 @@ from PySide2.QtWidgets import (
     QGraphicsPolygonItem,
 )
 
+import sleap
 from sleap.prefs import prefs
 from sleap.skeleton import Node
 from sleap.instance import Instance, Point
@@ -751,6 +752,9 @@ class GraphicsView(QGraphicsView):
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
         self.setTransformationAnchor(anchor_mode)
+
+        # Set icon as default background.
+        self.setImage(QImage(sleap.util.get_package_file("sleap/gui/icon.png")))
 
     def hasImage(self) -> bool:
         """Returns whether or not the scene contains an image pixmap."""
