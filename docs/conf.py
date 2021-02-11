@@ -40,7 +40,7 @@ release = "develop"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
-html_favicon = './_static/favicon.ico'
+html_favicon = '_static/favicon.ico'
 html_baseurl = "/develop/"
 
 # -- General configuration ---------------------------------------------------
@@ -126,6 +126,8 @@ html_theme = "furo"
 html_theme_options = {
     # Set this to add a site-wide banner:
     # "announcement": "<em>Important</em> announcement!",
+    "light_logo": "logo.png",
+    "dark_logo": "logo.png",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
