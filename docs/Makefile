@@ -8,7 +8,7 @@ SOURCEDIR     = .
 BUILDDIR      = ./build
 
 # Export the BUILDDIR so we can pick it up in conf.py. We need this to
-# be able to copy some the files in _static to an alternative location
+# be able to copy some of the files in _static to an alternative location
 # of docs/_static in order to have paths work for README.rst and index.rst
 # (which includes readme.rst)
 export BUILDDIR
@@ -24,7 +24,7 @@ api.rst:
 
 clean:
 	rm -f api.rst
-	rm -rf _autosummary
+	rm -rf api
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
