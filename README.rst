@@ -29,6 +29,9 @@
    :alt: Latest version
 
 
+.. image:: ./docs/_static/logo.png
+    :width: 200px
+
 .. start-inclusion-marker-do-not-remove
 
 
