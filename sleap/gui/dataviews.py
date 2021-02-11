@@ -388,7 +388,7 @@ class GenericCheckableTableModel(GenericTableModel):
             self.layoutChanged.emit()
             return True
         else:
-            super().setData(index, value, role)
+            return super().setData(index, value, role)
 
     def remove_checked(self):
         """Remove checked items."""

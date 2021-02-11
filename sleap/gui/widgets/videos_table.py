@@ -25,6 +25,8 @@ class VideosTableModel(GenericCheckableTableModel):
         "Path",
         "Frames",
         "Image size",
+        "First frame",
+        "Last frame",
     )
     sort_as_string = ("Path",)
     row_name = "videos"
@@ -34,8 +36,31 @@ class VideosTableModel(GenericCheckableTableModel):
             "Path": video.filename,
             "Frames": video.frames,
             "Image size": str(video.shape[1:]),
+            "First frame": 1,
+            "Last frame": video.frames,
         }
         return item_data
+
+    def can_set(self, item, key):
+        return key in ["First frame", "Last frame"]
+
+    def set_item(self, video, key, value):
+        row = self.original_items.index(video)
+        item = self.items[row]
+        try:
+            val = int(value)
+        except:
+            return
+        if key == "First frame":
+            val = min(val, len(video), item["Last frame"])
+            val = max(val, 1)
+            # self.items[row]["First frame"] = val
+            self._data[row]["First frame"] = val
+        elif key == "Last frame":
+            val = min(val, len(video))
+            val = max(val, 1, item["First frame"])
+            # self.items[row]["Last frame"] = val
+            self._data[row]["Last frame"] = val
 
 
 class VideosTableView(GenericTableView):
@@ -82,17 +107,20 @@ class VideosTableWidget(QWidget):
         status_label = QLabel("0 files selected.")
         layout.addWidget(status_label)
 
-        def update_status_label(videos):
+        def update_status_label():
+            videos = self.checked_videos
             if len(videos) == 0:
                 status_label.setText("0 videos selected.")
             else:
-                n_frames = sum(video.frames for video in videos)
+                n_frames = 0
+                for video in videos:
+                    item = self.table_model.items[
+                        self.table_model.original_items.index(video)
+                    ]
+                    n_frames += item["Last frame"] - item["First frame"] + 1
                 status_label.setText(
                     f"{len(videos)} videos selected. " f"Total: {n_frames:,} frames"
                 )
-
-        def dataChanged():
-            print(f"dataChanged: {len(self.videos)}")
 
         self.table_model.checked.connect(lambda x: remove_button.setEnabled(len(x) > 0))
         self.table_model.items_changed.connect(
@@ -102,10 +130,15 @@ class VideosTableWidget(QWidget):
             lambda x: select_none_button.setEnabled(len(x) > 0)
         )
         self.table_model.checked.connect(update_status_label)
+        self.table_model.dataChanged.connect(update_status_label)
 
     @property
     def videos(self):
         return self.table_model.original_items
+
+    @property
+    def checked_videos(self):
+        return self.table_model.checked_items
 
     @property
     def video_paths(self):
