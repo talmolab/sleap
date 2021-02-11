@@ -7,6 +7,8 @@ import h5py
 import os
 import re
 import numpy as np
+from pathlib import Path
+from itertools import groupby
 
 from sleap import Labels, Skeleton
 from sleap import util as sleap_utils
@@ -45,6 +47,7 @@ class ConfigFileInfo:
     dont_retrain: bool = False
     _skeleton: Optional[Skeleton] = None
     _tried_finding_skeleton: bool = False
+    _metrics_cache: dict = attr.ib(factory=dict)
     _dset_len_cache: dict = attr.ib(factory=dict)
 
     @property
@@ -75,8 +78,15 @@ class ConfigFileInfo:
             full_path = os.path.join(dir, shortname)
             if os.path.exists(full_path):
                 return full_path
-
         return None
+
+    @property
+    def initial_config_path(self):
+        return os.path.join(self.path_dir, "initial_config.json")
+
+    @property
+    def training_config_path(self):
+        return os.path.join(self.path_dir, "training_config.json")
 
     @property
     def metrics(self):
@@ -134,6 +144,10 @@ class ConfigFileInfo:
             year, month, day = int(match[1]), int(match[2]), int(match[3])
             hour, minute, sec = int(match[4]), int(match[5]), int(match[6])
             return datetime.datetime(2000 + year, month, day, hour, minute, sec)
+        elif os.path.exists(self.initial_config_path):
+            return datetime.datetime.fromtimestamp(
+                os.stat(self.initial_config_path).st_mtime
+            )
 
         return None
 
@@ -151,13 +165,18 @@ class ConfigFileInfo:
         return self._dset_len_cache[cache_key]
 
     def _get_metrics(self, split_name: Text):
-        metrics_path = self._get_file_path(f"metrics.{split_name}.npz")
+        """Load and cache metrics for a given split."""
+        if split_name in self._metrics_cache:
+            return self._metrics_cache[split_name]
 
+        metrics_path = self._get_file_path(f"metrics.{split_name}.npz")
         if metrics_path is None:
             return None
 
         with np.load(metrics_path, allow_pickle=True) as data:
-            return data["metrics"].item()
+            metrics = data["metrics"].item()
+        self._metrics_cache[split_name] = metrics
+        return metrics
 
     @classmethod
     def from_config_file(cls, path: Text) -> "ConfigFileInfo":
@@ -367,6 +386,21 @@ class TrainingConfigsGetter:
             json_files = sleap_utils.find_files_by_suffix(
                 config_dir, ".json", depth=self.search_depth
             )
+
+            # Keep only the training_config.json if it was found in the same folder.
+            json_files_grouped = []
+            for _, g in groupby(
+                sorted(json_files, key=lambda f: f.path), lambda p: Path(p).parent
+            ):
+                grp_files = list(g)
+                grp_names = [Path(f.path).name for f in grp_files]
+                if "training_config.json" in grp_names:
+                    fn = grp_files[grp_names.index("training_config.json")]
+                else:
+                    fn = grp_files[0]
+                json_files_grouped.append(fn)
+
+            json_files = json_files_grouped
 
             # Sort files, starting with most recently modified
             json_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)

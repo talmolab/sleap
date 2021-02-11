@@ -216,10 +216,6 @@ class MetricsTableModel(GenericTableModel):
 
         metrics = cfg.metrics
 
-        # import pprint
-        # pp = pprint.PrettyPrinter()
-        # pp.pprint(metrics)
-
         if metrics:
             item_data = {
                 **item_data,
