@@ -61,7 +61,11 @@ class ConfigFileInfo:
     @property
     def folder_path(self) -> str:
         """Return normalized path to model folder."""
-        return str(Path(os.path.dirname(self.path) if self.path.endswith("json") else self.path))
+        return str(
+            Path(
+                os.path.dirname(self.path) if self.path.endswith("json") else self.path
+            )
+        )
 
     def _get_file_path(self, shortname) -> Optional[Text]:
         """
