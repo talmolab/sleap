@@ -178,3 +178,6 @@ _docs_static_path = f"{os.environ['BUILDDIR']}/html/docs/_static"
 if os.path.exists(_docs_static_path):
     shutil.rmtree(_docs_static_path)
 shutil.copytree("_static", _docs_static_path)
+
+
+jupyter_execute_notebooks = "off"
