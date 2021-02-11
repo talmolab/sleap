@@ -5,8 +5,8 @@ High-level Overview
 
 .. image:: _static/workflow.png
 
-In a nutshell, SLEAP can be used to analyze animal behaviour from recorded video clips.
-This is a high-level overview of a typical end-to-end SLEAP workflow. You can also step thru this workflow yourself in the :ref:`Tutorial` section.
+In a nutshell, SLEAP enables analyzing animal behaviour from recorded video clips.
+Below is a high-level overview of a typical end-to-end workflow in SLEAP. You can also step thru this workflow yourself in the :ref:`Tutorial` section.
 
 1. Creating a new project and importing video file(s)
     You may import all or part of the video clips from your experiment footage. These video files will be used to build a ground-truth dataset and train the machine learning model that estimates animal pose. Link to tutorial: :ref:`new-project`

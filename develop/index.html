@@ -213,12 +213,6 @@
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
@@ -230,6 +224,12 @@
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -269,18 +269,18 @@
 <h1><strong>SLEAP</strong> - Social LEAP Estimates Animal Pose<a class="headerlink" href="#sleap-social-leap-estimates-animal-pose" title="Permalink to this headline">¶</a></h1>
 <a class="reference internal image-reference" href="https://sleap.ai/docs/_static/sleap_movie.gif"><img alt="https://sleap.ai/docs/_static/sleap_movie.gif" src="https://sleap.ai/docs/_static/sleap_movie.gif" style="width: 600px;"/></a>
 <p><strong>SLEAP</strong> is an open source deep-learning based framework for estimating positions of animal body parts. It supports <em>multi-animal pose estimation</em> and <em>tracking</em>, and includes an advanced labeling/training GUI for active learning and proofreading.</p>
-<p>SLEAP is developed by the <a class="reference external" href="pni.princeton.edu">Princeton Neuroscience Institute</a>. It is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.</p>
+<p>SLEAP is developed in the <a class="reference external" href="pni.princeton.edu">Princeton Neuroscience Institute</a>. It is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.</p>
 </div>
-<div class="section" id="key-features">
-<h1>Key Features<a class="headerlink" href="#key-features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="features">
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p>Purpose-built GUI and human-in-the-loop workflow for rapidly labeling large datasets</p></li>
 <li><p>Multi-animal pose estimation with <em>top-down</em> and <em>bottom-up</em> training strategies</p></li>
 <li><p>State-of-the-art pretrained and customizable Neural Network architectures that deliver <em>accurate predictions</em> with <em>very few</em> labels</p></li>
 <li><p>Fast training: 15 to 60 mins on a single GPU for a typical dataset</p></li>
 <li><p>Fast inference: 400+ FPS for batch, 10ms latency for realtime</p></li>
-<li><p>Support for remote training/inference workflow (for users without access to GPUs)</p></li>
-<li><p>Flexible developer API for customization and building integrated apps</p></li>
+<li><p>Support for remote training/inference workflow (for using without GPUs)</p></li>
+<li><p>Flexible developer API for building integrated apps and customization</p></li>
 </ul>
 </div>
 <div class="section" id="references">
@@ -310,7 +310,7 @@
 <li><p><strong>Joshua Shaevitz</strong>, Physics and Lewis-Sigler Institute, Princeton University</p></li>
 <li><p><strong>Mala Murthy</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
 </ul>
-<p>SLEAP was developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
+<p>SLEAP is developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
 SLEAP is the successor to <a class="reference external" href="https://github.com/talmo/leap">LEAP</a> (<a class="reference external" href="https://www.nature.com/articles/s41592-018-0234-5">Pereira et al., 2019</a>).
 To learn more about SLEAP and multi-animal pose tracking download our <a class="reference external" href="https://doi.org/10.1101/2020.08.31.276246">preprint on bioRxiv</a> or watch the <a class="reference external" href="https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking">tutorial on SLEAP</a>.</p>
 </div>
@@ -376,7 +376,7 @@ To learn more about SLEAP and multi-animal pose tracking download our <a class="
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#"><strong>SLEAP</strong> - Social LEAP Estimates Animal Pose</a></li>
-<li><a class="reference internal" href="#key-features">Key Features</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
 <li><a class="reference internal" href="#references">References</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
 <li><a class="reference internal" href="#contact">Contact</a></li>
