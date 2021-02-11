@@ -126,8 +126,6 @@ class ModelsTableWidget(QWidget):
         )
         layout.addWidget(self.table_view)
 
-        # TODO: Add batch size option?
-
     @property
     def config_infos(self) -> List[ConfigFileInfo]:
         return self.table_model.original_items
