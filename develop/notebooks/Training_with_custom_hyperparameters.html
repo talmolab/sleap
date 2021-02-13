@@ -286,11 +286,125 @@
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>'/device:GPU:0'
+</pre></div>
+</div>
+</div>
 </div>
 <p>Now let’s use <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install SLEAP from PyPI.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install sleap==1.0.10
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install sleap==1.1.0a10
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Collecting sleap==1.1.0a10
+?25l  Downloading https://files.pythonhosted.org/packages/b9/52/e80875c50a649da56377c7884d5b937260b2310f8c2543dca9bf6c3c06d4/sleap-1.1.0a10-py3-none-any.whl (39.5MB)
+     |████████████████████████████████| 39.5MB 84kB/s 
+Collecting imgaug==0.3.0
+?25l  Downloading https://files.pythonhosted.org/packages/11/df/5a3bba95b4600d5ca7aff072082ef0d9837056dd28cc4e738e7ce88dd8f8/imgaug-0.3.0-py2.py3-none-any.whl (819kB)
+     |████████████████████████████████| 829kB 46.9MB/s 
+?25hCollecting rich==9.10.0
+?25l  Downloading https://files.pythonhosted.org/packages/41/60/765dc36f3623c22fd08f152bfae65cc9f0d815c05503ea50f7c189486d10/rich-9.10.0-py3-none-any.whl (188kB)
+     |████████████████████████████████| 194kB 53.0MB/s 
+?25hRequirement already satisfied: scipy&lt;=1.4.1 in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (1.4.1)
+Collecting attrs==19.3
+  Downloading https://files.pythonhosted.org/packages/a2/db/4313ab3be961f7a763066401fb77f7748373b6094076ae2bda2806988af6/attrs-19.3.0-py2.py3-none-any.whl
+Collecting segmentation-models==1.0.1
+  Downloading https://files.pythonhosted.org/packages/da/b9/4a183518c21689a56b834eaaa45cad242d9ec09a4360b5b10139f23c63f4/segmentation_models-1.0.1-py3-none-any.whl
+Collecting qimage2ndarray==1.8
+?25l  Downloading https://files.pythonhosted.org/packages/6c/16/fdd8930ef4f5795afc3cf89f056645ff012da828a4ddcc6a3d6d41edfb53/qimage2ndarray-1.8.tar.gz (183kB)
+     |████████████████████████████████| 184kB 59.4MB/s 
+?25hRequirement already satisfied: pyzmq in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (22.0.2)
+Collecting opencv-python-headless==4.2.0.34
+?25l  Downloading https://files.pythonhosted.org/packages/43/2c/909a04b07360516953beaf6f66480bb6b84b817c6b300c1235bfb2901ad8/opencv_python_headless-4.2.0.34-cp36-cp36m-manylinux1_x86_64.whl (21.6MB)
+     |████████████████████████████████| 21.6MB 103kB/s 
+?25hCollecting python-rapidjson
+?25l  Downloading https://files.pythonhosted.org/packages/a0/8f/50488049033aba6943659d7906a45947ea5b510b74e7d44ab9d7457e1710/python_rapidjson-1.0-cp36-cp36m-manylinux2010_x86_64.whl (1.4MB)
+     |████████████████████████████████| 1.4MB 51.5MB/s 
+?25hRequirement already satisfied: seaborn in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.11.1)
+Collecting numpy&lt;1.19.0,&gt;=1.18.1
+?25l  Downloading https://files.pythonhosted.org/packages/b3/a9/b1bc4c935ed063766bce7d3e8c7b20bd52e515ff1c732b02caacf7918e5a/numpy-1.18.5-cp36-cp36m-manylinux1_x86_64.whl (20.1MB)
+     |████████████████████████████████| 20.1MB 1.4MB/s 
+?25hCollecting jsonpickle==1.2
+  Downloading https://files.pythonhosted.org/packages/07/07/c157520a3ebd166c8c24c6ae0ecae7c3968eb4653ff0e5af369bb82f004d/jsonpickle-1.2-py2.py3-none-any.whl
+Collecting cattrs==1.0.0rc
+?25l  Downloading https://files.pythonhosted.org/packages/01/f6/30e2b78920dae271ba94cb74a808021d88840b156c424c029f6255b72d3e/cattrs-1.0.0rc0-py2.py3-none-any.whl (59kB)
+     |████████████████████████████████| 61kB 8.8MB/s 
+?25hRequirement already satisfied: pandas in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (1.1.5)
+Requirement already satisfied: pyyaml in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (3.13)
+Collecting imgstore==0.2.9
+?25l  Downloading https://files.pythonhosted.org/packages/39/bb/a1099d1564c1f85752251a9549037ce36021f2b318c896be2f2b067d7e9a/imgstore-0.2.9-py2.py3-none-any.whl (904kB)
+     |████████████████████████████████| 911kB 47.3MB/s 
+?25hRequirement already satisfied: h5py==2.10.0 in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (2.10.0)
+Requirement already satisfied: networkx in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (2.5)
+Collecting scikit-video
+?25l  Downloading https://files.pythonhosted.org/packages/b1/a6/c69cad508139a342810ae46e946ebb3256aa6e42f690d901bb68f50582e3/scikit_video-1.1.11-py2.py3-none-any.whl (2.3MB)
+     |████████████████████████████████| 2.3MB 53.4MB/s 
+?25hRequirement already satisfied: scikit-learn in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.22.2.post1)
+Collecting tensorflow==2.3.1
+?25l  Downloading https://files.pythonhosted.org/packages/ad/ad/769c195c72ac72040635c66cd9ba7b0f4b4fc1ac67e59b99fa6988446c22/tensorflow-2.3.1-cp36-cp36m-manylinux2010_x86_64.whl (320.4MB)
+     |████████████████████████████████| 320.4MB 51kB/s 
+?25hCollecting jsmin
+  Downloading https://files.pythonhosted.org/packages/17/73/615d1267a82ed26cd7c124108c3c61169d8e40c36d393883eaee3a561852/jsmin-2.2.2.tar.gz
+Collecting pykalman==0.9.5
+?25l  Downloading https://files.pythonhosted.org/packages/2f/62/a4adc4516bd5974aa5583090199dd4b78d1e87018d14e9279f72ccbf0b9b/pykalman-0.9.5.tar.gz (228kB)
+     |████████████████████████████████| 235kB 50.4MB/s 
+?25hCollecting PySide2==5.14.1
+?25l  Downloading https://files.pythonhosted.org/packages/d3/ea/4699f9a83069751b98b038733b3123f5774da939ebba29a601964280a756/PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5MB)
+     |████████████████████████████████| 165.5MB 79kB/s 
+?25hRequirement already satisfied: imageio&gt;=2.3.0 in /usr/local/lib/python3.6/dist-packages (from scikit-image-&gt;sleap==1.1.0a10) (2.4.1)
+Collecting commonmark&lt;0.10.0,&gt;=0.9.0
+?25l  Downloading https://files.pythonhosted.org/packages/b1/92/dfd892312d822f36c55366118b95d914e5f16de11044a27cf10a7d71bbbf/commonmark-0.9.1-py2.py3-none-any.whl (51kB)
+     |████████████████████████████████| 51kB 8.9MB/s 
+?25hRequirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0-&gt;sleap==1.1.0a10) (2.6.1)
+Requirement already satisfied: typing-extensions&lt;4.0.0,&gt;=3.7.4 in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0-&gt;sleap==1.1.0a10) (3.7.4.3)
+Collecting colorama&lt;0.5.0,&gt;=0.4.0
+  Downloading https://files.pythonhosted.org/packages/44/98/5b86278fbbf250d239ae0ecb724f8572af1c91f4a11edf4d36a206189440/colorama-0.4.4-py2.py3-none-any.whl
+Collecting keras-applications&lt;=1.0.8,&gt;=1.0.7
+?25l  Downloading https://files.pythonhosted.org/packages/71/e3/19762fdfc62877ae9102edf6342d71b28fbfd9dea3d2f96a882ce099b03f/Keras_Applications-1.0.8-py3-none-any.whl (50kB)
+     |████████████████████████████████| 51kB 8.6MB/s 
+?25hCollecting efficientnet==1.0.0
+  Downloading https://files.pythonhosted.org/packages/97/82/f3ae07316f0461417dc54affab6e86ab188a5a22f33176d35271628b96e0/efficientnet-1.0.0-py3-none-any.whl
+Collecting image-classifiers==1.0.0
+  Downloading https://files.pythonhosted.org/packages/81/98/6f84720e299a4942ab80df5f76ab97b7828b24d1de5e9b2cbbe6073228b7/image_classifiers-1.0.0-py3-none-any.whl
+Collecting tensorflow-estimator&lt;2.4.0,&gt;=2.3.0
+?25l  Downloading https://files.pythonhosted.org/packages/e9/ed/5853ec0ae380cba4588eab1524e18ece1583b65f7ae0e97321f5ff9dfd60/tensorflow_estimator-2.3.0-py2.py3-none-any.whl (459kB)
+     |████████████████████████████████| 460kB 57.5MB/s 
+?25hCollecting shiboken2==5.14.1
+?25l  Downloading https://files.pythonhosted.org/packages/b5/9b/afca43974697e7b50ec22d3ad0c878a3d07eb89bfe75d341707ff2421772/shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847kB)
+     |████████████████████████████████| 849kB 52.7MB/s 
+?25hRequirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.6/dist-packages (from matplotlib!=3.0.0,&gt;=2.0.0-&gt;scikit-image-&gt;sleap==1.1.0a10) (0.10.0)
+Building wheels for collected packages: qimage2ndarray, jsmin, pykalman
+  Building wheel for qimage2ndarray (setup.py) ... ?25l?25hdone
+  Created wheel for qimage2ndarray: filename=qimage2ndarray-1.8-cp36-none-any.whl size=11696 sha256=87f58ad6078cd1396d24422430460b40c72904451c6c180741ab5a5e54eaad96
+  Stored in directory: /root/.cache/pip/wheels/52/ef/1d/c77ef6d3d3fe72aa88f822a05e29b17e79914af69ddeff4c02
+  Building wheel for jsmin (setup.py) ... ?25l?25hdone
+  Created wheel for jsmin: filename=jsmin-2.2.2-cp36-none-any.whl size=13921 sha256=cd932542124debabaff96e2a186bec8649aa42982bec713e493291fb482d191e
+  Stored in directory: /root/.cache/pip/wheels/64/f4/de/9667d84f759289edf5442220997c6d4334637a6bb2a7b90f73
+  Building wheel for pykalman (setup.py) ... ?25l?25hdone
+  Created wheel for pykalman: filename=pykalman-0.9.5-cp36-none-any.whl size=48464 sha256=865a0eb1a1bf0bc6d0bfade2108d175d3ca466c0be66c2d2fb026ac0f612555e
+  Stored in directory: /root/.cache/pip/wheels/d9/e8/6a/553d9832679cb74a8434fa597c3abdb07313e40054a0adf9ac
+Successfully built qimage2ndarray jsmin pykalman
+Installing collected packages: numpy, opencv-python-headless, imgaug, commonmark, colorama, rich, attrs, keras-applications, efficientnet, image-classifiers, segmentation-models, qimage2ndarray, python-rapidjson, jsonpickle, cattrs, imgstore, scikit-video, tensorflow-estimator, tensorflow, jsmin, pykalman, shiboken2, PySide2, sleap
+  Found existing installation: numpy 1.19.5
+    Uninstalling numpy-1.19.5:
+      Successfully uninstalled numpy-1.19.5
+  Found existing installation: imgaug 0.2.9
+    Uninstalling imgaug-0.2.9:
+      Successfully uninstalled imgaug-0.2.9
+  Found existing installation: attrs 20.3.0
+    Uninstalling attrs-20.3.0:
+      Successfully uninstalled attrs-20.3.0
+  Found existing installation: tensorflow-estimator 2.4.0
+    Uninstalling tensorflow-estimator-2.4.0:
+      Successfully uninstalled tensorflow-estimator-2.4.0
+  Found existing installation: tensorflow 2.4.1
+    Uninstalling tensorflow-2.4.1:
+      Successfully uninstalled tensorflow-2.4.1
+Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.3.0 imgstore-0.2.9 jsmin-2.2.2 jsonpickle-1.2 keras-applications-1.0.8 numpy-1.18.5 opencv-python-headless-4.2.0.34 pykalman-0.9.5 python-rapidjson-1.0 qimage2ndarray-1.8 rich-9.10.0 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.1.0a10 tensorflow-2.3.1 tensorflow-estimator-2.3.0
 </pre></div>
 </div>
 </div>
@@ -302,6 +416,11 @@
 <div class="cell_input docutils container">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">drive</span>
 <span class="n">drive</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s1">'/content/drive/'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Mounted at /content/drive/
 </pre></div>
 </div>
 </div>
