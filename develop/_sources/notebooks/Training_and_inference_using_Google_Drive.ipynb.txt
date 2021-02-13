@@ -59,7 +59,7 @@
       "source": [
         "%tensorflow_version 2.x"
       ],
-      "execution_count": 0,
+      "execution_count": 1,
       "outputs": []
     },
     {
@@ -76,21 +76,39 @@
       "cell_type": "code",
       "metadata": {
         "id": "9I12Lk6TKZnn",
-        "colab_type": "code",
-        "colab": {}
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 35
+        },
+        "outputId": "34e1f203-74fc-41b3-83e7-3aed695f8264"
       },
       "source": [
         "import tensorflow as tf\n",
         "tf.test.gpu_device_name()"
       ],
-      "execution_count": 0,
-      "outputs": []
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "string"
+            },
+            "text/plain": [
+              "'/device:GPU:0'"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 2
+        }
+      ]
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "pMjYpcVFqWgV",
-        "colab_type": "text"
+        "id": "pMjYpcVFqWgV"
       },
       "source": [
         "Now let's use `pip` to install SLEAP from PyPI.\n",
@@ -102,20 +120,198 @@
       "cell_type": "code",
       "metadata": {
         "id": "DUfnkxMtLcK3",
-        "colab_type": "code",
-        "colab": {}
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        },
+        "outputId": "4da8bc23-4209-4007-8507-607a30738f13"
       },
       "source": [
-        "!pip install sleap==1.0.10"
+        "!pip install sleap==1.1.0a10"
       ],
-      "execution_count": 0,
-      "outputs": []
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Collecting sleap==1.1.0a10\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/b9/52/e80875c50a649da56377c7884d5b937260b2310f8c2543dca9bf6c3c06d4/sleap-1.1.0a10-py3-none-any.whl (39.5MB)\n",
+            "\u001b[K     |████████████████████████████████| 39.5MB 83kB/s \n",
+            "\u001b[?25hCollecting numpy<1.19.0,>=1.18.1\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/b3/a9/b1bc4c935ed063766bce7d3e8c7b20bd52e515ff1c732b02caacf7918e5a/numpy-1.18.5-cp36-cp36m-manylinux1_x86_64.whl (20.1MB)\n",
+            "\u001b[K     |████████████████████████████████| 20.1MB 121kB/s \n",
+            "\u001b[?25hRequirement already satisfied: pyzmq in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (22.0.2)\n",
+            "Requirement already satisfied: networkx in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (2.5)\n",
+            "Requirement already satisfied: pyyaml in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (3.13)\n",
+            "Collecting opencv-python-headless==4.2.0.34\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/43/2c/909a04b07360516953beaf6f66480bb6b84b817c6b300c1235bfb2901ad8/opencv_python_headless-4.2.0.34-cp36-cp36m-manylinux1_x86_64.whl (21.6MB)\n",
+            "\u001b[K     |████████████████████████████████| 21.6MB 105kB/s \n",
+            "\u001b[?25hCollecting imgstore==0.2.9\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/39/bb/a1099d1564c1f85752251a9549037ce36021f2b318c896be2f2b067d7e9a/imgstore-0.2.9-py2.py3-none-any.whl (904kB)\n",
+            "\u001b[K     |████████████████████████████████| 911kB 53.6MB/s \n",
+            "\u001b[?25hCollecting imgaug==0.3.0\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/11/df/5a3bba95b4600d5ca7aff072082ef0d9837056dd28cc4e738e7ce88dd8f8/imgaug-0.3.0-py2.py3-none-any.whl (819kB)\n",
+            "\u001b[K     |████████████████████████████████| 829kB 51.8MB/s \n",
+            "\u001b[?25hCollecting attrs==19.3\n",
+            "  Downloading https://files.pythonhosted.org/packages/a2/db/4313ab3be961f7a763066401fb77f7748373b6094076ae2bda2806988af6/attrs-19.3.0-py2.py3-none-any.whl\n",
+            "Collecting pykalman==0.9.5\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/2f/62/a4adc4516bd5974aa5583090199dd4b78d1e87018d14e9279f72ccbf0b9b/pykalman-0.9.5.tar.gz (228kB)\n",
+            "\u001b[K     |████████████████████████████████| 235kB 62.6MB/s \n",
+            "\u001b[?25hCollecting jsonpickle==1.2\n",
+            "  Downloading https://files.pythonhosted.org/packages/07/07/c157520a3ebd166c8c24c6ae0ecae7c3968eb4653ff0e5af369bb82f004d/jsonpickle-1.2-py2.py3-none-any.whl\n",
+            "Collecting tensorflow==2.3.1\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/ad/ad/769c195c72ac72040635c66cd9ba7b0f4b4fc1ac67e59b99fa6988446c22/tensorflow-2.3.1-cp36-cp36m-manylinux2010_x86_64.whl (320.4MB)\n",
+            "\u001b[K     |████████████████████████████████| 320.4MB 49kB/s \n",
+            "\u001b[?25hCollecting qimage2ndarray==1.8\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/6c/16/fdd8930ef4f5795afc3cf89f056645ff012da828a4ddcc6a3d6d41edfb53/qimage2ndarray-1.8.tar.gz (183kB)\n",
+            "\u001b[K     |████████████████████████████████| 184kB 59.4MB/s \n",
+            "\u001b[?25hRequirement already satisfied: h5py==2.10.0 in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (2.10.0)\n",
+            "Requirement already satisfied: scipy<=1.4.1 in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (1.4.1)\n",
+            "Requirement already satisfied: scikit-image in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.16.2)\n",
+            "Collecting scikit-video\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/b1/a6/c69cad508139a342810ae46e946ebb3256aa6e42f690d901bb68f50582e3/scikit_video-1.1.11-py2.py3-none-any.whl (2.3MB)\n",
+            "\u001b[K     |████████████████████████████████| 2.3MB 51.2MB/s \n",
+            "\u001b[?25hRequirement already satisfied: scikit-learn in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.22.2.post1)\n",
+            "Collecting segmentation-models==1.0.1\n",
+            "  Downloading https://files.pythonhosted.org/packages/da/b9/4a183518c21689a56b834eaaa45cad242d9ec09a4360b5b10139f23c63f4/segmentation_models-1.0.1-py3-none-any.whl\n",
+            "Collecting cattrs==1.0.0rc\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/01/f6/30e2b78920dae271ba94cb74a808021d88840b156c424c029f6255b72d3e/cattrs-1.0.0rc0-py2.py3-none-any.whl (59kB)\n",
+            "\u001b[K     |████████████████████████████████| 61kB 8.3MB/s \n",
+            "\u001b[?25hCollecting jsmin\n",
+            "  Downloading https://files.pythonhosted.org/packages/17/73/615d1267a82ed26cd7c124108c3c61169d8e40c36d393883eaee3a561852/jsmin-2.2.2.tar.gz\n",
+            "Requirement already satisfied: seaborn in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.11.1)\n",
+            "Collecting PySide2==5.14.1\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/d3/ea/4699f9a83069751b98b038733b3123f5774da939ebba29a601964280a756/PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5MB)\n",
+            "\u001b[K     |████████████████████████████████| 165.5MB 94kB/s \n",
+            "\u001b[?25hRequirement already satisfied: pandas in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (1.1.5)\n",
+            "Collecting rich==9.10.0\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/41/60/765dc36f3623c22fd08f152bfae65cc9f0d815c05503ea50f7c189486d10/rich-9.10.0-py3-none-any.whl (188kB)\n",
+            "\u001b[K     |████████████████████████████████| 194kB 60.3MB/s \n",
+            "\u001b[?25hRequirement already satisfied: psutil in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (5.4.8)\n",
+            "Collecting python-rapidjson\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/a0/8f/50488049033aba6943659d7906a45947ea5b510b74e7d44ab9d7457e1710/python_rapidjson-1.0-cp36-cp36m-manylinux2010_x86_64.whl (1.4MB)\n",
+            "\u001b[K     |████████████████████████████████| 1.4MB 45.8MB/s \n",
+            "\u001b[?25hRequirement already satisfied: decorator>=4.3.0 in /usr/local/lib/python3.6/dist-packages (from networkx->sleap==1.1.0a10) (4.4.2)\n",
+            "Requirement already satisfied: tzlocal in /usr/local/lib/python3.6/dist-packages (from imgstore==0.2.9->sleap==1.1.0a10) (1.5.1)\n",
+            "Requirement already satisfied: pytz in /usr/local/lib/python3.6/dist-packages (from imgstore==0.2.9->sleap==1.1.0a10) (2018.9)\n",
+            "Requirement already satisfied: python-dateutil in /usr/local/lib/python3.6/dist-packages (from imgstore==0.2.9->sleap==1.1.0a10) (2.8.1)\n",
+            "Requirement already satisfied: Pillow in /usr/local/lib/python3.6/dist-packages (from imgaug==0.3.0->sleap==1.1.0a10) (7.0.0)\n",
+            "Requirement already satisfied: six in /usr/local/lib/python3.6/dist-packages (from imgaug==0.3.0->sleap==1.1.0a10) (1.15.0)\n",
+            "Requirement already satisfied: imageio in /usr/local/lib/python3.6/dist-packages (from imgaug==0.3.0->sleap==1.1.0a10) (2.4.1)\n",
+            "Requirement already satisfied: matplotlib in /usr/local/lib/python3.6/dist-packages (from imgaug==0.3.0->sleap==1.1.0a10) (3.2.2)\n",
+            "Requirement already satisfied: Shapely in /usr/local/lib/python3.6/dist-packages (from imgaug==0.3.0->sleap==1.1.0a10) (1.7.1)\n",
+            "Requirement already satisfied: tensorboard<3,>=2.3.0 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (2.4.1)\n",
+            "Requirement already satisfied: wrapt>=1.11.1 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (1.12.1)\n",
+            "Requirement already satisfied: google-pasta>=0.1.8 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (0.2.0)\n",
+            "Requirement already satisfied: termcolor>=1.1.0 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (1.1.0)\n",
+            "Requirement already satisfied: wheel>=0.26 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (0.36.2)\n",
+            "Requirement already satisfied: keras-preprocessing<1.2,>=1.1.1 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (1.1.2)\n",
+            "Requirement already satisfied: opt-einsum>=2.3.2 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (3.3.0)\n",
+            "Requirement already satisfied: gast==0.3.3 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (0.3.3)\n",
+            "Requirement already satisfied: grpcio>=1.8.6 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (1.32.0)\n",
+            "Requirement already satisfied: protobuf>=3.9.2 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (3.12.4)\n",
+            "Collecting tensorflow-estimator<2.4.0,>=2.3.0\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/e9/ed/5853ec0ae380cba4588eab1524e18ece1583b65f7ae0e97321f5ff9dfd60/tensorflow_estimator-2.3.0-py2.py3-none-any.whl (459kB)\n",
+            "\u001b[K     |████████████████████████████████| 460kB 48.4MB/s \n",
+            "\u001b[?25hRequirement already satisfied: astunparse==1.6.3 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (1.6.3)\n",
+            "Requirement already satisfied: absl-py>=0.7.0 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1->sleap==1.1.0a10) (0.10.0)\n",
+            "Requirement already satisfied: PyWavelets>=0.4.0 in /usr/local/lib/python3.6/dist-packages (from scikit-image->sleap==1.1.0a10) (1.1.1)\n",
+            "Requirement already satisfied: joblib>=0.11 in /usr/local/lib/python3.6/dist-packages (from scikit-learn->sleap==1.1.0a10) (1.0.0)\n",
+            "Collecting efficientnet==1.0.0\n",
+            "  Downloading https://files.pythonhosted.org/packages/97/82/f3ae07316f0461417dc54affab6e86ab188a5a22f33176d35271628b96e0/efficientnet-1.0.0-py3-none-any.whl\n",
+            "Collecting keras-applications<=1.0.8,>=1.0.7\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/71/e3/19762fdfc62877ae9102edf6342d71b28fbfd9dea3d2f96a882ce099b03f/Keras_Applications-1.0.8-py3-none-any.whl (50kB)\n",
+            "\u001b[K     |████████████████████████████████| 51kB 8.8MB/s \n",
+            "\u001b[?25hCollecting image-classifiers==1.0.0\n",
+            "  Downloading https://files.pythonhosted.org/packages/81/98/6f84720e299a4942ab80df5f76ab97b7828b24d1de5e9b2cbbe6073228b7/image_classifiers-1.0.0-py3-none-any.whl\n",
+            "Collecting shiboken2==5.14.1\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/b5/9b/afca43974697e7b50ec22d3ad0c878a3d07eb89bfe75d341707ff2421772/shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847kB)\n",
+            "\u001b[K     |████████████████████████████████| 849kB 49.7MB/s \n",
+            "\u001b[?25hCollecting colorama<0.5.0,>=0.4.0\n",
+            "  Downloading https://files.pythonhosted.org/packages/44/98/5b86278fbbf250d239ae0ecb724f8572af1c91f4a11edf4d36a206189440/colorama-0.4.4-py2.py3-none-any.whl\n",
+            "Requirement already satisfied: pygments<3.0.0,>=2.6.0 in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0->sleap==1.1.0a10) (2.6.1)\n",
+            "Requirement already satisfied: typing-extensions<4.0.0,>=3.7.4 in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0->sleap==1.1.0a10) (3.7.4.3)\n",
+            "Requirement already satisfied: dataclasses<0.9,>=0.7; python_version >= \"3.6\" and python_version < \"3.7\" in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0->sleap==1.1.0a10) (0.8)\n",
+            "Collecting commonmark<0.10.0,>=0.9.0\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/b1/92/dfd892312d822f36c55366118b95d914e5f16de11044a27cf10a7d71bbbf/commonmark-0.9.1-py2.py3-none-any.whl (51kB)\n",
+            "\u001b[K     |████████████████████████████████| 51kB 7.6MB/s \n",
+            "\u001b[?25hRequirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,>=2.0.1 in /usr/local/lib/python3.6/dist-packages (from matplotlib->imgaug==0.3.0->sleap==1.1.0a10) (2.4.7)\n",
+            "Requirement already satisfied: kiwisolver>=1.0.1 in /usr/local/lib/python3.6/dist-packages (from matplotlib->imgaug==0.3.0->sleap==1.1.0a10) (1.3.1)\n",
+            "Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.6/dist-packages (from matplotlib->imgaug==0.3.0->sleap==1.1.0a10) (0.10.0)\n",
+            "Requirement already satisfied: google-auth-oauthlib<0.5,>=0.4.1 in /usr/local/lib/python3.6/dist-packages (from tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (0.4.2)\n",
+            "Requirement already satisfied: werkzeug>=0.11.15 in /usr/local/lib/python3.6/dist-packages (from tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (1.0.1)\n",
+            "Requirement already satisfied: markdown>=2.6.8 in /usr/local/lib/python3.6/dist-packages (from tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (3.3.3)\n",
+            "Requirement already satisfied: requests<3,>=2.21.0 in /usr/local/lib/python3.6/dist-packages (from tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (2.23.0)\n",
+            "Requirement already satisfied: google-auth<2,>=1.6.3 in /usr/local/lib/python3.6/dist-packages (from tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (1.25.0)\n",
+            "Requirement already satisfied: setuptools>=41.0.0 in /usr/local/lib/python3.6/dist-packages (from tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (53.0.0)\n",
+            "Requirement already satisfied: tensorboard-plugin-wit>=1.6.0 in /usr/local/lib/python3.6/dist-packages (from tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (1.8.0)\n",
+            "Requirement already satisfied: requests-oauthlib>=0.7.0 in /usr/local/lib/python3.6/dist-packages (from google-auth-oauthlib<0.5,>=0.4.1->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (1.3.0)\n",
+            "Requirement already satisfied: importlib-metadata; python_version < \"3.8\" in /usr/local/lib/python3.6/dist-packages (from markdown>=2.6.8->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (3.4.0)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.6/dist-packages (from requests<3,>=2.21.0->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (2020.12.5)\n",
+            "Requirement already satisfied: idna<3,>=2.5 in /usr/local/lib/python3.6/dist-packages (from requests<3,>=2.21.0->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (2.10)\n",
+            "Requirement already satisfied: chardet<4,>=3.0.2 in /usr/local/lib/python3.6/dist-packages (from requests<3,>=2.21.0->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (3.0.4)\n",
+            "Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in /usr/local/lib/python3.6/dist-packages (from requests<3,>=2.21.0->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (1.24.3)\n",
+            "Requirement already satisfied: pyasn1-modules>=0.2.1 in /usr/local/lib/python3.6/dist-packages (from google-auth<2,>=1.6.3->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (0.2.8)\n",
+            "Requirement already satisfied: cachetools<5.0,>=2.0.0 in /usr/local/lib/python3.6/dist-packages (from google-auth<2,>=1.6.3->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (4.2.1)\n",
+            "Requirement already satisfied: rsa<5,>=3.1.4; python_version >= \"3.6\" in /usr/local/lib/python3.6/dist-packages (from google-auth<2,>=1.6.3->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (4.7)\n",
+            "Requirement already satisfied: oauthlib>=3.0.0 in /usr/local/lib/python3.6/dist-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib<0.5,>=0.4.1->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (3.1.0)\n",
+            "Requirement already satisfied: zipp>=0.5 in /usr/local/lib/python3.6/dist-packages (from importlib-metadata; python_version < \"3.8\"->markdown>=2.6.8->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (3.4.0)\n",
+            "Requirement already satisfied: pyasn1<0.5.0,>=0.4.6 in /usr/local/lib/python3.6/dist-packages (from pyasn1-modules>=0.2.1->google-auth<2,>=1.6.3->tensorboard<3,>=2.3.0->tensorflow==2.3.1->sleap==1.1.0a10) (0.4.8)\n",
+            "Building wheels for collected packages: pykalman, qimage2ndarray, jsmin\n",
+            "  Building wheel for pykalman (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for pykalman: filename=pykalman-0.9.5-cp36-none-any.whl size=48464 sha256=a9f29ac5e417c8447035238754a9b2ab0d54e3d7792b92eb2f998c9da2f919d9\n",
+            "  Stored in directory: /root/.cache/pip/wheels/d9/e8/6a/553d9832679cb74a8434fa597c3abdb07313e40054a0adf9ac\n",
+            "  Building wheel for qimage2ndarray (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for qimage2ndarray: filename=qimage2ndarray-1.8-cp36-none-any.whl size=11696 sha256=1699000301d530fa0739661ea993278e79c48812f313089881eea7f42bd55210\n",
+            "  Stored in directory: /root/.cache/pip/wheels/52/ef/1d/c77ef6d3d3fe72aa88f822a05e29b17e79914af69ddeff4c02\n",
+            "  Building wheel for jsmin (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for jsmin: filename=jsmin-2.2.2-cp36-none-any.whl size=13921 sha256=2e73dbea2cb2472654d5f25faa8b0dbe84c9f4bd24e14cf94243f9b3aa20839d\n",
+            "  Stored in directory: /root/.cache/pip/wheels/64/f4/de/9667d84f759289edf5442220997c6d4334637a6bb2a7b90f73\n",
+            "Successfully built pykalman qimage2ndarray jsmin\n",
+            "\u001b[31mERROR: datascience 0.10.6 has requirement folium==0.2.1, but you'll have folium 0.8.3 which is incompatible.\u001b[0m\n",
+            "\u001b[31mERROR: albumentations 0.1.12 has requirement imgaug<0.2.7,>=0.2.5, but you'll have imgaug 0.3.0 which is incompatible.\u001b[0m\n",
+            "Installing collected packages: numpy, opencv-python-headless, imgstore, imgaug, attrs, pykalman, jsonpickle, tensorflow-estimator, tensorflow, qimage2ndarray, scikit-video, keras-applications, efficientnet, image-classifiers, segmentation-models, cattrs, jsmin, shiboken2, PySide2, colorama, commonmark, rich, python-rapidjson, sleap\n",
+            "  Found existing installation: numpy 1.19.5\n",
+            "    Uninstalling numpy-1.19.5:\n",
+            "      Successfully uninstalled numpy-1.19.5\n",
+            "  Found existing installation: imgaug 0.2.9\n",
+            "    Uninstalling imgaug-0.2.9:\n",
+            "      Successfully uninstalled imgaug-0.2.9\n",
+            "  Found existing installation: attrs 20.3.0\n",
+            "    Uninstalling attrs-20.3.0:\n",
+            "      Successfully uninstalled attrs-20.3.0\n",
+            "  Found existing installation: tensorflow-estimator 2.4.0\n",
+            "    Uninstalling tensorflow-estimator-2.4.0:\n",
+            "      Successfully uninstalled tensorflow-estimator-2.4.0\n",
+            "  Found existing installation: tensorflow 2.4.1\n",
+            "    Uninstalling tensorflow-2.4.1:\n",
+            "      Successfully uninstalled tensorflow-2.4.1\n",
+            "Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.3.0 imgstore-0.2.9 jsmin-2.2.2 jsonpickle-1.2 keras-applications-1.0.8 numpy-1.18.5 opencv-python-headless-4.2.0.34 pykalman-0.9.5 python-rapidjson-1.0 qimage2ndarray-1.8 rich-9.10.0 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.1.0a10 tensorflow-2.3.1 tensorflow-estimator-2.3.0\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "application/vnd.colab-display-data+json": {
+              "pip_warning": {
+                "packages": [
+                  "numpy",
+                  "tensorflow"
+                ]
+              }
+            }
+          },
+          "metadata": {
+            "tags": []
+          }
+        }
+      ]
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "iq7jrgUksLtR",
-        "colab_type": "text"
+        "id": "iq7jrgUksLtR"
       },
       "source": [
         "## Getting your training data into Colab\n",
@@ -129,21 +325,30 @@
       "cell_type": "code",
       "metadata": {
         "id": "GBWjF4jpMG2N",
-        "colab_type": "code",
-        "colab": {}
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "d4b95967-c85a-4983-9896-84e2a41546d4"
       },
       "source": [
         "from google.colab import drive\n",
         "drive.mount('/content/drive/')"
       ],
-      "execution_count": 0,
-      "outputs": []
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Mounted at /content/drive/\n"
+          ],
+          "name": "stdout"
+        }
+      ]
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "KQhv_gsdJzaq",
-        "colab_type": "text"
+        "id": "KQhv_gsdJzaq"
       },
       "source": [
         "Now let's create a training package and copy it into your Google Drive.\n",
@@ -162,21 +367,18 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "9umui-gI2rBz",
-        "colab_type": "code",
-        "colab": {}
+        "id": "9umui-gI2rBz"
       },
       "source": [
         "import os\n",
         "os.chdir(\"/content/drive/My Drive/sleap\")"
       ],
-      "execution_count": 0,
+      "execution_count": 7,
       "outputs": []
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "colab_type": "text",
         "id": "xZ-sr67av5uu"
       },
       "source": [
@@ -194,21 +396,18 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "QKf6qzMqNBUi",
-        "colab_type": "code",
-        "colab": {}
+        "id": "QKf6qzMqNBUi"
       },
       "source": [
         "!sleap-train baseline_medium_rf.bottomup.json colab.pkg.slp --run_name \"colab_demo.bottomup\""
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "whOf8PaFxYbt",
-        "colab_type": "text"
+        "id": "whOf8PaFxYbt"
       },
       "source": [
         "Once training finishes, you'll have a trained model for confidence maps on your Google Drive. There will be a `models/` directory inside your `sleap/` directory (or wherever you had the training package), and inside this there will be a `colab_demo.bottomup` directory (the name of this directory was set by the `--run_name` parameter). \n",
@@ -219,8 +418,7 @@
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "Q7JUp9P840qB",
-        "colab_type": "text"
+        "id": "Q7JUp9P840qB"
       },
       "source": [
         "## Training other models\n",
@@ -233,34 +431,29 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "WZVftKcJ46jU",
-        "colab_type": "code",
-        "colab": {}
+        "id": "WZVftKcJ46jU"
       },
       "source": [
         "!sleap-train baseline_medium_rf.topdown.json --run_name \"colab_demo.topdown_confmaps\""
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     },
     {
       "cell_type": "code",
       "metadata": {
-        "id": "DsPTDnkW49-5",
-        "colab_type": "code",
-        "colab": {}
+        "id": "DsPTDnkW49-5"
       },
       "source": [
         "!sleap-train baseline.centroid.json colab.pkg.slp --run_name \"colab_demo.centroid\""
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "nIsKUX661xFK",
-        "colab_type": "text"
+        "id": "nIsKUX661xFK"
       },
       "source": [
         "# Inference\n",
@@ -271,21 +464,18 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "01HDohE5upwQ",
-        "colab_type": "code",
-        "colab": {}
+        "id": "01HDohE5upwQ"
       },
       "source": [
         "!ls models"
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "MNi260mJuyJ7",
-        "colab_type": "text"
+        "id": "MNi260mJuyJ7"
       },
       "source": [
         "We'll also need a video for which we want predictions. Copy the video onto your Google drive.\n",
@@ -298,9 +488,7 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "CLtjtq9E1Znr",
-        "colab_type": "code",
-        "colab": {}
+        "id": "CLtjtq9E1Znr"
       },
       "source": [
         "!sleap-track colab_demo.mp4 \\\n",
@@ -308,14 +496,13 @@
         "    --tracking.tracker simple \\\n",
         "    -m models/colab_demo.bottomup"
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "nzObCUToEqwA",
-        "colab_type": "text"
+        "id": "nzObCUToEqwA"
       },
       "source": [
         "When inference is finished, it will save the predictions in a file which can be opened in the GUI as a SLEAP project file. The file will be in the same directory as the video and the filename will be `{video filename}.predictions.slp`.\n",
@@ -326,21 +513,18 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "nPfmNMSt-vS7",
-        "colab_type": "code",
-        "colab": {}
+        "id": "nPfmNMSt-vS7"
       },
       "source": [
         "!sleap-inspect colab_demo.mp4.predictions.slp"
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "LoJ2kNBK-w6k",
-        "colab_type": "text"
+        "id": "LoJ2kNBK-w6k"
       },
       "source": [
         "You can copy this file from your Google Drive to a local drive and open it in the SLEAP GUI app (or open it directly if you have your Google Drive mounted on your local machine). If the video is in the same directory as the predictions file, SLEAP will automatically find it; otherwise, you'll be prompted to locate the video (since the path to the video on your local machine will be different than the path to the video on Colab)."
@@ -349,8 +533,7 @@
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "Mf-MsD7fv5Wy",
-        "colab_type": "text"
+        "id": "Mf-MsD7fv5Wy"
       },
       "source": [
         "## Inference parameters\n",
@@ -363,21 +546,18 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "6hh4ogd9wtxP",
-        "colab_type": "code",
-        "colab": {}
+        "id": "6hh4ogd9wtxP"
       },
       "source": [
         "!sleap-track --help"
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     },
     {
       "cell_type": "markdown",
       "metadata": {
-        "id": "qW-NoJOFvYHM",
-        "colab_type": "text"
+        "id": "qW-NoJOFvYHM"
       },
       "source": [
         "## Inference with top-down models\n",
@@ -388,9 +568,7 @@
     {
       "cell_type": "code",
       "metadata": {
-        "id": "QPKnMc1qvim7",
-        "colab_type": "code",
-        "colab": {}
+        "id": "QPKnMc1qvim7"
       },
       "source": [
         "!sleap-track colab_demo.video.mp4 \\\n",
@@ -399,7 +577,7 @@
         "    -m models/colab_demo.topdown_confmaps \\\n",
         "    -m models/colab_demo.centroid"
       ],
-      "execution_count": 0,
+      "execution_count": null,
       "outputs": []
     }
   ]
