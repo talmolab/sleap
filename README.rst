@@ -63,7 +63,7 @@ If you use **SLEAP** in your research, please cite:
 
 License
 -------
-SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/murthylab/sleap/master/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
+SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/murthylab/sleap/main/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
 
 Contact
 -------
