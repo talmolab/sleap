@@ -10,6 +10,7 @@ on:
     paths:
       - 'docs/**'
       - 'README.rst'
+      - '.github/workflows/website.yml'
 
 jobs:
   build:
@@ -60,5 +61,6 @@ jobs:
         if: github.ref != 'refs/heads/master'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages-test
+          publish_branch: gh-pages
           publish_dir: docs/build/html
+          destination_dir: develop

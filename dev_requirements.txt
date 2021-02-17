@@ -3,8 +3,10 @@ pytest-qt
 pytest-cov
 ipython
 sphinx
-sphinx_rtd_theme
-coveralls
+furo
+sphinx-copybutton
+myst-nb
+sphinx-autobuild
 black
 pre-commit
 twine
