@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.monitor" href="sleap.nn.monitor.html" /><link rel="prev" title="sleap.nn.losses" href="sleap.nn.losses.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.nn.model - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -273,11 +273,11 @@ parameters required to construct the actual model. This allows for easy querying
 model configuration without actually instantiating the model itself.</p>
 <dl class="py class">
 <dt id="sleap.nn.model.Model">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backbone</span><span class="p">:</span> <span class="n">Architecture</span></em>, <em class="sig-param"><span class="n">heads</span></em>, <em class="sig-param"><span class="n">keras_model</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>tensorflow.python.keras.engine.training.Model<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/model.py#L82-L285"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.model.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.model.</span></code><code class="sig-name descname"><span class="pre">Model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Architecture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.keras.engine.training.Model</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/model.py#L82-L285"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.model.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>SLEAP model that describes an architecture and output types.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.model.Model.backbone">
-<code class="sig-name descname">backbone</code><a class="headerlink" href="#sleap.nn.model.Model.backbone" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">backbone</span></code><a class="headerlink" href="#sleap.nn.model.Model.backbone" title="Permalink to this definition">¶</a></dt>
 <dd><p>An <code class="xref py py-obj docutils literal notranslate"><span class="pre">Architecture</span></code> class that provides methods for building a
 tf.keras.Model given an input.</p>
 <dl class="field-list simple">
@@ -288,7 +288,7 @@ tf.keras.Model given an input.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.model.Model.heads">
-<code class="sig-name descname">heads</code><a class="headerlink" href="#sleap.nn.model.Model.heads" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">heads</span></code><a class="headerlink" href="#sleap.nn.model.Model.heads" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of <a href="#id1"><span class="problematic" id="id2">`</span></a>Head`s that define the outputs of the network.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -298,7 +298,7 @@ tf.keras.Model given an input.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.model.Model.keras_model">
-<code class="sig-name descname">keras_model</code><a class="headerlink" href="#sleap.nn.model.Model.keras_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">keras_model</span></code><a class="headerlink" href="#sleap.nn.model.Model.keras_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>The current <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> instance if one has been created.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -308,7 +308,7 @@ tf.keras.Model given an input.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.model.Model.from_config">
-<em class="property">classmethod </em><code class="sig-name descname">from_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig" title="sleap.nn.config.model.ModelConfig">sleap.nn.config.model.ModelConfig</a></span></em>, <em class="sig-param"><span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">update_config</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.model.Model" title="sleap.nn.model.Model">sleap.nn.model.Model</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/model.py#L96-L210"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.model.Model.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig" title="sleap.nn.config.model.ModelConfig"><span class="pre">sleap.nn.config.model.ModelConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/model.py#L96-L210"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.model.Model.from_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a SLEAP model from configurations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -326,7 +326,7 @@ values inferred from other fields.</p></li>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.model.Model.make_model">
-<code class="sig-name descname">make_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">, </span>int<span class="p">]</span></span></em><span class="sig-paren">)</span> → tensorflow.python.keras.engine.training.Model<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/model.py#L217-L285"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.model.Model.make_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">make_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.keras.engine.training.Model</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/model.py#L217-L285"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.model.Model.make_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a trainable model by connecting the backbone with the heads.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -340,7 +340,7 @@ inputs before preprocessing.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.model.Model.maximum_stride">
-<em class="property">property </em><code class="sig-name descname">maximum_stride</code><a class="headerlink" href="#sleap.nn.model.Model.maximum_stride" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">maximum_stride</span></code><a class="headerlink" href="#sleap.nn.model.Model.maximum_stride" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the maximum stride of the model backbone.</p>
 </dd></dl>
 </dd></dl>

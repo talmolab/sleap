@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.architectures.leap" href="sleap.nn.architectures.leap.html" /><link rel="prev" title="sleap.nn.architectures.hourglass" href="sleap.nn.architectures.hourglass.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.nn.architectures.hrnet - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -275,11 +275,11 @@ implement HigherHRNet’s configuration and new deconvolution heads.</p>
 <a class="reference external" href="https://arxiv.org/pdf/1908.10357.pdf">https://arxiv.org/pdf/1908.10357.pdf</a></p>
 <dl class="py class">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.hrnet.</code><code class="sig-name descname">HigherHRNet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">C</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">18</span></em>, <em class="sig-param"><span class="n">initial_downsampling_steps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">n_deconv_modules</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">bottleneck</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">deconv_filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">256</span></em>, <em class="sig-param"><span class="n">bilinear_upsampling</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">stem_filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L576-L645"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hrnet.</span></code><code class="sig-name descname"><span class="pre">HigherHRNet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">18</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_downsampling_steps</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_deconv_modules</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottleneck</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deconv_filters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bilinear_upsampling</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_filters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">64</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L576-L645"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet" title="Permalink to this definition">¶</a></dt>
 <dd><p>HigherHRNet backbone.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.C">
-<code class="sig-name descname">C</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.C" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">C</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.C" title="Permalink to this definition">¶</a></dt>
 <dd><p>The variant of HRNet to use. The most common is HRNet32, which has ~30M
 params. This number is effectively the number of filters at the highest
 resolution output.</p>
@@ -291,7 +291,7 @@ resolution output.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.initial_downsampling_steps">
-<code class="sig-name descname">initial_downsampling_steps</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.initial_downsampling_steps" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">initial_downsampling_steps</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.initial_downsampling_steps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of initial downsampling steps at the stem.
 Decrease if this introduces too much loss of resolution from the initial
 images.</p>
@@ -303,7 +303,7 @@ images.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.n_deconv_modules">
-<code class="sig-name descname">n_deconv_modules</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.n_deconv_modules" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">n_deconv_modules</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.n_deconv_modules" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of upsampling steps to perform at the head. If this is
 equal to initial_downsampling_steps, the output will be at the same scale as
 the input.</p>
@@ -315,7 +315,7 @@ the input.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.bottleneck">
-<code class="sig-name descname">bottleneck</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.bottleneck" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">bottleneck</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.bottleneck" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, uses bottleneck blocks instead of simple residual blocks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -325,7 +325,7 @@ the input.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.deconv_filters">
-<code class="sig-name descname">deconv_filters</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.deconv_filters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">deconv_filters</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.deconv_filters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of filters to use in deconv blocks if using transposed
 convolutions.</p>
 <dl class="field-list simple">
@@ -336,7 +336,7 @@ convolutions.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.bilinear_upsampling">
-<code class="sig-name descname">bilinear_upsampling</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.bilinear_upsampling" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">bilinear_upsampling</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.bilinear_upsampling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use bilinear upsampling instead of transposed convolutions
 at the output heads.</p>
 <dl class="field-list simple">
@@ -347,12 +347,12 @@ at the output heads.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.down_blocks">
-<em class="property">property </em><code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.down_blocks" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">down_blocks</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.down_blocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of downsampling steps in the model.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span></em>, <em class="sig-param"><span class="n">n_output_channels</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L604-L633"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_output_channels</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L604-L633"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds the layers for this backbone and return the output tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -375,23 +375,23 @@ at the output heads.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.hrnet.HigherHRNet.output_scale">
-<em class="property">property </em><code class="sig-name descname">output_scale</code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.output_scale" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">output_scale</span></code><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.output_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns relative scaling factor of this backbone.</p>
 </dd></dl>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.architectures.hrnet.adjust_prefix">
-<code class="sig-prename descclassname">sleap.nn.architectures.hrnet.</code><code class="sig-name descname">adjust_prefix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name_prefix</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L16-L25"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.adjust_prefix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hrnet.</span></code><code class="sig-name descname"><span class="pre">adjust_prefix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_prefix</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L16-L25"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.adjust_prefix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a delimiter if the prefix is not empty.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.architectures.hrnet.bottleneck_block">
-<code class="sig-prename descclassname">sleap.nn.architectures.hrnet.</code><code class="sig-name descname">bottleneck_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span></em>, <em class="sig-param"><span class="n">filters</span></em>, <em class="sig-param"><span class="n">expansion_rate</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">name_prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L99-L137"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.bottleneck_block" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hrnet.</span></code><code class="sig-name descname"><span class="pre">bottleneck_block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expansion_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L99-L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.bottleneck_block" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a convolutional block with bottleneck.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.architectures.hrnet.simple_block">
-<code class="sig-prename descclassname">sleap.nn.architectures.hrnet.</code><code class="sig-name descname">simple_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span></em>, <em class="sig-param"><span class="n">filters</span></em>, <em class="sig-param"><span class="n">stride</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">downsampling_layer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name_prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L61-L96"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.simple_block" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hrnet.</span></code><code class="sig-name descname"><span class="pre">simple_block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downsampling_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/hrnet.py#L61-L96"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.simple_block" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a basic residual convolutional block.</p>
 </dd></dl>
 </div>

@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.io.format.genericjson" href="sleap.io.format.genericjson.html" /><link rel="prev" title="sleap.io.format.dispatch" href="sleap.io.format.dispatch.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.io.format.filehandle - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -273,21 +273,21 @@ dispatch is determining which adaptor to use, and the <a class="reference intern
 to keep any results from previous reads.</p>
 <dl class="py class">
 <dt id="sleap.io.format.filehandle.FileHandle">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.io.format.filehandle.</code><code class="sig-name descname">FileHandle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">is_hdf5</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_json</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_open</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">text</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">json</span><span class="p">:</span> <span class="n">object</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/filehandle.py#L18-L115"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.io.format.filehandle.</span></code><code class="sig-name descname"><span class="pre">FileHandle</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_hdf5</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_json</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_open</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">object</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">object</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/filehandle.py#L18-L115"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reference to a file; can hold loaded data so it needn’t be read twice.</p>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/filehandle.py#L53-L56"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">close</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/filehandle.py#L53-L56"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Closes the file.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.file">
-<em class="property">property </em><code class="sig-name descname">file</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.file" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">file</span></code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.file" title="Permalink to this definition">¶</a></dt>
 <dd><p>The raw file object.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.format_id">
-<em class="property">property </em><code class="sig-name descname">format_id</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.format_id" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">format_id</span></code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.format_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an ID from the metadata we store in some HDF5 or JSON formats.</p>
 <p>This can be used if we need to distinguish multiple formats with a
 common underlying file type, e.g., HDF5-based file formats. See
@@ -296,27 +296,27 @@ determine whether to convert from “gridline” to “midpixel” coordinates).
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.is_hdf5">
-<em class="property">property </em><code class="sig-name descname">is_hdf5</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_hdf5" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">is_hdf5</span></code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether file is HDF5.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.is_json">
-<em class="property">property </em><code class="sig-name descname">is_json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_json" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">is_json</span></code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.is_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether file is JSON.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.json">
-<em class="property">property </em><code class="sig-name descname">json</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.json" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">json</span></code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.json" title="Permalink to this definition">¶</a></dt>
 <dd><p>The loaded JSON dictionary (for a JSON file).</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.open">
-<code class="sig-name descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/filehandle.py#L36-L51"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.open" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">open</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/filehandle.py#L36-L51"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opens the file (if it’s not already open).</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.filehandle.FileHandle.text">
-<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.text" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">text</span></code><a class="headerlink" href="#sleap.io.format.filehandle.FileHandle.text" title="Permalink to this definition">¶</a></dt>
 <dd><p>The text from a text file.</p>
 </dd></dl>
 </dd></dl>

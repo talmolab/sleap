@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.model" href="sleap.nn.model.html" /><link rel="prev" title="sleap.nn.inference" href="sleap.nn.inference.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.nn.losses - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -270,7 +270,7 @@
 <p>Custom loss functions and metrics.</p>
 <dl class="py class">
 <dt id="sleap.nn.losses.OHKMLoss">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.losses.</code><code class="sig-name descname">OHKMLoss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hard_to_easy_ratio</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">min_hard_keypoints</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">max_hard_keypoints</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">loss_scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'ohkm'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L54-L110"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.losses.OHKMLoss" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.losses.</span></code><code class="sig-name descname"><span class="pre">OHKMLoss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hard_to_easy_ratio</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_scale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ohkm'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L54-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.losses.OHKMLoss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Online hard keypoint mining loss.</p>
 <p>This loss serves to dynamically reweight the MSE of the top-K worst channels in each
 batch. This is useful when fine tuning a model to improve performance on a hard
@@ -278,20 +278,20 @@ part to optimize for (e.g., small, hard to see, often not visible).</p>
 <p>Note: This works with any type of channel, so it can work for PAFs as well.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.losses.OHKMLoss.hard_to_easy_ratio">
-<code class="sig-name descname">hard_to_easy_ratio</code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.hard_to_easy_ratio" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">hard_to_easy_ratio</span></code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.hard_to_easy_ratio" title="Permalink to this definition">¶</a></dt>
 <dd><p>The minimum ratio of the individual keypoint loss with
 respect to the lowest keypoint loss in order to be considered as “hard”.
 This helps to switch focus on across groups of keypoints during training.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.losses.OHKMLoss.min_hard_keypoints">
-<code class="sig-name descname">min_hard_keypoints</code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.min_hard_keypoints" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">min_hard_keypoints</span></code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.min_hard_keypoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>The minimum number of keypoints that will be considered as
 “hard”, even if they are not below the <a class="reference internal" href="#sleap.nn.losses.OHKMLoss.hard_to_easy_ratio" title="sleap.nn.losses.OHKMLoss.hard_to_easy_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hard_to_easy_ratio</span></code></a>.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.losses.OHKMLoss.max_hard_keypoints">
-<code class="sig-name descname">max_hard_keypoints</code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.max_hard_keypoints" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">max_hard_keypoints</span></code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.max_hard_keypoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum number of hard keypoints to apply scaling to.
 This can help when there are few very easy keypoints which may skew the
 ratio and result in loss scaling being applied to most keypoints, which can
@@ -299,12 +299,12 @@ reduce the impact of hard mining altogether.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.losses.OHKMLoss.loss_scale">
-<code class="sig-name descname">loss_scale</code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.loss_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">loss_scale</span></code><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.loss_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factor to scale the hard keypoint losses by.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.losses.OHKMLoss.call">
-<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y_gt</span></em>, <em class="sig-param"><span class="n">y_pr</span></em>, <em class="sig-param"><span class="n">sample_weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L102-L110"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.call" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L102-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.call" title="Permalink to this definition">¶</a></dt>
 <dd><p>Invokes the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Loss</span></code> instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -322,7 +322,7 @@ shape = <code class="xref py py-obj docutils literal notranslate"><span class="p
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.losses.OHKMLoss.from_config">
-<em class="property">classmethod </em><code class="sig-name descname">from_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.HardKeypointMiningConfig" title="sleap.nn.config.optimization.HardKeypointMiningConfig">sleap.nn.config.optimization.HardKeypointMiningConfig</a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.losses.OHKMLoss" title="sleap.nn.losses.OHKMLoss">sleap.nn.losses.OHKMLoss</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L91-L100"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.HardKeypointMiningConfig" title="sleap.nn.config.optimization.HardKeypointMiningConfig"><span class="pre">sleap.nn.config.optimization.HardKeypointMiningConfig</span></a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.losses.OHKMLoss" title="sleap.nn.losses.OHKMLoss"><span class="pre">sleap.nn.losses.OHKMLoss</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L91-L100"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.losses.OHKMLoss.from_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiates a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Loss</span></code> from its config (output of <code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config()</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -336,29 +336,29 @@ shape = <code class="xref py py-obj docutils literal notranslate"><span class="p
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.losses.PartLoss">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.losses.</code><code class="sig-name descname">PartLoss</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L113-L157"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.losses.PartLoss" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.losses.</span></code><code class="sig-name descname"><span class="pre">PartLoss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L113-L157"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.losses.PartLoss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute channelwise loss.</p>
 <p>Useful for monitoring the MSE for specific body parts (channels).</p>
 <dl class="py attribute">
 <dt id="sleap.nn.losses.PartLoss.channel_ind">
-<code class="sig-name descname">channel_ind</code><a class="headerlink" href="#sleap.nn.losses.PartLoss.channel_ind" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">channel_ind</span></code><a class="headerlink" href="#sleap.nn.losses.PartLoss.channel_ind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Index of channel to compute MSE for.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.losses.PartLoss.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#sleap.nn.losses.PartLoss.name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#sleap.nn.losses.PartLoss.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Name of the loss tensor.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.losses.PartLoss.result">
-<code class="sig-name descname">result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L154-L157"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.losses.PartLoss.result" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">result</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L154-L157"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.losses.PartLoss.result" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes and returns the metric value tensor.</p>
 <p>Result computation is an idempotent operation that simply calculates the
 metric value using the state variables.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.losses.PartLoss.update_state">
-<code class="sig-name descname">update_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y_gt</span></em>, <em class="sig-param"><span class="n">y_pr</span></em>, <em class="sig-param"><span class="n">sample_weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L139-L152"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.losses.PartLoss.update_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">update_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L139-L152"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.losses.PartLoss.update_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accumulates statistics for the metric.</p>
 <p>Note: This function is executed as a graph function in graph mode.
 This means:</p>
@@ -385,7 +385,7 @@ eager execution.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.losses.compute_ohkm_loss">
-<code class="sig-prename descclassname">sleap.nn.losses.</code><code class="sig-name descname">compute_ohkm_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y_gt</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">y_pr</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">hard_to_easy_ratio</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">min_hard_keypoints</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">max_hard_keypoints</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">loss_scale</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5.0</span></em><span class="sig-paren">)</span> → tensorflow.python.framework.ops.Tensor<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L7-L51"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.losses.compute_ohkm_loss" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.losses.</span></code><code class="sig-name descname"><span class="pre">compute_ohkm_loss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_gt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_to_easy_ratio</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_scale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/losses.py#L7-L51"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.losses.compute_ohkm_loss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the online hard keypoint mining loss.</p>
 </dd></dl>
 </div>

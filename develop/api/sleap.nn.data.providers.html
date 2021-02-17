@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.data.resizing" href="sleap.nn.data.resizing.html" /><link rel="prev" title="sleap.nn.data.pipelines" href="sleap.nn.data.pipelines.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.nn.data.providers - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -270,14 +270,14 @@
 <p>Data providers for pipeline I/O.</p>
 <dl class="py class">
 <dt id="sleap.nn.data.providers.LabelsReader">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.providers.</code><code class="sig-name descname">LabelsReader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em>, <em class="sig-param"><span class="n">example_indices</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>Sequence<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">user_instances_only</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L11-L261"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.data.providers.</span></code><code class="sig-name descname"><span class="pre">LabelsReader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_indices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_instances_only</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L11-L261"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Data provider from a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> instance.</p>
 <p>This class can generate <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset`s</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">set</span> <span class="pre">of</span> <span class="pre">labels</span> <span class="pre">for</span> <span class="pre">use</span> <span class="pre">in</span> <span class="pre">data</span>
 <span class="pre">pipelines.</span> <span class="pre">Each</span> <span class="pre">element</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">dataset</span> <span class="pre">will</span> <span class="pre">contain</span> <span class="pre">the</span> <span class="pre">data</span> <span class="pre">contained</span> <span class="pre">in</span> <span class="pre">a</span> <span class="pre">single</span>
 <span class="pre">`LabeledFrame</span></code>.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.data.providers.LabelsReader.labels">
-<code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.labels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">labels</span></code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Labels</span></code> instance to generate data from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -287,7 +287,7 @@
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.providers.LabelsReader.example_indices">
-<code class="sig-name descname">example_indices</code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.example_indices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">example_indices</span></code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.example_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>List or numpy array of ints with the labeled frame indices to
 use when iterating over the labels. Use this to specify subsets of the
 labels to use. Particularly handy for creating data splits. If not provided,
@@ -302,7 +302,7 @@ or filtered.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.providers.LabelsReader.user_instances_only">
-<code class="sig-name descname">user_instances_only</code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.user_instances_only" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">user_instances_only</span></code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.user_instances_only" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, load only user labeled instances. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>,
 all instances will be loaded.</p>
 <dl class="field-list simple">
@@ -313,7 +313,7 @@ all instances will be loaded.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.from_filename">
-<em class="property">classmethod </em><code class="sig-name descname">from_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">user_instances</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader">sleap.nn.data.providers.LabelsReader</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L77-L94"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_filename" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_filename</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L77-L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_filename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelsReader</span></code></a> from a saved labels file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -329,7 +329,7 @@ all instances will be loaded.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.from_unlabeled_suggestions">
-<em class="property">classmethod </em><code class="sig-name descname">from_unlabeled_suggestions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader">sleap.nn.data.providers.LabelsReader</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L64-L75"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_unlabeled_suggestions" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_unlabeled_suggestions</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L64-L75"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_unlabeled_suggestions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelsReader</span></code></a> using the unlabeled suggestions in a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -342,7 +342,7 @@ all instances will be loaded.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.from_user_instances">
-<em class="property">classmethod </em><code class="sig-name descname">from_user_instances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader">sleap.nn.data.providers.LabelsReader</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L34-L46"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_user_instances" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_user_instances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L34-L46"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_user_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelsReader</span></code></a> using the user instances in a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -355,7 +355,7 @@ all instances will be loaded.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.from_user_labeled_frames">
-<em class="property">classmethod </em><code class="sig-name descname">from_user_labeled_frames</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader">sleap.nn.data.providers.LabelsReader</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L48-L62"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_user_labeled_frames" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_user_labeled_frames</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L48-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.from_user_labeled_frames" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelsReader</span></code></a> using the user labeled frames in a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -372,12 +372,12 @@ instances. To load only user labeled indices, use
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.is_from_multi_size_videos">
-<em class="property">property </em><code class="sig-name descname">is_from_multi_size_videos</code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.is_from_multi_size_videos" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">is_from_multi_size_videos</span></code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.is_from_multi_size_videos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> if labels contain videos with different sizes.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.make_dataset">
-<code class="sig-name descname">make_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ds_index</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>tensorflow.python.data.ops.dataset_ops.DatasetV2<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> → tensorflow.python.data.ops.dataset_ops.DatasetV2<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L137-L261"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.make_dataset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">make_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L137-L261"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.make_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> whose elements are data from labeled frames.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -416,29 +416,29 @@ grid in order to properly map points to image coordinates.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.max_height_and_width">
-<em class="property">property </em><code class="sig-name descname">max_height_and_width</code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.max_height_and_width" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">max_height_and_width</span></code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.max_height_and_width" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width)</span></code> that is the maximum of all videos.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.output_keys">
-<em class="property">property </em><code class="sig-name descname">output_keys</code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">output_keys</span></code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.output_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the output keys that the dataset will produce.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.LabelsReader.videos">
-<em class="property">property </em><code class="sig-name descname">videos</code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.videos" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">videos</span></code><a class="headerlink" href="#sleap.nn.data.providers.LabelsReader.videos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the list of videos that <code class="xref py py-obj docutils literal notranslate"><span class="pre">video_ind</span></code> in examples match up with.</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.data.providers.VideoReader">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.providers.</code><code class="sig-name descname">VideoReader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">example_indices</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>Sequence<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L265-L392"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.VideoReader" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.data.providers.</span></code><code class="sig-name descname"><span class="pre">VideoReader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_indices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L265-L392"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.VideoReader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Data provider from a <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Video</span></code> instance.</p>
 <p>This class can generate <a href="#id1"><span class="problematic" id="id2">`</span></a>tf.data.Dataset`s from a video for use in data pipelines.
 Each element in the dataset will contain the image data from a single frame.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.data.providers.VideoReader.video">
-<code class="sig-name descname">video</code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.video" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">video</span></code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.video" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Video</span></code> instance to generate data from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -448,7 +448,7 @@ Each element in the dataset will contain the image data from a single frame.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.providers.VideoReader.example_indices">
-<code class="sig-name descname">example_indices</code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.example_indices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">example_indices</span></code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.example_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>List or numpy array of ints with the frame indices to use when
 iterating over the video. Use this to specify subsets of the video to read.
 If not provided, the entire video will be read.</p>
@@ -460,13 +460,13 @@ If not provided, the entire video will be read.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.providers.VideoReader.video_ind">
-<code class="sig-name descname">video_ind</code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.video_ind" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">video_ind</span></code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.video_ind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scalar index of video to keep with each example. Helpful when running
 inference across videos.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.VideoReader.from_filepath">
-<em class="property">classmethod </em><code class="sig-name descname">from_filepath</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">example_indices</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>Sequence<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.VideoReader" title="sleap.nn.data.providers.VideoReader">sleap.nn.data.providers.VideoReader</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L283-L303"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.from_filepath" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_filepath</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_indices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.data.providers.VideoReader" title="sleap.nn.data.providers.VideoReader"><span class="pre">sleap.nn.data.providers.VideoReader</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L283-L303"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.from_filepath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelsReader</span></code></a> from a saved labels file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -485,7 +485,7 @@ to read. If not provided, the entire video will be read.</p></li>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.VideoReader.make_dataset">
-<code class="sig-name descname">make_dataset</code><span class="sig-paren">(</span><span class="sig-paren">)</span> → tensorflow.python.data.ops.dataset_ops.DatasetV2<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L322-L392"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.make_dataset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">make_dataset</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/providers.py#L322-L392"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.make_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> whose elements are data from video frames.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -519,12 +519,12 @@ grid in order to properly map points to image coordinates.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.VideoReader.output_keys">
-<em class="property">property </em><code class="sig-name descname">output_keys</code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">output_keys</span></code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.output_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the output keys that the dataset will produce.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.providers.VideoReader.videos">
-<em class="property">property </em><code class="sig-name descname">videos</code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.videos" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">videos</span></code><a class="headerlink" href="#sleap.nn.data.providers.VideoReader.videos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the list of videos that <a class="reference internal" href="#sleap.nn.data.providers.VideoReader.video_ind" title="sleap.nn.data.providers.VideoReader.video_ind"><code class="xref py py-obj docutils literal notranslate"><span class="pre">video_ind</span></code></a> in examples match up with.</p>
 </dd></dl>
 </dd></dl>

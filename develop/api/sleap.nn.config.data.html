@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.config.model" href="sleap.nn.config.model.html" /><link rel="prev" title="sleap.nn.tracker.kalman" href="sleap.nn.tracker.kalman.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.nn.config.data - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -269,7 +269,7 @@
 <span id="sleap-nn-config-data"></span><h1>sleap.nn.config.data<a class="headerlink" href="#module-sleap.nn.config.data" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="sleap.nn.config.data.DataConfig">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.data.</code><code class="sig-name descname">DataConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.nn.config.data.LabelsConfig" title="sleap.nn.config.data.LabelsConfig">sleap.nn.config.data.LabelsConfig</a></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em>, <em class="sig-param"><span class="n">preprocessing</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.nn.config.data.PreprocessingConfig" title="sleap.nn.config.data.PreprocessingConfig">sleap.nn.config.data.PreprocessingConfig</a></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em>, <em class="sig-param"><span class="n">instance_cropping</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.nn.config.data.InstanceCroppingConfig" title="sleap.nn.config.data.InstanceCroppingConfig">sleap.nn.config.data.InstanceCroppingConfig</a></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L147-L158"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.data.DataConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.config.data.</span></code><code class="sig-name descname"><span class="pre">DataConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#sleap.nn.config.data.LabelsConfig" title="sleap.nn.config.data.LabelsConfig"><span class="pre">sleap.nn.config.data.LabelsConfig</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessing</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#sleap.nn.config.data.PreprocessingConfig" title="sleap.nn.config.data.PreprocessingConfig"><span class="pre">sleap.nn.config.data.PreprocessingConfig</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_cropping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#sleap.nn.config.data.InstanceCroppingConfig" title="sleap.nn.config.data.InstanceCroppingConfig"><span class="pre">sleap.nn.config.data.InstanceCroppingConfig</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L147-L158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.data.DataConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Data configuration.</p>
 <p>labels: Configuration options related to user labels for training or testing.
 preprocessing: Configuration options related to data preprocessing.
@@ -280,12 +280,12 @@ instance_cropping: Configuration options related to instance cropping for centro
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.config.data.InstanceCroppingConfig">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.data.</code><code class="sig-name descname">InstanceCroppingConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">center_on_part</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">crop_size</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">crop_size_detection_padding</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">16</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L118-L143"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.config.data.</span></code><code class="sig-name descname"><span class="pre">InstanceCroppingConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center_on_part</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_size_detection_padding</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L118-L143"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instance cropping configuration.</p>
 <p>These are only used in topdown or centroid models.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.InstanceCroppingConfig.center_on_part">
-<code class="sig-name descname">center_on_part</code><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig.center_on_part" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">center_on_part</span></code><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig.center_on_part" title="Permalink to this definition">¶</a></dt>
 <dd><p>String name of the part to center the instance to. If None or
 not specified, instances will be centered to the centroid of their bounding
 box. This value will be used for both topdown and centroid models. It must
@@ -298,7 +298,7 @@ match the name of a node on the skeleton.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.InstanceCroppingConfig.crop_size">
-<code class="sig-name descname">crop_size</code><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig.crop_size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">crop_size</span></code><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig.crop_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integer size of bounding box height and width to crop out of the full
 image. This should be greater than the largest size of the instances in
 pixels. The crop is applied after any input scaling, so be sure to adjust
@@ -314,7 +314,7 @@ layer during inference. This must be divisible by the model’s max stride
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.InstanceCroppingConfig.crop_size_detection_padding">
-<code class="sig-name descname">crop_size_detection_padding</code><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig.crop_size_detection_padding" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">crop_size_detection_padding</span></code><a class="headerlink" href="#sleap.nn.config.data.InstanceCroppingConfig.crop_size_detection_padding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integer specifying how much extra padding should be
 applied around the instance bounding boxes when automatically detecting the
 appropriate crop size from the data. No effect if the <a class="reference internal" href="#sleap.nn.config.data.InstanceCroppingConfig.crop_size" title="sleap.nn.config.data.InstanceCroppingConfig.crop_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">crop_size</span></code></a> is
@@ -328,11 +328,11 @@ already specified.</p>
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.config.data.LabelsConfig">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.data.</code><code class="sig-name descname">LabelsConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">training_labels</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">validation_labels</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">validation_fraction</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">test_labels</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">split_by_inds</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">training_inds</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">validation_inds</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">test_inds</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">search_path_hints</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em>, <em class="sig-param"><span class="n">skeletons</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L7-L57"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.config.data.</span></code><code class="sig-name descname"><span class="pre">LabelsConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_fraction</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_by_inds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_inds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_inds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_inds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_path_hints</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeletons</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L7-L57"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Labels configuration.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.training_labels">
-<code class="sig-name descname">training_labels</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.training_labels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">training_labels</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.training_labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>A filepath to a saved labels file containing user labeled
 frames to use for generating the training set.</p>
 <dl class="field-list simple">
@@ -343,7 +343,7 @@ frames to use for generating the training set.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.validation_labels">
-<code class="sig-name descname">validation_labels</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.validation_labels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">validation_labels</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.validation_labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>A filepath to a saved labels file containing user labeled
 frames to use for generating validation data. These will not be trained on
 directly, but will be used to tune hyperparameters such as learning rate or
@@ -357,7 +357,7 @@ the training labels.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.validation_fraction">
-<code class="sig-name descname">validation_fraction</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.validation_fraction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">validation_fraction</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.validation_fraction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Float between 0 and 1 specifying the fraction of the
 training set to sample for generating the validation set. The remaining
 labeled frames will be left in the training set. If the <a class="reference internal" href="#sleap.nn.config.data.LabelsConfig.validation_labels" title="sleap.nn.config.data.LabelsConfig.validation_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validation_labels</span></code></a>
@@ -370,7 +370,7 @@ are already specified, this has no effect.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.test_labels">
-<code class="sig-name descname">test_labels</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.test_labels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">test_labels</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.test_labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>A filepath to a saved labels file containing user labeled frames to
 use for generating the test set. This is typically a held out set of
 examples that are never used for training or hyperparameter tuning (like the
@@ -386,7 +386,7 @@ multiple splits are created for training.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.split_by_inds">
-<code class="sig-name descname">split_by_inds</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.split_by_inds" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">split_by_inds</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.split_by_inds" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, splits used for training will be determined by the
 lists below by indexing into the labels in <a class="reference internal" href="#sleap.nn.config.data.LabelsConfig.training_labels" title="sleap.nn.config.data.LabelsConfig.training_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">training_labels</span></code></a>. If this is
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the indices below will not be used even if specified. This is
@@ -401,7 +401,7 @@ labels file. If splits are generated automatically (using
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.training_inds">
-<code class="sig-name descname">training_inds</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.training_inds" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">training_inds</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.training_inds" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of indices of the training split labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -411,7 +411,7 @@ labels file. If splits are generated automatically (using
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.validation_inds">
-<code class="sig-name descname">validation_inds</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.validation_inds" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">validation_inds</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.validation_inds" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of indices of the validation split labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -421,7 +421,7 @@ labels file. If splits are generated automatically (using
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.test_inds">
-<code class="sig-name descname">test_inds</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.test_inds" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">test_inds</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.test_inds" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of indices of the test split labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -431,7 +431,7 @@ labels file. If splits are generated automatically (using
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.search_path_hints">
-<code class="sig-name descname">search_path_hints</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.search_path_hints" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">search_path_hints</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.search_path_hints" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of paths to use for searching for missing data. This is
 useful when labels and data are moved across computers, network storage, or
 operating systems that may have different absolute paths than those stored
@@ -445,7 +445,7 @@ with the user labeled data.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.LabelsConfig.skeletons">
-<code class="sig-name descname">skeletons</code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.skeletons" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">skeletons</span></code><a class="headerlink" href="#sleap.nn.config.data.LabelsConfig.skeletons" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Skeleton</span></code> instances that can be used by the model. If
 not specified, these will be pulled out of the labels during training, but
 must be specified for inference in order to generate predicted instances.</p>
@@ -458,11 +458,11 @@ must be specified for inference in order to generate predicted instances.</p>
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.config.data.PreprocessingConfig">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.config.data.</code><code class="sig-name descname">PreprocessingConfig</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ensure_rgb</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ensure_grayscale</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">imagenet_mode</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">input_scaling</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">pad_to_stride</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resize_and_pad_to_target</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">target_height</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target_width</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L61-L114"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.config.data.</span></code><code class="sig-name descname"><span class="pre">PreprocessingConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ensure_rgb</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_grayscale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imagenet_mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_scaling</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_to_stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_and_pad_to_target</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_height</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_width</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/config/data.py#L61-L114"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Preprocessing configuration.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.ensure_rgb">
-<code class="sig-name descname">ensure_rgb</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.ensure_rgb" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ensure_rgb</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.ensure_rgb" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, converts the image to RGB if not already.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -472,7 +472,7 @@ must be specified for inference in order to generate predicted instances.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.ensure_grayscale">
-<code class="sig-name descname">ensure_grayscale</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.ensure_grayscale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">ensure_grayscale</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.ensure_grayscale" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, converts the image to grayscale if not already.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -482,7 +482,7 @@ must be specified for inference in order to generate predicted instances.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.imagenet_mode">
-<code class="sig-name descname">imagenet_mode</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.imagenet_mode" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">imagenet_mode</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.imagenet_mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies an ImageNet-based normalization mode commonly used in
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.applications</span></code>-based pretrained models. This has no effect if None
 or not specified.
@@ -508,7 +508,7 @@ preprocessing mode is required when using pretrained DenseNet models.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.input_scale">
-<code class="sig-name descname">input_scale</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.input_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">input_scale</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.input_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scalar float specifying scaling factor to resize raw images by.
 This can considerably increase performance and memory requirements at the
 cost of accuracy. Generally, it should only be used when the raw images are
@@ -516,7 +516,7 @@ at a much higher resolution than the smallest features in the data.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.pad_to_stride">
-<code class="sig-name descname">pad_to_stride</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.pad_to_stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">pad_to_stride</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.pad_to_stride" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of pixels that the image size must be divisible by.
 If &gt; 1, this will pad the bottom and right of the images to ensure they meet
 this divisibility criteria. Padding is applied after the scaling specified
@@ -533,7 +533,7 @@ model’s max stride.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.resize_and_pad_to_target">
-<code class="sig-name descname">resize_and_pad_to_target</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.resize_and_pad_to_target" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">resize_and_pad_to_target</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.resize_and_pad_to_target" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, will resize and pad all images in the dataset
 to match target dimensions. This is useful when preprocessing datasets with
 mixed image dimensions (from different video resolutions). Aspect ratio is
@@ -546,7 +546,7 @@ preserved, and padding applied (if needed) to bottom or right of image only.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.target_height">
-<code class="sig-name descname">target_height</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.target_height" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">target_height</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.target_height" title="Permalink to this definition">¶</a></dt>
 <dd><p>Target image height for ‘resize_and_pad_to_target’. When not
 explicitly provided, inferred as the max image height from the dataset.</p>
 <dl class="field-list simple">
@@ -557,7 +557,7 @@ explicitly provided, inferred as the max image height from the dataset.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.config.data.PreprocessingConfig.target_width">
-<code class="sig-name descname">target_width</code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.target_width" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">target_width</span></code><a class="headerlink" href="#sleap.nn.config.data.PreprocessingConfig.target_width" title="Permalink to this definition">¶</a></dt>
 <dd><p>Target image width for ‘resize_and_pad_to_target’. When not
 explicitly provided, inferred as the max image width from the dataset.</p>
 <dl class="field-list simple">

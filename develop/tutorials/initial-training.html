@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Prediction-assisted labeling" href="assisted-labeling.html" /><link rel="prev" title="Initial Labeling" href="initial-labeling.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>Training and Inference - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -287,7 +287,7 @@
 <h2>Start Training<a class="headerlink" href="#start-training" title="Permalink to this headline">¶</a></h2>
 <p>To run training on your local machine, select “<strong>Run Training…</strong>” from the “Predict”
 menu. For this tutorial, let’s use the default settings for training with the “top-down” pipeline and predict on 20 random frames.</p>
-<p><img alt="image6" src="../_images/training-dialog1.jpg"/></p>
+<p><img alt="image6" src="../_images/training-dialog.jpg"/></p>
 <p>Recall that the “topdown” approach will train two models: one for locating each instance in the frame, and one for locating the parts for each of those instances. The models will be trained in that order.</p>
 <p>When using the topdown approach, it’s a good idea to choose an <strong>anchor</strong> part which has a relatively stable position near the center of your animal. You may also want to turn on the option to “<strong>Visualize Predictions During Training</strong>” (although this will make training run a bit more slowly).</p>
 <p>Once you hit the <strong>Run</strong> button, you should see a window which shows you a graph of training and validation loss for each model as it trains. Since the topdown approach trains two models, once you’re done training the centroid model the graph will reset to show you loss while training the centered instance model.</p>

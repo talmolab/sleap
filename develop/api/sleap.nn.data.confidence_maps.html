@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.data.dataset_ops" href="sleap.nn.data.dataset_ops.html" /><link rel="prev" title="sleap.nn.data.augmentation" href="sleap.nn.data.augmentation.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.nn.data.confidence_maps - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -270,11 +270,11 @@
 <p>Transformers for confidence map generation.</p>
 <dl class="py class">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.confidence_maps.</code><code class="sig-name descname">InstanceConfidenceMapGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">all_instances</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">with_offsets</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">offsets_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">flatten_offsets</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L317-L454"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></code><code class="sig-name descname"><span class="pre">InstanceConfidenceMapGenerator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L317-L454"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transformer to generate instance-centered confidence maps.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.sigma">
-<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.sigma" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">sigma</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.sigma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Standard deviation of the 2D Gaussian distribution sampled to generate
 confidence maps. This defines the spread in units of the input image’s grid,
 i.e., it does not take scaling in previous steps into account.</p>
@@ -286,7 +286,7 @@ i.e., it does not take scaling in previous steps into account.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_stride">
-<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output_stride</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_stride" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relative stride of the generated confidence maps. This is
 effectively the reciprocal of the output scale, i.e., increase this to
 generate confidence maps that are smaller than the input images.</p>
@@ -298,7 +298,7 @@ generate confidence maps that are smaller than the input images.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances">
-<code class="sig-name descname">all_instances</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">all_instances</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, will also generate the multi-instance confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -308,7 +308,7 @@ generate confidence maps that are smaller than the input images.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.with_offsets">
-<code class="sig-name descname">with_offsets</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.with_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">with_offsets</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.with_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, also return offsets for refining the peaks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -318,7 +318,7 @@ generate confidence maps that are smaller than the input images.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.offsets_threshold">
-<code class="sig-name descname">offsets_threshold</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.offsets_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">offsets_threshold</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.offsets_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Minimum confidence map value below which offsets will be
 replaced with zeros.</p>
 <dl class="field-list simple">
@@ -329,7 +329,7 @@ replaced with zeros.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.flatten_offsets">
-<code class="sig-name descname">flatten_offsets</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.flatten_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">flatten_offsets</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.flatten_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the last two channels of the offset maps will be
 flattened to produce rank-3 tensors. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the generated offset maps
 will be rank-4 with shaape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>.</p>
@@ -341,17 +341,17 @@ will be rank-4 with shaape <code class="xref py py-obj docutils literal notransl
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.input_keys">
-<em class="property">property </em><code class="sig-name descname">input_keys</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">input_keys</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.input_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_keys">
-<em class="property">property </em><code class="sig-name descname">output_keys</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">output_keys</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset">
-<code class="sig-name descname">transform_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_ds</span><span class="p">:</span> <span class="n">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></em><span class="sig-paren">)</span> → tensorflow.python.data.ops.dataset_ops.DatasetV2<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L363-L454"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">transform_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L363-L454"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a dataset that contains the generated confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -381,11 +381,11 @@ the original grid prior to scaling operations.</p>
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.confidence_maps.</code><code class="sig-name descname">MultiConfidenceMapGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">centroids</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">with_offsets</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">offsets_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">flatten_offsets</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L194-L313"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></code><code class="sig-name descname"><span class="pre">MultiConfidenceMapGenerator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L194-L313"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transformer to generate multi-instance confidence maps.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.sigma">
-<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.sigma" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">sigma</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.sigma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Standard deviation of the 2D Gaussian distribution sampled to generate
 confidence maps. This defines the spread in units of the input image’s grid,
 i.e., it does not take scaling in previous steps into account.</p>
@@ -397,7 +397,7 @@ i.e., it does not take scaling in previous steps into account.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_stride">
-<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output_stride</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_stride" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relative stride of the generated confidence maps. This is
 effectively the reciprocal of the output scale, i.e., increase this to
 generate confidence maps that are smaller than the input images.</p>
@@ -409,7 +409,7 @@ generate confidence maps that are smaller than the input images.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids">
-<code class="sig-name descname">centroids</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">centroids</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, generate confidence maps for centroids rather than
 instance points.</p>
 <dl class="field-list simple">
@@ -420,7 +420,7 @@ instance points.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.with_offsets">
-<code class="sig-name descname">with_offsets</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.with_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">with_offsets</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.with_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, also return offsets for refining the peaks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -430,7 +430,7 @@ instance points.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.offsets_threshold">
-<code class="sig-name descname">offsets_threshold</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.offsets_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">offsets_threshold</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.offsets_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Minimum confidence map value below which offsets will be
 replaced with zeros.</p>
 <dl class="field-list simple">
@@ -441,7 +441,7 @@ replaced with zeros.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.flatten_offsets">
-<code class="sig-name descname">flatten_offsets</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.flatten_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">flatten_offsets</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.flatten_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the last two channels of the offset maps will be
 flattened to produce rank-3 tensors. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the generated offset maps
 will be rank-4 with shaape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>.</p>
@@ -453,17 +453,17 @@ will be rank-4 with shaape <code class="xref py py-obj docutils literal notransl
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.input_keys">
-<em class="property">property </em><code class="sig-name descname">input_keys</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">input_keys</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.input_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_keys">
-<em class="property">property </em><code class="sig-name descname">output_keys</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">output_keys</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset">
-<code class="sig-name descname">transform_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_ds</span><span class="p">:</span> <span class="n">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></em><span class="sig-paren">)</span> → tensorflow.python.data.ops.dataset_ops.DatasetV2<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L241-L313"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">transform_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L241-L313"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a dataset that contains the generated confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -492,11 +492,11 @@ the original grid prior to scaling operations.</p>
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.confidence_maps.</code><code class="sig-name descname">SingleInstanceConfidenceMapGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">with_offsets</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">offsets_threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">flatten_offsets</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L458-L554"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></code><code class="sig-name descname"><span class="pre">SingleInstanceConfidenceMapGenerator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L458-L554"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transformer to generate single-instance confidence maps.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.sigma">
-<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.sigma" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">sigma</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.sigma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Standard deviation of the 2D Gaussian distribution sampled to generate
 confidence maps. This defines the spread in units of the input image’s grid,
 i.e., it does not take scaling in previous steps into account.</p>
@@ -508,7 +508,7 @@ i.e., it does not take scaling in previous steps into account.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_stride">
-<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output_stride</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_stride" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relative stride of the generated confidence maps. This is
 effectively the reciprocal of the output scale, i.e., increase this to
 generate confidence maps that are smaller than the input images.</p>
@@ -520,7 +520,7 @@ generate confidence maps that are smaller than the input images.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.with_offsets">
-<code class="sig-name descname">with_offsets</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.with_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">with_offsets</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.with_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, also return offsets for refining the peaks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -530,7 +530,7 @@ generate confidence maps that are smaller than the input images.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.offsets_threshold">
-<code class="sig-name descname">offsets_threshold</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.offsets_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">offsets_threshold</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.offsets_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Minimum confidence map value below which offsets will be
 replaced with zeros.</p>
 <dl class="field-list simple">
@@ -541,7 +541,7 @@ replaced with zeros.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.flatten_offsets">
-<code class="sig-name descname">flatten_offsets</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.flatten_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">flatten_offsets</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.flatten_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, the last two channels of the offset maps will be
 flattened to produce rank-3 tensors. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the generated offset maps
 will be rank-4 with shaape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>.</p>
@@ -553,17 +553,17 @@ will be rank-4 with shaape <code class="xref py py-obj docutils literal notransl
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.input_keys">
-<em class="property">property </em><code class="sig-name descname">input_keys</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">input_keys</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.input_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_keys">
-<em class="property">property </em><code class="sig-name descname">output_keys</code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">output_keys</span></code><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset">
-<code class="sig-name descname">transform_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_ds</span><span class="p">:</span> <span class="n">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></em><span class="sig-paren">)</span> → tensorflow.python.data.ops.dataset_ops.DatasetV2<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L495-L554"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">transform_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L495-L554"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a dataset that contains the generated confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -587,7 +587,7 @@ the original grid prior to scaling operations.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.data.confidence_maps.make_confmaps">
-<code class="sig-prename descclassname">sleap.nn.data.confidence_maps.</code><code class="sig-name descname">make_confmaps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">xv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">yv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> → tensorflow.python.framework.ops.Tensor<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L10-L52"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_confmaps" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></code><code class="sig-name descname"><span class="pre">make_confmaps</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L10-L52"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_confmaps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make confidence maps from a set of points from a single instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -623,7 +623,7 @@ contain all zeros.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.data.confidence_maps.make_multi_confmaps">
-<code class="sig-prename descclassname">sleap.nn.data.confidence_maps.</code><code class="sig-name descname">make_multi_confmaps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instances</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">xv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">yv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> → tensorflow.python.framework.ops.Tensor<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L55-L108"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></code><code class="sig-name descname"><span class="pre">make_multi_confmaps</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L55-L108"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make confidence maps for multiple instances through reduction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -661,7 +661,7 @@ large numbers of instances.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets">
-<code class="sig-prename descclassname">sleap.nn.data.confidence_maps.</code><code class="sig-name descname">make_multi_confmaps_with_offsets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instances</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">xv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">yv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">offsets_threshold</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> → tensorflow.python.framework.ops.Tensor<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L111-L190"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></code><code class="sig-name descname"><span class="pre">make_multi_confmaps_with_offsets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/confidence_maps.py#L111-L190"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make confidence maps and offsets for multiple instances through reduction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

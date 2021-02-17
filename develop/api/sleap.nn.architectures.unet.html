@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.architectures.upsampling" href="sleap.nn.architectures.upsampling.html" /><link rel="prev" title="sleap.nn.architectures.resnet" href="sleap.nn.architectures.resnet.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
         <title>sleap.nn.architectures.unet - SLEAP (develop)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
@@ -271,7 +271,7 @@
 <p>See the <a class="reference internal" href="#sleap.nn.architectures.unet.UNet" title="sleap.nn.architectures.unet.UNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNet</span></code></a> class docstring for more information.</p>
 <dl class="py class">
 <dt id="sleap.nn.architectures.unet.PoolingBlock">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.unet.</code><code class="sig-name descname">PoolingBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pool</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">pooling_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L15-L42"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.unet.</span></code><code class="sig-name descname"><span class="pre">PoolingBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L15-L42"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pooling-only encoder block.</p>
 <p>Used to compensate for UNet having a skip source before the pooling, so the blocks
 need to end with a conv, not the pooling layer. This is added to the end of the
@@ -279,7 +279,7 @@ encoder stack to ensure that the number of down blocks is equal to the number of
 pooling steps.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.PoolingBlock.pool">
-<code class="sig-name descname">pool</code><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock.pool" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">pool</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock.pool" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, applies max pooling at the end of the block.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -289,7 +289,7 @@ pooling steps.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.PoolingBlock.pooling_stride">
-<code class="sig-name descname">pooling_stride</code><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock.pooling_stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">pooling_stride</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock.pooling_stride" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stride of the max pooling operation. If 1, the output of this
 block will be at the same stride (== 1/scale) as the input.</p>
 <dl class="field-list simple">
@@ -300,20 +300,20 @@ block will be at the same stride (== 1/scale) as the input.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.unet.PoolingBlock.make_block">
-<code class="sig-name descname">make_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'conv_block'</span></em><span class="sig-paren">)</span> → tensorflow.python.framework.ops.Tensor<a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L32-L42"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">make_block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'conv_block'</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L32-L42"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.unet.PoolingBlock.make_block" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate the encoder block from an input tensor.</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.nn.architectures.unet.UNet">
-<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.unet.</code><code class="sig-name descname">UNet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stacks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em>, <em class="sig-param"><span class="n">filters_rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em>, <em class="sig-param"><span class="n">stem_kernel_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em>, <em class="sig-param"><span class="n">convs_per_block</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">stem_blocks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">down_blocks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">middle_block</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">up_blocks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">up_interpolate</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">block_contraction</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L46-L278"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.UNet" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.unet.</span></code><code class="sig-name descname"><span class="pre">UNet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters_rate</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_kernel_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convs_per_block</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_blocks</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">down_blocks</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">middle_block</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">up_blocks</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">up_interpolate</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_contraction</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L46-L278"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.unet.UNet" title="Permalink to this definition">¶</a></dt>
 <dd><p>UNet encoder-decoder architecture for fully convolutional networks.</p>
 <p>This is the canonical architecture described in <a class="reference external" href="https://arxiv.org/abs/1505.04597">Ronneberger et al., 2015</a>.</p>
 <p>The default configuration with 4 down/up blocks and 64 base filters has ~34.5M
 parameters.</p>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.filters">
-<code class="sig-name descname">filters</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.filters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">filters</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.filters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base number of filters in the first encoder block. More filters will
 increase the representational capacity of the network at the cost of memory
 and runtime.</p>
@@ -325,7 +325,7 @@ and runtime.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.filters_rate">
-<code class="sig-name descname">filters_rate</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.filters_rate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">filters_rate</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.filters_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factor to increase the number of filters by in each block.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -335,7 +335,7 @@ and runtime.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.kernel_size">
-<code class="sig-name descname">kernel_size</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.kernel_size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">kernel_size</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.kernel_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Size of convolutional kernels (== height == width).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -345,7 +345,7 @@ and runtime.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.stem_kernel_size">
-<code class="sig-name descname">stem_kernel_size</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.stem_kernel_size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">stem_kernel_size</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.stem_kernel_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Size of convolutional kernels in stem blocks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -355,7 +355,7 @@ and runtime.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.stem_blocks">
-<code class="sig-name descname">stem_blocks</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.stem_blocks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">stem_blocks</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.stem_blocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>If &gt;0, will create additional “down” blocks for initial
 downsampling. These will be configured identically to the down blocks below.</p>
 <dl class="field-list simple">
@@ -366,7 +366,7 @@ downsampling. These will be configured identically to the down blocks below.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.down_blocks">
-<code class="sig-name descname">down_blocks</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.down_blocks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">down_blocks</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.down_blocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of blocks with pooling in the encoder. More down blocks will</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -376,7 +376,7 @@ downsampling. These will be configured identically to the down blocks below.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.convs_per_block">
-<code class="sig-name descname">convs_per_block</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.convs_per_block" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">convs_per_block</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.convs_per_block" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of convolutions in each block. More convolutions per
 block will increase the representational capacity of the network at the cost
 of memory and runtime.
@@ -389,7 +389,7 @@ increase the effective maximum receptive field.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.up_blocks">
-<code class="sig-name descname">up_blocks</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.up_blocks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">up_blocks</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.up_blocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of blocks with upsampling in the decoder. If this is equal to
 <a class="reference internal" href="#sleap.nn.architectures.unet.UNet.down_blocks" title="sleap.nn.architectures.unet.UNet.down_blocks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">down_blocks</span></code></a>, the output of this network will be at the same stride (scale)
 as the input.</p>
@@ -401,7 +401,7 @@ as the input.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.middle_block">
-<code class="sig-name descname">middle_block</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.middle_block" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">middle_block</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.middle_block" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, add an additional block at the end of the encoder.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -411,7 +411,7 @@ as the input.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.up_interpolate">
-<code class="sig-name descname">up_interpolate</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.up_interpolate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">up_interpolate</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.up_interpolate" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, use bilinear interpolation instead of transposed
 convolutions for upsampling. Interpolation is faster but transposed
 convolutions may be able to learn richer or more complex upsampling to
@@ -426,7 +426,7 @@ progressively decrease the number of filters at each step.</p>
 </dd></dl>
 <dl class="py attribute">
 <dt id="sleap.nn.architectures.unet.UNet.block_contraction">
-<code class="sig-name descname">block_contraction</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.block_contraction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">block_contraction</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.block_contraction" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, reduces the number of filters at the end of middle
 and decoder blocks. This has the effect of introducing an additional
 bottleneck before each upsampling step. The original implementation does not
@@ -447,17 +447,17 @@ at the first stride level as well as subsequent ones.</p>
 </div>
 <dl class="py method">
 <dt id="sleap.nn.architectures.unet.UNet.decoder_stack">
-<em class="property">property </em><code class="sig-name descname">decoder_stack</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.decoder_stack" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">decoder_stack</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.decoder_stack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define the decoder stack.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.unet.UNet.encoder_stack">
-<em class="property">property </em><code class="sig-name descname">encoder_stack</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.encoder_stack" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">encoder_stack</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.encoder_stack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define the encoder stack.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.unet.UNet.from_config">
-<em class="property">classmethod </em><code class="sig-name descname">from_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.UNetConfig" title="sleap.nn.config.model.UNetConfig">sleap.nn.config.model.UNetConfig</a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.architectures.unet.UNet" title="sleap.nn.architectures.unet.UNet">sleap.nn.architectures.unet.UNet</a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L250-L278"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.UNetConfig" title="sleap.nn.config.model.UNetConfig"><span class="pre">sleap.nn.config.model.UNetConfig</span></a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.architectures.unet.UNet" title="sleap.nn.architectures.unet.UNet"><span class="pre">sleap.nn.architectures.unet.UNet</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/architectures/unet.py#L250-L278"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.from_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a model from a set of configuration parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -470,7 +470,7 @@ at the first stride level as well as subsequent ones.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.unet.UNet.stem_stack">
-<em class="property">property </em><code class="sig-name descname">stem_stack</code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.stem_stack" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">stem_stack</span></code><a class="headerlink" href="#sleap.nn.architectures.unet.UNet.stem_stack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define the downsampling stem.</p>
 </dd></dl>
 </dd></dl>
