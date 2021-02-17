@@ -85,11 +85,11 @@ cache:
 # here we are going to override common configuration
 for:
 
-# override settings for `master` branch
+# override settings for `main` branch
 -
   branches:
     only:
-      - master
+      - main
 
   # Build and deploy our documentation. This involves checking out
   # the repo, switching to the github pages branch, building the docs
