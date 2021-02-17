@@ -1,5 +1,10 @@
-from sleap.gui.commands import CommandContext, ImportDeepLabCutFolder
+from sleap.gui.commands import (
+    CommandContext,
+    ImportDeepLabCutFolder,
+    get_new_version_filename,
+)
 from sleap.io.pathutils import fix_path_separator
+from pathlib import PurePath
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -44,3 +49,17 @@ def test_import_labels_from_dlc_folder():
     }
 
     assert set([l.frame_idx for l in labels.labeled_frames]) == {0, 0, 1}
+
+
+def test_get_new_version_filename():
+    assert get_new_version_filename("labels.slp") == "labels copy.slp"
+    assert get_new_version_filename("labels.v0.slp") == "labels.v1.slp"
+    assert get_new_version_filename("/a/b/labels.slp") == str(
+        PurePath("/a/b/labels copy.slp")
+    )
+    assert get_new_version_filename("/a/b/labels.v0.slp") == str(
+        PurePath("/a/b/labels.v1.slp")
+    )
+    assert get_new_version_filename("/a/b/labels.v01.slp") == str(
+        PurePath("/a/b/labels.v02.slp")
+    )

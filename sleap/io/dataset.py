@@ -51,6 +51,7 @@ from typing import (
     Iterable,
     Any,
     Set,
+    Callable,
 )
 
 import attr
@@ -203,7 +204,7 @@ class LabelsDataCache:
         return self._track_occupancy[video]
 
     def remove_frame(self, frame: LabeledFrame):
-        """Remvoe frame and update cache as needed."""
+        """Remove frame and update cache as needed."""
         self._lf_by_video[frame.video].remove(frame)
         # We'll assume that there's only a single LabeledFrame for this video and
         # frame_idx, and remove the frame_idx from the cache.
@@ -412,7 +413,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
-    suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
+    suggestions: List[SuggestionFrame] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
     provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
         default=attr.Factory(dict)
@@ -644,6 +645,8 @@ class Labels(MutableSequence):
             scalar key was provided.
         """
         if len(args) > 0:
+            if type(key) != tuple:
+                key = (key,)
             key = key + tuple(args)
 
         if isinstance(key, int):
@@ -684,6 +687,46 @@ class Labels(MutableSequence):
 
         else:
             raise KeyError("Invalid label indexing arguments.")
+
+    def get(self, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Get an item from the labels or return `None` if not found.
+
+        This is a safe version of `labels[...]` that will not raise an exception if the
+        item is not found.
+        """
+        try:
+            return self.__getitem__(*args)
+        except KeyError:
+            return None
+
+    def extract(self, inds) -> "Labels":
+        """Extract labeled frames from indices and return a new `Labels` object.
+
+        Args:
+            inds: Any valid indexing keys, e.g., a range, slice, list of label indices,
+                numpy array, `Video`, etc. See `__getitem__` for full list.
+
+        Returns:
+            A new `Labels` object with the specified labeled frames.
+
+            This will preserve the other data structures even if they are not found in
+            the extracted labels, including:
+                - `Labels.videos`
+                - `Labels.skeletons`
+                - `Labels.tracks`
+                - `Labels.suggestions`
+                - `Labels.provenance`
+        """
+        lfs = self.__getitem__(inds)
+        new_labels = type(self)(
+            labeled_frames=lfs,
+            videos=self.videos,
+            skeletons=self.skeletons,
+            tracks=self.tracks,
+            suggestions=self.suggestions,
+            provenance=self.provenance,
+        )
+        return new_labels
 
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
@@ -731,6 +774,13 @@ class Labels(MutableSequence):
         """
         to_remove = set(lfs)
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
+        self.update_cache()
+
+    def remove_empty_frames(self):
+        """Remove frames with no instances."""
+        self.labeled_frames = [
+            lf for lf in self.labeled_frames if len(lf.instances) > 0
+        ]
         self.update_cache()
 
     def find(
@@ -830,9 +880,18 @@ class Labels(MutableSequence):
                     return label
 
     @property
-    def user_labeled_frames(self):
+    def user_labeled_frames(self) -> List[LabeledFrame]:
         """Return all labeled frames with user (non-predicted) instances."""
         return [lf for lf in self.labeled_frames if lf.has_user_instances]
+
+    @property
+    def user_labeled_frame_inds(self) -> List[int]:
+        """Return a list of indices of frames with user labeled instances."""
+        return [i for i, lf in enumerate(self.labeled_frames) if lf.has_user_instances]
+
+    def with_user_labels_only(self) -> "Labels":
+        """Return a new `Labels` object with only user labels."""
+        return self.extract(self.user_labeled_frame_inds)
 
     def get_labeled_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
         return self._cache.get_frame_count(video, filter)
@@ -855,46 +914,37 @@ class Labels(MutableSequence):
     @property
     def user_instances(self) -> List[Instance]:
         """Return list of all user (non-predicted) instances."""
-        return [inst for inst in self.all_instances if isinstance(inst, Instance)]
+        return [inst for inst in self.all_instances if type(inst) == Instance]
 
     @property
     def predicted_instances(self) -> List[PredictedInstance]:
         """Return list of all predicted instances."""
-        return [
-            inst for inst in self.all_instances if isinstance(inst, PredictedInstance)
-        ]
+        return [inst for inst in self.all_instances if type(inst) == PredictedInstance]
 
     def describe(self):
         """Print basic statistics about the labels dataset."""
-        print(f"Videos: {len(self.videos)}")
-        n_user_inst = len(self.user_instances)
-        n_predicted_inst = len(self.predicted_instances)
-        print(
-            f"Instances: {n_user_inst:,} (user-labeled), "
-            f"{n_predicted_inst:,} (predicted), "
-            f"{n_user_inst + n_predicted_inst:,} (total)"
-        )
-        n_user_only = 0
-        n_pred_only = 0
-        n_both = 0
+        print(f"Skeleton: {self.skeleton}")
+        print(f"Videos: {[v.filename for v in self.videos]}")
+        n_user = 0
+        n_pred = 0
+        n_user_inst = 0
+        n_pred_inst = 0
         for lf in self.labeled_frames:
-            has_user = lf.has_user_instances
-            has_pred = lf.has_predicted_instances
-            if has_user and not has_pred:
-                n_user_only += 1
-            elif not has_user and has_pred:
-                n_pred_only += 1
-            elif has_user and has_pred:
-                n_both += 1
-        n_total = len(self.labeled_frames)
-        print(
-            f"Frames: {n_user_only:,} (user-labeled), "
-            f"{n_pred_only:,} (predicted), "
-            f"{n_both:,} (both), "
-            f"{n_total:,} (total)"
-        )
+            if lf.has_user_instances:
+                n_user += 1
+                n_user_inst += len(lf.user_instances)
+            if lf.has_predicted_instances:
+                n_pred += 1
+                n_pred_inst += len(lf.predicted_instances)
+        print(f"Frames (user/predicted): {n_user:,}/{n_pred:,}")
+        print(f"Instances (user/predicted): {n_user_inst:,}/{n_pred_inst:,}")
+        print("Tracks:", self.tracks)
+        print(f"Suggestions: {len(self.suggestions):,}")
+        print("Provenance:", self.provenance)
 
-    def instances(self, video: Video = None, skeleton: Skeleton = None):
+    def instances(
+        self, video: Optional[Video] = None, skeleton: Optional[Skeleton] = None
+    ):
         """Iterate over instances in the labels, optionally with filters.
 
         Args:
@@ -1086,16 +1136,54 @@ class Labels(MutableSequence):
         ]
         return track_frame_inst
 
-    def get_video_suggestions(self, video: Video) -> List[int]:
+    def add_suggestion(self, video: Video, frame_idx: int):
+        """Add a suggested frame to the labels.
+
+        Args:
+            video: `sleap.Video` instance of the suggestion.
+            frame_idx: Index of the frame of the suggestion.
+        """
+        for suggestion in self.suggestions:
+            if suggestion.video == video and suggestion.frame_idx == frame_idx:
+                return
+        self.suggestions.append(SuggestionFrame(video=video, frame_idx=frame_idx))
+
+    def remove_suggestion(self, video: Video, frame_idx: int):
+        """Remove a suggestion from the list by video and frame index.
+
+        Args:
+            video: `sleap.Video` instance of the suggestion.
+            frame_idx: Index of the frame of the suggestion.
+        """
+        for suggestion in self.suggestions:
+            if suggestion.video == video and suggestion.frame_idx == frame_idx:
+                self.suggestions.remove(suggestion)
+                return
+
+    def get_video_suggestions(
+        self, video: Video, user_labeled: bool = True
+    ) -> List[int]:
         """Return a list of suggested frame indices.
 
         Args:
             video: Video to get suggestions for.
+            user_labeled: If `True` (the default), return frame indices for suggestions
+                that already have user labels. If `False`, only suggestions with no user
+                labeled instances will be returned.
 
         Returns:
-            Indices of the labeled frames for for the specified video.
+            Indices of the suggested frames for for the specified video.
         """
-        return [item.frame_idx for item in self.suggestions if item.video == video]
+        frame_indices = []
+        for suggestion in self.suggestions:
+            if suggestion.video == video:
+                fidx = suggestion.frame_idx
+                if not user_labeled:
+                    lf = self.get((video, fidx))
+                    if lf is not None and lf.has_user_instances:
+                        continue
+                frame_indices.append(fidx)
+        return frame_indices
 
     def get_suggestions(self) -> List[SuggestionFrame]:
         """Return all suggestions as a list of SuggestionFrame items."""
@@ -1169,6 +1257,47 @@ class Labels(MutableSequence):
     def delete_suggestions(self, video):
         """Delete suggestions for specified video."""
         self.suggestions = [item for item in self.suggestions if item.video != video]
+
+    def clear_suggestions(self):
+        """Delete all suggestions."""
+        self.suggestions = []
+
+    @property
+    def unlabeled_suggestions(self) -> List[SuggestionFrame]:
+        """Return suggestions without user labels."""
+        unlabeled_suggestions = []
+        for suggestion in self.suggestions:
+            lf = self.get(suggestion.video, suggestion.frame_idx)
+            if lf is None or not lf.has_user_instances:
+                unlabeled_suggestions.append(suggestion)
+        return unlabeled_suggestions
+
+    def get_unlabeled_suggestion_inds(self) -> List[int]:
+        """Find labeled frames for unlabeled suggestions and return their indices.
+
+        This is useful for generating a list of example indices for inference on
+        unlabeled suggestions.
+
+        Returns:
+            List of indices of the labeled frames that correspond to the suggestions
+            that do not have user instances.
+
+            If a labeled frame corresponding to a suggestion does not exist, an empty
+            one will be created.
+
+        See also: `Labels.remove_empty_frames`
+        """
+        inds = []
+        for suggestion in self.unlabeled_suggestions:
+            lf = self.get((suggestion.video, suggestion.frame_idx))
+            if lf is None:
+                self.append(
+                    LabeledFrame(video=suggestion.video, frame_idx=suggestion.frame_idx)
+                )
+                inds.append(len(self.labeled_frames) - 1)
+            else:
+                inds.append(self.index(lf))
+        return inds
 
     def add_video(self, video: Video):
         """Add a video to the labels if it is not already in it.
@@ -1643,6 +1772,29 @@ class Labels(MutableSequence):
             suggested=embed_suggested,
         )
 
+    def export(self, filename: str):
+        """Export labels to analysis HDF5 format.
+
+        This expects the labels to contain data for a single video (e.g., predictions).
+
+        Args:
+            filename: Path to output HDF5 file.
+
+        Notes:
+            This will write the contents of the labels out as a HDF5 file without
+            complete metadata.
+
+            The resulting file will have datasets:
+                - `/node_names`: List of skeleton node names.
+                - `/track_names`: List of track names.
+                - `/tracks`: All coordinates of the instances in the labels.
+                - `/track_occupancy`: Mask denoting which instances are present in each
+                    frame.
+        """
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+
+        SleapAnalysisAdaptor.write(filename, self)
+
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
         from .format import read
@@ -1678,6 +1830,18 @@ class Labels(MutableSequence):
         from .format import read
 
         return read(filename, for_object="labels", as_format="deeplabcut")
+
+    @classmethod
+    def load_deeplabcut_folder(cls, filename: str) -> "Labels":
+        csv_files = glob(f"{filename}/*/*.csv")
+        merged_labels = None
+        for csv_file in csv_files:
+            labels = cls.load_file(csv_file, as_format="deeplabcut")
+            if merged_labels is None:
+                merged_labels = labels
+            else:
+                merged_labels.extend_from(labels, unify=True)
+        return merged_labels
 
     @classmethod
     def load_coco(
@@ -1750,6 +1914,7 @@ class Labels(MutableSequence):
         user_labeled: bool = True,
         all_labeled: bool = False,
         suggested: bool = False,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> List[HDF5Video]:
         """Write images for labeled frames from all videos to hdf5 file.
 
@@ -1765,12 +1930,21 @@ class Labels(MutableSequence):
                 Defaults to `False`.
             suggested: Include suggested frames even if they do not have instances.
                 Useful for inference after training. Defaults to `False`.
+            progress_callback: If provided, this function will be called to report the
+                progress of the frame data saving. This function should be a callable
+                of the form: `fn(n, n_total)` where `n` is the number of frames saved so
+                far and `n_total` is the total number of frames that will be saved. This
+                is called after each video is processed. If the function has a return
+                value and it returns `False`, saving will be canceled and the output
+                deleted.
 
         Returns:
             A list of :class:`HDF5Video` objects with the stored frames.
         """
-        new_vids = []
-        for v_idx, video in enumerate(self.videos):
+        # Build list of frames to save.
+        vids = []
+        frame_idxs = []
+        for video in self.videos:
             lfs_v = self.find(video)
             frame_nums = [
                 lf.frame_idx
@@ -1784,13 +1958,29 @@ class Labels(MutableSequence):
                     if suggestion.video == video
                 ]
             frame_nums = sorted(list(set(frame_nums)))
+            vids.append(video)
+            frame_idxs.append(frame_nums)
 
+        n_total = sum([len(x) for x in frame_idxs])
+        n = 0
+
+        # Save images for each video.
+        new_vids = []
+        for v_idx, (video, frame_nums) in enumerate(zip(vids, frame_idxs)):
             vid = video.to_hdf5(
                 path=output_path,
                 dataset=f"video{v_idx}",
                 format=format,
                 frame_numbers=frame_nums,
             )
+            n += len(frame_nums)
+            if progress_callback is not None:
+                # Notify update callback.
+                ret = progress_callback(n, n_total)
+                if ret == False:
+                    vid.close()
+                    return []
+
             vid.close()
             new_vids.append(vid)
 
@@ -1836,6 +2026,57 @@ class Labels(MutableSequence):
 
         pipeline += pipelines.Prefetcher()
         return pipeline
+
+    def numpy(
+        self, video: Optional[Video] = None, all_frames: bool = True
+    ) -> np.ndarray:
+        """Construct a numpy array from tracked instance points.
+
+        Args:
+            video: Video to convert to numpy arrays. If `None` (the default), uses the
+                first video.
+            all_frames: If `True` (the default), allocate array of the same number of
+                frames as the video. If `False`, only return data between the first and
+                last frame with data.
+
+        Returns:
+            An array of tracks of shape `(n_frames, n_tracks, n_nodes, 2)`.
+
+            Missing data will be replaced with `np.nan`.
+
+        Notes:
+            This method assumes that instances have tracks assigned and is intended to
+            function primarily for single-video prediction results.
+        """
+        if video is None:
+            video = self.videos[0]
+        lfs = self.find(video=video)
+
+        if all_frames:
+            first_frame, last_frame = None, None
+            for lf in lfs:
+                if first_frame is None:
+                    first_frame = lf.frame_idx
+                if last_frame is None:
+                    last_frame = lf.frame_idx
+                first_frame = min(first_frame, lf.frame_idx)
+                last_frame = max(last_frame, lf.frame_idx)
+        else:
+            first_frame, last_frame = 0, video.shape[0] - 1
+
+        n_frames = last_frame - first_frame + 1
+        n_tracks = len(self.tracks)
+        n_nodes = len(self.skeleton.nodes)
+
+        tracks = np.full((n_frames, n_tracks, n_nodes, 2), np.nan, dtype="float32")
+        for lf in lfs:
+            i = lf.frame_idx - first_frame
+            for inst in lf:
+                if inst.track is not None:
+                    j = self.tracks.index(inst.track)
+                    tracks[i, j] = inst.numpy()
+
+        return tracks
 
     @classmethod
     def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
@@ -1964,8 +2205,15 @@ def load_file(
     filename: Text,
     detect_videos: bool = True,
     search_paths: Optional[Union[List[Text], Text]] = None,
+    match_to: Optional[Labels] = None,
 ) -> Labels:
     """Load a SLEAP labels file.
+
+    SLEAP labels files (`.slp`) contain all the metadata for a labeling project or the
+    predicted labels from a video. This includes the skeleton, videos, labeled frames,
+    user-labeled and predicted instances, suggestions and tracks.
+
+    See `sleap.io.dataset.Labels` for more detailed information.
 
     Args:
         filename: Path to a SLEAP labels (.slp) file.
@@ -1976,6 +2224,9 @@ def load_file(
             be the direct path to the video file or its containing folder. If not
             specified, defaults to searching for the videos in the same folder as the
             labels.
+        match_to: If a `sleap.Labels` object is provided, attempt to match and reuse
+            video and skeleton objects when loading. This is useful when comparing the
+            contents across sets of labels.
 
     Returns:
         The loaded `Labels` instance.
@@ -1990,6 +2241,6 @@ def load_file(
     if detect_videos:
         if search_paths is None:
             search_paths = os.path.dirname(filename)
-        return Labels.load_file(filename, search_paths)
+        return Labels.load_file(filename, search_paths, match_to=match_to)
     else:
-        return Labels.load_file(filename)
+        return Labels.load_file(filename, match_to=match_to)

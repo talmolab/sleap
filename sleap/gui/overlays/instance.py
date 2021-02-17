@@ -43,7 +43,9 @@ class InstanceOverlay(BaseOverlay):
         has_user = any((True for inst in instances if not hasattr(inst, "score")))
 
         for instance in instances:
-            self.player.addInstance(instance=instance)
+            self.player.addInstance(
+                instance=instance, markerRadius=self.state.get("marker size", 4)
+            )
 
         self.player.showLabels(self.state.get("show labels", default=True))
         self.player.showEdges(self.state.get("show edges", default=True))

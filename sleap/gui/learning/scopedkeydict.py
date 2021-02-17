@@ -119,6 +119,18 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict: dict):
         key_val_dict[f"model.backbone.{backbone_name}.output_stride"] = output_stride
         key_val_dict[f"model.backbone.{backbone_name}.max_stride"] = max_stride
 
+    # Convert random flip dropdown selection to config.
+    random_flip = key_val_dict.get(
+        "optimization.augmentation_config.random_flip", "none"
+    )
+    if random_flip == "none":
+        key_val_dict["optimization.augmentation_config.random_flip"] = False
+    else:
+        key_val_dict["optimization.augmentation_config.random_flip"] = True
+        key_val_dict["optimization.augmentation_config.flip_horizontal"] = (
+            random_flip == "horizontal"
+        )
+
 
 def find_backbone_name_from_key_val_dict(key_val_dict: dict):
     """Find the backbone model name from the config dictionary."""

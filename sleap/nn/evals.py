@@ -37,8 +37,8 @@ from sleap.nn.config import (
 from sleap.nn.model import Model
 from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.inference import (
-    TopdownPredictor,
-    BottomupPredictor,
+    TopDownPredictor,
+    BottomUpPredictor,
     SingleInstancePredictor,
 )
 
@@ -671,21 +671,21 @@ def evaluate_model(
     # Setup predictor for evaluation.
     head_config = cfg.model.heads.which_oneof()
     if isinstance(head_config, CentroidsHeadConfig):
-        predictor = TopdownPredictor(
+        predictor = TopDownPredictor(
             centroid_config=cfg,
             centroid_model=model,
             confmap_config=None,
             confmap_model=None,
         )
     elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
-        predictor = TopdownPredictor(
+        predictor = TopDownPredictor(
             centroid_config=None,
             centroid_model=None,
             confmap_config=cfg,
             confmap_model=model,
         )
     elif isinstance(head_config, MultiInstanceConfig):
-        predictor = sleap.nn.inference.BottomupPredictor(
+        predictor = sleap.nn.inference.BottomUpPredictor(
             bottomup_config=cfg, bottomup_model=model
         )
     elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):

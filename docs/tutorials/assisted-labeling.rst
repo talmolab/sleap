@@ -11,7 +11,6 @@ poorly, and this should give you a better idea of which frames will be
 most useful to label.
 
 
-
 The GUI doesn’t yet give you a way to monitor the progress during inference,
 although it will alert you if an error occurs during inference.
 
@@ -43,6 +42,9 @@ corrected more instances, you can repeat the process:
 train a new model, predict on more frames, correct those predictions,
 and so on. You’ll want to regularly generate new frame suggestions,
 since active learning will return predictions for just these frames.
+
+After you have accurate frame-by-frame prediction, you’re ready to predict for entire video clips and to track animal identities. We use a variety of heuristic algorithms for tracking identities across time (see :ref:`tracking-method-details` for more details). SLEAP also includes a graphical proof-reading tool for quickly assessing the accuracy of tracking and correcting problems.
+
 
 Continue to :ref:`proofreading-tutorial`.
 

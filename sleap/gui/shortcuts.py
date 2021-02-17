@@ -3,9 +3,7 @@ Class for accessing/setting keyboard shortcuts.
 """
 
 from typing import Dict, Union
-
 from PySide2.QtGui import QKeySequence
-
 from sleap import util
 
 
@@ -99,6 +97,11 @@ class Shortcuts(object):
             data[key] = val.toString() if isinstance(val, QKeySequence) else val
 
         util.save_config_yaml("shortcuts.yaml", data)
+
+    def reset_to_default(self):
+        """Reset shortcuts to default and save."""
+        self._shortcuts = util.get_config_yaml("shortcuts.yaml", get_defaults=True)
+        self.save()
 
     def __getitem__(self, idx: Union[slice, int, str]) -> Union[str, Dict[str, str]]:
         """

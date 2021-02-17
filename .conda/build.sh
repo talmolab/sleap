@@ -36,6 +36,7 @@ pip install jsmin
 pip install seaborn
 pip install pykalman==0.9.5
 pip install segmentation-models==1.0.1
+pip install rich==9.10.0
 
 pip install setuptools-scm
 
