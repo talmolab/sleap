@@ -573,8 +573,9 @@ def test_bottomup_multiclass_predictor(
         labels_gt[0][inds1[1]].numpy(), labels_pr[0][inds2[1]].numpy(), rtol=0.02
     )
 
-    labels_pr = predictor.predict(sleap.nn.data.pipelines.VideoReader(
-        labels_gt.video, example_indices=[0]))
+    labels_pr = predictor.predict(
+        sleap.nn.data.pipelines.VideoReader(labels_gt.video, example_indices=[0])
+    )
     labels_pr[0][0].track.name == "female"
     labels_pr[0][1].track.name == "male"
 

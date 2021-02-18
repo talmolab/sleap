@@ -13,9 +13,17 @@ sleap.use_cpu_only()
 
 
 def test_group_class_peaks():
-    peak_class_probs = np.array([
-        [0.1, 0.9], [0.9, 0.1], [0.95, 0.05], [0.8, 0.2],
-        [0.9, 0.1], [0.85, 0.15], [0.1, 0.9]])
+    peak_class_probs = np.array(
+        [
+            [0.1, 0.9],
+            [0.9, 0.1],
+            [0.95, 0.05],
+            [0.8, 0.2],
+            [0.9, 0.1],
+            [0.85, 0.15],
+            [0.1, 0.9],
+        ]
+    )
     peak_sample_inds = np.array([0, 0, 0, 0, 1, 1, 1])
     peak_channel_inds = np.array([0, 0, 1, 1, 0, 0, 0])
     peak_inds, class_inds = group_class_peaks(
@@ -31,9 +39,17 @@ def test_group_class_peaks():
 
 
 def test_classify_peaks():
-    peak_class_probs = np.array([
-        [0.1, 0.9], [0.91, 0.09], [0.95, 0.05], [0.8, 0.2],
-        [0.92, 0.08], [0.85, 0.15], [0.07, 0.93]])
+    peak_class_probs = np.array(
+        [
+            [0.1, 0.9],
+            [0.91, 0.09],
+            [0.95, 0.05],
+            [0.8, 0.2],
+            [0.92, 0.08],
+            [0.85, 0.15],
+            [0.07, 0.93],
+        ]
+    )
     peak_sample_inds = np.array([0, 0, 0, 0, 1, 1, 1])
     peak_channel_inds = np.array([0, 0, 1, 1, 0, 0, 0])
     peak_points = tf.reshape(tf.range(7 * 2, dtype=tf.float32), [7, 2])
@@ -45,8 +61,12 @@ def test_classify_peaks():
     class_maps = tf.cast(class_maps, tf.float32)
 
     points, point_vals, class_probs = classify_peaks(
-        class_maps, peak_points, peak_vals, peak_sample_inds, peak_channel_inds,
-        n_channels=2
+        class_maps,
+        peak_points,
+        peak_vals,
+        peak_sample_inds,
+        peak_channel_inds,
+        n_channels=2,
     )
 
     assert_array_equal(points[0][0], peak_points.numpy()[[1, 2]])

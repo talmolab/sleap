@@ -502,14 +502,13 @@ def setup_visualization(
                 )
             callbacks.append(
                 MatplotlibSaver(
-                    save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
+                    save_folder=os.path.join(run_path, "viz"),
+                    plot_fn=viz_fn,
+                    prefix=name,
                 )
             )
 
-        if (
-            config.tensorboard.write_logs
-            and config.tensorboard.visualizations
-        ):
+        if config.tensorboard.write_logs and config.tensorboard.visualizations:
             try:
                 matplotlib.use("Qt5Agg")
             except ImportError:
@@ -1489,7 +1488,7 @@ class BottomUpMultiClassModelTrainer(Trainer):
             optimization_config=self.config.optimization,
             confmaps_head=self.model.heads[0],
             class_maps_head=self.model.heads[1],
-            offsets_head=self.model.heads[2] if self.has_offsets else None
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
         )
 
     @property
@@ -1579,7 +1578,9 @@ class BottomUpMultiClassModelTrainer(Trainer):
             setup_visualization(
                 self.config.outputs,
                 run_path=self.run_path,
-                viz_fn=lambda: visualize_class_maps_example(next(validation_viz_ds_iter)),
+                viz_fn=lambda: visualize_class_maps_example(
+                    next(validation_viz_ds_iter)
+                ),
                 name=f"validation_class_maps",
             )
         )
@@ -1626,7 +1627,7 @@ class TopDownMultiClassModelTrainer(Trainer):
             optimization_config=self.config.optimization,
             confmaps_head=self.model.heads[0],
             class_vectors_head=self.model.heads[1],
-            offsets_head=self.model.heads[2] if self.has_offsets else None
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
         )
 
     @property

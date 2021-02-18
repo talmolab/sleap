@@ -1029,7 +1029,9 @@ class BottomUpMultiClassPipeline:
             output_stride=self.confmaps_head.output_stride,
             centroids=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
         pipeline += ClassMapGenerator(
             sigma=self.class_maps_head.sigma,
@@ -1084,7 +1086,7 @@ class BottomUpMultiClassPipeline:
             model_output_keys=[
                 "predicted_confidence_maps",
                 "predicted_class_maps",
-            ]
+            ],
         )
         pipeline += LocalPeakFinder(
             confmaps_stride=self.confmaps_head.output_stride,
@@ -1178,7 +1180,9 @@ class TopDownMultiClassPipeline:
             output_stride=self.instance_confmap_head.output_stride,
             all_instances=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
         pipeline += ClassVectorGenerator()
 

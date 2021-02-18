@@ -41,7 +41,6 @@ def test_class_vector_generator(min_tracks_2node_labels):
     np.testing.assert_array_equal(ex["class"], [[0, 1], [1, 0]])
     assert ex["class"].dtype == tf.float32
 
-
     p = labels.to_pipeline()
     p += gen
     p += sleap.pipelines.InstanceCentroidFinder()
@@ -72,7 +71,9 @@ def test_class_map_generator(min_tracks_2node_labels):
         // 4
     )
     np.testing.assert_allclose(
-        tf.gather_nd(ex["class_maps"], subs), [[0, 1], [0, 1], [1, 0], [1, 0]], atol=1e-2
+        tf.gather_nd(ex["class_maps"], subs),
+        [[0, 1], [0, 1], [1, 0], [1, 0]],
+        atol=1e-2,
     )
 
     gen = ClassMapGenerator(

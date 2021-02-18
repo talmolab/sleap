@@ -433,7 +433,9 @@ class ClassVectorsHead(Head):
             name = f"{type(self).__name__}"
         x = x_in
         if self.global_pool:
-            x = tf.keras.layers.GlobalMaxPool2D(name="pre_classification_global_pool")(x)
+            x = tf.keras.layers.GlobalMaxPool2D(name="pre_classification_global_pool")(
+                x
+            )
         x = tf.keras.layers.Flatten(name="pre_classification_flatten")(x)
         for i in range(self.num_fc_layers):
             x = tf.keras.layers.Dense(

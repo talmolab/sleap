@@ -152,7 +152,11 @@ class Predictor(ABC):
                 batch_size=batch_size,
             )
 
-        elif "centroid" in model_types or "centered_instance" in model_types or "multi_class_topdown" in model_types:
+        elif (
+            "centroid" in model_types
+            or "centered_instance" in model_types
+            or "multi_class_topdown" in model_types
+        ):
             centroid_model_path = None
             if "centroid" in model_types:
                 centroid_model_path = model_paths[model_types.index("centroid")]
@@ -163,7 +167,9 @@ class Predictor(ABC):
 
             td_multiclass_model_path = None
             if "multi_class_topdown" in model_types:
-                td_multiclass_model_path = model_paths[model_types.index("multi_class_topdown")]
+                td_multiclass_model_path = model_paths[
+                    model_types.index("multi_class_topdown")
+                ]
 
             if td_multiclass_model_path is not None:
                 pass
@@ -240,7 +246,6 @@ class Predictor(ABC):
         self.pipeline = pipeline
 
         return pipeline
-
 
     @abstractmethod
     def _initialize_inference_model(self):
@@ -2943,7 +2948,10 @@ class BottomUpMultiClassPredictor(Predictor):
         if tracks is None:
             if hasattr(data_provider, "tracks"):
                 tracks = data_provider.tracks
-            elif self.config.model.heads.multi_class_bottomup.class_maps.classes is not None:
+            elif (
+                self.config.model.heads.multi_class_bottomup.class_maps.classes
+                is not None
+            ):
                 names = self.config.model.heads.multi_class_bottomup.class_maps.classes
                 tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
 

@@ -112,7 +112,8 @@ class Model:
         backbone_cls = BACKBONE_CONFIG_TO_CLS.get(type(backbone_config), None)
         if backbone_cls is None:
             raise ValueError(
-                "Backbone architecture (config.model.backbone) was not specified.")
+                "Backbone architecture (config.model.backbone) was not specified."
+            )
 
         # Figure out which head class to use.
         head_config = config.heads.which_oneof()
@@ -269,7 +270,9 @@ class Model:
                 CenteredInstanceConfmapsHead.from_config(
                     head_config.confmaps, part_names=part_names
                 ),
-                ClassVectorsHead.from_config(head_config.class_vectors, classes=classes),
+                ClassVectorsHead.from_config(
+                    head_config.class_vectors, classes=classes
+                ),
             ]
             output_stride = min(heads[0].output_stride, heads[1].output_stride)
             output_stride = heads[0].output_stride
@@ -323,9 +326,7 @@ class Model:
                 # The main output has the same stride as the head, so build output layer
                 # from that tensor.
                 for i, x in enumerate(x_main):
-                    x_head.append(
-                        output.make_head(x)
-                    )
+                    x_head.append(output.make_head(x))
 
             else:
                 # Look for an intermediate activation that has the correct stride.
@@ -334,9 +335,7 @@ class Model:
                     assert all([feat.stride == feats[0].stride for feat in feats])
                     if feats[0].stride == output.output_stride:
                         for i, feat in enumerate(feats):
-                            x_head.append(
-                                output.make_head(feat.tensor)
-                            )
+                            x_head.append(output.make_head(feat.tensor))
                         break
 
             if len(x_head) == 0:
