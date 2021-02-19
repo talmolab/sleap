@@ -107,7 +107,9 @@ def describe_tensors(
     for key, val in example.items():
         key_desc = f"{key.rjust(key_length)}: "
         if isinstance(val, tf.Tensor):
-            dtype = str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
+            dtype = (
+                str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
+            )
             key_desc += (
                 f"type={type(val).__name__}, "
                 f"shape={val.shape}, "
