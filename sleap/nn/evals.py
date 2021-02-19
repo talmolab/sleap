@@ -695,6 +695,11 @@ def evaluate_model(
         predictor = sleap.nn.inference.SingleInstancePredictor(
             confmap_config=cfg, confmap_model=model
         )
+    elif isinstance(head_config, MultiClassBottomUpConfig):
+        predictor = sleap.nn.inference.BottomUpMultiClassPredictor(
+            config=cfg,
+            model=model,
+        )
     elif isinstance(head_config, MultiClassTopDownConfig):
         predictor = sleap.nn.inference.TopDownMultiClassPredictor(
             centroid_config=None,
