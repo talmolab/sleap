@@ -106,7 +106,9 @@ def describe_tensors(
     key_length = max(len(k) for k in example.keys())
     for key, val in example.items():
         key_desc = f"{key.rjust(key_length)}: "
-        if isinstance(val, tf.Tensor):
+        if isinstance(val, (tuple, list, dict)):
+            key_desc += describe_tensors(val, return_description=True)
+        else:
             dtype = (
                 str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
             )
@@ -116,8 +118,6 @@ def describe_tensors(
                 f"dtype={dtype}, "
                 f"device={val.device if hasattr(val, 'device') else 'N/A'}"
             )
-        else:
-            key_desc += describe_tensors(val, return_description=True)
         desc.append(key_desc)
     desc = "\n".join(desc)
 
