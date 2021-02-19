@@ -3362,17 +3362,17 @@ class TopDownMultiClassPredictor(Predictor):
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained models and configuration."""
         use_gt_centroid = self.centroid_config is None
-        # use_gt_confmap = self.confmap_config is None  # TODO
+        use_gt_confmap = self.confmap_config is None  # TODO
 
         if use_gt_centroid:
             centroid_crop_layer = CentroidCropGroundTruth(
                 crop_size=self.confmap_config.data.instance_cropping.crop_size
             )
         else:
-            if use_gt_confmap:
-                crop_size = 1
-            else:
-                crop_size = self.confmap_config.data.instance_cropping.crop_size
+            # if use_gt_confmap:
+            #     crop_size = 1
+            # else:
+            crop_size = self.confmap_config.data.instance_cropping.crop_size
             centroid_crop_layer = CentroidCrop(
                 keras_model=self.centroid_model.keras_model,
                 crop_size=crop_size,
@@ -3550,11 +3550,11 @@ class TopDownMultiClassPredictor(Predictor):
             if hasattr(data_provider, "tracks"):
                 tracks = data_provider.tracks
             elif (
-                self.config.model.heads.multi_class_topdown.class_vectors.classes
+                self.confmap_config.model.heads.multi_class_topdown.class_vectors.classes
                 is not None
             ):
                 names = (
-                    self.config.model.heads.multi_class_topdown.class_vectors.classes
+                    self.confmap_config.model.heads.multi_class_topdown.class_vectors.classes
                 )
                 tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
 
