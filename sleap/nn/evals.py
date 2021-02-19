@@ -695,6 +695,13 @@ def evaluate_model(
         predictor = sleap.nn.inference.SingleInstancePredictor(
             confmap_config=cfg, confmap_model=model
         )
+    elif isinstance(head_config, MultiClassTopDownConfig):
+        predictor = sleap.nn.inference.TopDownMultiClassPredictor(
+            centroid_config=None,
+            centroid_model=None,
+            confmap_config=cfg,
+            confmap_model=model,
+        )
     else:
         raise ValueError("Unrecognized model type:", head_config)
 
