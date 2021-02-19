@@ -46,7 +46,7 @@ def group_class_peaks(
         algorithm. Peaks that are assigned to classes that are not the highest
         probability for each class are removed from the matches.
 
-    See also: classify_peaks
+    See also: classify_peaks_from_maps, classify_peaks_from_vectors
     """
     peak_sample_inds = tf.cast(peak_sample_inds, tf.int32)
     peak_channel_inds = tf.cast(peak_channel_inds, tf.int32)
@@ -94,7 +94,7 @@ def group_class_peaks(
     return peak_inds, class_inds
 
 
-def classify_peaks(
+def classify_peaks_from_maps(
     class_maps: tf.Tensor,
     peak_points: tf.Tensor,
     peak_vals: tf.Tensor,
@@ -172,6 +172,77 @@ def classify_peaks(
     )
     class_probs = tf.tensor_scatter_nd_update(
         tf.fill([n_samples, n_instances, n_channels], np.nan),
+        subs,
+        tf.gather_nd(peak_class_probs, tf.stack([peak_inds, class_inds], axis=1)),
+    )
+
+    return points, point_vals, class_probs
+
+
+def classify_peaks_from_vectors(
+    peak_points: tf.Tensor,
+    peak_vals: tf.Tensor,
+    peak_class_probs: tf.Tensor,
+    crop_sample_inds: tf.Tensor,
+    n_samples: int,
+) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+    """Group peaks by classification probabilities.
+
+    This is used in top-down classification models.
+
+    Args:
+        peak_points:
+        peak_vals:
+        peak_class_probs:
+        crop_sample_inds:
+        n_samples: Number of samples in the batch.
+
+    Returns:
+        A tuple of `(points, point_vals, class_probs)`.
+
+        `points`: Class-grouped peaks as a `tf.Tensor` of dtype `tf.float32` and shape
+            `(n_samples, n_classes, n_channels, 2)`. Missing points will be denoted by
+            NaNs.
+
+        `point_vals`: The confidence map values for each point as a `tf.Tensor` of dtype
+            `tf.float32` and shape `(n_samples, n_classes, n_channels)`.
+
+        `class_probs`: Classification probabilities for matched points as a `tf.Tensor`
+            of dtype `tf.float32` and shape `(n_samples, n_classes, n_channels)`.
+    """
+    crop_sample_inds = tf.cast(crop_sample_inds, tf.int32)
+    n_samples = tf.cast(n_samples, tf.int32)
+    n_channels = tf.shape(peak_points)[1]
+    n_instances = tf.shape(peak_class_probs)[1]
+
+    peak_inds, class_inds = group_class_peaks(
+        peak_class_probs,
+        crop_sample_inds,
+        tf.zeros_like(crop_sample_inds),
+        n_samples,
+        1,
+    )
+
+    # Assign the results to fixed size tensors.
+    subs = tf.stack(
+        [
+            tf.gather(crop_sample_inds, peak_inds),
+            class_inds,
+        ],
+        axis=1,
+    )
+    points = tf.tensor_scatter_nd_update(
+        tf.fill([n_samples, n_instances, n_channels, 2], np.nan),
+        subs,
+        tf.gather(peak_points, peak_inds),
+    )
+    point_vals = tf.tensor_scatter_nd_update(
+        tf.fill([n_samples, n_instances, n_channels], np.nan),
+        subs,
+        tf.gather(peak_vals, peak_inds),
+    )
+    class_probs = tf.tensor_scatter_nd_update(
+        tf.fill([n_samples, n_instances], np.nan),
         subs,
         tf.gather_nd(peak_class_probs, tf.stack([peak_inds, class_inds], axis=1)),
     )

@@ -82,7 +82,7 @@ class ClassVectorGenerator:
     @property
     def output_keys(self) -> List[Text]:
         """Return the keys that outgoing elements will have."""
-        return self.input_keys + ["class"]
+        return self.input_keys + ["class_vectors"]
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         """Create a dataset that contains the generated class identity vectors.
@@ -98,7 +98,7 @@ class ClassVectorGenerator:
 
         def generate_class_vectors(example):
             """Local processing function for dataset mapping."""
-            example["class"] = tf.cast(
+            example["class_vectors"] = tf.cast(
                 make_class_vectors(example["track_inds"], example["n_tracks"]),
                 tf.float32,
             )

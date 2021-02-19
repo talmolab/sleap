@@ -38,8 +38,8 @@ def test_class_vector_generator(min_tracks_2node_labels):
     ds = gen.transform_dataset(ds)
     ex = next(iter(ds))
 
-    np.testing.assert_array_equal(ex["class"], [[0, 1], [1, 0]])
-    assert ex["class"].dtype == tf.float32
+    np.testing.assert_array_equal(ex["class_vectors"], [[0, 1], [1, 0]])
+    assert ex["class_vectors"].dtype == tf.float32
 
     p = labels.to_pipeline()
     p += gen
@@ -47,8 +47,8 @@ def test_class_vector_generator(min_tracks_2node_labels):
     p += sleap.pipelines.InstanceCropper(32, 32)
     ex = p.peek()
 
-    np.testing.assert_array_equal(ex["class"], [0, 1])
-    assert ex["class"].dtype == tf.float32
+    np.testing.assert_array_equal(ex["class_vectors"], [0, 1])
+    assert ex["class_vectors"].dtype == tf.float32
 
 
 def test_class_map_generator(min_tracks_2node_labels):

@@ -5,7 +5,7 @@ import tensorflow as tf
 import sleap
 from sleap.nn.identity import (
     group_class_peaks,
-    classify_peaks,
+    classify_peaks_from_maps,
 )
 
 
@@ -38,7 +38,7 @@ def test_group_class_peaks():
     assert_array_equal(class_inds, [1, 0, 0, 0, 1])
 
 
-def test_classify_peaks():
+def test_classify_peaks_from_maps():
     peak_class_probs = np.array(
         [
             [0.1, 0.9],
@@ -60,7 +60,7 @@ def test_classify_peaks():
         class_maps[s, int(y), int(x), :] = pr
     class_maps = tf.cast(class_maps, tf.float32)
 
-    points, point_vals, class_probs = classify_peaks(
+    points, point_vals, class_probs = classify_peaks_from_maps(
         class_maps,
         peak_points,
         peak_vals,

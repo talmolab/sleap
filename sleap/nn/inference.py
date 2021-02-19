@@ -172,16 +172,14 @@ class Predictor(ABC):
                 ]
 
             if td_multiclass_model_path is not None:
-                pass
-                # TODO:
-                # predictor = TopDownMultiClassPredictor.from_trained_models(
-                #     centroid_model_path=centroid_model_path,
-                #     confmap_model_path=td_multiclass_model_path,
-                #     batch_size=batch_size,
-                #     peak_threshold=peak_threshold,
-                #     integral_refinement=integral_refinement,
-                #     integral_patch_size=integral_patch_size,
-                # )
+                predictor = TopDownMultiClassPredictor.from_trained_models(
+                    centroid_model_path=centroid_model_path,
+                    confmap_model_path=td_multiclass_model_path,
+                    batch_size=batch_size,
+                    peak_threshold=peak_threshold,
+                    integral_refinement=integral_refinement,
+                    integral_patch_size=integral_patch_size,
+                )
             else:
                 predictor = TopDownPredictor.from_trained_models(
                     centroid_model_path=centroid_model_path,
@@ -2741,7 +2739,7 @@ class BottomUpMultiClassInferenceLayer(InferenceLayer):
             predicted_instances,
             predicted_peak_scores,
             predicted_instance_scores,
-        ) = sleap.nn.identity.classify_peaks(
+        ) = sleap.nn.identity.classify_peaks_from_maps(
             class_maps,
             peaks,
             peak_vals,
@@ -2953,6 +2951,611 @@ class BottomUpMultiClassPredictor(Predictor):
                 is not None
             ):
                 names = self.config.model.heads.multi_class_bottomup.class_maps.classes
+                tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
+
+        # Loop over batches.
+        predicted_frames = []
+        for ex in generator:
+
+            # Loop over frames.
+            for image, video_ind, frame_ind, points, confidences, scores in zip(
+                ex["image"],
+                ex["video_ind"],
+                ex["frame_ind"],
+                ex["instance_peaks"],
+                ex["instance_peak_vals"],
+                ex["instance_scores"],
+            ):
+
+                # Loop over instances.
+                predicted_instances = []
+                for i, (pts, confs, score) in enumerate(
+                    zip(points, confidences, scores)
+                ):
+                    if np.isnan(pts).all():
+                        continue
+                    track = None
+                    if tracks is not None and len(tracks) >= (i - 1):
+                        track = tracks[i]
+                    predicted_instances.append(
+                        sleap.instance.PredictedInstance.from_arrays(
+                            points=pts,
+                            point_confidences=confs,
+                            instance_score=np.nanmean(score),
+                            skeleton=skeleton,
+                            track=track,
+                        )
+                    )
+
+                predicted_frames.append(
+                    sleap.LabeledFrame(
+                        video=data_provider.videos[video_ind],
+                        frame_idx=frame_ind,
+                        instances=predicted_instances,
+                    )
+                )
+
+        return predicted_frames
+
+
+class TopDownMultiClassFindPeaks(InferenceLayer):
+    """Keras layer that predicts and classifies peaks from images using a trained model.
+
+    This layer encapsulates all of the inference operations required for generating
+    predictions from a centered instance confidence map and multi-class model. This
+    includes preprocessing, model forward pass, peak finding, coordinate adjustment, and
+    classification.
+
+    Attributes:
+        keras_model: A `tf.keras.Model` that accepts rank-4 images as input and predicts
+            rank-4 confidence maps as output. This should be a model that is trained on
+            centered instance confidence maps and classification.
+        input_scale: Float indicating if the images should be resized before being
+            passed to the model.
+        output_stride: Output stride of the model, denoting the scale of the output
+            confidence maps relative to the images (after input scaling). This is used
+            for adjusting the peak coordinates to the image grid. This will be inferred
+            from the model shapes if not provided.
+        peak_threshold: Minimum confidence map value to consider a global peak as valid.
+        refinement: If `None`, returns the grid-aligned peaks with no refinement. If
+            `"integral"`, peaks will be refined with integral regression. If `"local"`,
+            peaks will be refined with quarter pixel local gradient offset. This has no
+            effect if the model has an offset regression head.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        return_confmaps: If `True`, the confidence maps will be returned together with
+            the predicted peaks. This will result in slower inference times since the
+            data must be copied off of the GPU, but is useful for visualizing the raw
+            output of the model.
+        return_class_vectors: If `True`, the classification probabilities will be
+            returned together with the predicted peaks. This will not line up with the
+            grouped instances, for which the associtated class probabilities will always
+            be returned in `"instance_scores"`.
+        confmaps_ind: Index of the output tensor of the model corresponding to
+            confidence maps. If `None` (the default), this will be detected
+            automatically by searching for the first tensor that contains
+            `"CenteredInstanceConfmapsHead"` in its name.
+        offsets_ind: Index of the output tensor of the model corresponding to
+            offset regression maps. If `None` (the default), this will be detected
+            automatically by searching for the first tensor that contains
+            `"OffsetRefinementHead"` in its name. If the head is not present, the method
+            specified in the `refinement` attribute will be used.
+        class_vectors_ind: Index of the output tensor of the model corresponding to the
+            classification vectors. If `None` (the default), this will be detected
+            automatically by searching for the first tensor that contains
+            `"ClassVectorsHead"` in its name.
+    """
+
+    def __init__(
+        self,
+        keras_model: tf.keras.Model,
+        input_scale: float = 1.0,
+        output_stride: Optional[int] = None,
+        peak_threshold: float = 0.2,
+        refinement: Optional[str] = "local",
+        integral_patch_size: int = 5,
+        return_confmaps: bool = False,
+        return_class_vectors: bool = False,
+        confmaps_ind: Optional[int] = None,
+        offsets_ind: Optional[int] = None,
+        class_vectors_ind: Optional[int] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            keras_model=keras_model, input_scale=input_scale, pad_to_stride=1, **kwargs
+        )
+        self.peak_threshold = peak_threshold
+        self.refinement = refinement
+        self.integral_patch_size = integral_patch_size
+        self.return_confmaps = return_confmaps
+        self.return_class_vectors = return_class_vectors
+        self.confmaps_ind = confmaps_ind
+        self.class_vectors_ind = class_vectors_ind
+        self.offsets_ind = offsets_ind
+
+        if self.confmaps_ind is None:
+            self.confmaps_ind = find_head(
+                self.keras_model, "CenteredInstanceConfmapsHead"
+            )
+        if self.confmaps_ind is None:
+            raise ValueError(
+                "Index of the confidence maps output tensor must be specified if not "
+                "named 'CenteredInstanceConfmapsHead'."
+            )
+
+        if self.class_vectors_ind is None:
+            self.class_vectors_ind = find_head(self.keras_model, "ClassVectorsHead")
+        if self.class_vectors_ind is None:
+            raise ValueError(
+                "Index of the classifications output tensor must be specified if not "
+                "named 'ClassVectorsHead'."
+            )
+
+        if self.offsets_ind is None:
+            self.offsets_ind = find_head(self.keras_model, "OffsetRefinementHead")
+
+        if output_stride is None:
+            # Attempt to automatically infer the output stride.
+            output_stride = get_model_output_stride(
+                self.keras_model, 0, self.confmaps_ind
+            )
+        self.output_stride = output_stride
+
+    def call(
+        self, inputs: Union[Dict[str, tf.Tensor], tf.Tensor]
+    ) -> Dict[str, tf.Tensor]:
+        """Predict confidence maps and infer peak coordinates.
+
+        This layer can be chained with a `CentroidCrop` layer to create a top-down
+        inference function from full images.
+
+        Args:
+            inputs: Instance-centered images as a `tf.Tensor` of shape
+                `(samples, height, width, channels)` or `tf.RaggedTensor` of shape
+                `(samples, ?, height, width, channels)` where images are grouped by
+                sample and may contain a variable number of crops, or a dictionary with
+                keys:
+                `"crops"`: Cropped images in either format above.
+                `"crop_offsets"`: (Optional) Coordinates of the top-left of the crops as
+                    `(x, y)` offsets of shape `(samples, ?, 2)` for adjusting the
+                    predicted peak coordinates. No adjustment is performed if not
+                    provided.
+                `"centroids"`: (Optional) If provided, will be passed through to the
+                    output.
+                `"centroid_vals"`: (Optional) If provided, will be passed through to the
+                    output.
+
+        Returns:
+            A dictionary of outputs with keys:
+
+            `"instance_peaks"`: The predicted peaks for each instance in the batch as a
+                `tf.Tensor` of shape `(samples, n_classes, nodes, 2)`. Instances will
+                be ordered by class and will be filled with `NaN` where not found.
+            `"instance_peak_vals"`: The value of the confidence maps at the predicted
+                peaks for each instance in the batch as a `tf.Tensor` of shape
+                `(samples, n_classes, nodes)`.
+
+            If provided (e.g., from an input `CentroidCrop` layer), the centroids that
+            generated the crops will also be included in the keys `"centroids"` and
+            `"centroid_vals"`.
+
+            If the `return_confmaps` attribute is set to `True`, the output will also
+            contain a key named `"instance_confmaps"` containing a `tf.RaggedTensor` of
+            shape `(samples, ?, output_height, output_width, nodes)` containing the
+            confidence maps predicted by the model.
+
+            If the `return_class_vectors` attribe is set to `True`, the output will also
+            contain a key named `"class_vectors"` containing the full classification
+            probabilities for all crops.
+        """
+        if isinstance(inputs, dict):
+            crops = inputs["crops"]
+        else:
+            # Tensor input provided. We'll infer the extra fields in the expected input
+            # dictionary.
+            crops = inputs
+            inputs = {}
+
+        if isinstance(crops, tf.RaggedTensor):
+            crops = inputs["crops"]  # (samples, ?, height, width, channels)
+
+            # Flatten crops into (n_peaks, height, width, channels)
+            crop_sample_inds = crops.value_rowids()  # (n_peaks,)
+            samples = crops.nrows()
+            crops = crops.merge_dims(0, 1)
+
+        else:
+            if "crop_sample_inds" in inputs:
+                # Crops provided as a regular tensor, use the metadata are in the input.
+                samples = inputs["samples"]
+                crop_sample_inds = inputs["crop_sample_inds"]
+            else:
+                # Assuming crops is (samples, height, width, channels).
+                samples = tf.shape(crops)[0]
+                crop_sample_inds = tf.range(samples, dtype=tf.int32)
+
+        # Preprocess inputs (scaling, padding, colorspace, int to float).
+        crops = self.preprocess(crops)
+
+        # Network forward pass.
+        out = self.keras_model(crops)
+
+        # Sort outputs.
+        cms = out[self.confmaps_ind]
+        peak_class_probs = out[self.class_vectors_ind]
+        offsets = None
+        if self.offsets_ind is not None:
+            offsets = out[self.offsets_ind]
+
+        # Find peaks.
+        if self.offsets_ind is None:
+            # Use deterministic refinement.
+            peak_points, peak_vals = sleap.nn.peak_finding.find_global_peaks(
+                cms,
+                threshold=self.peak_threshold,
+                refinement=self.refinement,
+                integral_patch_size=self.integral_patch_size,
+            )
+        else:
+            # Use learned offsets.
+            (
+                peak_points,
+                peak_vals,
+            ) = sleap.nn.peak_finding.find_global_peaks_with_offsets(
+                cms, offsets, threshold=self.peak_threshold
+            )
+
+        # Adjust for stride and scale.
+        peak_points = peak_points * self.output_stride
+        if self.input_scale != 1.0:
+            # Note: We add 0.5 here to offset TensorFlow's weird image resizing. This
+            # may not always(?) be the most correct approach.
+            # See: https://github.com/tensorflow/tensorflow/issues/6720
+            peak_points = (peak_points / self.input_scale) + 0.5
+
+        # Adjust for crop offsets if provided.
+        if "crop_offsets" in inputs:
+            # Flatten (samples, ?, 2) -> (n_peaks, 2).
+            crop_offsets = inputs["crop_offsets"].merge_dims(0, 1)
+            peak_points = peak_points + tf.expand_dims(crop_offsets, axis=1)
+
+        # Group peaks from classification probabilities.
+        points, point_vals, class_probs = sleap.nn.identity.classify_peaks_from_vectors(
+            peak_points, peak_vals, peak_class_probs, crop_sample_inds, samples
+        )
+
+        # Build outputs.
+        outputs = {
+            "instance_peaks": points,
+            "instance_peak_vals": point_vals,
+            "instance_scores": class_probs,
+        }
+        if "centroids" in inputs:
+            outputs["centroids"] = inputs["centroids"]
+        if "centroids" in inputs:
+            outputs["centroid_vals"] = inputs["centroid_vals"]
+        if self.return_confmaps:
+            cms = tf.RaggedTensor.from_value_rowids(
+                cms, crop_sample_inds, nrows=samples
+            )
+            outputs["instance_confmaps"] = cms
+        if self.return_class_vectors:
+            outputs["class_vectors"] = peak_class_probs
+        return outputs
+
+
+class TopDownMultiClassInferenceModel(InferenceModel):
+    """Top-down instance prediction model.
+
+    This model encapsulates the top-down approach where instances are first detected by
+    local peak detection of an anchor point and then cropped. These instance-centered
+    crops are then passed to an instance peak detector which is trained to detect all
+    remaining body parts for the instance that is centered within the crop.
+
+    Attributes:
+        centroid_crop: A centroid cropping layer. This can be either `CentroidCrop` or
+            `CentroidCropGroundTruth`. This layer takes the full image as input and
+            outputs a set of centroids and cropped boxes.
+        instance_peaks: A instance peak detection and classification layer, an instance
+            of `TopDownMultiClassFindPeaks`. This layer takes as input the output of the
+            centroid cropper and outputs the detected peaks and classes for the
+            instances within each crop.
+    """
+
+    def __init__(
+        self,
+        centroid_crop: Union[CentroidCrop, CentroidCropGroundTruth],
+        instance_peaks: TopDownMultiClassFindPeaks,
+    ):
+        super().__init__()
+        self.centroid_crop = centroid_crop
+        self.instance_peaks = instance_peaks
+
+    def call(
+        self, example: Union[Dict[str, tf.Tensor], tf.Tensor]
+    ) -> Dict[str, tf.Tensor]:
+        """Predict instances for one batch of images.
+
+        Args:
+            example: This may be either a single batch of images as a 4-D tensor of
+                shape `(batch_size, height, width, channels)`, or a dictionary
+                containing the image batch in the `"images"` key. If using a ground
+                truth model for either centroid cropping or instance peaks, the full
+                example from a `Pipeline` is required for providing the metadata.
+
+        Returns:
+            The predicted instances as a dictionary of tensors with keys:
+
+            `"centroids": (batch_size, n_instances, 2)`: Instance centroids.
+            `"centroid_vals": (batch_size, n_instances)`: Instance centroid confidence
+                values.
+            `"instance_peaks": (batch_size, n_instances, n_nodes, 2)`: Instance skeleton
+                points.
+            `"instance_peak_vals": (batch_size, n_instances, n_nodes)`: Confidence
+                values for the instance skeleton points.
+        """
+        if isinstance(example, tf.Tensor):
+            example = dict(image=example)
+
+        crop_output = self.centroid_crop(example)
+        peaks_output = self.instance_peaks(crop_output)
+        return peaks_output
+
+
+@attr.s(auto_attribs=True)
+class TopDownMultiClassPredictor(Predictor):
+    """Top-down multi-instance predictor with classification.
+
+    This high-level class handles initialization, preprocessing and tracking using a
+    trained top-down multi-instance classification SLEAP model.
+
+    This should be initialized using the `from_trained_models()` constructor or the
+    high-level API (`sleap.load_model`).
+
+    Attributes:
+        centroid_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained centroid model. If `None`, ground truth centroids will be
+            used if available from the data source.
+        centroid_model: A `sleap.nn.model.Model` instance created from the trained
+            centroid model. If `None`, ground truth centroids will be used if available
+            from the data source.
+        confmap_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained centered instance model. If `None`, ground truth instances
+            will be used if available from the data source.
+        confmap_model: A `sleap.nn.model.Model` instance created from the trained
+            centered-instance model. If `None`, ground truth instances will be used if
+            available from the data source.
+        inference_model: A `TopDownMultiClassInferenceModel` that wraps a trained
+            `tf.keras.Model` to implement preprocessing, centroid detection, cropping,
+            peak finding and classification.
+        pipeline: A `sleap.nn.data.Pipeline` that loads the data and batches input data.
+            This will be updated dynamically if new data sources are used.
+        tracker: A `sleap.nn.tracking.Tracker` that will be called to associate
+            detections over time. Predicted instances will not be assigned to tracks if
+            if this is `None`.
+        batch_size: The default batch size to use when loading data for inference.
+            Higher values increase inference speed at the cost of higher memory usage.
+        peak_threshold: Minimum confidence map value to consider a local peak as valid.
+        integral_refinement: If `True`, peaks will be refined with integral regression.
+            If `False`, `"local"`, peaks will be refined with quarter pixel local
+            gradient offset. This has no effect if the model has an offset regression
+            head.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        tracks: If provided, instances will be created using these track instances. If
+            not, instances will be assigned tracks from the provider if possible.
+    """
+
+    centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
+    centroid_model: Optional[Model] = attr.ib(default=None)
+    confmap_config: Optional[TrainingJobConfig] = attr.ib(default=None)
+    confmap_model: Optional[Model] = attr.ib(default=None)
+    inference_model: Optional[TopDownMultiClassInferenceModel] = attr.ib(default=None)
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    batch_size: int = 4
+    peak_threshold: float = 0.2
+    integral_refinement: bool = True
+    integral_patch_size: int = 5
+    tracks: Optional[List[sleap.Track]] = None
+
+    def _initialize_inference_model(self):
+        """Initialize the inference model from the trained models and configuration."""
+        use_gt_centroid = self.centroid_config is None
+        # use_gt_confmap = self.confmap_config is None  # TODO
+
+        if use_gt_centroid:
+            centroid_crop_layer = CentroidCropGroundTruth(
+                crop_size=self.confmap_config.data.instance_cropping.crop_size
+            )
+        else:
+            if use_gt_confmap:
+                crop_size = 1
+            else:
+                crop_size = self.confmap_config.data.instance_cropping.crop_size
+            centroid_crop_layer = CentroidCrop(
+                keras_model=self.centroid_model.keras_model,
+                crop_size=crop_size,
+                input_scale=self.centroid_config.data.preprocessing.input_scaling,
+                pad_to_stride=self.centroid_config.data.preprocessing.pad_to_stride,
+                output_stride=self.centroid_config.model.heads.centroid.output_stride,
+                peak_threshold=self.peak_threshold,
+                refinement="integral" if self.integral_refinement else "local",
+                integral_patch_size=self.integral_patch_size,
+                return_confmaps=False,
+            )
+
+        # if use_gt_confmap:
+        #     instance_peaks_layer = FindInstancePeaksGroundTruth()
+        # else:
+        cfg = self.confmap_config
+        instance_peaks_layer = TopDownMultiClassFindPeaks(
+            keras_model=self.confmap_model.keras_model,
+            input_scale=cfg.data.preprocessing.input_scaling,
+            peak_threshold=self.peak_threshold,
+            output_stride=cfg.model.heads.multi_class_topdown.confmaps.output_stride,
+            refinement="integral" if self.integral_refinement else "local",
+            integral_patch_size=self.integral_patch_size,
+            return_confmaps=False,
+        )
+
+        self.inference_model = TopDownMultiClassInferenceModel(
+            centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
+        )
+
+    @classmethod
+    def from_trained_models(
+        cls,
+        centroid_model_path: Optional[Text] = None,
+        confmap_model_path: Optional[Text] = None,
+        batch_size: int = 4,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 5,
+    ) -> "TopDownMultiClassPredictor":
+        """Create predictor from saved models.
+
+        Args:
+            centroid_model_path: Path to a centroid model folder or training job JSON
+                file inside a model folder. This folder should contain
+                `training_config.json` and `best_model.h5` files for a trained model.
+            confmap_model_path: Path to a centered instance model folder or training job
+                JSON file inside a model folder. This folder should contain
+                `training_config.json` and `best_model.h5` files for a trained model.
+            batch_size: The default batch size to use when loading data for inference.
+                Higher values increase inference speed at the cost of higher memory
+                usage.
+            peak_threshold: Minimum confidence map value to consider a local peak as
+                valid.
+            integral_refinement: If `True`, peaks will be refined with integral
+                regression. If `False`, `"local"`, peaks will be refined with quarter
+                pixel local gradient offset. This has no effect if the model has an
+                offset regression head.
+            integral_patch_size: Size of patches to crop around each rough peak for
+                integral refinement as an integer scalar.
+
+        Returns:
+            An instance of `TopDownPredictor` with the loaded models.
+
+            One of the two models can be left as `None` to perform inference with ground
+            truth data. This will only work with `LabelsReader` as the provider.
+        """
+        if centroid_model_path is None and confmap_model_path is None:
+            raise ValueError(
+                "Either the centroid or topdown confidence map model must be provided."
+            )
+
+        if centroid_model_path is not None:
+            # Load centroid model.
+            centroid_config = TrainingJobConfig.load_json(centroid_model_path)
+            centroid_keras_model_path = get_keras_model_path(centroid_model_path)
+            centroid_model = Model.from_config(centroid_config.model)
+            centroid_model.keras_model = tf.keras.models.load_model(
+                centroid_keras_model_path, compile=False
+            )
+        else:
+            centroid_config = None
+            centroid_model = None
+
+        if confmap_model_path is not None:
+            # Load confmap model.
+            confmap_config = TrainingJobConfig.load_json(confmap_model_path)
+            confmap_keras_model_path = get_keras_model_path(confmap_model_path)
+            confmap_model = Model.from_config(confmap_config.model)
+            confmap_model.keras_model = tf.keras.models.load_model(
+                confmap_keras_model_path, compile=False
+            )
+        else:
+            confmap_config = None
+            confmap_model = None
+
+        obj = cls(
+            centroid_config=centroid_config,
+            centroid_model=centroid_model,
+            confmap_config=confmap_config,
+            confmap_model=confmap_model,
+            batch_size=batch_size,
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
+        )
+        obj._initialize_inference_model()
+        return obj
+
+    def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+        """Make a data loading pipeline.
+
+        Args:
+            data_provider: If not `None`, the pipeline will be created with an instance
+                of a `sleap.pipelines.Provider`.
+
+        Returns:
+            The created `sleap.pipelines.Pipeline` with batching and prefetching.
+
+        Notes:
+            This method also updates the class attribute for the pipeline and will be
+            called automatically when predicting on data from a new source.
+        """
+        pipeline = Pipeline()
+        if data_provider is not None:
+            pipeline.providers = [data_provider]
+
+        if self.centroid_model is None:
+            anchor_part = self.confmap_config.data.instance_cropping.center_on_part
+            pipeline += sleap.nn.data.pipelines.InstanceCentroidFinder(
+                center_on_anchor_part=anchor_part is not None,
+                anchor_part_names=anchor_part,
+                skeletons=self.confmap_config.data.labels.skeletons,
+            )
+
+        pipeline += sleap.nn.data.pipelines.Batcher(
+            batch_size=self.batch_size, drop_remainder=False, unrag=False
+        )
+
+        pipeline += Prefetcher()
+
+        self.pipeline = pipeline
+
+        return pipeline
+
+    def _make_labeled_frames_from_generator(
+        self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
+    ) -> List[sleap.LabeledFrame]:
+        """Create labeled frames from a generator that yields inference results.
+
+        This method converts pure arrays into SLEAP-specific data structures and runs
+        them through the tracker if it is specified.
+
+        Args:
+            generator: A generator that returns dictionaries with inference results.
+                This should return dictionaries with keys `"image"`, `"video_ind"`,
+                `"frame_ind"`, `"instance_peaks"`, `"instance_peak_vals"`, and
+                `"centroid_vals"`. This can be created using the `_predict_generator()`
+                method.
+            data_provider: The `sleap.pipelines.Provider` that the predictions are being
+                created from. This is used to retrieve the `sleap.Video` instance
+                associated with each inference result.
+
+        Returns:
+            A list of `sleap.LabeledFrame`s with `sleap.PredictedInstance`s created from
+            arrays returned from the inference result generator.
+        """
+        if self.confmap_config is not None:
+            skeleton = self.confmap_config.data.labels.skeletons[0]
+        else:
+            skeleton = self.centroid_config.data.labels.skeletons[0]
+
+        tracks = self.tracks
+        if tracks is None:
+            if hasattr(data_provider, "tracks"):
+                tracks = data_provider.tracks
+            elif (
+                self.config.model.heads.multi_class_topdown.class_vectors.classes
+                is not None
+            ):
+                names = (
+                    self.config.model.heads.multi_class_topdown.class_vectors.classes
+                )
                 tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
 
         # Loop over batches.
