@@ -47,7 +47,8 @@ def test_single_instance_confmaps_head():
             output_stride=2,
             loss_weight=2.0,
             offset_refinement=False,
-        ), part_names=["c", "b", "a"]
+        ),
+        part_names=["c", "b", "a"],
     )
     assert head.part_names == ["c", "b", "a"]
     assert head.sigma == 1.5
@@ -78,7 +79,7 @@ def test_centroid_confmaps_head():
             sigma=1.5,
             output_stride=2,
             loss_weight=2.0,
-            offset_refinement=False
+            offset_refinement=False,
         )
     )
     assert head.anchor_part == "a"
@@ -110,7 +111,7 @@ def test_centroid_confmaps_head():
             sigma=1.5,
             output_stride=2,
             loss_weight=2.0,
-            offset_refinement=False
+            offset_refinement=False,
         )
     )
     assert head.anchor_part == "a"
@@ -145,7 +146,8 @@ def test_centered_instance_confmaps_head():
             output_stride=2,
             loss_weight=2.0,
             offset_refinement=False,
-        ), part_names=["c", "b", "a"]
+        ),
+        part_names=["c", "b", "a"],
     )
     assert head.part_names == ["c", "b", "a"]
     assert head.sigma == 1.5
@@ -176,7 +178,8 @@ def test_multi_instance_confmaps_head():
             output_stride=2,
             loss_weight=2.0,
             offset_refinement=False,
-        ), part_names=["c", "b", "a"]
+        ),
+        part_names=["c", "b", "a"],
     )
     assert head.part_names == ["c", "b", "a"]
     assert head.sigma == 1.5
@@ -206,7 +209,8 @@ def test_part_affinity_fields_head():
             sigma=1.5,
             output_stride=2,
             loss_weight=2.0,
-        ), edges=[("a", "b"), ("b", "c")],
+        ),
+        edges=[("a", "b"), ("b", "c")],
     )
     assert head.edges == [("a", "b"), ("b", "c")]
     assert head.sigma == 1.5
@@ -236,7 +240,8 @@ def test_class_maps_head():
             sigma=1.5,
             output_stride=2,
             loss_weight=2.0,
-        ), classes=["1", "2"],
+        ),
+        classes=["1", "2"],
     )
     assert head.classes == ["1", "2"]
     assert head.sigma == 1.5
@@ -267,7 +272,8 @@ def test_offset_refinement_head():
             output_stride=2,
             loss_weight=2.0,
             offset_refinement=False,
-        ), sigma_threshold=0.4
+        ),
+        sigma_threshold=0.4,
     )
     assert head.part_names == ["a", "b"]
     assert head.output_stride == 2
