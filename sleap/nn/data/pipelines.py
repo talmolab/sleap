@@ -1115,7 +1115,7 @@ class TopDownMultiClassPipeline:
 
     data_config: DataConfig
     optimization_config: OptimizationConfig
-    confmaps_head: MultiInstanceConfmapsHead
+    instance_confmap_head: CenteredInstanceConfmapsHead
     class_vectors_head: ClassVectorsHead
     offsets_head: Optional[OffsetRefinementHead] = None
 
@@ -1170,6 +1170,7 @@ class TopDownMultiClassPipeline:
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
 
+        pipeline += ClassVectorGenerator()
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -1184,7 +1185,6 @@ class TopDownMultiClassPipeline:
             if self.offsets_head is not None
             else 1.0,
         )
-        pipeline += ClassVectorGenerator()
 
         if len(data_provider) >= self.optimization_config.batch_size:
             # Batching before repeating is preferred since it preserves epoch boundaries

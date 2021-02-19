@@ -212,7 +212,7 @@ class DataReaders:
             ) = split_labels_train_val(training.with_user_labels_only(), validation)
             logger.info(
                 f"  Splits: Training = {len(training_inds)} /"
-                f" Validation = {len(validation_inds)}."
+                f" Validation = {len(validation_inds)}"
             )
             if update_config and labels_config is not None:
                 labels_config.training_inds = training_inds
@@ -1625,7 +1625,7 @@ class TopDownMultiClassModelTrainer(Trainer):
         self.pipeline_builder = TopDownMultiClassPipeline(
             data_config=self.config.data,
             optimization_config=self.config.optimization,
-            confmaps_head=self.model.heads[0],
+            instance_confmap_head=self.model.heads[0],
             class_vectors_head=self.model.heads[1],
             offsets_head=self.model.heads[2] if self.has_offsets else None,
         )
@@ -1633,15 +1633,45 @@ class TopDownMultiClassModelTrainer(Trainer):
     @property
     def input_keys(self) -> List[Text]:
         """Return example keys to be mapped to model inputs."""
-        return ["image"]
+        return ["instance_image"]
 
     @property
     def output_keys(self) -> List[Text]:
         """Return example keys to be mapped to model outputs."""
-        output_keys = ["confidence_maps", "class_vectors"]
+        output_keys = ["instance_confidence_maps", "class_vectors"]
         if self.has_offsets:
             output_keys.append("offsets")
         return output_keys
+
+    def _setup_optimization(self):
+        """Set up optimizer, loss functions and compile the model."""
+        optimizer = setup_optimizer(self.config.optimization)
+        # loss_fn = setup_losses(self.config.optimization)
+
+        # part_names = None
+        # metrics = setup_metrics(self.config.optimization, part_names=None)
+        metrics = {"ClassVectorsHead": "accuracy"}
+
+        self.optimization_callbacks = setup_optimization_callbacks(
+            self.config.optimization
+        )
+
+        self.keras_model.compile(
+            optimizer=optimizer,
+            loss={
+                output_name: head.loss_function
+                for output_name, head in zip(
+                    self.keras_model.output_names, self.model.heads
+                )
+            },
+            metrics=metrics,
+            loss_weights={
+                output_name: head.loss_weight
+                for output_name, head in zip(
+                    self.keras_model.output_names, self.model.heads
+                )
+            },
+        )
 
     def _setup_visualization(self):
         """Set up visualization pipelines and callbacks."""

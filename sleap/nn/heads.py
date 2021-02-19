@@ -34,6 +34,11 @@ class Head(ABC):
         """Return the activation function of the head output layer."""
         return "linear"
 
+    @property
+    def loss_function(self) -> str:
+        """Return the name of the loss function to use for this head."""
+        return "mse"
+
     def make_head(self, x_in: tf.Tensor, name: Optional[Text] = None) -> tf.Tensor:
         """Make head output tensor from input feature tensor.
 
@@ -389,6 +394,11 @@ class ClassVectorsHead(Head):
     def activation(self) -> str:
         """Return the activation function of the head output layer."""
         return "softmax"
+
+    @property
+    def loss_function(self) -> str:
+        """Return the name of the loss function to use for this head."""
+        return "categorical_crossentropy"
 
     @classmethod
     def from_config(
