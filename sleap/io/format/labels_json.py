@@ -396,6 +396,7 @@ class LabelsJsonAdaptor(Adaptor):
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:
+            # Match skeletons
             for idx, sk in enumerate(skeletons):
                 for old_sk in match_to.skeletons:
                     if sk.matches(old_sk):
@@ -406,6 +407,8 @@ class LabelsJsonAdaptor(Adaptor):
                         # use skeleton from match
                         skeletons[idx] = old_sk
                         break
+
+            # Match videos
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
 
@@ -431,6 +434,13 @@ class LabelsJsonAdaptor(Adaptor):
                         if is_match:
                             break
                     if is_match:
+                        break
+
+            # Match tracks
+            for idx, track in enumerate(tracks):
+                for old_track in match_to.tracks:
+                    if track.name == old_track.name:
+                        tracks[idx] = old_track
                         break
 
         suggestions = []
