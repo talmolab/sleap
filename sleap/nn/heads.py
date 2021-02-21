@@ -451,7 +451,6 @@ class ClassVectorsHead(Head):
             x = tf.keras.layers.Dense(
                 self.num_fc_units, name=f"pre_classification{i}_fc"
             )(x)
-            x = tf.keras.layers.BatchNormalization(name=f"pre_classification{i}_bn")(x)
             x = tf.keras.layers.Activation("relu", name=f"pre_classification{i}_relu")(
                 x
             )
