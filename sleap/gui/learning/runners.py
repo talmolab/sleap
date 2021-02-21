@@ -464,6 +464,9 @@ def run_learning_pipeline(
     if None in trained_job_paths.values():
         return -1
 
+    if len(items_for_inference) == 0:
+        return 0
+
     inference_task = InferenceTask(
         labels=labels,
         labels_filename=labels_filename,
