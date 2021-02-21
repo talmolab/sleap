@@ -594,13 +594,27 @@ class PretrainedEncoderConfig:
     """Configuration for UNet backbone with pretrained encoder.
 
     Attributes:
-        encoder: Name of the network architecture to use as the encoder.
+        encoder: Name of the network architecture to use as the encoder. Valid encoder
+            names are:
+            - `"vgg16", "vgg19",`
+            - `"resnet18", "resnet34", "resnet50", "resnet101", "resnet152"`
+            - `"resnext50", "resnext101"`
+            - `"inceptionv3", "inceptionresnetv2"`
+            - `"densenet121", "densenet169", "densenet201"`
+            - `"seresnet18", "seresnet34", "seresnet50", "seresnet101", "seresnet152",`
+              `"seresnext50", "seresnext101", "senet154"`
+            - `"mobilenet", "mobilenetv2"`
+            - `"efficientnetb0", "efficientnetb1", "efficientnetb2", "efficientnetb3",`
+              `"efficientnetb4", "efficientnetb5", "efficientnetb6", "efficientnetb7"`
+            Defaults to `"efficientnetb0"`.
         pretrained: If `True`, use initialized with weights pretrained on ImageNet.
         decoder_filters: Base number of filters for the upsampling blocks in the
             decoder.
         decoder_filters_rate: Factor to scale the number of filters by at each
             consecutive upsampling block in the decoder.
         output_stride: Stride of the final output.
+        decoder_batchnorm: If `True` (the default), use batch normalization in the
+            decoder layers.
     """
 
     encoder: Text = attr.ib(default="efficientnetb0")
@@ -608,6 +622,7 @@ class PretrainedEncoderConfig:
     decoder_filters: int = 256
     decoder_filters_rate: float = 1.0
     output_stride: int = 2
+    decoder_batchnorm: bool = True
 
 
 @oneof
