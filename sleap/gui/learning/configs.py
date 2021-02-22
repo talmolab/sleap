@@ -67,6 +67,17 @@ class ConfigFileInfo:
             )
         )
 
+    @property
+    def cfg_filename(self) -> str:
+        """Return the filename of the JSON file for this config."""
+        if self.path.endswith("json"):
+            return Path(self.path).name
+        else:
+            if os.path.exists(self.training_config_path):
+                return "training_config.json"
+            else:
+                return "initial_config.json"
+
     def _get_file_path(self, shortname) -> Optional[Text]:
         """
         Check for specified file in various directories related config.
