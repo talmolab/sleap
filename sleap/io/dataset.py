@@ -937,6 +937,31 @@ class Labels(MutableSequence):
                 return True
         return False
 
+    @property
+    def max_user_instances(self) -> int:
+        """Return the maximum number of user instances in any frame."""
+        n = 0
+        for lf in self.labeled_frames:
+            n = max(n, len(lf.user_instances))
+        return n
+    
+    @property
+    def min_user_instances(self) -> int:
+        """Return the minimum number of user instances in any frame."""
+        n = None
+        for lf in self.labeled_frames:
+            if n is None:
+                n = len(lf.user_instances)
+            else:
+                n = min(n, len(lf.user_instances))
+        n = 0 if n is None else n
+        return n
+
+    @property
+    def is_multi_instance(self) -> bool:
+        """Returns `True` if there are multiple user instances in any frame."""
+        return self.max_user_instances > 1
+
     def describe(self):
         """Print basic statistics about the labels dataset."""
         print(f"Skeleton: {self.skeleton}")
