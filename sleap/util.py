@@ -5,8 +5,6 @@ unless they really have no other place.
 
 import os
 import re
-import subprocess
-import sys
 import shutil
 
 from collections import defaultdict
@@ -22,7 +20,7 @@ import yaml
 
 from typing import Any, Dict, Hashable, Iterable, List, Optional
 
-from sleap.io import pathutils
+import sleap.version as sleap_version
 
 
 def json_loads(json_str: str) -> Dict:
@@ -255,7 +253,7 @@ def get_config_file(
     """
     Returns the full path to the specified config file.
 
-    The config file will be at ~/.sleap/<shortname>
+    The config file will be at ~/.sleap/<version>/<shortname>
 
     If that file doesn't yet exist, we'll look for a <shortname> file inside
     the package config directory (sleap/config) and copy the file into the
@@ -275,12 +273,14 @@ def get_config_file(
     """
 
     if not get_defaults:
-        desired_path = os.path.expanduser(f"~/.sleap/{shortname}")
+        desired_path = os.path.expanduser(
+            f"~/.sleap/{sleap_version.__version__}/{shortname}"
+        )
 
-        # Make sure there's a ~/.sleap/ directory to store user version of the
+        # Make sure there's a ~/.sleap/<version>/ directory to store user version of the
         # config file.
         try:
-            os.makedirs(os.path.expanduser("~/.sleap"))
+            os.makedirs(os.path.expanduser(f"~/.sleap/{sleap_version.__version__}"))
         except FileExistsError:
             pass
 
@@ -310,12 +310,13 @@ def get_config_file(
 def get_config_yaml(shortname: str, get_defaults: bool = False) -> dict:
     config_path = get_config_file(shortname, get_defaults=get_defaults)
     with open(config_path, "r") as f:
-        return yaml.load(f, Loader=yaml.SafeLoader)
+        return yaml.load(f, Loader=yaml.Loader)
 
 
 def save_config_yaml(shortname: str, data: Any) -> dict:
     yaml_path = get_config_file(shortname, ignore_file_not_found=True)
     with open(yaml_path, "w") as f:
+        print(f"Saving config: {yaml_path}")
         yaml.dump(data, f)
 
 
@@ -379,16 +380,3 @@ def find_files_by_suffix(
             )
 
     return matching_files
-
-
-def open_file(filename):
-    """
-    Opens file (as if double-clicked by user).
-
-    https://stackoverflow.com/questions/17317219/is-there-an-platform-independent-equivalent-of-os-startfile/17317468#17317468
-    """
-    if sys.platform == "win32":
-        os.startfile(filename)
-    else:
-        opener = "open" if sys.platform == "darwin" else "xdg-open"
-        subprocess.call([opener, filename])

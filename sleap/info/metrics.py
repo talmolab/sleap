@@ -213,7 +213,7 @@ def compare_instance_lists(
     instances_b: List[Union[Instance, PredictedInstance]],
 ) -> np.ndarray:
     """Given two lists of corresponding Instances, returns
-     (instances * nodes) matrix of distances between corresponding nodes."""
+    (instances * nodes) matrix of distances between corresponding nodes."""
 
     paired_points_array_distances = []
     for inst_a, inst_b in zip(instances_a, instances_b):

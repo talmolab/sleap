@@ -46,6 +46,17 @@ class AugmentationConfig:
             illumination change. See `imgaug.augmenters.arithmetic.Add`.
         brightness_min_val: Minimum value to add to all pixels.
         brightness_max_val: Maximum value to add to all pixels.
+        random_crop: If `True`, performs random crops on the image. This is useful for
+            training efficiently on large resolution images, but may fail to learn
+            global structure beyond the crop size. Random cropping will be applied after
+            the augmentations above.
+        random_crop_width: Width of random crops.
+        random_crop_height: Height of random crops.
+        random_flip: If `True`, images will be randomly reflected. The coordinates of
+            the instances will be adjusted accordingly. Body parts that are left/right
+            symmetric must be marked on the skeleton in order to be swapped correctly.
+        flip_horizontal: If `True`, flip images left/right when randomly reflecting
+            them. If `False`, flipping is down up/down instead.
     """
 
     rotate: bool = False
@@ -69,6 +80,11 @@ class AugmentationConfig:
     brightness: bool = False
     brightness_min_val: float = 0.0
     brightness_max_val: float = 10.0
+    random_crop: bool = False
+    random_crop_height: int = 256
+    random_crop_width: int = 256
+    random_flip: bool = False
+    flip_horizontal: bool = True
 
 
 @attr.s(auto_attribs=True)
@@ -95,7 +111,7 @@ class HardKeypointMiningConfig:
         loss_scale: Factor to scale the hard keypoint losses by.
     """
 
-    online_mining: bool = True
+    online_mining: bool = False
     hard_to_easy_ratio: float = 2.0
     min_hard_keypoints: int = 2
     max_hard_keypoints: Optional[int] = None

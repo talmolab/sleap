@@ -11,7 +11,9 @@ def test_config_list_load():
         "centroid"
     )
 
-    assert 2 == len(configs)
+    assert len(configs) > 0
+    for cfg in configs:
+        assert cfg.config.model.heads.which_oneof_attrib_name() == "centroid"
 
 
 def test_config_list_order():
@@ -20,7 +22,10 @@ def test_config_list_order():
     # Check that all 'old' configs (if any) are last in the collected configs list
     for i in range(len(configs) - 1):
         # if current config is 'old', next must be 'old' as well
-        assert not configs[i].filename.startswith('old.') or configs[i + 1].filename.startswith('old.')
+        assert not configs[i].filename.startswith("old.") or configs[
+            i + 1
+        ].filename.startswith("old.")
+
 
 def test_scoped_key_dict():
     d = {"foo": 1, "bar": {"cat": {"dog": 2}, "elephant": 3}}
@@ -40,7 +45,8 @@ def test_inference_cli_builder():
     )
 
     item_for_inference = runners.VideoItemForInference(
-        video=Video.from_filename("video.mp4"), frames=[1, 2, 3],
+        video=Video.from_filename("video.mp4"),
+        frames=[1, 2, 3],
     )
 
     cli_args, output_path = inference_task.make_predict_cli_call(item_for_inference)
@@ -58,16 +64,19 @@ def test_inference_cli_builder():
 
 def test_inference_cli_output_path():
     inference_task = runners.InferenceTask(
-        trained_job_paths=["model1", "model2"], inference_params=dict(),
+        trained_job_paths=["model1", "model2"],
+        inference_params=dict(),
     )
 
     item_for_inference = runners.VideoItemForInference(
-        video=Video.from_filename("video.mp4"), frames=[1, 2, 3],
+        video=Video.from_filename("video.mp4"),
+        frames=[1, 2, 3],
     )
 
     # Try with specified output path
     cli_args, output_path = inference_task.make_predict_cli_call(
-        item_for_inference, output_path="another_output_path.slp",
+        item_for_inference,
+        output_path="another_output_path.slp",
     )
 
     assert output_path == "another_output_path.slp"

@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
-from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
+from sleap.nn.system import use_cpu_only
+
+use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.architectures import encoder_decoder
 
@@ -122,9 +124,9 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = False,
-            interp_method = "bilinear",
-            refine_convs = 0,
+            transposed_conv=False,
+            interp_method="bilinear",
+            refine_convs=0,
         )
         x_in = tf.keras.Input((8, 8, 1))
         x = block.make_block(x_in)
@@ -139,14 +141,14 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block_trans_conv(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = True,
-            transposed_conv_filters = 8,
-            transposed_conv_kernel_size = 3,
-            transposed_conv_use_bias = True,
-            transposed_conv_batch_norm = True,
-            transposed_conv_batch_norm_before_activation = True,
-            transposed_conv_activation = "relu",
-            refine_convs = 0,
+            transposed_conv=True,
+            transposed_conv_filters=8,
+            transposed_conv_kernel_size=3,
+            transposed_conv_use_bias=True,
+            transposed_conv_batch_norm=True,
+            transposed_conv_batch_norm_before_activation=True,
+            transposed_conv_activation="relu",
+            refine_convs=0,
         )
         x_in = tf.keras.Input((8, 8, 1))
         x = block.make_block(x_in)
@@ -163,14 +165,14 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block_trans_conv_bn_post(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = True,
-            transposed_conv_filters = 8,
-            transposed_conv_kernel_size = 3,
-            transposed_conv_use_bias = True,
-            transposed_conv_batch_norm = True,
-            transposed_conv_batch_norm_before_activation = False,
-            transposed_conv_activation = "relu",
-            refine_convs = 0,
+            transposed_conv=True,
+            transposed_conv_filters=8,
+            transposed_conv_kernel_size=3,
+            transposed_conv_use_bias=True,
+            transposed_conv_batch_norm=True,
+            transposed_conv_batch_norm_before_activation=False,
+            transposed_conv_activation="relu",
+            refine_convs=0,
         )
         x_in = tf.keras.Input((8, 8, 1))
         x = block.make_block(x_in)
@@ -187,11 +189,11 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block_ignore_skip_source(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = False,
-            interp_method = "bilinear",
-            skip_connection = False,
-            skip_add = False,
-            refine_convs = 0,
+            transposed_conv=False,
+            interp_method="bilinear",
+            skip_connection=False,
+            skip_add=False,
+            refine_convs=0,
         )
         x_in = tf.keras.Input((8, 8, 1))
         skip_src = tf.keras.Input((16, 16, 1))
@@ -207,11 +209,11 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block_skip_add(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = False,
-            interp_method = "bilinear",
-            skip_connection = True,
-            skip_add = True,
-            refine_convs = 0,
+            transposed_conv=False,
+            interp_method="bilinear",
+            skip_connection=True,
+            skip_add=True,
+            refine_convs=0,
         )
         x_in = tf.keras.Input((8, 8, 1))
         skip_src = tf.ones((1, 16, 16, 1))
@@ -223,17 +225,17 @@ class EncoderDecoderTests(tf.test.TestCase):
         self.assertEqual(model.count_params(), 0)
         self.assertAllEqual(model.output.shape, (None, 16, 16, 1))
         self.assertIsInstance(model.layers[1], tf.keras.layers.UpSampling2D)
-        self.assertTrue("add" in model.layers[2].name)
+        self.assertTrue("add" in model.layers[2].name.lower())  # tf_op_layer_AddV2
         self.assertAllClose(model(tf.ones((1, 8, 8, 1))), tf.ones((1, 16, 16, 1)) * 2)
 
     def test_simple_upsampling_block_skip_add_adjust_channels(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = False,
-            interp_method = "bilinear",
-            skip_connection = True,
-            skip_add = True,
-            refine_convs = 0,
+            transposed_conv=False,
+            interp_method="bilinear",
+            skip_connection=True,
+            skip_add=True,
+            refine_convs=0,
         )
         x_in = tf.keras.Input((8, 8, 1))
         skip_src = tf.keras.Input((16, 16, 4))
@@ -242,7 +244,7 @@ class EncoderDecoderTests(tf.test.TestCase):
 
         self.assertEqual(len(model.layers), 5)
         self.assertEqual(len(model.trainable_weights), 2)
-        self.assertEqual(model.count_params(), 1+4)
+        self.assertEqual(model.count_params(), 1 + 4)
         self.assertAllEqual(model.output.shape, (None, 16, 16, 1))
         self.assertIsInstance(model.layers[3], tf.keras.layers.UpSampling2D)
         self.assertIsInstance(model.layers[2], tf.keras.layers.Conv2D)
@@ -251,11 +253,11 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block_skip_concat(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = False,
-            interp_method = "bilinear",
-            skip_connection = True,
-            skip_add = False,
-            refine_convs = 0,
+            transposed_conv=False,
+            interp_method="bilinear",
+            skip_connection=True,
+            skip_add=False,
+            refine_convs=0,
         )
         x_in = tf.keras.Input((8, 8, 1))
         skip_src = tf.keras.Input((16, 16, 4))
@@ -272,16 +274,16 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block_refine_convs(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = False,
-            interp_method = "bilinear",
-            skip_connection = True,
-            refine_convs = 2,
-            refine_convs_filters = 16,
-            refine_convs_use_bias = True,
-            refine_convs_kernel_size = 3,
-            refine_convs_batch_norm = True,
-            refine_convs_batch_norm_before_activation = True,
-            refine_convs_activation = "relu",
+            transposed_conv=False,
+            interp_method="bilinear",
+            skip_connection=True,
+            refine_convs=2,
+            refine_convs_filters=16,
+            refine_convs_use_bias=True,
+            refine_convs_kernel_size=3,
+            refine_convs_batch_norm=True,
+            refine_convs_batch_norm_before_activation=True,
+            refine_convs_activation="relu",
         )
         x_in = tf.keras.Input((8, 8, 1))
         x = block.make_block(x_in)
@@ -299,16 +301,16 @@ class EncoderDecoderTests(tf.test.TestCase):
     def test_simple_upsampling_block_refine_convs_bn_post(self):
         block = encoder_decoder.SimpleUpsamplingBlock(
             upsampling_stride=2,
-            transposed_conv = False,
-            interp_method = "bilinear",
-            skip_connection = True,
-            refine_convs = 2,
-            refine_convs_filters = 16,
-            refine_convs_use_bias = True,
-            refine_convs_kernel_size = 3,
-            refine_convs_batch_norm = True,
-            refine_convs_batch_norm_before_activation = False,
-            refine_convs_activation = "relu",
+            transposed_conv=False,
+            interp_method="bilinear",
+            skip_connection=True,
+            refine_convs=2,
+            refine_convs_filters=16,
+            refine_convs_use_bias=True,
+            refine_convs_kernel_size=3,
+            refine_convs_batch_norm=True,
+            refine_convs_batch_norm_before_activation=False,
+            refine_convs_activation="relu",
         )
         x_in = tf.keras.Input((8, 8, 1))
         x = block.make_block(x_in)
@@ -322,4 +324,3 @@ class EncoderDecoderTests(tf.test.TestCase):
         self.assertIsInstance(model.layers[2], tf.keras.layers.Conv2D)
         self.assertIsInstance(model.layers[3], tf.keras.layers.Activation)
         self.assertIsInstance(model.layers[4], tf.keras.layers.BatchNormalization)
-

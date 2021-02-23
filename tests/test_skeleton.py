@@ -144,6 +144,14 @@ def test_symmetry():
     s1.add_symmetry("1", "5")
     s1.add_symmetry("3", "6")
 
+    assert (s1.nodes[0], s1.nodes[4]) in s1.symmetries
+    assert (s1.nodes[2], s1.nodes[5]) in s1.symmetries
+    assert len(s1.symmetries) == 2
+
+    assert (0, 4) in s1.symmetric_inds
+    assert (2, 5) in s1.symmetric_inds
+    assert len(s1.symmetric_inds) == 2
+
     assert s1.get_symmetry("1").name == "5"
     assert s1.get_symmetry("5").name == "1"
 

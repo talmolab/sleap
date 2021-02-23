@@ -41,11 +41,11 @@ popd
 rem Commit the documents to the repo if the user passed push
 rem argument as a second parameter
 if "%2" == "push" (
-    echo "Pusing to github docs repo ... "
+    echo "Pushing to github docs repo..."
     pushd .
     cd "%BUILDDIR%\html"
     git add .
-    git commit -m "rebuilt docs"
+    git commit -m "Rebuilt docs"
     git push origin gh-pages
     popd
 )

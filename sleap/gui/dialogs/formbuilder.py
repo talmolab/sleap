@@ -501,7 +501,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 add_blank_option = True
 
             field = TextOrListWidget(
-                result_as_idx=result_as_optional_idx, add_blank_option=add_blank_option,
+                result_as_idx=result_as_optional_idx,
+                add_blank_option=add_blank_option,
             )
 
             if item["name"] in self.field_options_lists:
@@ -910,7 +911,8 @@ class TextOrListWidget(QtWidgets.QWidget):
 
         self.text_widget = QtWidgets.QLineEdit()
         self.list_widget = FieldComboWidget(
-            result_as_idx=result_as_idx, add_blank_option=add_blank_option,
+            result_as_idx=result_as_idx,
+            add_blank_option=add_blank_option,
         )
 
         layout.addWidget(self.text_widget)

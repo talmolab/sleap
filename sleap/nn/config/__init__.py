@@ -17,6 +17,7 @@ from sleap.nn.config.model import (
     HourglassConfig,
     UpsamplingConfig,
     ResNetConfig,
+    PretrainedEncoderConfig,
     BackboneConfig,
     ModelConfig,
 )
@@ -33,4 +34,4 @@ from sleap.nn.config.outputs import (
     ZMQConfig,
     OutputsConfig,
 )
-from sleap.nn.config.training_job import TrainingJobConfig
+from sleap.nn.config.training_job import TrainingJobConfig, load_config

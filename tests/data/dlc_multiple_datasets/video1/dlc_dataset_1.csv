@@ -1,0 +1,6 @@
+scorer,Scorer,Scorer,Scorer,Scorer,Scorer,Scorer,Scorer,Scorer,Scorer,Scorer,Scorer,Scorer
+individuals,Animal1,Animal1,Animal1,Animal1,Animal1,Animal1,Animal2,Animal2,Animal2,Animal2,Animal2,Animal2
+bodyparts,A,A,B,B,C,C,A,A,B,B,C,C
+coords,x,y,x,y,x,y,x,y,x,y,x,y
+labeled-data/video/img000.jpg,0,1,2,3,4,5,6,7,8,9,10,11
+labeled-data/video/img001.jpg,12,13,,,15,16,17,18,,,20,21

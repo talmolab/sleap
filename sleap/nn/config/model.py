@@ -28,11 +28,19 @@ class SingleInstanceConfmapsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        offset_refinement: If `True`, model will also output an offset refinement map
+            used to achieve subpixel localization of peaks during inference. This can
+            improve the localization accuracy of the model at the cost of additional
+            memory and training and inference time. If `False` (the default), subpixel
+            localization can be achieved post-hoc with deterministic refinement, which
+            does not require additional resources or training, but may not achieve the
+            same accuracy as learned refinement.
     """
 
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
+    offset_refinement: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -43,7 +51,7 @@ class CentroidsHeadConfig:
     instances for cropping before predicting the remaining body parts.
 
     Multiple centroids can be present (one per instance), so their coordinates can be
-    recovered in infernece via local peak finding.
+    recovered in inference via local peak finding.
 
     Attributes:
         anchor_part: Text name of a body part (node) to use as the anchor point. If
@@ -64,11 +72,19 @@ class CentroidsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        offset_refinement: If `True`, model will also output an offset refinement map
+            used to achieve subpixel localization of peaks during inference. This can
+            improve the localization accuracy of the model at the cost of additional
+            memory and training and inference time. If `False` (the default), subpixel
+            localization can be achieved post-hoc with deterministic refinement, which
+            does not require additional resources or training, but may not achieve the
+            same accuracy as learned refinement.
     """
 
     anchor_part: Optional[Text] = None
     sigma: float = 5.0
     output_stride: int = 1
+    offset_refinement: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -113,12 +129,20 @@ class CenteredInstanceConfmapsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        offset_refinement: If `True`, model will also output an offset refinement map
+            used to achieve subpixel localization of peaks during inference. This can
+            improve the localization accuracy of the model at the cost of additional
+            memory and training and inference time. If `False` (the default), subpixel
+            localization can be achieved post-hoc with deterministic refinement, which
+            does not require additional resources or training, but may not achieve the
+            same accuracy as learned refinement.
     """
 
     anchor_part: Optional[Text] = None
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
+    offset_refinement: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -161,12 +185,20 @@ class MultiInstanceConfmapsHeadConfig:
         loss_weight: Scalar float used to weigh the loss term for this head during
             training. Increase this to encourage the optimization to focus on improving
             this specific output in multi-head models.
+        offset_refinement: If `True`, model will also output an offset refinement map
+            used to achieve subpixel localization of peaks during inference. This can
+            improve the localization accuracy of the model at the cost of additional
+            memory and training and inference time. If `False` (the default), subpixel
+            localization can be achieved post-hoc with deterministic refinement, which
+            does not require additional resources or training, but may not achieve the
+            same accuracy as learned refinement.
     """
 
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
     loss_weight: float = 1.0
+    offset_refinement: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -422,6 +454,27 @@ class ResNetConfig:
     output_stride: int = 4
 
 
+@attr.s(auto_attribs=True)
+class PretrainedEncoderConfig:
+    """Configuration for UNet backbone with pretrained encoder.
+
+    Attributes:
+        encoder: Name of the network architecture to use as the encoder.
+        pretrained: If `True`, use initialized with weights pretrained on ImageNet.
+        decoder_filters: Base number of filters for the upsampling blocks in the
+            decoder.
+        decoder_filters_rate: Factor to scale the number of filters by at each
+            consecutive upsampling block in the decoder.
+        output_stride: Stride of the final output.
+    """
+
+    encoder: Text = attr.ib(default="efficientnetb0")
+    pretrained: bool = True
+    decoder_filters: int = 256
+    decoder_filters_rate: float = 1.0
+    output_stride: int = 2
+
+
 @oneof
 @attr.s(auto_attribs=True)
 class BackboneConfig:
@@ -440,6 +493,7 @@ class BackboneConfig:
     unet: Optional[UNetConfig] = None
     hourglass: Optional[HourglassConfig] = None
     resnet: Optional[ResNetConfig] = None
+    pretrained_encoder: Optional[PretrainedEncoderConfig] = None
 
 
 @attr.s(auto_attribs=True)

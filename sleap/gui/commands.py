@@ -29,9 +29,13 @@ for now it's at least easy to see where this separation is violated.
 import attr
 import operator
 import os
+import re
+import sys
+import subprocess
 
 from abc import ABC
 from enum import Enum
+from glob import glob
 from pathlib import PurePath
 from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
@@ -39,7 +43,7 @@ import numpy as np
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
-from PySide2.QtWidgets import QMessageBox
+from PySide2.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.skeleton import Skeleton
@@ -263,6 +267,10 @@ class CommandContext:
         """Imports DeepLabCut datasets."""
         self.execute(ImportDeepLabCut)
 
+    def importDLCFolder(self):
+        """Imports multiple DeepLabCut datasets."""
+        self.execute(ImportDeepLabCutFolder)
+
     def importLEAP(self):
         """Imports LEAP matlab datasets."""
         self.execute(ImportLEAP)
@@ -320,6 +328,18 @@ class CommandContext:
     def prevSuggestedFrame(self):
         """Goes to previous suggested frame."""
         self.execute(GoPrevSuggestedFrame)
+
+    def addCurrentFrameAsSuggestion(self):
+        """Add current frame as a suggestion."""
+        self.execute(AddSuggestion)
+
+    def removeSuggestion(self):
+        """Remove the selected frame from suggestions."""
+        self.execute(RemoveSuggestion)
+
+    def clearSuggestions(self):
+        """Clear all suggestions."""
+        self.execute(ClearSuggestions)
 
     def nextTrackFrame(self):
         """Goes to next frame on which a track starts."""
@@ -481,6 +501,10 @@ class CommandContext:
         """Sets track for selected instance."""
         self.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+    def deleteTrack(self, track: "Track"):
+        """Delete a track and remove from all instances."""
+        self.execute(DeleteTrack, track=track)
+
     def setTrackName(self, track: "Track", name: str):
         """Sets name for track."""
         self.execute(SetTrackName, track=track, name=name)
@@ -623,7 +647,9 @@ class ImportLEAP(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
 
-        labels = Labels.load_leap_matlab(filename=params["filename"],)
+        labels = Labels.load_leap_matlab(
+            filename=params["filename"],
+        )
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -674,18 +700,6 @@ class ImportCoco(AppCommand):
         if len(filename) == 0:
             return False
 
-        # QtWidgets.QMessageBox(
-        #     text="Please locate the directory with image files for this dataset."
-        # ).exec_()
-        #
-        # img_dir = FileDialog.openDir(
-        #     None,
-        #     directory=os.path.dirname(filename),
-        #     caption="Open Image Directory"
-        # )
-        # if len(img_dir) == 0:
-        #     return False
-
         params["filename"] = filename
         params["img_dir"] = os.path.dirname(filename)
 
@@ -719,6 +733,54 @@ class ImportDeepLabCut(AppCommand):
         params["filename"] = filename
 
         return True
+
+
+class ImportDeepLabCutFolder(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+        csv_files = ImportDeepLabCutFolder.find_dlc_files_in_folder(
+            params["folder_name"]
+        )
+        if csv_files:
+            win = MessageDialog(
+                f"Importing {len(csv_files)} DeepLabCut datasets...", context.app
+            )
+            merged_labels = ImportDeepLabCutFolder.import_labels_from_dlc_files(
+                csv_files
+            )
+            win.hide()
+
+            new_window = context.app.__class__()
+            new_window.showMaximized()
+            new_window.loadLabelsObject(labels=merged_labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        folder_name = FileDialog.openDir(
+            context.app,
+            dir=None,
+            caption="Select a folder with DeepLabCut datasets...",
+        )
+
+        if len(folder_name) == 0:
+            return False
+        params["folder_name"] = folder_name
+        return True
+
+    @staticmethod
+    def find_dlc_files_in_folder(folder_name: str) -> List[str]:
+        return glob(f"{folder_name}/*/*.csv")
+
+    @staticmethod
+    def import_labels_from_dlc_files(csv_files: List[str]) -> Labels:
+        merged_labels = None
+        for csv_file in csv_files:
+            labels = Labels.load_file(csv_file, as_format="deeplabcut")
+            if merged_labels is None:
+                merged_labels = labels
+            else:
+                merged_labels.extend_from(labels, unify=True)
+        return merged_labels
 
 
 class ImportAnalysisFile(AppCommand):
@@ -762,6 +824,22 @@ class ImportAnalysisFile(AppCommand):
         return True
 
 
+def get_new_version_filename(filename: str) -> str:
+    """Increment version number in filenames that end in `.v###.slp`."""
+    p = PurePath(filename)
+
+    match = re.match(".*\\.v(\\d+)\\.slp", filename)
+    if match is not None:
+        old_ver = match.group(1)
+        new_ver = str(int(old_ver) + 1).zfill(len(old_ver))
+        filename = filename.replace(f".v{old_ver}.slp", f".v{new_ver}.slp")
+        filename = str(PurePath(filename))
+    else:
+        filename = str(p.with_name(f"{p.stem} copy{p.suffix}"))
+
+    return filename
+
+
 class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
@@ -794,15 +872,12 @@ class SaveProjectAs(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"] or "untitled"
-        p = PurePath(default_name)
-        default_name = str(p.with_name(f"{p.stem} copy{p.suffix}"))
-
-        filters = [
-            "SLEAP HDF5 dataset (*.slp)",
-            "SLEAP JSON dataset (*.json)",
-            "Compressed JSON (*.zip)",
-        ]
+        default_name = context.state["filename"]
+        if default_name:
+            default_name = get_new_version_filename(default_name)
+        else:
+            default_name = "labels.v000.slp"
+        filters = ["SLEAP labels dataset (*.slp)"]
         filename, selected_filter = FileDialog.save(
             context.app,
             caption="Save As...",
@@ -826,7 +901,7 @@ class ExportAnalysisFile(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"] or "untitled"
+        default_name = context.state["filename"] or "labels"
         p = PurePath(default_name)
         default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
 
@@ -954,24 +1029,64 @@ class ExportLabeledClip(AppCommand):
         return True
 
 
+def export_dataset_gui(
+    labels: Labels, filename: str, all_labeled: bool = False, suggested: bool = False
+) -> str:
+    """Export dataset with image data and display progress GUI dialog.
+
+    Args:
+        labels: `sleap.Labels` dataset to export.
+        filename: Output filename. Should end in `.pkg.slp`.
+        all_labeled: If `True`, export all labeled frames, including frames with no user
+            instances.
+        suggested: If `True`, include image data for suggested frames.
+    """
+    win = QProgressDialog("Exporting dataset with frame images...", "Cancel", 0, 1)
+
+    def update_progress(n, n_total):
+        if win.wasCanceled():
+            return False
+        win.setMaximum(n_total)
+        win.setValue(n)
+        win.setLabelText(
+            "Exporting dataset with frame images...<br>"
+            f"{n}/{n_total} (<b>{(n/n_total)*100:.1f}%</b>)"
+        )
+        QtWidgets.QApplication.instance().processEvents()
+        return True
+
+    Labels.save_file(
+        labels,
+        filename,
+        default_suffix="slp",
+        save_frame_data=True,
+        all_labeled=all_labeled,
+        suggested=suggested,
+        progress_callback=update_progress,
+    )
+
+    if win.wasCanceled():
+        # Delete output if saving was canceled.
+        os.remove(filename)
+        return "canceled"
+
+    win.hide()
+
+    return filename
+
+
 class ExportDatasetWithImages(AppCommand):
     all_labeled = False
     suggested = False
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        win = MessageDialog("Exporting dataset with frame images...", context.app)
-
-        Labels.save_file(
-            context.state["labels"],
-            params["filename"],
-            default_suffix="slp",
-            save_frame_data=True,
+        export_dataset_gui(
+            labels=context.state["labels"],
+            filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
         )
-
-        win.hide()
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -1754,11 +1869,12 @@ class SetSelectedInstanceTrack(EditCommand):
         if selected_instance is None:
             return
 
-        old_track = selected_instance.track
-
         # When setting track for an instance that doesn't already have a track set,
         # just set for selected instance.
-        if old_track is None:
+        if (
+            selected_instance.track is None
+            or not context.state["propagate track labels"]
+        ):
             # Move anything already in the new track out of it
             new_track_instances = context.labels.find_track_occupancy(
                 video=context.state["video"],
@@ -1778,6 +1894,7 @@ class SetSelectedInstanceTrack(EditCommand):
         # When the instance does already have a track, then we want to update
         # the track for a range of frames.
         else:
+            old_track = selected_instance.track
 
             # Determine range that should be affected
             if context.state["has_frame_range"]:
@@ -1799,6 +1916,15 @@ class SetSelectedInstanceTrack(EditCommand):
         context.state["instance"] = selected_instance
 
 
+class DeleteTrack(EditCommand):
+    topics = [UpdateTopic.tracks]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        track = params["track"]
+        context.labels.remove_track(track)
+
+
 class SetTrackName(EditCommand):
     topics = [UpdateTopic.tracks, UpdateTopic.frame]
 
@@ -1815,7 +1941,11 @@ class GenerateSuggestions(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
 
-        win = MessageDialog("Generating list of suggested frames...", context.app)
+        # TODO: Progress bar
+        win = MessageDialog(
+            "Generating list of suggested frames... " "This may take a few minutes.",
+            context.app,
+        )
 
         new_suggestions = VideoFrameSuggestions.suggest(
             labels=context.labels, params=params
@@ -1824,6 +1954,56 @@ class GenerateSuggestions(EditCommand):
         context.labels.set_suggestions(new_suggestions)
 
         win.hide()
+
+
+class AddSuggestion(EditCommand):
+    topics = [UpdateTopic.suggestions]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        context.labels.add_suggestion(
+            context.state["video"], context.state["frame_idx"]
+        )
+        context.app.suggestionsTable.selectRow(len(context.labels) - 1)
+
+
+class RemoveSuggestion(EditCommand):
+    topics = [UpdateTopic.suggestions]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        selected_frame = context.app.suggestionsTable.getSelectedRowItem()
+        if selected_frame is not None:
+            context.labels.remove_suggestion(
+                selected_frame.video, selected_frame.frame_idx
+            )
+
+
+class ClearSuggestions(EditCommand):
+    topics = [UpdateTopic.suggestions]
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        if len(context.labels.suggestions) == 0:
+            return False
+
+        # Warn that suggestions will be cleared
+
+        response = QMessageBox.warning(
+            context.app,
+            "Clearing all suggestions",
+            "Are you sure you want to remove all suggestions from the project?",
+            QMessageBox.Yes,
+            QMessageBox.No,
+        )
+        if response == QMessageBox.No:
+            return False
+
+        return True
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        context.labels.clear_suggestions()
 
 
 class MergeProject(EditCommand):
@@ -1887,7 +2067,8 @@ class AddInstance(EditCommand):
         if context.state["labeled_frame"] is None:
             return
 
-        # FIXME: filter by skeleton type
+        if len(context.state["skeleton"]) == 0:
+            return
 
         from_predicted = copy_instance
         from_prev_frame = False
@@ -2080,6 +2261,7 @@ class AddMissingInstanceNodes(EditCommand):
 
     @classmethod
     def add_random_nodes(cls, context, instance, visible):
+        # TODO: Move this to Instance so we can do this on-demand
         # the rect that's currently visible in the window view
         in_view_rect = context.app.player.getVisibleRect()
 
@@ -2202,10 +2384,19 @@ class AddUserInstancesFromPredictions(EditCommand):
             context.labels.add_instance(context.state["labeled_frame"], new_instance)
 
 
+def open_website(url: str):
+    """Open website in default browser.
+
+    Args:
+        url: URL to open.
+    """
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
+
+
 class OpenWebsite(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        QtGui.QDesktopServices.openUrl(QtCore.QUrl(params["url"]))
+        open_website(params["url"])
 
 
 class CheckForUpdates(AppCommand):
@@ -2221,6 +2412,7 @@ class CheckForUpdates(AppCommand):
                 f"  Prerelease: {prerelease.version}"
             )
             context.state["prerelease_version_menu"].setEnabled(True)
+
     # TODO: Provide GUI feedback about result.
 
 
@@ -2238,3 +2430,30 @@ class OpenPrereleaseVersion(AppCommand):
         rls = context.app.release_checker.latest_prerelease
         if rls is not None:
             context.openWebsite(rls.url)
+
+
+def copy_to_clipboard(text: str):
+    """Copy a string to the system clipboard.
+
+    Args:
+        text: String to copy to clipboard.
+    """
+    clipboard = QtWidgets.QApplication.clipboard()
+    clipboard.clear(mode=clipboard.Clipboard)
+    clipboard.setText(text, mode=clipboard.Clipboard)
+
+
+def open_file(filename: str):
+    """Opens file in native system file browser or registered application.
+
+    Args:
+        filename: Path to file or folder.
+
+    Notes:
+        Source: https://stackoverflow.com/a/16204023
+    """
+    if sys.platform == "win32":
+        os.startfile(filename)
+    else:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])

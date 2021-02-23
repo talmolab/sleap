@@ -39,6 +39,9 @@ def plot_img(
     img: np.ndarray, dpi: int = 72, scale: float = 1.0
 ) -> matplotlib.figure.Figure:
     """Plot an image in a tight figure."""
+    if hasattr(img, "numpy"):
+        img = img.numpy()
+
     if img.shape[0] == 1:
         # Squeeze out batch singleton dimension.
         img = img.squeeze(axis=0)
@@ -78,6 +81,8 @@ def plot_confmaps(confmaps: np.ndarray, output_scale: float = 1.0):
         np.squeeze(confmaps.max(axis=-1)),
         alpha=0.5,
         origin="upper",
+        vmin=0,
+        vmax=1,
         extent=[
             -0.5,
             confmaps.shape[1] / output_scale - 0.5,
@@ -195,15 +200,23 @@ def plot_instance(
     if cmap is None:
         cmap = sns.color_palette("tab20")
 
-    if skeleton is None:
+    if skeleton is None and hasattr(instance, "skeleton"):
         skeleton = instance.skeleton
 
-    if len(skeleton.edges) == 0:
+    if skeleton is None:
         color_by_node = True
+    else:
+        if len(skeleton.edges) == 0:
+            color_by_node = True
+
+    if hasattr(instance, "numpy"):
+        inst_pts = instance.numpy()
+    else:
+        inst_pts = instance
 
     h_lines = []
     if color_by_node:
-        for k, (x, y) in enumerate(instance.points_array):
+        for k, (x, y) in enumerate(inst_pts):
             if bbox is not None:
                 x -= bbox[1]
                 y -= bbox[0]

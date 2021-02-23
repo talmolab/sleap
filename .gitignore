@@ -65,8 +65,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/api/
 docs/_autosummary/
-docs/api.rst  # this is created when making docs
+docs/api.rst
 
 # PyBuilder
 target/
@@ -113,3 +114,6 @@ venv.bak/
 
 # VSCode files
 .vscode/
+
+# OS generated files
+.DS_Store

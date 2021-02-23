@@ -67,6 +67,8 @@ class InstanceCentroidFinder:
         skeletons: List of `sleap.Skeleton`s to use for looking up the index of the
             anchor body parts. If `center_on_anchor_part` is False, this has no effect
             and does not need to be specified.
+        instances_key: Name of the example key where the instance points are stored.
+            Defaults to "instances".
     """
 
     center_on_anchor_part: bool = False
@@ -76,6 +78,7 @@ class InstanceCentroidFinder:
     skeletons: Optional[List[sleap.Skeleton]] = attr.ib(
         default=None, converter=attr.converters.optional(ensure_list)
     )
+    instances_key: Text = "instances"
 
     @classmethod
     def from_config(
@@ -121,9 +124,9 @@ class InstanceCentroidFinder:
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
         if self.center_on_anchor_part:
-            return ["instances", "skeleton_inds"]
+            return [self.instances_key, "skeleton_inds"]
         else:
-            return ["instances"]
+            return [self.instances_key]
 
     @property
     def output_keys(self) -> List[Text]:

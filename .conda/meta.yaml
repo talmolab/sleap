@@ -16,7 +16,8 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: {{ GIT_DESCRIBE_NUMBER }}
+  # number: {{ GIT_DESCRIBE_NUMBER }}
+  number: {{ data.get('version') }}
 
 source:
   path: ../
@@ -24,18 +25,22 @@ source:
 requirements:
   host:
     - python=3.6
+    - sleap::tensorflow=2.3.1
+    - sleap::pyside2=5.14.1
     - pip
 
   run:
     - python=3.6
     - cudatoolkit=10.1
     - cudnn=7.6
+    - sleap::tensorflow=2.3.1
+    - sleap::pyside2=5.14.1
     - Pillow
     - Shapely
     - pip
 
   run_constrained:
-    - pyqt ==9999999999
+    - pyqt==9999999999
 
 test:
   imports:

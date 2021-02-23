@@ -92,18 +92,32 @@ def test_scale_image_range():
 
 
 def test_normalizer(min_labels):
-    tf.executing_eagerly()
+    # tf.executing_eagerly()
 
     labels_reader = providers.LabelsReader(min_labels)
-    normalizer = normalization.Normalizer(
-        image_key="image", ensure_float=True, ensure_grayscale=True
-    )
+    ds_img = labels_reader.make_dataset()
 
-    ds = labels_reader.make_dataset()
-    ds = normalizer.transform_dataset(ds)
+    normalizer = normalization.Normalizer(ensure_grayscale=True)
+    ds = normalizer.transform_dataset(ds_img)
     example = next(iter(ds))
+    assert example["image"].shape[-1] == 1
 
+    normalizer = normalization.Normalizer(ensure_float=True, ensure_grayscale=True)
+    ds = normalizer.transform_dataset(ds_img)
+    example = next(iter(ds))
     assert example["image"].dtype == tf.float32
+    assert example["image"].shape[-1] == 1
+
+    normalizer = normalization.Normalizer(ensure_float=True, ensure_rgb=True)
+    ds = normalizer.transform_dataset(ds_img)
+    example = next(iter(ds))
+    assert example["image"].dtype == tf.float32
+    assert example["image"].shape[-1] == 3
+
+    normalizer = normalization.Normalizer(ensure_grayscale=True, ensure_rgb=True)
+    ds = normalizer.transform_dataset(ds_img)
+    example = next(iter(ds))
+    assert example["image"].shape[-1] == 1
 
 
 def test_normalizer_from_config():
@@ -131,7 +145,10 @@ def test_normalizer_from_config():
 
 
 def test_ensure_grayscale_from_provider(small_robot_mp4_vid):
-    video = providers.VideoReader(video=small_robot_mp4_vid, example_indices=[0],)
+    video = providers.VideoReader(
+        video=small_robot_mp4_vid,
+        example_indices=[0],
+    )
 
     normalizer = normalization.Normalizer(image_key="image", ensure_grayscale=True)
 
@@ -143,7 +160,10 @@ def test_ensure_grayscale_from_provider(small_robot_mp4_vid):
 
 
 def test_ensure_rgb_from_provider(centered_pair_vid):
-    video = providers.VideoReader(video=centered_pair_vid, example_indices=[0],)
+    video = providers.VideoReader(
+        video=centered_pair_vid,
+        example_indices=[0],
+    )
 
     normalizer = normalization.Normalizer(image_key="image", ensure_rgb=True)
 

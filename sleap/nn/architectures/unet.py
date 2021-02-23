@@ -173,7 +173,7 @@ class UNet(encoder_decoder.EncoderDecoder):
                         use_bias=True,
                         batch_norm=False,
                         activation="relu",
-                        block_prefix="_middle_expand"
+                        block_prefix="_middle_expand",
                     )
                 )
 
@@ -200,7 +200,7 @@ class UNet(encoder_decoder.EncoderDecoder):
                     use_bias=True,
                     batch_norm=False,
                     activation="relu",
-                    block_prefix="_middle_contract"
+                    block_prefix="_middle_contract",
                 )
             )
 
@@ -213,12 +213,18 @@ class UNet(encoder_decoder.EncoderDecoder):
         for block in range(self.up_blocks):
             block_filters_in = int(
                 self.filters
-                * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 1 - block))
+                * (
+                    self.filters_rate
+                    ** (self.down_blocks + self.stem_blocks - 1 - block)
+                )
             )
             if self.block_contraction:
                 block_filters_out = int(
                     self.filters
-                    * (self.filters_rate ** (self.down_blocks + self.stem_blocks - 2 - block))
+                    * (
+                        self.filters_rate
+                        ** (self.down_blocks + self.stem_blocks - 2 - block)
+                    )
                 )
             else:
                 block_filters_out = block_filters_in

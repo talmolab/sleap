@@ -982,7 +982,13 @@ class Video:
 
     def __str__(self) -> str:
         """Informal string representation (for print or format)."""
-        return type(self).__name__ + " ([%d x %d x %d x %d])" % self.shape
+        return (
+            "Video("
+            f"filename={self.filename}, "
+            f"shape={self.shape}, "
+            f"backend={type(self.backend).__name__}"
+            ")"
+        )
 
     def __len__(self) -> int:
         """Return the length of the video as the number of frames."""
@@ -1172,7 +1178,7 @@ class Video:
             backend_class = HDF5Video
         elif filename.endswith(("npy")):
             backend_class = NumpyVideo
-        elif filename.lower().endswith(("mp4", "avi")):
+        elif filename.lower().endswith(("mp4", "avi", "mov")):
             backend_class = MediaVideo
         elif os.path.isdir(filename) or "metadata.yaml" in filename:
             backend_class = ImgStoreVideo
@@ -1381,6 +1387,40 @@ class Video:
             )
         )
 
+    def to_pipeline(
+        self,
+        batch_size: Optional[int] = None,
+        prefetch: bool = True,
+        frame_indices: Optional[List[int]] = None,
+    ) -> "sleap.pipelines.Pipeline":
+        """Create a pipeline for reading the video.
+
+        Args:
+            batch_size: If not `None`, the video frames will be batched into rank-4
+                tensors. Otherwise, single rank-3 images will be returned.
+            prefetch: If `True`, pipeline will include prefetching.
+            frame_indices: Frame indices to limit the pipeline reader to. If not
+                specified (default), pipeline will read the entire video.
+
+        Returns:
+            A `sleap.pipelines.Pipeline` that builds `tf.data.Dataset` for high
+            throughput I/O during inference.
+
+        See also: sleap.pipelines.VideoReader
+        """
+        from sleap.nn.data import pipelines
+
+        pipeline = pipelines.Pipeline(
+            pipelines.VideoReader(self, example_indices=frame_indices)
+        )
+        if batch_size is not None:
+            pipeline += pipelines.Batcher(
+                batch_size=batch_size, drop_remainder=False, unrag=False
+            )
+
+        pipeline += pipelines.Prefetcher()
+        return pipeline
+
     @staticmethod
     def make_specific_backend(backend_class, kwargs):
         # Only pass through the kwargs that match attributes for the backend
@@ -1478,3 +1518,51 @@ class Video:
             if raise_warning:
                 logger.warning(f"Cannot find a video file: {path}")
             return path
+
+
+def load_video(
+    filename: str,
+    grayscale: Optional[bool] = None,
+    dataset=Optional[None],
+    channels_first: bool = False,
+) -> Video:
+    """Open a video from disk.
+
+    Args:
+        filename: Path to a video file. The video reader backend will be determined by
+            the file extension. Support extensions include: `.mp4`, `.avi`, `.h5`,
+            `.hdf5` and `.slp` (for embedded images in a labels file). If the path to a
+            folder is provided, images within that folder will be treated as video
+            frames.
+        grayscale: Read frames as a single channel grayscale images. If `None` (the
+            default), this will be auto-detected.
+        dataset: Name of the dataset that contains the video if loading a video stored
+            in an HDF5 file. This has no effect for non-HDF5 inputs.
+        channels_first: If `False` (the default), assume the data in the HDF5 dataset
+            are formatted in `(frames, height, width, channels)` order. If `False`,
+            assume the data are in `(frames, channels, width, height)` format. This has
+            no effect for non-HDF5 inputs.
+
+    Returns:
+        A `sleap.Video` instance with the appropriate backend for its format.
+
+        This enables numpy-like access to video data.
+
+    Example:
+        >>> video = sleap.load_video("centered_pair_small.mp4")
+        >>> video.shape
+        (1100, 384, 384, 1)
+        >>> imgs = video[0:3]
+        >>> imgs.shape
+        (3, 384, 384, 1)
+
+    See also:
+        sleap.io.video.Video
+    """
+    kwargs = {}
+    if grayscale is not None:
+        kwargs["grayscale"] = grayscale
+    if dataset is not None:
+        kwargs["dataset"] = dataset
+    kwargs["input_format"] = "channels_first" if channels_first else "channels_last"
+    return Video.from_filename(filename, **kwargs)

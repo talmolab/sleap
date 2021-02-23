@@ -212,7 +212,11 @@ class FlowCandidateMaker:
             None,
             winSize=(window_size, window_size),
             maxLevel=max_levels,
-            criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 30, 0.01,),
+            criteria=(
+                cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
+                30,
+                0.01,
+            ),
         )
         shifted_pts /= scale
 
@@ -264,13 +268,21 @@ class SimpleCandidateMaker:
         return candidate_instances
 
 
-tracker_policies = dict(simple=SimpleCandidateMaker, flow=FlowCandidateMaker,)
-
-similarity_policies = dict(
-    instance=instance_similarity, centroid=centroid_distance, iou=instance_iou,
+tracker_policies = dict(
+    simple=SimpleCandidateMaker,
+    flow=FlowCandidateMaker,
 )
 
-match_policies = dict(hungarian=hungarian_matching, greedy=greedy_matching,)
+similarity_policies = dict(
+    instance=instance_similarity,
+    centroid=centroid_distance,
+    iou=instance_iou,
+)
+
+match_policies = dict(
+    hungarian=hungarian_matching,
+    greedy=greedy_matching,
+)
 
 
 @attr.s(auto_attribs=True)
@@ -420,7 +432,9 @@ class Tracker(BaseTracker):
 
             # Build a pool of matchable candidate instances.
             candidate_instances = self.candidate_maker.get_candidates(
-                track_matching_queue=self.track_matching_queue, t=t, img=img,
+                track_matching_queue=self.track_matching_queue,
+                t=t,
+                img=img,
             )
 
             # Determine matches for untracked instances in current frame.
@@ -462,7 +476,9 @@ class Tracker(BaseTracker):
             # Assign to track and save.
             inst_list.append(
                 attr.evolve(
-                    match.instance, track=match.track, tracking_score=match.score,
+                    match.instance,
+                    track=match.track,
+                    tracking_score=match.score,
                 )
             )
         return inst_list
@@ -489,13 +505,13 @@ class Tracker(BaseTracker):
     def final_pass(self, frames: List[LabeledFrame]):
         """Called after tracking has run on all frames to do any post-processing."""
         if self.cleaner:
-            print(
-                "DEPRECATION WARNING: "
-                "--clean_instance_count is deprecated (but still applied to "
-                "clean results *after* tracking). Use --target_instance_count "
-                "and --pre_cull_to_target instead to cull instances *before* "
-                "tracking."
-            )
+            #     print(
+            #         "DEPRECATION WARNING: "
+            #         "--clean_instance_count is deprecated (but still applied to "
+            #         "clean results *after* tracking). Use --target_instance_count "
+            #         "and --pre_cull_to_target instead to cull instances *before* "
+            #         "tracking."
+            #     )
             self.cleaner.run(frames)
         elif self.target_instance_count and self.post_connect_single_breaks:
             connect_single_track_breaks(frames, self.target_instance_count)
@@ -647,16 +663,12 @@ class Tracker(BaseTracker):
 
         option = dict(name="clean_instance_count", default=0)
         option["type"] = int
-        option[
-            "help"
-        ] = "DEPRECATED: Target number of instances to clean *after* tracking."
+        option["help"] = "Target number of instances to clean *after* tracking."
         options.append(option)
 
         option = dict(name="clean_iou_threshold", default=0)
         option["type"] = float
-        option[
-            "help"
-        ] = "DEPRECATED: IOU to use when culling instances *after* tracking."
+        option["help"] = "IOU to use when culling instances *after* tracking."
         options.append(option)
 
         option = dict(name="similarity", default="instance")
@@ -707,9 +719,7 @@ class Tracker(BaseTracker):
 
         option = dict(name="kf_node_indices", default="")
         option["type"] = int_list_func
-        option[
-            "help"
-        ] = "For Kalman filter: Indices of nodes to track."
+        option["help"] = "For Kalman filter: Indices of nodes to track."
         options.append(option)
 
         option = dict(name="kf_init_frame_count", default="0")
@@ -735,7 +745,9 @@ class Tracker(BaseTracker):
                 arg_name = arg["name"]
 
             parser.add_argument(
-                f"--{arg_name}", type=arg["type"], help=help_string,
+                f"--{arg_name}",
+                type=arg["type"],
+                help=help_string,
             )
 
 

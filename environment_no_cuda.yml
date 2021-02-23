@@ -1,0 +1,12 @@
+name: sleap
+
+dependencies:
+- python=3.6
+- sleap::tensorflow=2.3.1
+- sleap::pyside2=5.14.1
+- Pillow
+- Shapely
+- pip
+- pip:
+    - "--editable=./"
+    - "--requirement=./dev_requirements.txt"

@@ -49,12 +49,19 @@ def pad_to_stride(image: tf.Tensor, max_stride: int) -> tf.Tensor:
         new shape's height and width are both divisible by `max_stride`.
     """
     pad_bottom, pad_right = find_padding_for_stride(
-        image_height=tf.shape(image)[0],
-        image_width=tf.shape(image)[1],
+        image_height=tf.shape(image)[-3],
+        image_width=tf.shape(image)[-2],
         max_stride=max_stride,
     )
     if pad_bottom > 0 or pad_right > 0:
-        paddings = tf.cast([[0, pad_bottom], [0, pad_right], [0, 0]], tf.int32)
+        if tf.rank(image) == 3:
+            paddings = tf.cast([[0, pad_bottom], [0, pad_right], [0, 0]], tf.int32)
+        else:
+            # tf.rank(image) == 4:
+            paddings = tf.cast(
+                [[0, 0], [0, pad_bottom], [0, pad_right], [0, 0]], tf.int32
+            )
+
         image = tf.pad(image, paddings, mode="CONSTANT", constant_values=0)
     return image
 
@@ -76,8 +83,8 @@ def resize_image(image: tf.Tensor, scale: tf.Tensor) -> tf.Tensor:
 
     See also: tf.image.resize
     """
-    height = tf.shape(image)[0]
-    width = tf.shape(image)[1]
+    height = tf.shape(image)[-3]
+    width = tf.shape(image)[-2]
     new_size = tf.reverse(
         tf.cast(
             tf.cast([width, height], tf.float32) * tf.cast(scale, tf.float32), tf.int32
@@ -135,7 +142,7 @@ class Resizer:
         pad_to_stride: Optional[int] = None,
         keep_full_image: bool = False,
         full_image_key: Text = "full_image",
-        points_key: Optional[Text] = "instances"
+        points_key: Optional[Text] = "instances",
     ) -> "Resizer":
         """Build an instance of this class from its configuration options.
 
@@ -240,6 +247,182 @@ class Resizer:
         # Map transformation.
         ds_output = ds_input.map(
             resize, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return ds_output
+
+
+@attr.s(auto_attribs=True)
+class SizeMatcher:
+    """Data transformer that ensures output images have uniform shape by resizing/padding smaller images.
+
+    Attributes:
+        image_key: String name of the key containing the images to resize.
+        scale_key: String name of the key containing the scale of the images.
+        points_key: String name of the key containing points to adjust for the resizing
+            operation.
+        keep_full_image: If True, keeps the (original size) full image in the examples.
+            This is useful for multi-scale inference.
+        full_image_key: String name of the key containing the full images.
+        max_image_height: int The target height to which all smaller images will be resized/padded to.
+        max_image_width: int The target width to which all smaller images will be resized/padded to.
+    """
+
+    image_key: Text = "image"
+    scale_key: Text = "scale"
+    points_key: Optional[Text] = "instances"
+    keep_full_image: bool = False
+    full_image_key: Text = "full_image"
+    max_image_height: int = None
+    max_image_width: int = None
+
+    @classmethod
+    def from_config(
+        cls,
+        config: PreprocessingConfig,
+        provider: Optional = None,
+        update_config: bool = True,
+        image_key: Text = "image",
+        scale_key: Text = "scale",
+        keep_full_image: bool = False,
+        full_image_key: Text = "full_image",
+        points_key: Optional[Text] = "instances",
+    ) -> "SizeMatcher":
+        """Build an instance of this class from configuration.
+
+        Args:
+            config: An `PreprocessingConfig` instance with the desired parameters. If
+                `config.resize_and_pad_to_target` is True and 'target_height' / 'target_width' are not set, provider
+                needs to be set that implements 'max_height_and_width'.
+            provider: Data provider.
+            update_config: If True, the input model configuration will be updated with
+                values inferred from other fields.
+            image_key: String name of the key containing the images to resize.
+            scale_key: String name of the key containing the scale of the images.
+            pad_to_stride: An integer specifying the `pad_to_stride` if
+                `config.pad_to_stride` is not an explicit integer (e.g., set to None).
+            keep_full_image: If True, keeps the (original size) full image in the
+                examples. This is useful for multi-scale inference.
+            full_image_key: String name of the key containing the full images.
+            points_key: String name of the key containing points to adjust for the
+                resizing operation.
+        Returns:
+            An instance of this class.
+
+        Raises:
+            ValueError: If `provider` is not set or does not implement `max_height_and_width`.
+        """
+        if config.resize_and_pad_to_target:
+            if config.target_height is not None and config.target_width is not None:
+                max_height = config.target_height
+                max_width = config.target_width
+            else:
+                try:
+                    max_height, max_width = provider.max_height_and_width
+                except:
+                    raise ValueError(
+                        "target_height / target_width could not be determined"
+                    )
+                if update_config:
+                    config.target_height = max_height
+                    config.target_width = max_width
+        else:
+            max_height, max_width = None, None
+
+        return cls(
+            image_key=image_key,
+            points_key=points_key,
+            scale_key=scale_key,
+            keep_full_image=keep_full_image,
+            full_image_key=full_image_key,
+            max_image_height=max_height,
+            max_image_width=max_width,
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        input_keys = [self.image_key, self.scale_key]
+        if self.points_key is not None:
+            input_keys.append(self.points_key)
+        return input_keys
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        output_keys = self.input_keys
+        if self.keep_full_image:
+            output_keys.append(self.full_image_key)
+        return output_keys
+
+    def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
+        """Transform a dataset with potentially different size images into one with equal sized images.
+
+        Args:
+            ds_input: A dataset with the image specified in the `image_key` attribute,
+                points specified in the `points_key` attribute, and the "scale" key for
+                tracking scaling transformations.
+
+        Returns:
+            A `tf.data.Dataset` with elements containing the same images and points of equal size.
+
+            If the `keep_full_image` attribute is True, a key specified by
+            `full_image_key` will be added with the to the example containing the image
+            before any processing.
+        """
+
+        # mapping function: match to max height width by resizing and padding bottom/right accordingly
+        def resize_and_pad(example):
+            image = example[self.image_key]
+            if self.keep_full_image:
+                example[self.full_image_key] = image
+
+            current_shape = tf.shape(image)
+
+            # Only apply this transform if image shape differs from target
+            if (
+                current_shape[-3] != self.max_image_height
+                or current_shape[-2] != self.max_image_width
+            ):
+                # Calculate target height and width for resizing the image (no padding yet)
+                hratio = self.max_image_height / tf.cast(current_shape[-3], tf.float32)
+                wratio = self.max_image_width / tf.cast(current_shape[-2], tf.float32)
+                if hratio > wratio:
+                    # The bottleneck is width, scale to fit width first then pad to height
+                    target_height = tf.cast(
+                        tf.cast(current_shape[-3], tf.float32) * wratio, tf.int32
+                    )
+                    target_width = self.max_image_width
+                    example[self.scale_key] = example[self.scale_key] * wratio
+                else:
+                    # The bottleneck is height, scale to fit height first then pad to width
+                    target_height = self.max_image_height
+                    target_width = tf.cast(
+                        tf.cast(current_shape[-2], tf.float32) * hratio, tf.int32
+                    )
+                    example[self.scale_key] = example[self.scale_key] * hratio
+                # Resize the image to fill one of the dimensions by preserving aspect ratio
+                image = tf.image.resize_with_pad(
+                    image, target_height=target_height, target_width=target_width
+                )
+                # Pad the image on bottom/right with zeroes to match specified dimensions
+                image = tf.image.pad_to_bounding_box(
+                    image,
+                    offset_height=0,
+                    offset_width=0,
+                    target_height=self.max_image_height,
+                    target_width=self.max_image_width,
+                )
+                example[self.image_key] = tf.cast(image, example[self.image_key].dtype)
+                # Scale the instance points accordingly
+                if self.points_key:
+                    example[self.points_key] = (
+                        example[self.points_key] * example[self.scale_key]
+                    )
+
+            return example
+
+        ds_output = ds_input.map(
+            resize_and_pad, num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
         return ds_output
 

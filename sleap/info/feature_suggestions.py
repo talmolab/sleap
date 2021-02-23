@@ -344,7 +344,7 @@ class FrameGroupSet(object):
 class ItemStack(object):
     """
     Container for items, each item can "own" one or more rows of data.
-    
+
     Attributes:
         items: The list of items
         data: An ndarray with rows of data corresponding to items.
@@ -352,7 +352,7 @@ class ItemStack(object):
             items.
         meta: List which stores metadata about each operation on stack.
         group_sets: List of GroupSets of items.
-    
+
     """
 
     items: List = attr.ib(default=attr.Factory(list))

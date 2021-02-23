@@ -21,8 +21,15 @@ data:
   type: optional_int
   none_label: Auto
   range: 0,512
+
 model:
 - default: unet
+  label: Backbone
+  name: _backbone_name
+  options: leap,unet,hourglass,resnet,pretrained_encoder
+  type: stacked
+
+#####
   hourglass:
   - default: 4
     help: Controls how many stem blocks to use for initial downsampling. These are
@@ -64,7 +71,9 @@ model:
     label: Stacks
     name: model.backbone.hourglass.stacks
     type: int
-  label: Backbone
+#####
+
+#####
   leap:
   - default: 8
     help: Determines the number of downsampling blocks in the network, increasing
@@ -100,8 +109,9 @@ model:
   #   label: Stacks
   #   name: model.backbone.leap.stacks
   #   type: int
-  name: _backbone_name
-  options: leap,unet,hourglass,resnet
+#####
+
+#####
   resnet:
   - default: ResNet50
     help: 'Name of the ResNetV1 variant. Can be one of: "ResNet50", "ResNet101", or
@@ -189,7 +199,43 @@ model:
   #   name: model.backbone.resnet.output_stride
   #   type: list
   #   options: 1,2,4,8,16,32,64
-  type: stacked
+#####
+
+#####
+#####
+  pretrained_encoder:
+  - label: Encoder
+    name: model.backbone.pretrained_encoder.encoder
+    default: efficientnetb0
+    help: 'Name of the network architecture to use as the encoder.'
+    options: vgg16,vgg19,resnet18,resnet34,resnet50,resnet101,resnet152,resnext50,resnext101,inceptionv3,inceptionresnetv2,densenet121,densenet169,densenet201,seresnet18,seresnet34,seresnet50,seresnet101,seresnet152,seresnext50,seresnext101,senet154,mobilenet,mobilenetv2,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7
+    type: list
+  - label: Pretrained
+    name: model.backbone.pretrained_encoder.pretrained
+    default: true
+    help: Use ImageNet-pretrained weights for initialization (transfer learning). Model
+      will have randomly initialized weights otherwise.
+    type: bool
+  - label: Decoder filters
+    name: model.backbone.pretrained_encoder.decoder_filters
+    default: 256
+    help: Base number of filters for the upsampling blocks in the decoder.
+    type: int
+  - label: Decoder filters rate
+    name: model.backbone.pretrained_encoder.decoder_filters_rate
+    default: 1.0
+    help: Factor to scale the number of filters by at each consecutive upsampling block
+      in the decoder.
+    type: double
+  # - label: Output Stride
+  #   name: model.backbone.pretrained_encoder.output_stride
+  #   help: Determines the number of upsampling blocks in the network.
+  #   type: list
+  #   options: 1,2,4,8,16
+  #   default: 2
+#####
+
+#####
   unet:
   - default: null
     help: If not None, controls how many stem blocks to use for initial downsampling.
@@ -239,6 +285,8 @@ model:
   #   label: Stacks
   #   name: model.backbone.unet.stacks
   #   type: int
+#####
+
 - centered_instance:
   - default: null
     help: Text name of a body part (node) to use as the anchor point. If None, the
@@ -418,6 +466,13 @@ augmentation:
   label: Scale Max
   name: optimization.augmentation_config.scale_max
   type: double
+- label: Random flip
+  default: none
+  type: list
+  name: optimization.augmentation_config.random_flip
+  options: none,horizontal,vertical
+  default: none
+  help: 'Randomly reflect images and instances. IMPORTANT: Left/right symmetric nodes must be indicated in the skeleton or this will lead to incorrect results!'
 - default: false
   help: If True, uniformly distributed noise will be added to the image. This is effectively
     adding a different random value to each pixel to simulate shot noise. See `imgaug.augmenters.arithmetic.AddElementwise`.
@@ -485,6 +540,7 @@ augmentation:
   label: Brightness Max Val
   name: optimization.augmentation_config.brightness_max_val
   type: double
+
 optimization:
 - default: 8
   help: Number of examples per minibatch, i.e., a single step of training. Higher

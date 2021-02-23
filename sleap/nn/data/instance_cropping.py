@@ -224,14 +224,28 @@ class InstanceCropper:
             that use both full and cropped images, at the cost of increased memory
             requirements usage. Setting this to False can substantially improve
             performance of large pipelines if the full images are no longer required.
-        mock_centroid_confidence: If True, add confidence keys for compatibility with 
+        mock_centroid_confidence: If True, add confidence keys for compatibility with
             predicted instance cropping.
+        unbatch: If True (the default), split frame-level examples into multiple
+            instance-level examples. If False, all instance crops will be kept within
+            the same example. Use this when building pipelines that require knowledge
+            about all instances within a single example.
+        image_key: Name of the example key where the image is stored. Defaults to
+            "image".
+        instances_key: Name of the example key where the instance points are stored.
+            Defaults to "instances".
+        centroids_key: Name of the example key where the instance centroids are stored.
+            Defaults to "centroids".
     """
 
     crop_width: int
     crop_height: int
     keep_full_image: bool = False
     mock_centroid_confidence: bool = False
+    unbatch: bool = True
+    image_key: Text = "image"
+    instances_key: Text = "instances"
+    centroids_key: Text = "centroids"
 
     @classmethod
     def from_config(
@@ -265,7 +279,7 @@ class InstanceCropper:
     @property
     def input_keys(self) -> List[Text]:
         """Return the keys that incoming elements are expected to have."""
-        return ["image", "instances", "centroids"]
+        return [self.image_key, self.instances_key, self.centroids_key]
 
     @property
     def output_keys(self) -> List[Text]:
@@ -281,7 +295,7 @@ class InstanceCropper:
             "full_image_width",
         ]
         if self.keep_full_image:
-            output_keys.append("image")
+            output_keys.append(self.image_key)
         if self.mock_centroid_confidence:
             output_keys.append("centroid_confidence")
         return output_keys
@@ -345,20 +359,26 @@ class InstanceCropper:
         keys_to_expand = [
             key for key in test_example.keys() if key not in self.input_keys
         ]
+        img_channels = test_example[self.image_key].shape[-1]
         if self.keep_full_image:
-            keys_to_expand.append("image")
+            keys_to_expand.append(self.image_key)
 
         def crop_instances(frame_data):
             """Local processing function for dataset mapping."""
             # Make bounding boxes from centroids.
             bboxes = make_centered_bboxes(
-                frame_data["centroids"],
+                frame_data[self.centroids_key],
                 box_height=self.crop_height,
                 box_width=self.crop_width,
             )
 
             # Crop images from bounding boxes.
-            instance_images = crop_bboxes(frame_data["image"], bboxes)
+            instance_images = crop_bboxes(frame_data[self.image_key], bboxes)
+
+            # Ensure shape is statically specified.
+            instance_images = tf.ensure_shape(
+                instance_images, [None, self.crop_height, self.crop_width, img_channels]
+            )
 
             # Pull out the bbox offsets as (n_instances, 2) in xy order.
             bboxes_x1y1 = tf.gather(bboxes, [1, 0], axis=1)
@@ -366,7 +386,9 @@ class InstanceCropper:
             # Expand the instance points to (n_instances, n_instances, n_nodes, 2).
             n_instances = tf.shape(bboxes)[0]
             all_instances = tf.repeat(
-                tf.expand_dims(frame_data["instances"], axis=0), n_instances, axis=0
+                tf.expand_dims(frame_data[self.instances_key], axis=0),
+                n_instances,
+                axis=0,
             )
 
             # Subtract offsets such that each row is relative to an instance.
@@ -387,17 +409,17 @@ class InstanceCropper:
                 "center_instance": center_instances,
                 "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
                 "all_instances": all_instances,
-                "centroid": frame_data["centroids"],
+                "centroid": frame_data[self.centroids_key],
                 "full_image_height": tf.repeat(
-                    tf.shape(frame_data["image"])[0], n_instances
+                    tf.shape(frame_data[self.image_key])[0], n_instances
                 ),
                 "full_image_width": tf.repeat(
-                    tf.shape(frame_data["image"])[1], n_instances
+                    tf.shape(frame_data[self.image_key])[1], n_instances
                 ),
             }
             if self.mock_centroid_confidence:
                 instances_data["centroid_confidence"] = tf.ones(
-                    [n_instances,], dtype=tf.float32
+                    [n_instances], dtype=tf.float32
                 )  # (n_instances,)
             for key in keys_to_expand:
                 instances_data[key] = tf.repeat(
@@ -409,9 +431,10 @@ class InstanceCropper:
         output_ds = input_ds.map(
             crop_instances, num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
-
-        # Unbatch to split frame-level examples into individual instance-level examples.
-        output_ds = output_ds.unbatch()
+        if self.unbatch:
+            # Unbatch to split frame-level examples into individual instance-level
+            # examples.
+            output_ds = output_ds.unbatch()
 
         return output_ds
 

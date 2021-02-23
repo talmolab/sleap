@@ -35,7 +35,8 @@
                 "stacks": 1
             },
             "hourglass": null,
-            "resnet": null
+            "resnet": null,
+            "pretrained_encoder": null
         },
         "heads": {
             "single_instance": null,
@@ -72,7 +73,9 @@
             "contrast_max_gamma": 2.0,
             "brightness": false,
             "brightness_min_val": 0.0,
-            "brightness_max_val": 10.0
+            "brightness_max_val": 10.0,
+            "random_flip": false,
+            "flip_horizontal": true
         },
         "online_shuffling": true,
         "shuffle_buffer_size": 128,

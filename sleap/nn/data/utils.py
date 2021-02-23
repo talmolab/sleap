@@ -1,7 +1,8 @@
 """Miscellaneous utility functions for data processing."""
 
 import tensorflow as tf
-from typing import Any, List, Tuple
+import numpy as np
+from typing import Any, List, Tuple, Dict, Text, Optional
 
 
 def ensure_list(x: Any) -> List[Any]:
@@ -80,3 +81,95 @@ def gaussian_pdf(x: tf.Tensor, sigma: float) -> tf.Tensor:
         Gaussian distribution. Values of 0 have an unnormalized PDF value of 1.0.
     """
     return tf.exp(-(tf.square(x)) / (2 * tf.square(sigma)))
+
+
+def describe_tensors(
+    example: Dict[Text, tf.Tensor], return_description: bool = False
+) -> Optional[str]:
+    """Print the keys in a example.
+
+    Args:
+        example: Dictionary keyed by strings with tensors as values.
+        return_description: If `True`, returns the string description instead of
+            printing it.
+
+    Returns:
+        String description if `return_description` is `True`, otherwise `None`.
+    """
+    desc = []
+    key_length = max(len(k) for k in example.keys())
+    for key, val in example.items():
+        dtype = str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
+        desc.append(
+            f"{key.rjust(key_length)}: type={type(val).__name__}, "
+            f"shape={val.shape}, "
+            f"dtype={dtype}, "
+            f"device={val.device if hasattr(val, 'device') else 'N/A'}"
+        )
+    desc = "\n".join(desc)
+
+    if return_description:
+        return desc
+    else:
+        print(desc)
+
+
+def unrag_example(
+    example: Dict[str, tf.Tensor], numpy: bool = False
+) -> Dict[str, tf.Tensor]:
+    """Convert ragged tensors in an example into normal tensors with NaN padding.
+
+    Args:
+        example: Dictionary keyed by strings with tensors as values.
+        numpy: If `True`, convert values to numpy arrays or Python primitives.
+
+    Returns:
+        The same dictionary, but values of type `tf.RaggedTensor` will be converted to
+        tensors of type `tf.Tensor` with NaN padding if the ragged dimensions are of
+        variable length.
+
+        The output shapes will be the bounding shape of the ragged tensors.
+
+        If `numpy` is `True`, the values will be `numpy.ndarray`s or Python primitives
+        depending on their data type and shape.
+
+    See also: tf.python.keras.utils.tf_utils.to_numpy_or_python_type
+    """
+    for key in example:
+        if isinstance(example[key], tf.RaggedTensor):
+            example[key] = example[key].to_tensor(
+                default_value=tf.cast(np.nan, example[key].dtype)
+            )
+    if numpy:
+        example = tf.python.keras.utils.tf_utils.to_numpy_or_python_type(example)
+    return example
+
+
+def unrag_tensor(x: tf.RaggedTensor, max_size: int, axis: int) -> tf.Tensor:
+    """Converts a ragged tensor to a full tensor by padding to a maximum size.
+
+    This function is useful for converting ragged tensors to a fixed size when one or
+    more of the dimensions are of variable length.
+
+    Args:
+        x: Ragged tensor to convert.
+        max_size: Maximum size of the axis to pad.
+        axis: Axis of `x` to pad to `max_size`. This must specify ragged dimensions.
+            If more than one axis is specified, `max_size` must be of the same length as
+            `axis`.
+
+    Returns:
+        A padded version of `x`. Padding will use the equivalent of NaNs in the tensor's
+        native dtype.
+
+        This will replace the shape of the specified `axis` with `max_size`, leaving the
+        remaining dimensions set to the bounding shape of the ragged tensor.
+    """
+    bounding_shape = x.bounding_shape()
+    axis = tf.cast(axis, tf.int64)
+    axis = axis % len(x.shape)  # Handle negative indices.
+    axis = tf.reshape(axis, [-1, 1])  # Ensure (n, 1) shape for indexing.
+    max_size = tf.cast(max_size, bounding_shape.dtype)
+    max_size = tf.reshape(max_size, [-1])  # Ensure (n,) shape for indexing.
+    shape = tf.tensor_scatter_nd_update(bounding_shape, axis, max_size)
+    return x.to_tensor(default_value=tf.cast(np.NaN, x.dtype), shape=shape)
