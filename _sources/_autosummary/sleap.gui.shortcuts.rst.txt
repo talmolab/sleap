@@ -1,0 +1,5 @@
+﻿sleap.gui.shortcuts
+===================
+
+.. automodule:: sleap.gui.shortcuts
+   :members:

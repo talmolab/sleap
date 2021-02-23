@@ -1,0 +1,778 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.learning.runners &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.learning.runners</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Run training/inference in background process via CLI.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">sub</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span><span class="p">,</span> <span class="n">LabeledFrame</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.learning.configs</span> <span class="kn">import</span> <span class="n">ConfigFileInfo</span>
+<span class="kn">from</span> <span class="nn">sleap.nn</span> <span class="kn">import</span> <span class="n">training</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">TrainingJobConfig</span>
+
+<span class="n">SKIP_TRAINING</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="ItemForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.ItemForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ItemForInference</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for item on which we can run inference via CLI.</span>
+
+<span class="sd">    Must have `path` and `cli_args` properties, used to build CLI call.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">cli_args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="VideoItemForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.VideoItemForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">VideoItemForInference</span><span class="p">(</span><span class="n">ItemForInference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encapsulate data about video on which inference should run.</span>
+
+<span class="sd">    This allows for inference on an arbitrary list of frames from video.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        video: the :py:class:`Video` object (which already stores its own path)</span>
+<span class="sd">        frames: list of frames for inference; if None, then all frames are used</span>
+<span class="sd">        use_absolute_path: whether to use absolute path for inference cli call</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">video</span><span class="p">:</span> <span class="n">Video</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">use_absolute_path</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_absolute_path</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cli_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">arg_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># TODO: better support for video params</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">dataset</span><span class="p">:</span>
+            <span class="n">arg_list</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;--video.dataset&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">dataset</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;input_format&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">input_format</span>
+        <span class="p">):</span>
+            <span class="n">arg_list</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;--video.input_format&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">input_format</span><span class="p">))</span>
+
+        <span class="c1"># -Y represents endpoint of [X, Y) range but inference cli expects</span>
+        <span class="c1"># [X, Y-1] range (so add 1 since negative).</span>
+        <span class="n">frame_int_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">]</span>
+
+        <span class="n">arg_list</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;--frames&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">frame_int_list</span><span class="p">))))</span>
+
+        <span class="k">return</span> <span class="n">arg_list</span></div>
+
+
+<div class="viewcode-block" id="DatasetItemForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.DatasetItemForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DatasetItemForInference</span><span class="p">(</span><span class="n">ItemForInference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encapsulate data about frame selection based on dataset data.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        labels_path: path to the saved :py:class:`Labels` dataset.</span>
+<span class="sd">        frame_filter: which subset of frames to get from dataset, supports</span>
+<span class="sd">            * &quot;user&quot;</span>
+<span class="sd">            * &quot;suggested&quot;</span>
+<span class="sd">        use_absolute_path: whether to use absolute path for inference cli call.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels_path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">frame_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;user&quot;</span>
+    <span class="n">use_absolute_path</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_absolute_path</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cli_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--labels&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_filter</span> <span class="o">==</span> <span class="s2">&quot;user&quot;</span><span class="p">:</span>
+            <span class="n">args_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--only-labeled-frames&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_filter</span> <span class="o">==</span> <span class="s2">&quot;suggested&quot;</span><span class="p">:</span>
+            <span class="n">args_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--only-suggested-frames&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args_list</span></div>
+
+
+<div class="viewcode-block" id="ItemsForInference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.ItemsForInference">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ItemsForInference</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Encapsulates list of items for inference.&quot;&quot;&quot;</span>
+
+    <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ItemForInference</span><span class="p">]</span>
+    <span class="n">total_frame_count</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_video_frames_dict</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">video_frames_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Video</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">total_frame_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">video</span><span class="p">,</span> <span class="n">frames</span> <span class="ow">in</span> <span class="n">video_frames_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">frames</span><span class="p">:</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VideoItemForInference</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">total_frame_count</span><span class="o">=</span><span class="n">total_frame_count</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InferenceTask"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">InferenceTask</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Encapsulates all data needed for running inference via CLI.&quot;&quot;&quot;</span>
+
+    <span class="n">trained_job_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Labels</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+
+<div class="viewcode-block" id="InferenceTask.make_predict_cli_call"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask.make_predict_cli_call">[docs]</a>    <span class="k">def</span> <span class="nf">make_predict_cli_call</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">item_for_inference</span><span class="p">:</span> <span class="n">ItemForInference</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Makes list of CLI arguments needed for running inference.&quot;&quot;&quot;</span>
+        <span class="n">cli_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sleap-track&quot;</span><span class="p">]</span>
+
+        <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">item_for_inference</span><span class="o">.</span><span class="n">cli_args</span><span class="p">)</span>
+
+        <span class="c1"># TODO: encapsulate in inference item class</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">trained_job_paths</span>
+            <span class="ow">and</span> <span class="s2">&quot;tracking.tracker&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span>
+        <span class="p">):</span>
+            <span class="c1"># No models so we must want to re-track previous predictions</span>
+            <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;--labels&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">))</span>
+
+        <span class="c1"># Make path where we&#39;ll save predictions (if not specified)</span>
+        <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">:</span>
+                <span class="c1"># Make a predictions directory next to the labels dataset file</span>
+                <span class="n">predictions_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;predictions&quot;</span>
+                <span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">predictions_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Dataset filename wasn&#39;t given, so save predictions in same dir</span>
+                <span class="c1"># as the video</span>
+                <span class="n">predictions_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">item_for_inference</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+            <span class="c1"># Build filename with video name and timestamp</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">predictions_dir</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">item_for_inference</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">&quot;predictions.slp&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">job_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trained_job_paths</span><span class="p">:</span>
+            <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="n">job_path</span><span class="p">))</span>
+
+        <span class="n">optional_items_as_nones</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;tracking.target_instance_count&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tracking.kf_init_frame_count&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">optional_items_as_nones</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1"># --tracking.kf_init_frame_count enables the kalman filter tracking</span>
+        <span class="c1"># so if not set, then remove other (unused) args</span>
+        <span class="k">if</span> <span class="s2">&quot;tracking.kf_init_frame_count&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;tracking.kf_node_indices&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">[</span><span class="s2">&quot;tracking.kf_node_indices&quot;</span><span class="p">]</span>
+
+        <span class="n">bool_items_as_ints</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;tracking.pre_cull_to_target&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tracking.post_connect_single_breaks&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">bool_items_as_ints</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;outputs.&quot;</span><span class="p">,</span> <span class="s2">&quot;model.&quot;</span><span class="p">,</span> <span class="s2">&quot;data.&quot;</span><span class="p">)):</span>
+                <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
+
+        <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">cli_args</span><span class="p">,</span> <span class="n">output_path</span></div>
+
+<div class="viewcode-block" id="InferenceTask.predict_subprocess"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask.predict_subprocess">[docs]</a>    <span class="k">def</span> <span class="nf">predict_subprocess</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item_for_inference</span><span class="p">:</span> <span class="n">ItemForInference</span><span class="p">,</span>
+        <span class="n">append_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">waiting_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Runs inference in a subprocess.&quot;&quot;&quot;</span>
+        <span class="n">cli_args</span><span class="p">,</span> <span class="n">output_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_predict_cli_call</span><span class="p">(</span><span class="n">item_for_inference</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Command line call:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; </span><span class="se">\\\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_args</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">sub</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cli_args</span><span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">waiting_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="n">waiting_callback</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="c1"># -1 signals user cancellation</span>
+                        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">False</span>
+
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Process return code: </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">success</span> <span class="ow">and</span> <span class="n">append_results</span><span class="p">:</span>
+            <span class="c1"># Load frames from inference into results list</span>
+            <span class="n">new_inference_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="n">match_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_inference_labels</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">success</span></div>
+
+<div class="viewcode-block" id="InferenceTask.merge_results"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.InferenceTask.merge_results">[docs]</a>    <span class="k">def</span> <span class="nf">merge_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Merges result frames into labels dataset.&quot;&quot;&quot;</span>
+        <span class="c1"># Remove any frames without instances.</span>
+        <span class="n">new_lfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">))</span>
+        <span class="n">new_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="p">(</span><span class="n">new_lfs</span><span class="p">)</span>
+
+        <span class="c1"># Remove potentially conflicting predictions from the base dataset.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">remove_predictions</span><span class="p">(</span><span class="n">new_labels</span><span class="o">=</span><span class="n">new_labels</span><span class="p">)</span>
+
+        <span class="c1"># Merge predictions into current labels dataset.</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">new_conflicts</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">complex_merge_between</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">new_labels</span><span class="o">=</span><span class="n">new_labels</span><span class="p">,</span>
+            <span class="n">unify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># since we used match_to when loading predictions file</span>
+        <span class="p">)</span>
+
+        <span class="c1"># new predictions should replace old ones</span>
+        <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_conflicts</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="write_pipeline_files"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.write_pipeline_files">[docs]</a><span class="k">def</span> <span class="nf">write_pipeline_files</span><span class="p">(</span>
+    <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">config_info_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">],</span>
+    <span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">items_for_inference</span><span class="p">:</span> <span class="n">ItemsForInference</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes the config files and scripts for manually running pipeline.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Use absolute path for all files that aren&#39;t contained in the output dir.</span>
+    <span class="n">labels_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">)</span>
+
+    <span class="c1"># Preserve current working directory and change working directory to the</span>
+    <span class="c1"># output directory, so we can set local paths relative to that.</span>
+    <span class="n">old_cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+
+    <span class="n">new_cfg_filenames</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">train_script</span> <span class="o">=</span> <span class="s2">&quot;#!/bin/bash</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="c1"># Add head type to save path suffix to prevent overwriting.</span>
+    <span class="k">for</span> <span class="n">cfg_info</span> <span class="ow">in</span> <span class="n">config_info_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">dont_retrain</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_name_suffix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_name_suffix</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="p">):</span>
+                <span class="c1"># Keep existing suffix if defined.</span>
+                <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_name_suffix</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+            <span class="c1"># Add head name.</span>
+            <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">head_name</span> <span class="o">+</span> <span class="n">suffix</span>
+
+            <span class="c1"># Update config.</span>
+            <span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_name_suffix</span> <span class="o">=</span> <span class="n">suffix</span>
+
+    <span class="k">for</span> <span class="n">cfg_info</span> <span class="ow">in</span> <span class="n">config_info_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">dont_retrain</span><span class="p">:</span>
+            <span class="c1"># Use full absolute path to already training model</span>
+            <span class="n">trained_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">old_cwd</span><span class="p">,</span> <span class="n">cfg_info</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+            <span class="n">new_cfg_filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trained_path</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># We&#39;re training this model, so save config file...</span>
+
+            <span class="c1"># First we want to set the run folder so that we know where to find</span>
+            <span class="c1"># the model after it&#39;s trained.</span>
+            <span class="c1"># We&#39;ll use local path to the output directory (cwd).</span>
+            <span class="c1"># Note that setup_new_run_folder does things relative to cwd which</span>
+            <span class="c1"># is the main reason we&#39;re setting it to the output directory rather</span>
+            <span class="c1"># than just using normpath.</span>
+            <span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">runs_folder</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">setup_new_run_folder</span><span class="p">(</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+
+            <span class="c1"># Now we set the filename for the training config file</span>
+            <span class="n">new_cfg_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">head_name</span><span class="si">}</span><span class="s2">.json&quot;</span>
+
+            <span class="c1"># Save the config file</span>
+            <span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">new_cfg_filename</span><span class="p">)</span>
+
+            <span class="c1"># Keep track of the path where we&#39;ll find the trained model</span>
+            <span class="n">new_cfg_filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfg_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_path</span><span class="p">)</span>
+
+            <span class="c1"># Add a line to the script for training this model</span>
+            <span class="n">train_script</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;sleap-train </span><span class="si">{</span><span class="n">new_cfg_filename</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">labels_filename</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="c1"># Write the script to train the models which need to be trained</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;train-script.sh&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">train_script</span><span class="p">)</span>
+
+    <span class="c1"># Build the script for running inference</span>
+    <span class="n">inference_script</span> <span class="o">=</span> <span class="s2">&quot;#!/bin/bash</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="c1"># Object with settings for inference</span>
+    <span class="n">inference_task</span> <span class="o">=</span> <span class="n">InferenceTask</span><span class="p">(</span>
+        <span class="n">labels_filename</span><span class="o">=</span><span class="n">labels_filename</span><span class="p">,</span>
+        <span class="n">trained_job_paths</span><span class="o">=</span><span class="n">new_cfg_filenames</span><span class="p">,</span>
+        <span class="n">inference_params</span><span class="o">=</span><span class="n">inference_params</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">item_for_inference</span> <span class="ow">in</span> <span class="n">items_for_inference</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+        <span class="c1"># We want to save predictions in output dir so use local path</span>
+        <span class="n">prediction_output_path</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">item_for_inference</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">.predictions.slp&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Use absolute path to video</span>
+        <span class="n">item_for_inference</span><span class="o">.</span><span class="n">use_absolute_path</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Get list of cli args</span>
+        <span class="n">cli_args</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">inference_task</span><span class="o">.</span><span class="n">make_predict_cli_call</span><span class="p">(</span>
+            <span class="n">item_for_inference</span><span class="o">=</span><span class="n">item_for_inference</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">prediction_output_path</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># And join them into a single call to inference</span>
+        <span class="n">inference_script</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_args</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="c1"># And write it</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;inference-script.sh&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">inference_script</span><span class="p">)</span>
+
+    <span class="c1"># Restore the working directory</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">old_cwd</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="run_learning_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.run_learning_pipeline">[docs]</a><span class="k">def</span> <span class="nf">run_learning_pipeline</span><span class="p">(</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+    <span class="n">config_info_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">],</span>
+    <span class="n">inference_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">items_for_inference</span><span class="p">:</span> <span class="n">ItemsForInference</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Runs training (as needed) and inference.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels_filename: Path to already saved current labels object.</span>
+<span class="sd">        labels: The current labels object; results will be added to this.</span>
+<span class="sd">        config_info_list: List of ConfigFileInfo with configs for training</span>
+<span class="sd">            and inference.</span>
+<span class="sd">        inference_params: Parameters to pass to inference.</span>
+<span class="sd">        frames_to_predict: Dict that gives list of frame indices for each video.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Number of new frames added to labels.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">save_viz</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_save_viz&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Train the TrainingJobs</span>
+    <span class="n">trained_job_paths</span> <span class="o">=</span> <span class="n">run_gui_training</span><span class="p">(</span>
+        <span class="n">labels_filename</span><span class="o">=</span><span class="n">labels_filename</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">config_info_list</span><span class="o">=</span><span class="n">config_info_list</span><span class="p">,</span>
+        <span class="n">gui</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_viz</span><span class="o">=</span><span class="n">save_viz</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Check that all the models were trained</span>
+    <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">trained_job_paths</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">inference_task</span> <span class="o">=</span> <span class="n">InferenceTask</span><span class="p">(</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">labels_filename</span><span class="o">=</span><span class="n">labels_filename</span><span class="p">,</span>
+        <span class="n">trained_job_paths</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">trained_job_paths</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+        <span class="n">inference_params</span><span class="o">=</span><span class="n">inference_params</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Run the Predictor for suggested frames</span>
+    <span class="n">new_labeled_frame_count</span> <span class="o">=</span> <span class="n">run_gui_inference</span><span class="p">(</span><span class="n">inference_task</span><span class="p">,</span> <span class="n">items_for_inference</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_labeled_frame_count</span></div>
+
+
+<div class="viewcode-block" id="run_gui_training"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.run_gui_training">[docs]</a><span class="k">def</span> <span class="nf">run_gui_training</span><span class="p">(</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+    <span class="n">config_info_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">],</span>
+    <span class="n">gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">save_viz</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Text</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs training for each training job.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels: Labels object from which we&#39;ll get training data.</span>
+<span class="sd">        config_info_list: List of ConfigFileInfo with configs for training.</span>
+<span class="sd">        gui: Whether to show gui windows and process gui events.</span>
+<span class="sd">        save_viz: Whether to save visualizations from training.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary, keys are head name, values are path to trained config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">trained_job_paths</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sleap.nn.monitor</span> <span class="kn">import</span> <span class="n">LossViewer</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.widgets.imagedir</span> <span class="kn">import</span> <span class="n">QtImageDirectoryWidget</span>
+
+        <span class="c1"># open training monitor window</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">LossViewer</span><span class="p">()</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">config_info</span> <span class="ow">in</span> <span class="n">config_info_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">config_info</span><span class="o">.</span><span class="n">dont_retrain</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">config_info</span><span class="o">.</span><span class="n">has_trained_model</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Config is set to not retrain but no trained model found: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_info</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Using already trained model for </span><span class="si">{</span><span class="n">config_info</span><span class="o">.</span><span class="n">head_name</span><span class="si">}</span><span class="s2">: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_info</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="n">trained_job_paths</span><span class="p">[</span><span class="n">config_info</span><span class="o">.</span><span class="n">head_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">config_info</span><span class="o">.</span><span class="n">path</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">job</span> <span class="o">=</span> <span class="n">config_info</span><span class="o">.</span><span class="n">config</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="n">config_info</span><span class="o">.</span><span class="n">head_name</span>
+
+            <span class="c1"># We&#39;ll pass along the list of paths we actually used for loading</span>
+            <span class="c1"># the videos so that we don&#39;t have to rely on the paths currently</span>
+            <span class="c1"># saved in the labels file for finding videos.</span>
+            <span class="n">video_path_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span> <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">videos</span><span class="p">]</span>
+
+            <span class="c1"># Update save dir and run name for job we&#39;re about to train</span>
+            <span class="c1"># so we have access to them here (rather than letting</span>
+            <span class="c1"># train_subprocess update them).</span>
+            <span class="c1"># training.Trainer.set_run_name(job, labels_filename)</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">runs_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">labels_filename</span><span class="p">),</span> <span class="s2">&quot;models&quot;</span>
+            <span class="p">)</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">setup_new_run_folder</span><span class="p">(</span>
+                <span class="n">job</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">base_run_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_type</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resetting monitor window.&quot;</span><span class="p">)</span>
+                <span class="n">win</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">))</span>
+                <span class="n">win</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training Model - </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">win</span><span class="o">.</span><span class="n">set_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preparing to run training...&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">save_viz</span><span class="p">:</span>
+                    <span class="n">viz_window</span> <span class="o">=</span> <span class="n">QtImageDirectoryWidget</span><span class="o">.</span><span class="n">make_training_vizualizer</span><span class="p">(</span>
+                        <span class="n">job</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_path</span>
+                    <span class="p">)</span>
+                    <span class="n">viz_window</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">win</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">+</span> <span class="n">win</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">+</span> <span class="mi">20</span><span class="p">,</span> <span class="n">win</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+                    <span class="n">win</span><span class="o">.</span><span class="n">on_epoch</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">viz_window</span><span class="o">.</span><span class="n">poll</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Start training </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">)</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">waiting</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                    <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+
+            <span class="c1"># Run training</span>
+            <span class="n">trained_job_path</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="n">train_subprocess</span><span class="p">(</span>
+                <span class="n">job_config</span><span class="o">=</span><span class="n">job</span><span class="p">,</span>
+                <span class="n">labels_filename</span><span class="o">=</span><span class="n">labels_filename</span><span class="p">,</span>
+                <span class="n">video_paths</span><span class="o">=</span><span class="n">video_path_list</span><span class="p">,</span>
+                <span class="n">waiting_callback</span><span class="o">=</span><span class="n">waiting</span><span class="p">,</span>
+                <span class="n">save_viz</span><span class="o">=</span><span class="n">save_viz</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+                <span class="c1"># get the path to the resulting TrainingJob file</span>
+                <span class="n">trained_job_paths</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">trained_job_path</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished training </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                    <span class="n">win</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                        <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;An error occurred while training </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">model_type</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
+                        <span class="s2">&quot;Your command line terminal may have more information about &quot;</span>
+                        <span class="s2">&quot;the error.&quot;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                <span class="n">trained_job_paths</span><span class="p">[</span><span class="n">model_type</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="c1"># close training monitor window</span>
+        <span class="n">win</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">trained_job_paths</span></div>
+
+
+<div class="viewcode-block" id="run_gui_inference"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.run_gui_inference">[docs]</a><span class="k">def</span> <span class="nf">run_gui_inference</span><span class="p">(</span>
+    <span class="n">inference_task</span><span class="p">:</span> <span class="n">InferenceTask</span><span class="p">,</span>
+    <span class="n">items_for_inference</span><span class="p">:</span> <span class="n">ItemsForInference</span><span class="p">,</span>
+    <span class="n">gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Run inference on specified frames using models from training_jobs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inference_task: Encapsulates information needed for running inference,</span>
+<span class="sd">            such as labels dataset and models.</span>
+<span class="sd">        items_for_inference: Encapsulates information about the videos (etc.)</span>
+<span class="sd">            on which we&#39;re running inference.</span>
+<span class="sd">        gui: Whether to show gui windows and process gui events.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Number of new frames added to labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="c1"># show message while running inference</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QProgressDialog</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Running inference on </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">items_for_inference</span><span class="p">)</span><span class="si">}</span><span class="s2"> videos...&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Cancel&quot;</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">items_for_inference</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">progress</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+
+    <span class="c1"># Make callback to process events while running inference</span>
+    <span class="k">def</span> <span class="nf">waiting</span><span class="p">(</span><span class="n">done_count</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+            <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
+            <span class="n">progress</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">done_count</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">progress</span><span class="o">.</span><span class="n">wasCanceled</span><span class="p">():</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item_for_inference</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">items_for_inference</span><span class="o">.</span><span class="n">items</span><span class="p">):</span>
+        <span class="c1"># Run inference for desired frames in this video</span>
+        <span class="n">predictions_path</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="n">inference_task</span><span class="o">.</span><span class="n">predict_subprocess</span><span class="p">(</span>
+            <span class="n">item_for_inference</span><span class="p">,</span> <span class="n">append_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">waiting_callback</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">waiting</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+                <span class="n">progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">(</span>
+                    <span class="n">text</span><span class="o">=</span><span class="s2">&quot;An error occcured during inference. Your command line &quot;</span>
+                    <span class="s2">&quot;terminal may have more information about the error.&quot;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">inference_task</span><span class="o">.</span><span class="n">merge_results</span><span class="p">()</span>
+
+    <span class="c1"># close message window</span>
+    <span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+        <span class="n">progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># return total_new_lf_count</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">inference_task</span><span class="o">.</span><span class="n">results</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="train_subprocess"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.runners.html#sleap.gui.learning.runners.train_subprocess">[docs]</a><span class="k">def</span> <span class="nf">train_subprocess</span><span class="p">(</span>
+    <span class="n">job_config</span><span class="p">:</span> <span class="n">TrainingJobConfig</span><span class="p">,</span>
+    <span class="n">labels_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">video_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">waiting_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_viz</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs training inside subprocess.&quot;&quot;&quot;</span>
+
+    <span class="c1"># run_name = job_config.outputs.run_name</span>
+    <span class="n">run_path</span> <span class="o">=</span> <span class="n">job_config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_path</span>
+
+    <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">temp_dir</span><span class="p">:</span>
+
+        <span class="c1"># Write a temporary file of the TrainingJob so that we can respect</span>
+        <span class="c1"># any changed made to the job attributes after it was loaded.</span>
+        <span class="n">temp_filename</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_training_job.json&quot;</span>
+        <span class="n">training_job_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">,</span> <span class="n">temp_filename</span><span class="p">)</span>
+        <span class="n">job_config</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">training_job_path</span><span class="p">)</span>
+
+        <span class="c1"># Build CLI arguments for training</span>
+        <span class="n">cli_args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;sleap-train&quot;</span><span class="p">,</span>
+            <span class="n">training_job_path</span><span class="p">,</span>
+            <span class="n">labels_filename</span><span class="p">,</span>
+            <span class="s2">&quot;--zmq&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">save_viz</span><span class="p">:</span>
+            <span class="n">cli_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--save_viz&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Use cli arg since cli ignores setting in config</span>
+        <span class="k">if</span> <span class="n">job_config</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">tensorboard</span><span class="o">.</span><span class="n">write_logs</span><span class="p">:</span>
+            <span class="n">cli_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--tensorboard&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Add list of video paths so we can find video even if paths in saved</span>
+        <span class="c1"># labels dataset file are incorrect.</span>
+        <span class="k">if</span> <span class="n">video_paths</span><span class="p">:</span>
+            <span class="n">cli_args</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;--video-paths&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video_paths</span><span class="p">)))</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">cli_args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">SKIP_TRAINING</span><span class="p">:</span>
+            <span class="c1"># Run training in a subprocess</span>
+            <span class="k">with</span> <span class="n">sub</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cli_args</span><span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">:</span>
+
+                <span class="c1"># Wait till training is done, calling a callback if given.</span>
+                <span class="k">while</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">waiting_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">waiting_callback</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="c1"># -1 signals user cancellation</span>
+                            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">False</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+                <span class="n">success</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run Path:&quot;</span><span class="p">,</span> <span class="n">run_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">run_path</span><span class="p">,</span> <span class="n">success</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

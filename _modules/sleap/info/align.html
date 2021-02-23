@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.info.align &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.info.align</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions to align instances.</span>
+
+<span class="sd">Usually you&#39;ll want to</span>
+
+<span class="sd">1. find out the skeleton edge to use for aligning instances,</span>
+<span class="sd">2. align all instances using this edge in the skeleton,</span>
+<span class="sd">3. calculate mean/std for node locations of aligned instances.</span>
+
+<span class="sd">For step (1), we use the most &quot;stable&quot; edge (smallest std in length) for the set</span>
+<span class="sd">of instances which has a (mean) length above some threshold. Usually this will</span>
+<span class="sd">be something like [head -&gt; thorax], i.e., an edge between two body parts which</span>
+<span class="sd">are relatively fixed relative to each other, and thus work well as an axis for</span>
+<span class="sd">aligning all the instances.</span>
+
+<span class="sd">Steps (2) and (3) are fairly straightforward: we calculate angle of the edge</span>
+<span class="sd">found in step (1) for each instance, then rotate each instance accordingly,</span>
+<span class="sd">then calculate mean/standard deviation for each node in the resulting matrix.</span>
+
+<span class="sd">Note that all these functions are vectorized and work on matrices with shape</span>
+<span class="sd">(instances, nodes, 2), where 2 corresponds to (x, y) for each node.</span>
+
+<span class="sd">After we have a &quot;mean&quot; instance (i.e., an instance with all points at mean</span>
+<span class="sd">of other, aligned instances), the &quot;mean&quot; instance can then itself be aligned</span>
+<span class="sd">with another instance using the `align_instance_points` function. This is</span>
+<span class="sd">useful so we can use &quot;mean&quot; instance to add &quot;default&quot; points to an instance</span>
+<span class="sd">which doesn&#39;t yet have all points).</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Instance</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="get_stable_node_pairs"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.get_stable_node_pairs">[docs]</a><span class="k">def</span> <span class="nf">get_stable_node_pairs</span><span class="p">(</span>
+    <span class="n">all_points_arrays</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">node_names</span><span class="p">,</span> <span class="n">min_dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns sorted list of node pairs with mean and standard dev distance.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Calculate distance from each point to each other point within each instance</span>
+    <span class="n">intra_points</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">all_points_arrays</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">all_points_arrays</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="p">)</span>
+    <span class="n">intra_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">intra_points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Find mean and standard deviation for distances between each pair of nodes</span>
+    <span class="n">inter_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">intra_dist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">inter_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">intra_dist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Clear pairs with too small mean distance</span>
+    <span class="n">inter_std</span><span class="p">[</span><span class="n">inter_mean</span> <span class="o">&lt;=</span> <span class="n">min_dist</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># Ravel so that we can sort along single dimension</span>
+    <span class="n">flat_inter_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">inter_std</span><span class="p">)</span>
+    <span class="n">flat_inter_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">inter_mean</span><span class="p">)</span>
+
+    <span class="c1"># Get indices for sort by standard deviation (asc)</span>
+    <span class="n">sorted_flat_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">flat_inter_std</span><span class="p">)</span>
+    <span class="n">sorted_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">sorted_flat_inds</span><span class="p">,</span> <span class="n">inter_std</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Take every other, since we&#39;ll get A-&gt;B and B-&gt;A for each pair</span>
+    <span class="n">sorted_inds</span> <span class="o">=</span> <span class="n">sorted_inds</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">sorted_flat_inds</span> <span class="o">=</span> <span class="n">sorted_flat_inds</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># print(all_points_arrays.shape)</span>
+    <span class="c1"># print(intra_points.shape)</span>
+    <span class="c1"># print(intra_dist.shape)</span>
+    <span class="c1"># print(inter_std.shape)</span>
+    <span class="c1"># print(sorted_inds.shape)</span>
+
+    <span class="c1"># Make sorted list of data to return</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">inds</span><span class="p">,</span> <span class="n">flat_idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sorted_inds</span><span class="p">,</span> <span class="n">sorted_flat_inds</span><span class="p">):</span>
+        <span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span> <span class="o">=</span> <span class="n">inds</span>
+        <span class="n">std</span><span class="p">,</span> <span class="n">mean</span> <span class="o">=</span> <span class="n">flat_inter_std</span><span class="p">[</span><span class="n">flat_idx</span><span class="p">],</span> <span class="n">flat_inter_mean</span><span class="p">[</span><span class="n">flat_idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mean</span> <span class="o">&lt;=</span> <span class="n">min_dist</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">node_a</span><span class="o">=</span><span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span><span class="o">=</span><span class="n">node_b</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">mean</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="get_most_stable_node_pair"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.get_most_stable_node_pair">[docs]</a><span class="k">def</span> <span class="nf">get_most_stable_node_pair</span><span class="p">(</span>
+    <span class="n">all_points_arrays</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">min_dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Returns pair of nodes which are at stable distance (over min threshold).&quot;&quot;&quot;</span>
+    <span class="n">all_pairs</span> <span class="o">=</span> <span class="n">get_stable_node_pairs</span><span class="p">(</span><span class="n">all_points_arrays</span><span class="p">,</span> <span class="n">min_dist</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">all_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;node_a&quot;</span><span class="p">],</span> <span class="n">all_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;node_b&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="align_instances"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.align_instances">[docs]</a><span class="k">def</span> <span class="nf">align_instances</span><span class="p">(</span>
+    <span class="n">all_points_arrays</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">node_a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">node_b</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">rotate_on_node_a</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rotates every instance so that line from node_a to node_b aligns.&quot;&quot;&quot;</span>
+
+    <span class="c1"># For each instance, calculate the angle between nodes A and B</span>
+    <span class="n">node_to_node_lines</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">all_points_arrays</span><span class="p">[:,</span> <span class="n">node_a</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">all_points_arrays</span><span class="p">[:,</span> <span class="n">node_b</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="p">)</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">node_to_node_lines</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">node_to_node_lines</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Make rotation matrix for each instance based on this angle</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+
+    <span class="n">R</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+    <span class="n">R</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+    <span class="n">R</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">s</span>
+    <span class="n">R</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+
+    <span class="c1"># Rotate each instance by taking dot product with its corresponding rotation</span>
+    <span class="n">rotated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;aij,ajk-&gt;aik&quot;</span><span class="p">,</span> <span class="n">all_points_arrays</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rotate_on_node_a</span><span class="p">:</span>
+        <span class="c1"># Shift so that rotation is &quot;around&quot; node A</span>
+        <span class="n">node_a_pos</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span> <span class="n">node_a</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Shift so node A is at fixed position for every instance</span>
+        <span class="n">node_a_pos</span> <span class="o">=</span> <span class="n">rotated</span><span class="p">[:,</span> <span class="n">node_a</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="c1"># Do the shift</span>
+    <span class="n">rotated</span> <span class="o">-=</span> <span class="n">node_a_pos</span>
+
+    <span class="k">return</span> <span class="n">rotated</span></div>
+
+
+<div class="viewcode-block" id="align_instances_on_most_stable"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.align_instances_on_most_stable">[docs]</a><span class="k">def</span> <span class="nf">align_instances_on_most_stable</span><span class="p">(</span>
+    <span class="n">all_points_arrays</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">min_stable_dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets most stable pair of nodes and aligned instances along these nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span> <span class="o">=</span> <span class="n">get_most_stable_node_pair</span><span class="p">(</span>
+        <span class="n">all_points_arrays</span><span class="p">,</span> <span class="n">min_dist</span><span class="o">=</span><span class="n">min_stable_dist</span>
+    <span class="p">)</span>
+    <span class="n">aligned</span> <span class="o">=</span> <span class="n">align_instances</span><span class="p">(</span><span class="n">all_points_arrays</span><span class="p">,</span> <span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span><span class="p">,</span> <span class="n">rotate_on_node_a</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">aligned</span></div>
+
+
+<div class="viewcode-block" id="get_mean_and_std_for_points"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.get_mean_and_std_for_points">[docs]</a><span class="k">def</span> <span class="nf">get_mean_and_std_for_points</span><span class="p">(</span>
+    <span class="n">aligned_points_arrays</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns mean and standard deviation for every node given aligned points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">aligned_points_arrays</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">stdev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">aligned_points_arrays</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">stdev</span></div>
+
+
+<span class="k">def</span> <span class="nf">make_mean_instance</span><span class="p">(</span>
+    <span class="n">aligned_points_arrays</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">std_thresh</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Instance</span><span class="p">:</span>
+    <span class="n">mean</span><span class="p">,</span> <span class="n">stdev</span> <span class="o">=</span> <span class="n">get_mean_and_std_for_points</span><span class="p">(</span><span class="n">aligned_points_arrays</span><span class="p">)</span>
+
+    <span class="c1"># Remove points with standard deviation higher than threshold</span>
+    <span class="k">if</span> <span class="n">std_thresh</span><span class="p">:</span>
+        <span class="n">mean</span><span class="p">[</span><span class="n">stdev</span> <span class="o">&gt;</span> <span class="n">std_thresh</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Instance</span>
+    <span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Point</span>
+
+    <span class="n">OFFSET</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># FIXME</span>
+
+    <span class="n">new_instance</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span>
+        <span class="n">skeleton</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">points</span><span class="o">=</span><span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">OFFSET</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">OFFSET</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">mean</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_instance</span>
+
+
+<div class="viewcode-block" id="align_instance_points"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.align_instance_points">[docs]</a><span class="k">def</span> <span class="nf">align_instance_points</span><span class="p">(</span><span class="n">source_points_array</span><span class="p">,</span> <span class="n">target_points_array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transforms source for best fit on to target.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Find (furthest) pair of points in target to use for alignment</span>
+    <span class="n">pairwise_distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+        <span class="n">target_points_array</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">target_points_array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span>
+        <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">pairwise_distances</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="n">pairwise_distances</span><span class="o">.</span><span class="n">shape</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Align source to target</span>
+    <span class="n">source_line</span> <span class="o">=</span> <span class="n">source_points_array</span><span class="p">[</span><span class="n">node_a</span><span class="p">]</span> <span class="o">-</span> <span class="n">source_points_array</span><span class="p">[</span><span class="n">node_b</span><span class="p">]</span>
+    <span class="n">target_line</span> <span class="o">=</span> <span class="n">target_points_array</span><span class="p">[</span><span class="n">node_a</span><span class="p">]</span> <span class="o">-</span> <span class="n">target_points_array</span><span class="p">[</span><span class="n">node_b</span><span class="p">]</span>
+
+    <span class="n">source_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">source_line</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">source_line</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">target_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">target_line</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">target_line</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">rotation_theta</span> <span class="o">=</span> <span class="n">source_theta</span> <span class="o">-</span> <span class="n">target_theta</span>
+    <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rotation_theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rotation_theta</span><span class="p">)</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">]])</span>
+
+    <span class="n">rotated</span> <span class="o">=</span> <span class="n">source_points_array</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="c1"># Shift source to minimize total point different from target</span>
+    <span class="n">target_row_mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">target_points_array</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+        <span class="n">rotated</span><span class="p">[</span><span class="n">target_row_mask</span><span class="p">]</span> <span class="o">-</span> <span class="n">target_points_array</span><span class="p">[</span><span class="n">target_row_mask</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+    <span class="p">)</span>
+    <span class="n">rotated</span> <span class="o">-=</span> <span class="n">shift</span>
+
+    <span class="k">return</span> <span class="n">rotated</span></div>
+
+
+<div class="viewcode-block" id="get_instances_points"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.get_instances_points">[docs]</a><span class="k">def</span> <span class="nf">get_instances_points</span><span class="p">(</span><span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns single (instance, node, 2) matrix with points for all instances.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">inst</span><span class="o">.</span><span class="n">points_array</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="get_template_points_array"><a class="viewcode-back" href="../../../_autosummary/sleap.info.align.html#sleap.info.align.get_template_points_array">[docs]</a><span class="k">def</span> <span class="nf">get_template_points_array</span><span class="p">(</span><span class="n">instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Instance</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns mean of aligned points for instances.&quot;&quot;&quot;</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">get_instances_points</span><span class="p">(</span><span class="n">instances</span><span class="p">)</span>
+
+    <span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span> <span class="o">=</span> <span class="n">get_most_stable_node_pair</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">min_dist</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span>
+
+    <span class="n">aligned</span> <span class="o">=</span> <span class="n">align_instances</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">node_a</span><span class="o">=</span><span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span><span class="o">=</span><span class="n">node_b</span><span class="p">)</span>
+    <span class="n">points_mean</span><span class="p">,</span> <span class="n">points_std</span> <span class="o">=</span> <span class="n">get_mean_and_std_for_points</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">points_mean</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># filename = &quot;tests/data/json_format_v2/centered_pair_predictions.json&quot;</span>
+    <span class="c1"># filename = &quot;/Volumes/fileset-mmurthy/shruthi/code/sleap_expts/preds/screen_all.5pts_tmp_augment_200122/191210_102108_18159112_rig3_2.preds.h5&quot;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;/Volumes/fileset-mmurthy/talmo/wt_gold_labeling/100919.sleap_wt_gold.13pt_init.n=288.junyu.h5&quot;</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="n">get_instances_points</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">instances</span><span class="p">())</span>
+    <span class="n">get_stable_node_pairs</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">node_names</span><span class="p">))</span>
+
+    <span class="c1"># import time</span>
+    <span class="c1">#</span>
+    <span class="c1"># t0 = time.time()</span>
+    <span class="c1"># labels.add_instance(</span>
+    <span class="c1">#     frame=labels.find_first(video=labels.videos[0]),</span>
+    <span class="c1">#     instance=make_mean_instance(align_instances(points, 12, 0))</span>
+    <span class="c1"># )</span>
+    <span class="c1"># print(labels.find_first(video=labels.videos[0]))</span>
+    <span class="c1"># print(&quot;time&quot;, time.time() - t0)</span>
+    <span class="c1">#</span>
+    <span class="c1"># Labels.save_file(labels, &quot;mean.h5&quot;)</span>
+
+    <span class="c1"># R = np.array(((c, -s), (s, c)))</span>
+    <span class="c1"># a_rotated = a.dot(R)</span>
+    <span class="c1"># a_rotated += a[0] - a_rotated[0]</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

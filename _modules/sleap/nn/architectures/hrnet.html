@@ -1,0 +1,746 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.architectures.hrnet &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.architectures.hrnet</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;(Higher)HRNet backbone.</span>
+
+<span class="sd">This implementation is based on the PyTorch implementation of HRNet, modified to</span>
+<span class="sd">implement HigherHRNet&#39;s configuration and new deconvolution heads.</span>
+
+<span class="sd">Refs:</span>
+<span class="sd">https://arxiv.org/pdf/1902.09212.pdf</span>
+<span class="sd">https://arxiv.org/pdf/1908.10357.pdf</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
+
+
+<div class="viewcode-block" id="adjust_prefix"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.adjust_prefix">[docs]</a><span class="k">def</span> <span class="nf">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a delimiter if the prefix is not empty.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">name_prefix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">name_prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name_prefix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span>
+            <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+
+    <span class="k">return</span> <span class="n">name_prefix</span></div>
+
+
+<span class="k">def</span> <span class="nf">conv_block</span><span class="p">(</span>
+    <span class="n">x_in</span><span class="p">,</span>
+    <span class="n">filters</span><span class="p">,</span>
+    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">with_batch_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>
+    <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">strides</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">x_in</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">with_batch_norm</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">activation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span>
+            <span class="n">activation</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">activation</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<div class="viewcode-block" id="simple_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.simple_block">[docs]</a><span class="k">def</span> <span class="nf">simple_block</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">downsampling_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a basic residual convolutional block.&quot;&quot;&quot;</span>
+
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+    <span class="c1"># Sub-block 1</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1&quot;</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="c1"># Sub-block 2</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2&quot;</span><span class="p">,</span>
+        <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Increase the number of filters in the input if needed.</span>
+    <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">x_in</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+            <span class="n">x_in</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_residual&quot;</span><span class="p">,</span>
+            <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Add residual and output result with non-linearity.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;add_residual&quot;</span><span class="p">)([</span><span class="n">x_in</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;relu_out&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="bottleneck_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.bottleneck_block">[docs]</a><span class="k">def</span> <span class="nf">bottleneck_block</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">expansion_rate</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a convolutional block with bottleneck.&quot;&quot;&quot;</span>
+
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+    <span class="c1"># Initial 1x1 conv.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_in&quot;</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="c1"># Middle 3x3 conv.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_3x3&quot;</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="c1"># Channel expansion with 1x1 conv.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_expand&quot;</span><span class="p">,</span>
+        <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Increase the number of filters in the input if needed.</span>
+    <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">x_in</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+            <span class="n">x_in</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_residual&quot;</span><span class="p">,</span>
+            <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Add residual and output result with non-linearity.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;add_residual&quot;</span><span class="p">)([</span><span class="n">x_in</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;relu_out&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<span class="k">def</span> <span class="nf">downsampling_block</span><span class="p">(</span>
+    <span class="n">x_in</span><span class="p">,</span> <span class="n">down_steps</span><span class="p">,</span> <span class="n">output_filters</span><span class="p">,</span> <span class="n">relu_before_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="n">intermediate_activation</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">relu_before_output</span><span class="p">:</span>
+        <span class="n">intermediate_activation</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+    <span class="n">input_filters</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">down_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># In the intermediate downsampling steps we don&#39;t change the number of filters.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">input_filters</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">intermediate_activation</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;strided_conv&quot;</span><span class="p">,</span>
+            <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">down</span><span class="si">{</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">filters</span><span class="o">=</span><span class="n">output_filters</span><span class="p">,</span>
+        <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;strided_conv&quot;</span><span class="p">,</span>
+        <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">down</span><span class="si">{</span><span class="n">down_steps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">upsampling_block</span><span class="p">(</span>
+    <span class="n">x_in</span><span class="p">,</span> <span class="n">up_steps</span><span class="p">,</span> <span class="n">output_filters</span><span class="p">,</span> <span class="n">interp_method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">filters</span><span class="o">=</span><span class="n">output_filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_1x1&quot;</span><span class="p">,</span>
+        <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">up</span><span class="si">{</span><span class="n">up_steps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">2</span> <span class="o">**</span> <span class="n">up_steps</span><span class="p">,</span>
+        <span class="n">interpolation</span><span class="o">=</span><span class="n">interp_method</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">up</span><span class="si">{</span><span class="n">up_steps</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">interp_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">deconv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;concat_in&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2DTranspose</span><span class="p">(</span>
+        <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+        <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+        <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;deconv&quot;</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">make_transition_layers</span><span class="p">(</span>
+    <span class="n">source_outputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span>
+    <span class="n">targets_filters</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;transition&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_outputs</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="n">source_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_outputs</span><span class="p">]</span>
+
+    <span class="n">targets_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">target_down_steps</span><span class="p">,</span> <span class="n">target_filters</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">targets_filters</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">target_down_steps</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">source_outputs</span><span class="p">):</span>
+            <span class="c1"># There exists a source output at the corresponding target scale.</span>
+            <span class="n">source_output</span> <span class="o">=</span> <span class="n">source_outputs</span><span class="p">[</span><span class="n">target_down_steps</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">source_output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">target_filters</span><span class="p">:</span>
+                <span class="c1"># The number of filters match up, just pass it through.</span>
+                <span class="n">targets_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_output</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Source and target have different number of filters, adjust with a conv</span>
+                <span class="c1"># block.</span>
+                <span class="n">targets_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">conv_block</span><span class="p">(</span>
+                        <span class="n">source_output</span><span class="p">,</span>
+                        <span class="n">target_filters</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;conv_at_</span><span class="si">{</span><span class="n">target_down_steps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">name_prefix</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The source has fewer outputs than the target, so we&#39;ll downsample from the</span>
+            <span class="c1"># smallest source available.</span>
+            <span class="n">source_output</span> <span class="o">=</span> <span class="n">source_outputs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">source_down_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">source_outputs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+            <span class="n">targets_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">downsampling_block</span><span class="p">(</span>
+                    <span class="n">x_in</span><span class="o">=</span><span class="n">source_output</span><span class="p">,</span>
+                    <span class="n">down_steps</span><span class="o">=</span><span class="n">target_down_steps</span> <span class="o">-</span> <span class="n">source_down_steps</span><span class="p">,</span>
+                    <span class="n">output_filters</span><span class="o">=</span><span class="n">target_filters</span><span class="p">,</span>
+                    <span class="n">relu_before_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">name_prefix</span><span class="o">=</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.downsamp_</span><span class="si">{</span><span class="n">source_down_steps</span><span class="si">}</span><span class="s2">_to_</span><span class="si">{</span><span class="n">target_down_steps</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">targets_inputs</span>
+
+
+<span class="k">def</span> <span class="nf">make_branch</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">block_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">bottleneck</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">bottleneck</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">bottleneck_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">block</span><span class="si">{</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">simple_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">block</span><span class="si">{</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">make_fuse_layers</span><span class="p">(</span><span class="n">branches_outputs</span><span class="p">,</span> <span class="n">single_scale_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">branches_outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must have more than 1 branch to create fuse layers.&quot;</span><span class="p">)</span>
+
+    <span class="n">n_fused_outputs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">branches_outputs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">single_scale_output</span><span class="p">:</span>
+        <span class="c1"># When doing single scale output, all outputs will be fused into the largest</span>
+        <span class="c1"># scale.</span>
+        <span class="n">n_fused_outputs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">fused_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">target_output</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">branches_outputs</span><span class="p">[:</span><span class="n">n_fused_outputs</span><span class="p">]):</span>
+        <span class="c1"># Target scale is 1 / (2 ** i)</span>
+        <span class="n">target_filters</span> <span class="o">=</span> <span class="n">target_output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># We start with the output at the current scale.</span>
+        <span class="n">fused_output_i</span> <span class="o">=</span> <span class="n">target_output</span>
+
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">source_output</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">branches_outputs</span><span class="p">):</span>
+            <span class="c1"># Source scale is 1 / (2 ** j)</span>
+
+            <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
+                <span class="c1"># Branch j has a smaller scale than i: Upsample to scale i.</span>
+                <span class="n">source_output</span> <span class="o">=</span> <span class="n">upsampling_block</span><span class="p">(</span>
+                    <span class="n">x_in</span><span class="o">=</span><span class="n">source_output</span><span class="p">,</span>
+                    <span class="n">up_steps</span><span class="o">=</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span><span class="p">,</span>
+                    <span class="n">output_filters</span><span class="o">=</span><span class="n">target_filters</span><span class="p">,</span>
+                    <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">fuse_</span><span class="si">{</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">_to_</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">j</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span>
+                <span class="c1"># No need to add the target to itself.</span>
+                <span class="k">continue</span>
+
+            <span class="k">elif</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">i</span><span class="p">:</span>
+                <span class="c1"># Branch j has a larger scale than i: downsample to scale i.</span>
+                <span class="n">source_output</span> <span class="o">=</span> <span class="n">downsampling_block</span><span class="p">(</span>
+                    <span class="n">x_in</span><span class="o">=</span><span class="n">source_output</span><span class="p">,</span>
+                    <span class="n">down_steps</span><span class="o">=</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">,</span>
+                    <span class="n">output_filters</span><span class="o">=</span><span class="n">target_filters</span><span class="p">,</span>
+                    <span class="n">relu_before_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">fuse_</span><span class="si">{</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">_to_</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Add (scale adjusted) source to target output.</span>
+            <span class="n">fused_output_i</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">fuse_</span><span class="si">{</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">_to_</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">.add&quot;</span>
+            <span class="p">)([</span><span class="n">fused_output_i</span><span class="p">,</span> <span class="n">source_output</span><span class="p">])</span>
+
+        <span class="c1"># Fused output at the current scale now has every other branch added to it.</span>
+        <span class="c1"># Throw a nonlinearity on and add to the list of final outputs.</span>
+        <span class="n">fused_output_i</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span>
+            <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">fused_</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">.relu&quot;</span>
+        <span class="p">)(</span><span class="n">fused_output_i</span><span class="p">)</span>
+        <span class="n">fused_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fused_output_i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fused_outputs</span>
+
+
+<span class="k">def</span> <span class="nf">make_stage</span><span class="p">(</span>
+    <span class="n">source_outputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="n">branches_filters</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">modules</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">branches_blocks</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">bottleneck</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">single_scale_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;stage&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+
+    <span class="c1"># Make transition layers for the inputs.</span>
+    <span class="n">branches_inputs</span> <span class="o">=</span> <span class="n">make_transition_layers</span><span class="p">(</span>
+        <span class="n">source_outputs</span><span class="p">,</span> <span class="n">branches_filters</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.transition&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">branches_blocks</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="c1"># Convert scalar specification of the number of blocks per branch to list of</span>
+        <span class="c1"># matching length.</span>
+        <span class="n">branches_blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">branches_blocks</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">branches_filters</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">modules</span><span class="p">):</span>
+
+        <span class="c1"># Make the branches for this stage -&gt; module.</span>
+        <span class="n">branches_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">branch_input</span><span class="p">,</span> <span class="n">branch_filters</span><span class="p">,</span> <span class="n">branch_blocks</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">branches_inputs</span><span class="p">,</span> <span class="n">branches_filters</span><span class="p">,</span> <span class="n">branches_blocks</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">branches_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">make_branch</span><span class="p">(</span>
+                    <span class="n">branch_input</span><span class="p">,</span>
+                    <span class="n">block_filters</span><span class="o">=</span><span class="n">branch_filters</span><span class="p">,</span>
+                    <span class="n">blocks</span><span class="o">=</span><span class="n">branch_blocks</span><span class="p">,</span>
+                    <span class="n">bottleneck</span><span class="o">=</span><span class="n">bottleneck</span><span class="p">,</span>
+                    <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.module</span><span class="si">{</span><span class="n">module</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">.branch</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">branches_outputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># If we have more than one branch, we&#39;ll fuse each of the outputs to each</span>
+            <span class="c1"># other before returning.</span>
+            <span class="n">module_single_scale_output</span> <span class="o">=</span> <span class="n">single_scale_output</span>
+            <span class="k">if</span> <span class="n">module</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">modules</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">module_single_scale_output</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">branches_outputs</span> <span class="o">=</span> <span class="n">make_fuse_layers</span><span class="p">(</span>
+                <span class="n">branches_outputs</span><span class="p">,</span>
+                <span class="n">single_scale_output</span><span class="o">=</span><span class="n">module_single_scale_output</span><span class="p">,</span>
+                <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.module</span><span class="si">{</span><span class="n">module</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">branches_inputs</span> <span class="o">=</span> <span class="n">branches_outputs</span>
+
+    <span class="k">return</span> <span class="n">branches_outputs</span>
+
+
+<span class="k">def</span> <span class="nf">make_deconv_module</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="p">,</span>
+    <span class="n">output_filters</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="p">,</span>
+    <span class="n">deconv_filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">bottleneck</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">deconv_residual_blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">deconv_residual_block_filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">bilinear_upsampling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">name_prefix</span> <span class="o">=</span> <span class="n">adjust_prefix</span><span class="p">(</span><span class="n">name_prefix</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">bilinear_upsampling</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;concat_in&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">deconv_feats</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span>
+            <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="s2">&quot;upsample&quot;</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">deconv_feats</span> <span class="o">=</span> <span class="n">deconv_block</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">deconv_filters</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">name_prefix</span><span class="o">=</span><span class="n">name_prefix</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">deconv_feats</span>
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">deconv_residual_blocks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">bottleneck</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">bottleneck_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="n">deconv_residual_block_filters</span><span class="p">,</span>
+                <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">block</span><span class="si">{</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">simple_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="n">deconv_residual_block_filters</span><span class="p">,</span>
+                <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_prefix</span><span class="si">}</span><span class="s2">block</span><span class="si">{</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">output_filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">with_batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name_prefix</span> <span class="o">+</span> <span class="n">output_name</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">deconv_feats</span><span class="p">,</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">make_stem</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">downsampling_steps</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">downsampling_steps</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">filters</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;strided_conv</span><span class="si">{</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">name_prefix</span><span class="o">=</span><span class="s2">&quot;stem&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;stem.relu_out&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">make_first_stage</span><span class="p">(</span>
+    <span class="n">x_in</span><span class="p">,</span> <span class="n">bottleneck</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">block_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">output_filters</span><span class="o">=</span><span class="mi">32</span>
+<span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">bottleneck</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">bottleneck_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;stage1.block</span><span class="si">{</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">simple_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;stage1.block</span><span class="si">{</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">output_filters</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_out&quot;</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="s2">&quot;stage1&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">make_hrnet_backbone</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">initial_downsampling_steps</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stem_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">bottleneck</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">make_stem</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">stem_filters</span><span class="p">,</span> <span class="n">downsampling_steps</span><span class="o">=</span><span class="n">initial_downsampling_steps</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">make_first_stage</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">bottleneck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">block_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">output_filters</span><span class="o">=</span><span class="n">C</span>
+    <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">make_stage</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">branches_filters</span><span class="o">=</span><span class="p">[</span><span class="n">C</span><span class="p">,</span> <span class="n">C</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span> <span class="n">modules</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottleneck</span><span class="o">=</span><span class="n">bottleneck</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;stage2&quot;</span>
+    <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">make_stage</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">branches_filters</span><span class="o">=</span><span class="p">[</span><span class="n">C</span><span class="p">,</span> <span class="n">C</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">C</span> <span class="o">*</span> <span class="mi">4</span><span class="p">],</span>
+        <span class="n">modules</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">bottleneck</span><span class="o">=</span><span class="n">bottleneck</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;stage3&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">make_stage</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">branches_filters</span><span class="o">=</span><span class="p">[</span><span class="n">C</span><span class="p">,</span> <span class="n">C</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">C</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">C</span> <span class="o">*</span> <span class="mi">8</span><span class="p">],</span>
+        <span class="n">modules</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">bottleneck</span><span class="o">=</span><span class="n">bottleneck</span><span class="p">,</span>
+        <span class="n">single_scale_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;stage4&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;HRNet</span><span class="si">{</span><span class="n">C</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">make_higher_hrnet_heads</span><span class="p">(</span>
+    <span class="n">hrnet_backbone</span><span class="p">,</span>
+    <span class="n">n_output_channels</span><span class="p">,</span>
+    <span class="n">n_deconv_modules</span><span class="p">,</span>
+    <span class="n">bottleneck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">deconv_filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">bilinear_upsampling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+
+    <span class="n">backbone_feats</span> <span class="o">=</span> <span class="n">hrnet_backbone</span><span class="o">.</span><span class="n">output</span>
+
+    <span class="c1"># Output at 1/4 resolution (by default):</span>
+    <span class="n">output_small</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span>
+        <span class="n">backbone_feats</span><span class="p">,</span>
+        <span class="n">n_output_channels</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">with_batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;output_small&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">all_feats</span> <span class="o">=</span> <span class="p">[</span><span class="n">backbone_feats</span><span class="p">]</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_small</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">deconv_module</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_deconv_modules</span><span class="p">):</span>
+        <span class="n">deconv_inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_feats</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">outputs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">feats</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">make_deconv_module</span><span class="p">(</span>
+            <span class="n">deconv_inputs</span><span class="p">,</span>
+            <span class="n">output_filters</span><span class="o">=</span><span class="n">n_output_channels</span><span class="p">,</span>
+            <span class="n">bottleneck</span><span class="o">=</span><span class="n">bottleneck</span><span class="p">,</span>
+            <span class="n">deconv_filters</span><span class="o">=</span><span class="n">deconv_filters</span><span class="p">,</span>
+            <span class="n">bilinear_upsampling</span><span class="o">=</span><span class="n">bilinear_upsampling</span><span class="p">,</span>
+            <span class="n">output_name</span><span class="o">=</span><span class="s2">&quot;deconv_output&quot;</span><span class="p">,</span>
+            <span class="n">name_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;deconv_module</span><span class="si">{</span><span class="n">deconv_module</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">all_feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="n">hrnet_backbone</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+        <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hrnet_backbone</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.deconv</span><span class="si">{</span><span class="n">n_deconv_modules</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span>
+
+
+<div class="viewcode-block" id="HigherHRNet"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">HigherHRNet</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;HigherHRNet backbone.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        C: The variant of HRNet to use. The most common is HRNet32, which has ~30M</span>
+<span class="sd">            params. This number is effectively the number of filters at the highest</span>
+<span class="sd">            resolution output.</span>
+<span class="sd">        initial_downsampling_steps: Number of initial downsampling steps at the stem.</span>
+<span class="sd">            Decrease if this introduces too much loss of resolution from the initial</span>
+<span class="sd">            images.</span>
+<span class="sd">        n_deconv_modules: Number of upsampling steps to perform at the head. If this is</span>
+<span class="sd">            equal to initial_downsampling_steps, the output will be at the same scale as</span>
+<span class="sd">            the input.</span>
+<span class="sd">        bottleneck: If True, uses bottleneck blocks instead of simple residual blocks.</span>
+<span class="sd">        deconv_filters: Number of filters to use in deconv blocks if using transposed</span>
+<span class="sd">            convolutions.</span>
+<span class="sd">        bilinear_upsampling: Use bilinear upsampling instead of transposed convolutions</span>
+<span class="sd">            at the output heads.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">C</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">18</span>
+    <span class="n">initial_downsampling_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">n_deconv_modules</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">bottleneck</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">deconv_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">bilinear_upsampling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">stem_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+
+<div class="viewcode-block" id="HigherHRNet.output"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">n_output_channels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the layers for this backbone and return the output tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input 4D tf.Tensor.</span>
+<span class="sd">            n_output_channels: The number of final output channels.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            higher_hrnet_model: A tf.keras.model whose outputs are a list of tf.Tensors</span>
+<span class="sd">                at each scale of the deconv_modules.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">hrnet_backbone</span> <span class="o">=</span> <span class="n">make_hrnet_backbone</span><span class="p">(</span>
+            <span class="n">x_in</span><span class="p">,</span>
+            <span class="n">C</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">C</span><span class="p">,</span>
+            <span class="n">initial_downsampling_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_downsampling_steps</span><span class="p">,</span>
+            <span class="n">bottleneck</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bottleneck</span><span class="p">,</span>
+            <span class="n">stem_filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_filters</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">higher_hrnet_model</span> <span class="o">=</span> <span class="n">make_higher_hrnet_heads</span><span class="p">(</span>
+            <span class="n">hrnet_backbone</span><span class="p">,</span>
+            <span class="n">n_output_channels</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_deconv_modules</span><span class="p">,</span>
+            <span class="n">bottleneck</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bottleneck</span><span class="p">,</span>
+            <span class="n">deconv_filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deconv_filters</span><span class="p">,</span>
+            <span class="n">bilinear_upsampling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bilinear_upsampling</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">higher_hrnet_model</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">down_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of downsampling steps in the model.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_downsampling_steps</span> <span class="o">+</span> <span class="mi">3</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns relative scaling factor of this backbone.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_downsampling_steps</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_deconv_modules</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

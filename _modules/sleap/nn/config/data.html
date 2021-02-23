@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.config.data &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.config.data</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">sleap</span>
+
+
+<div class="viewcode-block" id="LabelsConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LabelsConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Labels configuration.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        training_labels: A filepath to a saved labels file containing user labeled</span>
+<span class="sd">            frames to use for generating the training set.</span>
+<span class="sd">        validation_labels: A filepath to a saved labels file containing user labeled</span>
+<span class="sd">            frames to use for generating validation data. These will not be trained on</span>
+<span class="sd">            directly, but will be used to tune hyperparameters such as learning rate or</span>
+<span class="sd">            early stopping. If not specified, the validation set will be sampled from</span>
+<span class="sd">            the training labels.</span>
+<span class="sd">        validation_fraction: Float between 0 and 1 specifying the fraction of the</span>
+<span class="sd">            training set to sample for generating the validation set. The remaining</span>
+<span class="sd">            labeled frames will be left in the training set. If the `validation_labels`</span>
+<span class="sd">            are already specified, this has no effect.</span>
+<span class="sd">        test_labels: A filepath to a saved labels file containing user labeled frames to</span>
+<span class="sd">            use for generating the test set. This is typically a held out set of</span>
+<span class="sd">            examples that are never used for training or hyperparameter tuning (like the</span>
+<span class="sd">            validation set). This is optional, but useful for benchmarking as metrics</span>
+<span class="sd">            can be computed from these data during model optimization. This is also</span>
+<span class="sd">            useful to explicitly keep track of the test set that should be used when</span>
+<span class="sd">            multiple splits are created for training.</span>
+<span class="sd">        search_path_hints: List of paths to use for searching for missing data. This is</span>
+<span class="sd">            useful when labels and data are moved across computers, network storage, or</span>
+<span class="sd">            operating systems that may have different absolute paths than those stored</span>
+<span class="sd">            in the labels. This has no effect if the labels were exported as a package</span>
+<span class="sd">            with the user labeled data.</span>
+<span class="sd">        skeletons: List of `sleap.Skeleton` instances that can be used by the model. If</span>
+<span class="sd">            not specified, these will be pulled out of the labels during training, but</span>
+<span class="sd">            must be specified for inference in order to generate predicted instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">training_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">validation_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">validation_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">test_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">search_path_hints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">skeletons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">sleap</span><span class="o">.</span><span class="n">Skeleton</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PreprocessingConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.data.html#sleap.nn.config.data.PreprocessingConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PreprocessingConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Preprocessing configuration.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        ensure_rgb: If True, converts the image to RGB if not already.</span>
+<span class="sd">        ensure_grayscale: If True, converts the image to grayscale if not already.</span>
+<span class="sd">        imagenet_mode: Specifies an ImageNet-based normalization mode commonly used in</span>
+<span class="sd">            `tf.keras.applications`-based pretrained models. This has no effect if None</span>
+<span class="sd">            or not specified.</span>
+<span class="sd">            Valid values are:</span>
+<span class="sd">            &quot;tf&quot;: Values will be scaled to [-1, 1], expanded to RGB if grayscale. This</span>
+<span class="sd">                preprocessing mode is required when using pretrained ResNetV2,</span>
+<span class="sd">                MobileNetV1, MobileNetV2 and NASNet models.</span>
+<span class="sd">            &quot;caffe&quot;: Values will be scaled to [0, 255], expanded to RGB if grayscale,</span>
+<span class="sd">                RGB channels flipped to BGR, and subtracted by a fixed mean. This</span>
+<span class="sd">                preprocessing mode is required when using pretrained ResNetV1 models.</span>
+<span class="sd">            &quot;torch&quot;: Values will be scaled to [0, 1], expanded to RGB if grayscale,</span>
+<span class="sd">                subtracted by a fixed mean, and scaled by fixed standard deviation. This</span>
+<span class="sd">                preprocessing mode is required when using pretrained DenseNet models.</span>
+<span class="sd">        input_scale: Scalar float specifying scaling factor to resize raw images by.</span>
+<span class="sd">            This can considerably increase performance and memory requirements at the</span>
+<span class="sd">            cost of accuracy. Generally, it should only be used when the raw images are</span>
+<span class="sd">            at a much higher resolution than the smallest features in the data.</span>
+<span class="sd">        pad_to_stride: Number of pixels that the image size must be divisible by.</span>
+<span class="sd">            If &gt; 1, this will pad the bottom and right of the images to ensure they meet</span>
+<span class="sd">            this divisibility criteria. Padding is applied after the scaling specified</span>
+<span class="sd">            in the `input_scale` attribute. If set to None, this will be automatically</span>
+<span class="sd">            detected from the model architecture. This must be divisible by the model&#39;s</span>
+<span class="sd">            max stride (typically 32). This padding will be ignored when instance</span>
+<span class="sd">            cropping inputs since the crop size should already be divisible by the</span>
+<span class="sd">            model&#39;s max stride.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ensure_rgb</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">ensure_grayscale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">imagenet_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+            <span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="s2">&quot;tf&quot;</span><span class="p">,</span> <span class="s2">&quot;caffe&quot;</span><span class="p">,</span> <span class="s2">&quot;torch&quot;</span><span class="p">])</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">input_scaling</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">pad_to_stride</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="InstanceCroppingConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.data.html#sleap.nn.config.data.InstanceCroppingConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">InstanceCroppingConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Instance cropping configuration.</span>
+
+<span class="sd">    These are only used in topdown or centroid models.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        center_on_part: String name of the part to center the instance to. If None or</span>
+<span class="sd">            not specified, instances will be centered to the centroid of their bounding</span>
+<span class="sd">            box. This value will be used for both topdown and centroid models. It must</span>
+<span class="sd">            match the name of a node on the skeleton.</span>
+<span class="sd">        crop_size: Integer size of bounding box height and width to crop out of the full</span>
+<span class="sd">            image. This should be greater than the largest size of the instances in</span>
+<span class="sd">            pixels. The crop is applied after any input scaling, so be sure to adjust</span>
+<span class="sd">            this to changes in the input image scale. If set to None, this will be</span>
+<span class="sd">            automatically detected from the data during training or from the model input</span>
+<span class="sd">            layer during inference. This must be divisible by the model&#39;s max stride</span>
+<span class="sd">            (typically 32).</span>
+<span class="sd">        crop_size_detection_padding: Integer specifying how much extra padding should be</span>
+<span class="sd">            applied around the instance bounding boxes when automatically detecting the</span>
+<span class="sd">            appropriate crop size from the data. No effect if the `crop_size` is</span>
+<span class="sd">            already specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">center_on_part</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">crop_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">crop_size_detection_padding</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span></div>
+
+
+<div class="viewcode-block" id="DataConfig"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.config.data.html#sleap.nn.config.data.DataConfig">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DataConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Data configuration.</span>
+
+<span class="sd">    labels: Configuration options related to user labels for training or testing.</span>
+<span class="sd">    preprocessing: Configuration options related to data preprocessing.</span>
+<span class="sd">    instance_cropping: Configuration options related to instance cropping for centroid</span>
+<span class="sd">        and topdown models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">LabelsConfig</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">LabelsConfig</span><span class="p">)</span>
+    <span class="n">preprocessing</span><span class="p">:</span> <span class="n">PreprocessingConfig</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">PreprocessingConfig</span><span class="p">)</span>
+    <span class="n">instance_cropping</span><span class="p">:</span> <span class="n">InstanceCroppingConfig</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="n">InstanceCroppingConfig</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,499 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.util &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.util</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A miscellaneous set of utility functions. Try not to put things in here</span>
+<span class="sd">unless they really have no other place.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">resource_filename</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span> <span class="k">as</span> <span class="nn">h5</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">psutil</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">rapidjson</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">sleap.io</span> <span class="kn">import</span> <span class="n">pathutils</span>
+
+
+<div class="viewcode-block" id="json_loads"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.json_loads">[docs]</a><span class="k">def</span> <span class="nf">json_loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple wrapper around the JSON decoder we are using.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        json_str: JSON string to decode.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Result of decoding JSON string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rapidjson</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="json_dumps"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.json_dumps">[docs]</a><span class="k">def</span> <span class="nf">json_dumps</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple wrapper around the JSON encoder we are using.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        d: The dict to write.</span>
+<span class="sd">        filename: The filename to write to.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">rapidjson</span>
+
+    <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">encoder</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">encoder</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="attr_to_dtype"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.attr_to_dtype">[docs]</a><span class="k">def</span> <span class="nf">attr_to_dtype</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts classes with basic types to numpy composite dtypes.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        cls: class to convert</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy dtype.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">dtype_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">h5</span><span class="o">.</span><span class="n">special_dtype</span><span class="p">(</span><span class="n">vlen</span><span class="o">=</span><span class="nb">str</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="n">field</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;numpy dtype for </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2"> cannot be constructed because no &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;type information found. Make sure each field is type annotated.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">field</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+            <span class="n">dtype_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;numpy dtype for </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2"> cannot be constructed because no &quot;</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">field</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype_list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="usable_cpu_count"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.usable_cpu_count">[docs]</a><span class="k">def</span> <span class="nf">usable_cpu_count</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets number of CPUs usable by the current process.</span>
+
+<span class="sd">    Takes into consideration cpusets restrictions.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The number of usable cpus</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sched_getaffinity</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">psutil</span><span class="o">.</span><span class="n">Process</span><span class="p">()</span><span class="o">.</span><span class="n">cpu_affinity</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="save_dict_to_hdf5"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.save_dict_to_hdf5">[docs]</a><span class="k">def</span> <span class="nf">save_dict_to_hdf5</span><span class="p">(</span><span class="n">h5file</span><span class="p">:</span> <span class="n">h5</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dic</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Saves dictionary to an HDF5 file.</span>
+
+<span class="sd">    Calls itself recursively if items in dictionary are not</span>
+<span class="sd">    `np.ndarray`, `np.int64`, `np.float64`, `str`, or bytes.</span>
+<span class="sd">    Objects must be iterable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        h5file: The HDF5 filename object to save the data to.</span>
+<span class="sd">            Assume it is open.</span>
+<span class="sd">        path: The path to group save the dict under.</span>
+<span class="sd">        dic: The dict to save.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If type for item in dict cannot be saved.</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dic</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">items_encoded</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">items_encoded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">items_encoded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+
+            <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">items_encoded</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">)):</span>
+            <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">save_dict_to_hdf5</span><span class="p">(</span><span class="n">h5file</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot save </span><span class="si">%s</span><span class="s2"> type&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="frame_list"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.frame_list">[docs]</a><span class="k">def</span> <span class="nf">frame_list</span><span class="p">(</span><span class="n">frame_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts &#39;n-m&#39; string to list of ints.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        frame_str: string representing range</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of ints, or None if string does not represent valid range.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Handle ranges of frames. Must be of the form &quot;1-200&quot; (or &quot;1,-200&quot;)</span>
+    <span class="k">if</span> <span class="s2">&quot;-&quot;</span> <span class="ow">in</span> <span class="n">frame_str</span><span class="p">:</span>
+        <span class="n">min_max</span> <span class="o">=</span> <span class="n">frame_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="n">min_frame</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_max</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span>
+        <span class="n">max_frame</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_max</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">min_frame</span><span class="p">,</span> <span class="n">max_frame</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">frame_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="uniquify"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.uniquify">[docs]</a><span class="k">def</span> <span class="nf">uniquify</span><span class="p">(</span><span class="n">seq</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Hashable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns unique elements from list, preserving order.</span>
+
+<span class="sd">    Note: This will not work on Python 3.5 or lower since dicts don&#39;t</span>
+<span class="sd">    preserve order.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        seq: The list to remove duplicates from.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The unique elements from the input list extracted in original</span>
+<span class="sd">        order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Raymond Hettinger</span>
+    <span class="c1"># https://twitter.com/raymondh/status/944125570534621185</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="weak_filename_match"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.weak_filename_match">[docs]</a><span class="k">def</span> <span class="nf">weak_filename_match</span><span class="p">(</span><span class="n">filename_a</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename_b</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if paths probably point to same file.</span>
+
+<span class="sd">    Compares the filename and names of two directories up.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename_a: first path to check</span>
+<span class="sd">        filename_b: path to check against first path</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if the paths probably match.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># convert all path separators to /</span>
+    <span class="n">filename_a</span> <span class="o">=</span> <span class="n">filename_a</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="n">filename_b</span> <span class="o">=</span> <span class="n">filename_b</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+    <span class="c1"># remove unique pid so we can match tmp directories for same zip</span>
+    <span class="n">filename_a</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;/tmp_\d+_&quot;</span><span class="p">,</span> <span class="s2">&quot;tmp_&quot;</span><span class="p">,</span> <span class="n">filename_a</span><span class="p">)</span>
+    <span class="n">filename_b</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;/tmp_\d+_&quot;</span><span class="p">,</span> <span class="s2">&quot;tmp_&quot;</span><span class="p">,</span> <span class="n">filename_b</span><span class="p">)</span>
+
+    <span class="c1"># check if last three parts of path match</span>
+    <span class="k">return</span> <span class="n">filename_a</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">==</span> <span class="n">filename_b</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span></div>
+
+
+<div class="viewcode-block" id="dict_cut"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.dict_cut">[docs]</a><span class="k">def</span> <span class="nf">dict_cut</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for creating subdictionary by numeric indexing of items.</span>
+
+<span class="sd">    Assumes that `dict.items()` will have a fixed order.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        d: The dictionary to &quot;split&quot;</span>
+<span class="sd">        a: Start index of range of items to include in result.</span>
+<span class="sd">        b: End index of range of items to include in result.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary that contains a subset of the items in the original dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">())[</span><span class="n">a</span><span class="p">:</span><span class="n">b</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="get_package_file"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.get_package_file">[docs]</a><span class="k">def</span> <span class="nf">get_package_file</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns full path to specified file within sleap package.&quot;&quot;&quot;</span>
+    <span class="n">package_path</span> <span class="o">=</span> <span class="n">Requirement</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;sleap&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">package_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="get_config_file"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.get_config_file">[docs]</a><span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span>
+    <span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ignore_file_not_found</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the full path to the specified config file.</span>
+
+<span class="sd">    The config file will be at ~/.sleap/&lt;shortname&gt;</span>
+
+<span class="sd">    If that file doesn&#39;t yet exist, we&#39;ll look for a &lt;shortname&gt; file inside</span>
+<span class="sd">    the package config directory (sleap/config) and copy the file into the</span>
+<span class="sd">    user&#39;s config directory (creating the directory if needed).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        shortname: The short filename, e.g., shortcuts.yaml</span>
+<span class="sd">        ignore_file_not_found: If True, then return path for config file</span>
+<span class="sd">            regardless of whether it exists.</span>
+<span class="sd">        get_defaults: If True, then just return the path to default config file.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        FileNotFoundError: If the specified config file cannot be found.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The full path to the specified config file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">get_defaults</span><span class="p">:</span>
+        <span class="n">desired_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;~/.sleap/</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Make sure there&#39;s a ~/.sleap/ directory to store user version of the</span>
+        <span class="c1"># config file.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~/.sleap&quot;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># If we don&#39;t care whether the file exists, just return the path</span>
+        <span class="k">if</span> <span class="n">ignore_file_not_found</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">desired_path</span>
+
+    <span class="c1"># If we do care whether the file exists, check the package version of the</span>
+    <span class="c1"># config file if we can&#39;t find the user version.</span>
+
+    <span class="k">if</span> <span class="n">get_defaults</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">desired_path</span><span class="p">):</span>
+        <span class="n">package_path</span> <span class="o">=</span> <span class="n">get_package_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sleap/config/</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot locate </span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2"> config file at </span><span class="si">{</span><span class="n">desired_path</span><span class="si">}</span><span class="s2"> or </span><span class="si">{</span><span class="n">package_path</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">get_defaults</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">package_path</span>
+
+        <span class="c1"># Copy package version of config file into user config directory.</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">package_path</span><span class="p">,</span> <span class="n">desired_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">desired_path</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_config_yaml</span><span class="p">(</span><span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="n">config_path</span> <span class="o">=</span> <span class="n">get_config_file</span><span class="p">(</span><span class="n">shortname</span><span class="p">,</span> <span class="n">get_defaults</span><span class="o">=</span><span class="n">get_defaults</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">save_config_yaml</span><span class="p">(</span><span class="n">shortname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="n">yaml_path</span> <span class="o">=</span> <span class="n">get_config_file</span><span class="p">(</span><span class="n">shortname</span><span class="p">,</span> <span class="n">ignore_file_not_found</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="make_scoped_dictionary"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.make_scoped_dictionary">[docs]</a><span class="k">def</span> <span class="nf">make_scoped_dictionary</span><span class="p">(</span>
+    <span class="n">flat_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">exclude_nones</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Converts dictionary with scoped keys to dictionary of dictionaries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        flat_dict: The dictionary to convert. Keys should be strings with</span>
+<span class="sd">            `scope.foo` format.</span>
+<span class="sd">        exclude_nodes: Whether to exclude items where value is None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary in which keys are `scope` and values are dictionary with</span>
+<span class="sd">            `foo` (etc) as keys and original value of `scope.foo` as value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scoped_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">flat_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">exclude_nones</span> <span class="ow">or</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">scope</span><span class="p">,</span> <span class="n">subkey</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+            <span class="n">scoped_dict</span><span class="p">[</span><span class="n">scope</span><span class="p">][</span><span class="n">subkey</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="k">return</span> <span class="n">scoped_dict</span></div>
+
+
+<div class="viewcode-block" id="find_files_by_suffix"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.find_files_by_suffix">[docs]</a><span class="k">def</span> <span class="nf">find_files_by_suffix</span><span class="p">(</span>
+    <span class="n">root_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">DirEntry</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns list of files matching suffix, optionally searching in subdirs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        root_dir: Path to directory where we start searching</span>
+<span class="sd">        suffix: File suffix to match (e.g., &#39;.json&#39;)</span>
+<span class="sd">        prefix: Optional file prefix to match</span>
+<span class="sd">        depth: How many subdirectories deep to keep searching</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of os.DirEntry objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">root_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_iterator</span><span class="p">:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">file</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">file_iterator</span><span class="p">]</span>
+
+    <span class="n">subdir_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">file</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+    <span class="n">matching_files</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">file</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+        <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">prefix</span> <span class="ow">or</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">depth</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">subdir_paths</span><span class="p">:</span>
+            <span class="n">matching_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">find_files_by_suffix</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">matching_files</span></div>
+
+
+<div class="viewcode-block" id="open_file"><a class="viewcode-back" href="../../_autosummary/sleap.util.html#sleap.util.open_file">[docs]</a><span class="k">def</span> <span class="nf">open_file</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Opens file (as if double-clicked by user).</span>
+
+<span class="sd">    https://stackoverflow.com/questions/17317219/is-there-an-platform-independent-equivalent-of-os-startfile/17317468#17317468</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">startfile</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">opener</span> <span class="o">=</span> <span class="s2">&quot;open&quot;</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span> <span class="k">else</span> <span class="s2">&quot;xdg-open&quot;</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="n">opener</span><span class="p">,</span> <span class="n">filename</span><span class="p">])</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

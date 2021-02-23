@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.data.augmentation &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.data.augmentation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Transformers for applying data augmentation.&quot;&quot;&quot;</span>
+
+<span class="c1"># Monkey patch for: https://github.com/aleju/imgaug/issues/537</span>
+<span class="c1"># TODO: Fix when PyPI/conda packages are available for version fencing.</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="p">,</span> <span class="s2">&quot;_bit_generator&quot;</span><span class="p">):</span>
+    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">bit_generator</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">_bit_generator</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span>
+<span class="kn">import</span> <span class="nn">imgaug</span> <span class="k">as</span> <span class="nn">ia</span>
+<span class="kn">import</span> <span class="nn">imgaug.augmenters</span> <span class="k">as</span> <span class="nn">iaa</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">AugmentationConfig</span>
+
+
+<div class="viewcode-block" id="ImgaugAugmenter"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ImgaugAugmenter</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Data transformer based on the `imgaug` library.</span>
+
+<span class="sd">    This class can generate a `tf.data.Dataset` from an existing one that generates</span>
+<span class="sd">    image and instance data. Element of the output dataset will have a set of</span>
+<span class="sd">    augmentation transformations applied.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        augmenter: An instance of `imgaug.augmenters.Sequential` that will be applied to</span>
+<span class="sd">            each element of the input dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">augmenter</span><span class="p">:</span> <span class="n">iaa</span><span class="o">.</span><span class="n">Sequential</span>
+
+<div class="viewcode-block" id="ImgaugAugmenter.from_config"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">AugmentationConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ImgaugAugmenter&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create an augmenter from a set of configuration parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: An `AugmentationConfig` instance with the desired parameters.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of this class with the specified augmentation configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">aug_stack</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">rotate</span><span class="p">:</span>
+            <span class="n">aug_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">iaa</span><span class="o">.</span><span class="n">Affine</span><span class="p">(</span>
+                    <span class="n">rotate</span><span class="o">=</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">rotation_min_angle</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">rotation_max_angle</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">translate</span><span class="p">:</span>
+            <span class="n">aug_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">iaa</span><span class="o">.</span><span class="n">Affine</span><span class="p">(</span>
+                    <span class="n">translate_px</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">translate_min</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">translate_max</span><span class="p">),</span>
+                        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">translate_min</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">translate_max</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">scale</span><span class="p">:</span>
+            <span class="n">aug_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iaa</span><span class="o">.</span><span class="n">Affine</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">scale_min</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">scale_max</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">uniform_noise</span><span class="p">:</span>
+            <span class="n">aug_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">iaa</span><span class="o">.</span><span class="n">AddElementwise</span><span class="p">(</span>
+                    <span class="n">value</span><span class="o">=</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">uniform_noise_min_val</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">uniform_noise_max_val</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">gaussian_noise</span><span class="p">:</span>
+            <span class="n">aug_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">iaa</span><span class="o">.</span><span class="n">AdditiveGaussianNoise</span><span class="p">(</span>
+                    <span class="n">loc</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">gaussian_noise_mean</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">gaussian_noise_stddev</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">contrast</span><span class="p">:</span>
+            <span class="n">aug_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">iaa</span><span class="o">.</span><span class="n">GammaContrast</span><span class="p">(</span>
+                    <span class="n">gamma</span><span class="o">=</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">contrast_min_gamma</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">contrast_max_gamma</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">brightness</span><span class="p">:</span>
+            <span class="n">aug_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">iaa</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">brightness_min_val</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">brightness_max_val</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">augmenter</span><span class="o">=</span><span class="n">iaa</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">aug_stack</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that incoming elements are expected to have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;instances&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that outgoing elements will have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_keys</span>
+
+<div class="viewcode-block" id="ImgaugAugmenter.transform_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ds</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a `tf.data.Dataset` with elements containing augmented data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_ds: A dataset with elements that contain the keys &quot;image&quot; and</span>
+<span class="sd">                &quot;instances&quot;. This is typically raw data from a data provider.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `tf.data.Dataset` with the same keys as the input, but with images and</span>
+<span class="sd">            instance points updated with the applied augmentations.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            The &quot;scale&quot; key in examples are not modified when scaling augmentation is</span>
+<span class="sd">            applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Define augmentation function to map over each sample.</span>
+        <span class="k">def</span> <span class="nf">py_augment</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">instances</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local processing function that will not be autographed.&quot;&quot;&quot;</span>
+            <span class="c1"># Ensure that the transformations applied to all data within this</span>
+            <span class="c1"># example are kept consistent.</span>
+            <span class="n">aug_det</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmenter</span><span class="o">.</span><span class="n">to_deterministic</span><span class="p">()</span>
+
+            <span class="c1"># Augment the image.</span>
+            <span class="n">aug_img</span> <span class="o">=</span> <span class="n">aug_det</span><span class="o">.</span><span class="n">augment_image</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+
+            <span class="c1"># Augment each set of points for each instance.</span>
+            <span class="n">aug_instances</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+                <span class="n">kps</span> <span class="o">=</span> <span class="n">ia</span><span class="o">.</span><span class="n">KeypointsOnImage</span><span class="o">.</span><span class="n">from_xy_array</span><span class="p">(</span>
+                    <span class="n">instance</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">aug_instance</span> <span class="o">=</span> <span class="n">aug_det</span><span class="o">.</span><span class="n">augment_keypoints</span><span class="p">(</span><span class="n">kps</span><span class="p">)</span><span class="o">.</span><span class="n">to_xy_array</span><span class="p">()</span>
+                <span class="n">aug_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aug_instance</span><span class="p">)</span>
+
+            <span class="c1"># Convert the results to tensors.</span>
+            <span class="c1"># aug_img = tf.convert_to_tensor(aug_img, dtype=image.dtype)</span>
+
+            <span class="c1"># This will get converted to a rank 3 tensor (n_instances, n_nodes, 2).</span>
+            <span class="n">aug_instances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">aug_instances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># aug_instances = [</span>
+            <span class="c1">#     tf.convert_to_tensor(x, dtype=instances.dtype) for x in aug_instances</span>
+            <span class="c1"># ]</span>
+
+            <span class="k">return</span> <span class="n">aug_img</span><span class="p">,</span> <span class="n">aug_instances</span>
+
+        <span class="k">def</span> <span class="nf">augment</span><span class="p">(</span><span class="n">frame_data</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Wrap local processing function for dataset mapping.&quot;&quot;&quot;</span>
+            <span class="n">image</span><span class="p">,</span> <span class="n">instances</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">py_function</span><span class="p">(</span>
+                <span class="n">py_augment</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">frame_data</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span> <span class="n">frame_data</span><span class="p">[</span><span class="s2">&quot;instances&quot;</span><span class="p">]],</span>
+                <span class="p">[</span><span class="n">frame_data</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">frame_data</span><span class="p">[</span><span class="s2">&quot;instances&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">frame_data</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+            <span class="n">instances</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">frame_data</span><span class="p">[</span><span class="s2">&quot;instances&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+            <span class="n">frame_data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;instances&quot;</span><span class="p">:</span> <span class="n">instances</span><span class="p">})</span>
+            <span class="k">return</span> <span class="n">frame_data</span>
+
+        <span class="c1"># Apply the augmentation to each element.</span>
+        <span class="c1"># Note: We map sequentially since imgaug gets slower with tf.data parallelism.</span>
+        <span class="n">output_ds</span> <span class="o">=</span> <span class="n">input_ds</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">augment</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output_ds</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

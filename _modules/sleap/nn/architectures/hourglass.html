@@ -1,0 +1,411 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.architectures.hourglass &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.architectures.hourglass</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides a generalized implementation of (stacked) hourglass.</span>
+
+<span class="sd">See the `Hourglass` class docstring for more information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures</span> <span class="kn">import</span> <span class="n">encoder_decoder</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures.common</span> <span class="kn">import</span> <span class="n">IntermediateFeature</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">HourglassConfig</span>
+
+
+<div class="viewcode-block" id="conv"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.conv">[docs]</a><span class="k">def</span> <span class="nf">conv</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;conv&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Apply basic convolution with ReLU and batch normalization.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: Input tensor.</span>
+<span class="sd">        filters: Number of convolutional filters (output channels).</span>
+<span class="sd">        kernel_size: Size (height == width) of convolutional kernel.</span>
+<span class="sd">        stride: Striding of convolution. If &gt;1, the output is smaller than the input.</span>
+<span class="sd">        prefix: String to prepend to the sublayers of this convolution.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The output tensor after applying convolution and batch normalization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+        <span class="n">strides</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_conv&quot;</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="StemBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.StemBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">StemBlock</span><span class="p">(</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderBlock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stem layers of the hourglass. These are not repeated with multiple stacks.</span>
+
+<span class="sd">    The default structure of this block is:</span>
+<span class="sd">        Conv(7 x 7 x filters, stride 2) -&gt; Conv(3 x 3 x 2*filters) -&gt; MaxPool(stride 2)</span>
+<span class="sd">        -&gt; Conv(3 x 3 x output_filters)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        pool: If True, pooling is applied. See `pooling_stride`.</span>
+<span class="sd">        pooling_stride: Determines how much pooling is applied within the stem block. If</span>
+<span class="sd">            set to 1, no pooling is applied. If set to 2, the max pooling layer will</span>
+<span class="sd">            have a stride of 2. If set to 4, the first convolution and the max pooling</span>
+<span class="sd">            layer will both have a stride of 2.</span>
+<span class="sd">        filters: Base number of convolutional filters.</span>
+<span class="sd">        output_filters: Number of filters to output at the end of this block.</span>
+<span class="sd">        first_conv_stride: Stride of the first convolutional layer. Set to 1 to increase</span>
+<span class="sd">            the effective spatial resolution of the initial activations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pool</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">pooling_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">output_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
+
+<div class="viewcode-block" id="StemBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.StemBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;stem&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create the block from an input tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input tensor to the block.</span>
+<span class="sd">            prefix: String that will be added to the name of every layer in the block.</span>
+<span class="sd">                If not specified, instantiating this block multiple times may result in</span>
+<span class="sd">                name conflicts if existing layers have the same name.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The output tensor after applying all operations in the block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span>
+            <span class="n">x_in</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="mi">2</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pooling_stride</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_conv7x7&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_conv3x3&quot;</span><span class="p">)</span>
+            
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">(</span>
+            <span class="n">strides</span><span class="o">=</span><span class="mi">2</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pooling_stride</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_pool&quot;</span><span class="p">)(</span>
+            <span class="n">x</span>
+        <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_filters</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_conv3x3_out&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+
+<div class="viewcode-block" id="DownsamplingBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.DownsamplingBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DownsamplingBlock</span><span class="p">(</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderBlock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convolutional downsampling block of the hourglass.</span>
+
+<span class="sd">    This block is the simplified convolution-only block described in the `Associative</span>
+<span class="sd">    Embedding paper &lt;https://arxiv.org/abs/1611.05424&gt;`_, not the original residual</span>
+<span class="sd">    blocks used in the `original hourglass paper &lt;https://arxiv.org/abs/1603.06937&gt;`_.</span>
+<span class="sd">    This block is simpler and demonstrated similar performance to the residual block.</span>
+
+<span class="sd">    The structure of this block is simply:</span>
+<span class="sd">        MaxPool(stride 2) -&gt; Conv(3 x 3 x filters)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        filters: Number of filters in the convolutional layer of the block.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
+
+<div class="viewcode-block" id="DownsamplingBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.DownsamplingBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;downsample&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create the block from an input tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input tensor to the block.</span>
+<span class="sd">            prefix: String that will be added to the name of every layer in the block.</span>
+<span class="sd">                If not specified, instantiating this block multiple times may result in</span>
+<span class="sd">                name conflicts if existing layers have the same name.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The output tensor after applying all operations in the block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">(</span><span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_pool&quot;</span><span class="p">)(</span>
+            <span class="n">x_in</span>
+        <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_conv&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+
+<div class="viewcode-block" id="UpsamplingBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.UpsamplingBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">UpsamplingBlock</span><span class="p">(</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">DecoderBlock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Upsampling block that integrates skip connections with refinement.</span>
+
+<span class="sd">    This block implements both the intermediate block after the skip connection from the</span>
+<span class="sd">    downsampling path, as well as the upsampling block from the main network backbone</span>
+<span class="sd">    path.</span>
+
+<span class="sd">    The structure of this block is:</span>
+<span class="sd">        x_in -&gt; Conv(3 x 3 x filters) -&gt; Upsample -&gt; x_up</span>
+<span class="sd">        skip_in -&gt; Conv(3 x 3 x filters) -&gt; x_middle</span>
+<span class="sd">        x_up + x_middle -&gt; x_out</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        filters: Number of filters in the output tensor.</span>
+<span class="sd">        interp_method: Interpolation method for the upsampling step. In the original</span>
+<span class="sd">            implementation, nearest neighbor interpolation was used. Valid values are</span>
+<span class="sd">            &quot;nearest&quot; or &quot;bilinear&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">interp_method</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+
+<div class="viewcode-block" id="UpsamplingBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.UpsamplingBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">current_stride</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IntermediateFeature</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;upsample&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the upsampling block from an input tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input tensor to the block.</span>
+<span class="sd">            current_stride: The stride of input tensor.</span>
+<span class="sd">            skip_source: A tensor that will be used to form a skip connection if</span>
+<span class="sd">                the block is configured to use it.</span>
+<span class="sd">            prefix: String that will be added to the name of every layer in the block.</span>
+<span class="sd">                If not specified, instantiating this block multiple times may result in</span>
+<span class="sd">                name conflicts if existing layers have the same name.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The output tensor after applying all operations in the block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_conv&quot;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span>
+            <span class="n">interpolation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp_method</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_method</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">x_skip</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">skip_source</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_skip&quot;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_skip_add&quot;</span><span class="p">)([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_skip</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+
+<div class="viewcode-block" id="Hourglass"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Hourglass</span><span class="p">(</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderDecoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Encoder-decoder definition of the (stacked) hourglass network backbone.</span>
+
+<span class="sd">    This implements the architecture of the `Associative Embedding paper</span>
+<span class="sd">    &lt;https://arxiv.org/abs/1611.05424&gt;`_, which improves upon the architecture in the </span>
+<span class="sd">    `original hourglass paper &lt;https://arxiv.org/abs/1603.06937&gt;`_. The primary changes</span>
+<span class="sd">    are to replace the residual block with simple convolutions and modify the filter</span>
+<span class="sd">    sizes.</span>
+
+<span class="sd">    The basic structure of this backbone is:</span>
+<span class="sd">        x_in -&gt; stem -&gt; {encoder_stack -&gt; decoder_stack} * stacks -&gt; x_out</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        down_blocks: Number of downsampling blocks. The original implementation has 4</span>
+<span class="sd">            downsampling blocks.</span>
+<span class="sd">        up_blocks: Number of upsampling blocks. The original implementation is symmetric</span>
+<span class="sd">            and has 4 upsampling blocks. If specifying more than 1 stack, this should be</span>
+<span class="sd">            equal to down_blocks.</span>
+<span class="sd">        stem_filters: Number of filters to output from the stem block. This block of</span>
+<span class="sd">            convolutions will not be repeated across stacks, so it serves as a</span>
+<span class="sd">            convenient way to reduce the input image size while extracting fine-scale</span>
+<span class="sd">            image features. In the original implementation this is 128.</span>
+<span class="sd">        stem_stride: Stride of the stem block. This can be set to 1, 2 or 4. If &gt;1, this</span>
+<span class="sd">            increases the spatial receptive field at the cost of losing fine details at</span>
+<span class="sd">            higher resolution. In the original implementation this is 4.</span>
+<span class="sd">        filters: Base number of filters. This will be the number of filters in the first</span>
+<span class="sd">            block, where subsequent blocks will have an linearly increasing number of</span>
+<span class="sd">            filters (see `filter_increase`). In the original implementation this is 256.</span>
+<span class="sd">        filter_increase: Number to increment the number of filters in each subsequent</span>
+<span class="sd">            block by. This number is added, not multiplied, at each block. In the</span>
+<span class="sd">            original implementation this is 128.</span>
+<span class="sd">        interp_method: Method for interpolation in the upsampling blocks. In the</span>
+<span class="sd">            original implementation this is nearest neighbor interpolation. Valid values</span>
+<span class="sd">            are &quot;nearest&quot; or &quot;bilinear&quot;.</span>
+<span class="sd">        stacks: Number of repeated stacks of symmetric downsampling -&gt; upsampling</span>
+<span class="sd">            stacks. Intermediate outputs are returned which can be used to apply</span>
+<span class="sd">            intermediate supervision.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">down_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">stem_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">stem_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">filter_increase</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">interp_method</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;nearest&quot;</span>
+    <span class="n">stacks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stem_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Define stem stack configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">StemBlock</span><span class="p">(</span>
+                <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_filters</span><span class="p">,</span>
+                <span class="n">output_filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+                <span class="n">pool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">pooling_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_stride</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">encoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Define encoder stack configuration.&quot;&quot;&quot;</span>
+        <span class="n">encoder_blocks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Downsampling path</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span><span class="p">):</span>
+            <span class="n">encoder_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DownsamplingBlock</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_increase</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">encoder_blocks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">decoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">DecoderBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Define decoder stack configuration.&quot;&quot;&quot;</span>
+        <span class="c1"># Upsampling path</span>
+        <span class="n">decoder_blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">):</span>
+            <span class="n">decoder_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">UpsamplingBlock</span><span class="p">(</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span>
+                    <span class="o">+</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_increase</span><span class="p">),</span>
+                    <span class="n">interp_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp_method</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">decoder_blocks</span>
+
+<div class="viewcode-block" id="Hourglass.from_config"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HourglassConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Hourglass&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a model from a set of configuration parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: An `HourglassConfig` instance with the desired parameters.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of this class with the specified configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stem_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">stem_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">down_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="n">stem_blocks</span>
+        <span class="n">up_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_stride</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">down_blocks</span><span class="o">=</span><span class="n">down_blocks</span><span class="p">,</span>
+            <span class="n">up_blocks</span><span class="o">=</span><span class="n">up_blocks</span><span class="p">,</span>
+            <span class="n">stem_filters</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stem_filters</span><span class="p">,</span>
+            <span class="n">stem_stride</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stem_stride</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">filter_increase</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filter_increase</span><span class="p">,</span>
+            <span class="n">interp_method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
+            <span class="n">stacks</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

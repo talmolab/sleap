@@ -1,0 +1,262 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.losses &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.losses</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Custom loss functions and metrics.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">HardKeypointMiningConfig</span>
+
+
+<div class="viewcode-block" id="compute_ohkm_loss"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.losses.html#sleap.nn.losses.compute_ohkm_loss">[docs]</a><span class="k">def</span> <span class="nf">compute_ohkm_loss</span><span class="p">(</span>
+    <span class="n">y_gt</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">y_pr</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">hard_to_easy_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">min_hard_keypoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">max_hard_keypoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">loss_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Compute the online hard keypoint mining loss.&quot;&quot;&quot;</span>
+    <span class="c1"># Compute elementwise squared difference.</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">squared_difference</span><span class="p">(</span><span class="n">y_gt</span><span class="p">,</span> <span class="n">y_pr</span><span class="p">)</span>  <span class="c1"># rank 4</span>
+
+    <span class="c1"># Store initial shape for normalization.</span>
+    <span class="n">batch_shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+    <span class="c1"># Reduce over everything but channels axis.</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+    <span class="c1"># Compute the loss for the &quot;easy&quot; keypoint.</span>
+    <span class="n">best_loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">reduce_min</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+    <span class="c1"># Find the number of hard keypoints.</span>
+    <span class="n">is_hard_keypoint</span> <span class="o">=</span> <span class="p">(</span><span class="n">loss</span> <span class="o">/</span> <span class="n">best_loss</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">hard_to_easy_ratio</span>
+    <span class="n">n_hard_keypoints</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">is_hard_keypoint</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+
+    <span class="c1"># Work out the actual final number of keypoints to consider as hard.</span>
+    <span class="k">if</span> <span class="n">max_hard_keypoints</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">max_hard_keypoints</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">loss</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">max_hard_keypoints</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">max_hard_keypoints</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">loss</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">n_hard_keypoints</span><span class="p">,</span> <span class="n">min_hard_keypoints</span><span class="p">),</span> <span class="n">max_hard_keypoints</span><span class="p">)</span>
+
+    <span class="c1"># Pull out the top hard values.</span>
+    <span class="n">k_vals</span><span class="p">,</span> <span class="n">k_inds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">top_k</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="nb">sorted</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Apply weights.</span>
+    <span class="n">k_loss</span> <span class="o">=</span> <span class="n">k_vals</span> <span class="o">*</span> <span class="n">loss_scale</span>
+
+    <span class="c1"># Reduce over all channels.</span>
+    <span class="n">n_elements</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span>
+        <span class="n">batch_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">batch_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">batch_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span>
+    <span class="p">)</span>
+    <span class="n">k_loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">k_loss</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_elements</span>
+
+    <span class="k">return</span> <span class="n">k_loss</span></div>
+
+
+<div class="viewcode-block" id="OHKMLoss"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.losses.html#sleap.nn.losses.OHKMLoss">[docs]</a><span class="k">class</span> <span class="nc">OHKMLoss</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Online hard keypoint mining loss.</span>
+
+<span class="sd">    This loss serves to dynamically reweight the MSE of the top-K worst channels in each</span>
+<span class="sd">    batch. This is useful when fine tuning a model to improve performance on a hard</span>
+<span class="sd">    part to optimize for (e.g., small, hard to see, often not visible).</span>
+
+<span class="sd">    Note: This works with any type of channel, so it can work for PAFs as well.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        hard_to_easy_ratio: The minimum ratio of the individual keypoint loss with</span>
+<span class="sd">            respect to the lowest keypoint loss in order to be considered as &quot;hard&quot;.</span>
+<span class="sd">            This helps to switch focus on across groups of keypoints during training.</span>
+<span class="sd">        min_hard_keypoints: The minimum number of keypoints that will be considered as</span>
+<span class="sd">            &quot;hard&quot;, even if they are not below the `hard_to_easy_ratio`.</span>
+<span class="sd">        max_hard_keypoints: The maximum number of hard keypoints to apply scaling to.</span>
+<span class="sd">            This can help when there are few very easy keypoints which may skew the</span>
+<span class="sd">            ratio and result in loss scaling being applied to most keypoints, which can</span>
+<span class="sd">            reduce the impact of hard mining altogether.</span>
+<span class="sd">        loss_scale: Factor to scale the hard keypoint losses by.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hard_to_easy_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">min_hard_keypoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">max_hard_keypoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">loss_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ohkm&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">OHKMLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hard_to_easy_ratio</span> <span class="o">=</span> <span class="n">hard_to_easy_ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_hard_keypoints</span> <span class="o">=</span> <span class="n">min_hard_keypoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_hard_keypoints</span> <span class="o">=</span> <span class="n">max_hard_keypoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_scale</span> <span class="o">=</span> <span class="n">loss_scale</span>
+
+<div class="viewcode-block" id="OHKMLoss.from_config"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.losses.html#sleap.nn.losses.OHKMLoss.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HardKeypointMiningConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OHKMLoss&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hard_to_easy_ratio</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">hard_to_easy_ratio</span><span class="p">,</span>
+            <span class="n">min_hard_keypoints</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">min_hard_keypoints</span><span class="p">,</span>
+            <span class="n">max_hard_keypoints</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_hard_keypoints</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">max_hard_keypoints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">loss_scale</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">loss_scale</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="OHKMLoss.call"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.losses.html#sleap.nn.losses.OHKMLoss.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_gt</span><span class="p">,</span> <span class="n">y_pr</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">compute_ohkm_loss</span><span class="p">(</span>
+            <span class="n">y_gt</span><span class="p">,</span>
+            <span class="n">y_pr</span><span class="p">,</span>
+            <span class="n">hard_to_easy_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hard_to_easy_ratio</span><span class="p">,</span>
+            <span class="n">min_hard_keypoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_hard_keypoints</span><span class="p">,</span>
+            <span class="n">max_hard_keypoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_hard_keypoints</span><span class="p">,</span>
+            <span class="n">loss_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_scale</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PartLoss"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.losses.html#sleap.nn.losses.PartLoss">[docs]</a><span class="k">class</span> <span class="nc">PartLoss</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute channelwise loss.</span>
+
+<span class="sd">    Useful for monitoring the MSE for specific body parts (channels).</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        channel_ind: Index of channel to compute MSE for.</span>
+<span class="sd">        name: Name of the loss tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_ind</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;part_loss&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PartLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_ind</span> <span class="o">=</span> <span class="n">channel_ind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_mse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.mse&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s2">&quot;zeros&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.n_samples&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s2">&quot;zeros&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.height&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s2">&quot;zeros&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.width&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s2">&quot;zeros&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="PartLoss.update_state"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.losses.html#sleap.nn.losses.PartLoss.update_state">[docs]</a>    <span class="k">def</span> <span class="nf">update_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_gt</span><span class="p">,</span> <span class="n">y_pr</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">y_gt</span><span class="p">)</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">channel_mse</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">squared_difference</span><span class="p">(</span>
+                <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">y_gt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_ind</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+                <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">y_pr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_ind</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># rank 4</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_mse</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">channel_mse</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PartLoss.result"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.losses.html#sleap.nn.losses.PartLoss.result">[docs]</a>    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_mse</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

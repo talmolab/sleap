@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.io.format.main &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.io.format.main</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Read/write for multiple dataset formats.</span>
+
+<span class="sd">File adaptors provide a common API for code that reads and/or writes data files.</span>
+<span class="sd">Usually these are for reading or writing SLEAP datasets or something with</span>
+<span class="sd">roughly equivalent data (e.g., a COCO keypoint dataset), although the code</span>
+<span class="sd">can in principle be used for reading/writing different types of data.</span>
+
+<span class="sd">For reading or writing SLEAP datasets, use `main.read()` or `main.write()`,</span>
+<span class="sd">optionally specifying the `as_format` parameter (e.g., if you want to write a</span>
+<span class="sd">specific, non-default format). `sleap.io.convert` is a nice usage example.</span>
+
+<span class="sd">To add support for a new file format:</span>
+
+<span class="sd">1. Create an adaptor class which implements all virtual functions in the</span>
+<span class="sd">   `Adaptor` class. Take a look at `GenericJsonAdaptor` for a simple example</span>
+<span class="sd">   or `SleapAnalysisAdaptor` for an adaptor which supports reading and writing</span>
+<span class="sd">   datasets (this would be a good adaptor to use as a template for your own).</span>
+
+<span class="sd">2. If it&#39;s for reading and/or writing `Labels` datasets (the typical case),</span>
+<span class="sd">   add it to `all_labels_adaptors` dictionary in `main.py`.</span>
+
+<span class="sd">If your file format has a file extension that&#39;s distinct from other</span>
+<span class="sd">supported file formats, then read/write code will automatically detect the</span>
+<span class="sd">correct format. For example, if your adaptor supports save and its default file</span>
+<span class="sd">ext is `.foo`, then calling `Labels.save_file(labels, &quot;filename.foo&quot;)` will use</span>
+<span class="sd">your file adaptor.</span>
+
+<span class="sd">If your file format does not have a distinct file extension, then additional</span>
+<span class="sd">work is required. For an example, take a look at the `ExportAnalysisFile` and</span>
+<span class="sd">`ImportAnalysisFile` command classes (in `sleap.gui.commands`). For the analysis</span>
+<span class="sd">HDF5 we need custom code since these files have a `.h5` extension, and this is</span>
+<span class="sd">also a non-default file extension for the `LabelsV1Adaptor` adaptor.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">.coco</span> <span class="kn">import</span> <span class="n">LabelsCocoAdaptor</span>
+<span class="kn">from</span> <span class="nn">.deeplabcut</span> <span class="kn">import</span> <span class="n">LabelsDeepLabCutCsvAdaptor</span><span class="p">,</span> <span class="n">LabelsDeepLabCutYamlAdaptor</span>
+<span class="kn">from</span> <span class="nn">.deepposekit</span> <span class="kn">import</span> <span class="n">LabelsDeepPoseKitAdaptor</span>
+<span class="kn">from</span> <span class="nn">.hdf5</span> <span class="kn">import</span> <span class="n">LabelsV1Adaptor</span>
+<span class="kn">from</span> <span class="nn">.labels_json</span> <span class="kn">import</span> <span class="n">LabelsJsonAdaptor</span>
+<span class="kn">from</span> <span class="nn">.leap_matlab</span> <span class="kn">import</span> <span class="n">LabelsLeapMatlabAdaptor</span>
+<span class="kn">from</span> <span class="nn">.sleap_analysis</span> <span class="kn">import</span> <span class="n">SleapAnalysisAdaptor</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">adaptor</span><span class="p">,</span> <span class="n">dispatch</span><span class="p">,</span> <span class="n">filehandle</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+
+<span class="c1"># Default adaptors to use when input/output format isn&#39;t specified.</span>
+<span class="n">default_labels_adaptors</span> <span class="o">=</span> <span class="p">[</span><span class="n">LabelsV1Adaptor</span><span class="p">,</span> <span class="n">LabelsJsonAdaptor</span><span class="p">]</span>
+
+<span class="c1"># All supported adaptors for reading and/or writing SLEAP datasets.</span>
+<span class="c1"># Key is string used to specify format (`as_format` param), value is either an</span>
+<span class="c1"># adaptor class (i.e., class which inherits from `adaptor.Adaptor`) or a list</span>
+<span class="c1"># of adaptor classes.</span>
+<span class="n">all_labels_adaptors</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;hdf5_v1&quot;</span><span class="p">:</span> <span class="n">LabelsV1Adaptor</span><span class="p">,</span>
+    <span class="s2">&quot;json&quot;</span><span class="p">:</span> <span class="n">LabelsJsonAdaptor</span><span class="p">,</span>
+    <span class="s2">&quot;leap&quot;</span><span class="p">:</span> <span class="n">LabelsLeapMatlabAdaptor</span><span class="p">,</span>
+    <span class="s2">&quot;deeplabcut&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">LabelsDeepLabCutYamlAdaptor</span><span class="p">,</span> <span class="n">LabelsDeepLabCutCsvAdaptor</span><span class="p">),</span>
+    <span class="s2">&quot;deepposekit&quot;</span><span class="p">:</span> <span class="n">LabelsDeepPoseKitAdaptor</span><span class="p">,</span>
+    <span class="s2">&quot;coco&quot;</span><span class="p">:</span> <span class="n">LabelsCocoAdaptor</span><span class="p">,</span>
+    <span class="s2">&quot;analysis&quot;</span><span class="p">:</span> <span class="n">SleapAnalysisAdaptor</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.main.html#sleap.io.format.main.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+    <span class="n">for_object</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="n">as_format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads file using the appropriate file format adaptor.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: Full filename of the file to read.</span>
+<span class="sd">        for_object: The type of object we&#39;re trying to read; can be given as</span>
+<span class="sd">            string (e.g., &quot;labels&quot;) or instance of the object.</span>
+<span class="sd">        as_format: Allows you to specify the format adaptor to use;</span>
+<span class="sd">            if not specified, then we&#39;ll try the default adaptors for this</span>
+<span class="sd">            object type.</span>
+
+<span class="sd">    Exceptions:</span>
+<span class="sd">        NotImplementedError if appropriate adaptor cannot be found.</span>
+
+<span class="sd">        TypeError if adaptor does not support reading</span>
+<span class="sd">        (shouldn&#39;t happen unless you specify `as_format` adaptor).</span>
+
+<span class="sd">        Any file-related exception thrown while trying to read.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">disp</span> <span class="o">=</span> <span class="n">dispatch</span><span class="o">.</span><span class="n">Dispatch</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">as_format</span> <span class="ow">in</span> <span class="n">all_labels_adaptors</span><span class="p">:</span>
+
+        <span class="n">disp</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">all_labels_adaptors</span><span class="p">[</span><span class="n">as_format</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">disp</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">for_object</span> <span class="o">==</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">for_object</span><span class="p">,</span> <span class="s2">&quot;labeled_frames&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">as_format</span> <span class="o">==</span> <span class="s2">&quot;*&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">format_name</span><span class="p">,</span> <span class="n">adaptor</span> <span class="ow">in</span> <span class="n">all_labels_adaptors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">disp</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">adaptor</span><span class="p">)</span>
+                <span class="c1"># print(f&quot;[registering format adaptor for {format_name}]&quot;)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">disp</span><span class="o">.</span><span class="n">register_list</span><span class="p">(</span><span class="n">default_labels_adaptors</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">disp</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;No adaptors for this object type.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.main.html#sleap.io.format.main.write">[docs]</a><span class="k">def</span> <span class="nf">write</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">source_object</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">as_format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Writes SLEAP dataset file using the appropriate file format adaptor.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: Full filename of the file to write.</span>
+<span class="sd">            All directories should exist.</span>
+<span class="sd">        source_object: The object we want to write to a file.</span>
+<span class="sd">        as_format: Allows you to specify the format adaptor to use;</span>
+<span class="sd">            if not specified, then this will use the privileged adaptor for</span>
+<span class="sd">            the type of object.</span>
+
+<span class="sd">    Exceptions:</span>
+<span class="sd">        NotImplementedError if appropriate adaptor cannot be found.</span>
+
+<span class="sd">        TypeError if adaptor does not support writing</span>
+<span class="sd">        (shouldn&#39;t happen unless you specify `as_format` adaptor).</span>
+
+<span class="sd">        Any file-related exception thrown while trying to write.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">disp</span> <span class="o">=</span> <span class="n">dispatch</span><span class="o">.</span><span class="n">Dispatch</span><span class="p">()</span>
+
+    <span class="c1"># User specified known output format</span>
+    <span class="k">if</span> <span class="n">as_format</span> <span class="ow">in</span> <span class="n">all_labels_adaptors</span><span class="p">:</span>
+        <span class="c1"># Register adaptors which support this format</span>
+        <span class="n">disp</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">all_labels_adaptors</span><span class="p">[</span><span class="n">as_format</span><span class="p">])</span>
+        <span class="c1"># Write file using dispatch (which finds best adaptor)</span>
+        <span class="k">return</span> <span class="n">disp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">source_object</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">as_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No adaptor for </span><span class="si">{</span><span class="n">as_format</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># If we&#39;re still here, then user didn&#39;t specify output format.</span>
+
+    <span class="c1"># Check if we&#39;re trying to save a SLEAP dataset (i.e., `Labels` object)</span>
+    <span class="c1"># and if so, register default adaptors and try writing.</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source_object</span><span class="p">,</span> <span class="s2">&quot;labeled_frames&quot;</span><span class="p">):</span>
+        <span class="n">disp</span><span class="o">.</span><span class="n">register_list</span><span class="p">(</span><span class="n">default_labels_adaptors</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">disp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">source_object</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;No adaptors for object type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source_object</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">as_format</span><span class="si">}</span><span class="s2">).&quot;</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

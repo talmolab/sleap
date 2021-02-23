@@ -1,0 +1,790 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.architectures.encoder_decoder &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.nn.architectures.hourglass" href="sleap.nn.architectures.hourglass.html" />
+    <link rel="prev" title="sleap.nn.architectures.common" href="sleap.nn.architectures.common.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.nn.architectures.encoder_decoder">
+<span id="sleap-nn-architectures-encoder-decoder"></span><h1>sleap.nn.architectures.encoder_decoder<a class="headerlink" href="#module-sleap.nn.architectures.encoder_decoder" title="Permalink to this headline">¶</a></h1>
+<p>Generic encoder-decoder fully convolutional backbones.</p>
+<p>This module contains building blocks for creating encoder-decoder architectures of
+general form.</p>
+<p>The encoder branch of the network forms the initial multi-scale feature extraction via
+repeated blocks of convolutions and pooling steps.</p>
+<p>The decoder branch is then responsible for upsampling the low resolution feature maps
+to achieve the target output stride.</p>
+<p>This pattern is generalizable and describes most fully convolutional architectures. For
+.. rubric:: Example</p>
+<ul class="simple">
+<li><p>simple convolutions with pooling form the structure in <a href="#id1"><span class="problematic" id="id2">`</span></a>LEAP CNN</p></li>
+</ul>
+<dl>
+<dt>&lt;<a class="reference external" href="https://www.nature.com/articles/s41592-018-0234-5">https://www.nature.com/articles/s41592-018-0234-5</a>&gt;`_;</dt><dd><ul class="simple">
+<li><p>adding skip connections forms <a class="reference external" href="https://arxiv.org/pdf/1505.04597.pdf">U-Net</a>;</p></li>
+<li><p>using residual blocks with skip connections forms the base module in <a href="#id3"><span class="problematic" id="id4">`</span></a>stacked</p></li>
+</ul>
+<p>hourglass &lt;<a class="reference external" href="https://arxiv.org/pdf/1603.06937.pdf">https://arxiv.org/pdf/1603.06937.pdf</a>&gt;`_;
+- using dense blocks with skip connections forms <a href="#id5"><span class="problematic" id="id6">`</span></a>FC-DenseNet</p>
+</dd>
+</dl>
+<p>&lt;<a class="reference external" href="https://arxiv.org/pdf/1611.09326.pdf">https://arxiv.org/pdf/1611.09326.pdf</a>&gt;`_.</p>
+<p>This module implements blocks used in all of these variants on top of a generic base
+classes.</p>
+<p>See the <cite>EncoderDecoder</cite> base class for requirements for creating new architectures.</p>
+<dl class="py class">
+<dt id="sleap.nn.architectures.encoder_decoder.DecoderBlock">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.encoder_decoder.</code><code class="sig-name descname">DecoderBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">upsampling_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#DecoderBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for decoder blocks.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.DecoderBlock.upsampling_stride">
+<code class="sig-name descname">upsampling_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.upsampling_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The striding of the upsampling layer. This is typically set
+to 2, such that the input tensor doubles in size after the block, but can be
+set higher to upsample in fewer steps.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block">
+<code class="sig-name descname">make_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">current_stride</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">skip_source</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'upsample'</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#DecoderBlock.make_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the decoder block from an input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input tensor to the block.</p></li>
+<li><p><strong>current_stride</strong> – The stride of input tensor.</p></li>
+<li><p><strong>skip_source</strong> – A tensor that will be used to form a skip connection if
+the block is configured to use it.</p></li>
+<li><p><strong>prefix</strong> – String that will be added to the name of every layer in the block.
+If not specified, instantiating this block multiple times may result in
+name conflicts if existing layers have the same name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The output tensor after applying all operations in the block.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderBlock">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.encoder_decoder.</code><code class="sig-name descname">EncoderBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pool</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">pooling_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#EncoderBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for encoder blocks.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderBlock.pool">
+<code class="sig-name descname">pool</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, applies max pooling at the end of the block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderBlock.pooling_stride">
+<code class="sig-name descname">pooling_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.pooling_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stride of the max pooling operation. If 1, the output of this
+block will be at the same stride (== 1/scale) as the input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block">
+<code class="sig-name descname">make_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#EncoderBlock.make_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the encoder block from an input tensor.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.encoder_decoder.</code><code class="sig-name descname">EncoderDecoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stacks</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#EncoderDecoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>General encoder-decoder base class.</p>
+<p>New architectures that follow the encoder-decoder pattern can be defined by
+inheriting from this class and implementing the <cite>encoder_stack</cite> and <cite>decoder_stack</cite>
+methods.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.stacks">
+<code class="sig-name descname">stacks</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>If greater than 1, the encoder-decoder architecture will be repeated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_features_stride">
+<em class="property">property </em><code class="sig-name descname">decoder_features_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_features_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the relative stride of the final output of the decoder.</p>
+<p>This is equivalent to the stride of the decoder assuming that it is constructed
+from an input with stride 1.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack">
+<em class="property">property </em><code class="sig-name descname">decoder_stack</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of decoder blocks that define the decoder.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_features_stride">
+<em class="property">property </em><code class="sig-name descname">encoder_features_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_features_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the relative stride of the final output of the encoder.</p>
+<p>This is equivalent to the stride of the encoder assuming that it is constructed
+from an input with stride 1.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack">
+<em class="property">property </em><code class="sig-name descname">encoder_stack</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of encoder blocks that define the encoder.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone">
+<code class="sig-name descname">make_backbone</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">current_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span>Tuple<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature">sleap.nn.architectures.common.IntermediateFeature</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Tuple<span class="p">[</span>List<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><span class="p">, </span>List<span class="p">[</span>List<span class="p">[</span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature">sleap.nn.architectures.common.IntermediateFeature</a><span class="p">]</span><span class="p">]</span><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#EncoderDecoder.make_backbone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the entire encoder-decoder backbone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – The input tensor.</p></li>
+<li><p><strong>current_stride</strong> – The stride of <cite>x_in</cite> relative to the original input. This is
+1 if the input tensor comes from the input layer of the network. If not,
+this must be set appropriately in order to match up intermediate tensors
+during decoder construction.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of the final output tensor of the decoder and a list of
+<a href="#id7"><span class="problematic" id="id8">`</span></a>IntermediateFeature`s.</p>
+<p>The intermediate features contain the output tensors from every block except
+the last. This includes the input to this function (<cite>x_in</cite>). These are
+useful when defining heads that take inputs at multiple scales.</p>
+<p>If the architecture has more than 1 stack, the outputs are each lists of
+output tensors and intermediate features corresponding to each stack.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder">
+<code class="sig-name descname">make_decoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">current_stride</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">skip_source_features</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Sequence<span class="p">[</span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature">sleap.nn.architectures.common.IntermediateFeature</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'dec'</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature">sleap.nn.architectures.common.IntermediateFeature</a><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#EncoderDecoder.make_decoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the encoder layers defined by the decoder stack configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – The input tensor.</p></li>
+<li><p><strong>current_stride</strong> – The stride of <cite>x_in</cite> relative to the original input. This is
+the stride of the output of the encoder relative to the original input.</p></li>
+<li><p><strong>skip_source_features</strong> – A sequence of <a href="#id9"><span class="problematic" id="id10">`</span></a>IntermediateFeature`s containing
+tensors that can be used to form skip connections at matching strides.
+At every decoder block, the first skip source feature found at the input
+stride of the block will be passed to the block instantiation method. If
+the decoder block is not configured to form skip connections, these will
+be ignored even if found.</p></li>
+<li><p><strong>prefix</strong> – String prefix for naming decoder layers.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of the final output tensor of the decoder and a list of
+<a href="#id11"><span class="problematic" id="id12">`</span></a>IntermediateFeature`s.</p>
+<p>The intermediate features contain the output tensors from every block except
+the last. This includes the input to this function (<cite>x_in</cite>). These are
+useful when defining heads that take inputs at multiple scales.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder">
+<code class="sig-name descname">make_encoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">current_stride</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'enc'</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature">sleap.nn.architectures.common.IntermediateFeature</a><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#EncoderDecoder.make_encoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the encoder layers defined by the encoder stack configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – The input tensor.</p></li>
+<li><p><strong>current_stride</strong> – The stride of <cite>x_in</cite> relative to the original input. If any
+pooling was performed before the encoder, this must be specified in
+order to appropriately set the stride in the returned intermediate
+features.</p></li>
+<li><p><strong>prefix</strong> – String prefix for naming encoder layers.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of the final output tensor of the encoder and a list of
+<a href="#id13"><span class="problematic" id="id14">`</span></a>IntermediateFeature`s.</p>
+<p>The intermediate features contain the output tensors from every block except
+the last. These can be reused in the decoder to form skip connections.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem">
+<code class="sig-name descname">make_stem</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'stem'</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#EncoderDecoder.make_stem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the stem layers defined by the stem block configuration.</p>
+<p>Unlike in the encoder, the stem layers do not get repeated in stacked models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – The input tensor.</p></li>
+<li><p><strong>current_stride</strong> – The stride of <cite>x_in</cite> relative to the original input. If any
+pooling was performed before the stem, this must be specified in
+order to appropriately set the stride in the rest of the model.</p></li>
+<li><p><strong>prefix</strong> – String prefix for naming stem layers.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The final output tensor of the stem.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.maximum_stride">
+<em class="property">property </em><code class="sig-name descname">maximum_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.maximum_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the maximum stride that the input must be divisible by.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.output_stride">
+<em class="property">property </em><code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return stride of the output of the backbone.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_features_stride">
+<em class="property">property </em><code class="sig-name descname">stem_features_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_features_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the relative stride of the final output of the stem block.</p>
+<p>This is equivalent to the stride of the stem assuming that it is constructed
+from an input with stride 1.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack">
+<em class="property">property </em><code class="sig-name descname">stem_stack</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of encoder blocks that define the stem.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.encoder_decoder.</code><code class="sig-name descname">SimpleConvBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pool</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">pooling_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">pool_before_convs</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_convs</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">32</span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em>, <em class="sig-param"><span class="n">use_bias</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">batch_norm</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">batch_norm_before_activation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">activation</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'relu'</span></em>, <em class="sig-param"><span class="n">block_prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#SimpleConvBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flexible block of convolutions and max pooling.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool">
+<code class="sig-name descname">pool</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, applies max pooling at the end of the block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pooling_stride">
+<code class="sig-name descname">pooling_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pooling_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stride of the max pooling operation. If 1, the output of this
+block will be at the same stride (== 1/scale) as the input.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool_before_convs">
+<code class="sig-name descname">pool_before_convs</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool_before_convs" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, max pooling is performed before convolutions.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.num_convs">
+<code class="sig-name descname">num_convs</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.num_convs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of convolution layers with activation. All attributes below
+are the same for all convolution layers within the block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.filters">
+<code class="sig-name descname">filters</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of convolutional kernel filters.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.kernel_size">
+<code class="sig-name descname">kernel_size</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.kernel_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of convolutional kernels (== height == width).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.use_bias">
+<code class="sig-name descname">use_bias</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.use_bias" title="Permalink to this definition">¶</a></dt>
+<dd><p>If False, convolution layers will not have a bias term.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm">
+<code class="sig-name descname">batch_norm</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, applies batch normalization after each convolution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm_before_activation">
+<code class="sig-name descname">batch_norm_before_activation</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm_before_activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, batch normalization is applied to the
+features computed from the linear convolution operation before the
+activation function, i.e.:</p>
+<blockquote>
+<div><p>conv -&gt; BN -&gt; activation function</p>
+</div></blockquote>
+<dl class="simple">
+<dt>If False, the mini-block will look like:</dt><dd><p>conv -&gt; activation function -&gt; BN</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.activation">
+<code class="sig-name descname">activation</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of activation function (typically “relu” or “linear”).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.block_prefix">
+<code class="sig-name descname">block_prefix</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.block_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>String to append to the prefix provided at block creation time.</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This block is used in LeapCNN and UNet.</p>
+</div>
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block">
+<code class="sig-name descname">make_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_in</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'conv_block'</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#SimpleConvBlock.make_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the block from an input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input tensor to the block.</p></li>
+<li><p><strong>prefix</strong> – String that will be added to the name of every layer in the block.
+If not specified, instantiating this block multiple times may result in
+name conflicts if existing layers have the same name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The output tensor after applying all operations in the block.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.architectures.encoder_decoder.</code><code class="sig-name descname">SimpleUpsamplingBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">upsampling_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">transposed_conv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">transposed_conv_filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em>, <em class="sig-param"><span class="n">transposed_conv_kernel_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em>, <em class="sig-param"><span class="n">transposed_conv_use_bias</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">transposed_conv_batch_norm</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">transposed_conv_batch_norm_before_activation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">transposed_conv_activation</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'relu'</span></em>, <em class="sig-param"><span class="n">interp_method</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'bilinear'</span></em>, <em class="sig-param"><span class="n">skip_connection</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">skip_add</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">refine_convs</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em>, <em class="sig-param"><span class="n">refine_convs_first_filters</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">refine_convs_filters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">64</span></em>, <em class="sig-param"><span class="n">refine_convs_use_bias</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">refine_convs_kernel_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em>, <em class="sig-param"><span class="n">refine_convs_batch_norm</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">refine_convs_batch_norm_before_activation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">refine_convs_activation</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'relu'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#SimpleUpsamplingBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard block of upsampling with optional refinement and skip connections.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.upsampling_stride">
+<code class="sig-name descname">upsampling_stride</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.upsampling_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>The striding of the upsampling layer. This is typically set
+to 2, such that the input tensor doubles in size after the block, but can be
+set higher to upsample in fewer steps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv">
+<code class="sig-name descname">transposed_conv</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, use a strided transposed convolution to perform
+learnable upsampling. If False, interpolated upsampling will be used (see
+<cite>interp_method</cite>) and <cite>transposed_conv_*</cite> attributes will have no effect.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_filters">
+<code class="sig-name descname">transposed_conv_filters</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integer that specifies the number of filters in the
+transposed convolution layer.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_kernel_size">
+<code class="sig-name descname">transposed_conv_kernel_size</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_kernel_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the kernel for the transposed convolution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_use_bias">
+<code class="sig-name descname">transposed_conv_use_bias</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_use_bias" title="Permalink to this definition">¶</a></dt>
+<dd><p>If False, transposed convolution layers will not have
+a bias term.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm">
+<code class="sig-name descname">transposed_conv_batch_norm</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, applies batch normalization after the
+transposed convolution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm_before_activation">
+<code class="sig-name descname">transposed_conv_batch_norm_before_activation</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm_before_activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, batch normalization is
+applied to the features computed from the linear transposed convolution
+operation before the activation function, i.e.:</p>
+<blockquote>
+<div><p>transposed conv -&gt; BN -&gt; activation function</p>
+</div></blockquote>
+<dl class="simple">
+<dt>If False, the mini-block will look like:</dt><dd><p>transposed conv -&gt; activation function -&gt; BN</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_activation">
+<code class="sig-name descname">transposed_conv_activation</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of activation function (typically “relu” or
+“linear”).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.interp_method">
+<code class="sig-name descname">interp_method</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.interp_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>String specifying the type of interpolation to use if
+<cite>transposed_conv</cite> is set to False. This can be <cite>bilinear</cite> or <cite>nearest</cite>. See
+<cite>tf.keras.layers.UpSampling2D</cite> for more details on the implementation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_connection">
+<code class="sig-name descname">skip_connection</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, the block will form a skip connection with source
+features if provided during instantiation in the <cite>make_block</cite> method. If
+False, no skip connection will be formed even if a source feature is
+available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_add">
+<code class="sig-name descname">skip_add</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, the skip connection will be formed by adding the source
+feature to the output of the upsampling operation. If they have different
+number of channels, a 1x1 linear convolution will be applied to the source
+first (similar to residual shortcut connections). If False, the two tensors
+will be concatenated channelwise instead.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs">
+<code class="sig-name descname">refine_convs</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs" title="Permalink to this definition">¶</a></dt>
+<dd><p>If greater than 0, specifies the number of convolutions that will
+be applied after the upsampling step. These layers can serve the purpose of
+“mixing” the skip connection fused features, or to refine the current
+feature map after upsampling which can help to prevent aliasing and
+checkerboard effects. If 0, no additional convolutions will be applied after
+upsampling and the skip connection (if present) and all <cite>refine_convs_*</cite>
+attributes will have no effect. If greater than 1, all layers will be
+identical with respect to these attributes.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_first_filters">
+<code class="sig-name descname">refine_convs_first_filters</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_first_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>If not None, the first refinement conv layer will
+have this many filters, otherwise <cite>refine_convs_filters</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_filters">
+<code class="sig-name descname">refine_convs_filters</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the number of filters to use for the refinement
+convolutions.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_kernel_size">
+<code class="sig-name descname">refine_convs_kernel_size</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_kernel_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the kernel for the refinement convolution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_use_bias">
+<code class="sig-name descname">refine_convs_use_bias</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_use_bias" title="Permalink to this definition">¶</a></dt>
+<dd><p>If False, refinement convolution layers will not have a
+bias term.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm">
+<code class="sig-name descname">refine_convs_batch_norm</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, applies batch normalization after each
+refinement convolution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm_before_activation">
+<code class="sig-name descname">refine_convs_batch_norm_before_activation</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm_before_activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If True, batch normalization is
+applied to the features computed from each linear refinement convolution
+operation before the activation function, i.e.:</p>
+<blockquote>
+<div><p>conv -&gt; BN -&gt; activation function</p>
+</div></blockquote>
+<dl class="simple">
+<dt>If False, the mini-block will look like:</dt><dd><p>conv -&gt; activation function -&gt; BN</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_activation">
+<code class="sig-name descname">refine_convs_activation</code><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of activation function (typically “relu” or
+“linear”).</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This block is used in LeapCNN and UNet.</p>
+</div>
+<dl class="py method">
+<dt id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block">
+<code class="sig-name descname">make_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">current_stride</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">skip_source</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'upsample'</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/architectures/encoder_decoder.html#SimpleUpsamplingBlock.make_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the decoder block from an input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_in</strong> – Input tensor to the block.</p></li>
+<li><p><strong>current_stride</strong> – The stride of input tensor. Not required but if provided,
+will be used to prepend the strides to the prefix.</p></li>
+<li><p><strong>skip_source</strong> – A tensor that will be used to form a skip connection if
+the block is configured to use it.</p></li>
+<li><p><strong>prefix</strong> – String that will be added to the name of every layer in the block.
+If not specified, instantiating this block multiple times may result in
+name conflicts if existing layers have the same name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The output tensor after applying all operations in the block.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.metrics.html">sleap.gui.dialogs.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.mpl.html">sleap.gui.widgets.mpl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.nn.architectures.common.html" title="previous chapter">sleap.nn.architectures.common</a></li>
+      <li>Next: <a href="sleap.nn.architectures.hourglass.html" title="next chapter">sleap.nn.architectures.hourglass</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.nn.architectures.encoder_decoder.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

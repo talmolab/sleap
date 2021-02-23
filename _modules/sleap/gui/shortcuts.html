@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.shortcuts &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.shortcuts</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for accessing/setting keyboard shortcuts.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QKeySequence</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">util</span>
+
+
+<div class="viewcode-block" id="Shortcuts"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.shortcuts.html#sleap.gui.shortcuts.Shortcuts">[docs]</a><span class="k">class</span> <span class="nc">Shortcuts</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for accessing keyboard shortcuts.</span>
+
+<span class="sd">    Shortcuts are saved in `sleap/config/shortcuts.yaml`</span>
+
+<span class="sd">    When instantiated, this reads in the shortcuts from the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_shortcuts</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_names</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;new&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;open&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;save&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;save as&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;close&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;add videos&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;next video&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;prev video&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto frame&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;select to frame&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;add instance&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete instance&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete track&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;transpose&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;select next&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear selection&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next labeled&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto prev labeled&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next suggestion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto prev suggestion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;goto next track spawn&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;show labels&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;show edges&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;show trails&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color predicted&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;learning&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;export clip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete frame predictions&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete clip predictions&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;delete area predictions&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame next&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame prev&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame next medium step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame prev medium step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame next large step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frame prev large step&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">shortcuts</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_config_yaml</span><span class="p">(</span><span class="s2">&quot;shortcuts.yaml&quot;</span><span class="p">)</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_config_yaml</span><span class="p">(</span><span class="s2">&quot;shortcuts.yaml&quot;</span><span class="p">,</span> <span class="n">get_defaults</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_shortcut_dict</span><span class="p">(</span><span class="n">shortcuts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_shortcut_dict</span><span class="p">(</span><span class="n">defaults</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_shortcut_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortcuts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">shortcuts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="c1"># Ignore shortcuts which aren&#39;t in currently supported list</span>
+            <span class="k">if</span> <span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Use &quot;&quot; if there&#39;s no shortcut set</span>
+            <span class="n">key_string</span> <span class="o">=</span> <span class="n">shortcuts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">key_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">key_string</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">key_string</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">key_string</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">continue</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">key_string</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">shortcuts</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="n">QKeySequence</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">key_string</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shortcuts</span>
+
+<div class="viewcode-block" id="Shortcuts.save"><a class="viewcode-back" href="../../../_autosummary/sleap.gui.shortcuts.html#sleap.gui.shortcuts.Shortcuts.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves all shortcuts to shortcut file.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Only save shortcuts with names in supported list</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">QKeySequence</span><span class="p">)</span> <span class="k">else</span> <span class="n">val</span>
+
+        <span class="n">util</span><span class="o">.</span><span class="n">save_config_yaml</span><span class="p">(</span><span class="s2">&quot;shortcuts.yaml&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">slice</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns shortcut value, accessed by range, index, or key.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx: Index (range, int, or str) of shortcut to access.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            If idx is int or string, then return value is the shortcut string.</span>
+<span class="sd">            If idx is range, then return value is dictionary in which keys</span>
+<span class="sd">            are shortcut name and value are shortcut strings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="c1"># dict with names and values</span>
+            <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">idx</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="c1"># value</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># if idx not in self._names:</span>
+        <span class="c1">#     print(f&quot;No shortcut matching &#39;{idx}&#39;&quot;)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets shortcut by index.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No shortcut matching &#39;</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shortcuts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns number of shortcuts.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
+
+    <span class="kn">from</span> <span class="nn">sleap.gui.dialogs.shortcuts</span> <span class="kn">import</span> <span class="n">ShortcutDialog</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">()</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">ShortcutDialog</span><span class="p">()</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

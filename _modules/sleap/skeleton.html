@@ -1,0 +1,1302 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.skeleton &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.skeleton</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Implementation of skeleton data structure and API.</span>
+
+<span class="sd">This module implements and API for creating animal skeletons. The goal</span>
+<span class="sd">is to provide a common interface for defining the parts of the animal,</span>
+<span class="sd">their connection to each other, and needed meta-data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">cattr</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">jsonpickle</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">count</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Text</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.readwrite</span> <span class="kn">import</span> <span class="n">json_graph</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">loadmat</span>
+
+<span class="n">NodeRef</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Node&quot;</span><span class="p">]</span>
+<span class="n">H5FileRef</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="EdgeType"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.EdgeType">[docs]</a><span class="k">class</span> <span class="nc">EdgeType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The skeleton graph can store different types of edges to represent</span>
+<span class="sd">    different things. All edges must specify one or more of the</span>
+<span class="sd">    following types:</span>
+
+<span class="sd">        * BODY - these edges represent connections between parts or</span>
+<span class="sd">          landmarks.</span>
+<span class="sd">        * SYMMETRY - these edges represent symmetrical relationships</span>
+<span class="sd">          between parts (e.g. left and right arms)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">BODY</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">SYMMETRY</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Node">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Node</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The class :class:`Node` represents a potential skeleton node.</span>
+<span class="sd">    (But note that nodes can exist without being part of a skeleton.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<div class="viewcode-block" id="Node.from_names"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Node.from_names">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_names</span><span class="p">(</span><span class="n">name_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;Node&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Convert list of node names to list of nodes objects.&quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">name_list</span><span class="p">:</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">nodes</span></div>
+
+<div class="viewcode-block" id="Node.as_node"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Node.as_node">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">as_node</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Node&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convert given `node` to `Node` object (if not already).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">node</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span> <span class="k">else</span> <span class="bp">cls</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Node.matches"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Node.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Node&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether all attributes match between two nodes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The `Node` to compare to this one.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if all attributes match, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">weight</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span></div></div>
+
+
+<div class="viewcode-block" id="Skeleton"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton">[docs]</a><span class="k">class</span> <span class="nc">Skeleton</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main object for representing animal skeletons.</span>
+
+<span class="sd">    The skeleton represents the constituent parts of the animal whose</span>
+<span class="sd">    pose is being estimated.</span>
+
+<span class="sd">    An index variable used to give skeletons a default name that should</span>
+<span class="sd">    be unique across all skeletons.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_skeleton_idx</span> <span class="o">=</span> <span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize an empty skeleton object.</span>
+
+<span class="sd">        Skeleton objects, once created, can be modified by adding nodes</span>
+<span class="sd">        and edges.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: A name for this skeleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If no skeleton was create, try to create a unique name for this Skeleton.</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Skeleton-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_skeleton_idx</span><span class="p">))</span>
+
+        <span class="c1"># Since networkx does not keep edges in the order we insert them we need</span>
+        <span class="c1"># to keep track of how many edges have been inserted so we can number them</span>
+        <span class="c1"># as they are inserted and sort them by this numbering when the edge list</span>
+        <span class="c1"># is returned.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">num_edges_inserted</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Skeleton.matches"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compare this `Skeleton` to another, ignoring skeleton name and</span>
+<span class="sd">        the identities of the `Node` objects in each graph.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: The other skeleton.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if match, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">dict_match</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dict1</span> <span class="o">==</span> <span class="n">dict2</span>
+
+        <span class="c1"># Check if the graphs are iso-morphic</span>
+        <span class="n">is_isomorphic</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">dict_match</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_isomorphic</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Now check that the nodes have the same labels and order. They can have</span>
+        <span class="c1"># different weights I guess?!</span>
+        <span class="k">for</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node1</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">node2</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Check if the two graphs are equal</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_arborescence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">recognition</span><span class="o">.</span><span class="n">is_arborescence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">in_degree_over_one</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">in_degree</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">in_degree</span> <span class="k">if</span> <span class="n">in_degree</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">root_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">in_degree</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">in_degree</span> <span class="k">if</span> <span class="n">in_degree</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cycles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">simple_cycles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns subgraph of BODY edges for skeleton.&quot;&quot;&quot;</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">edge_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_type</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">BODY</span>
+        <span class="p">]</span>
+        <span class="c1"># TODO: properly induce subgraph for MultiDiGraph</span>
+        <span class="c1">#   Currently, NetworkX will just return the nodes in the subgraph.</span>
+        <span class="c1">#   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">graph_symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns subgraph of symmetric edges for skeleton.&quot;&quot;&quot;</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">edge_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_type</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Skeleton.find_unique_nodes"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.find_unique_nodes">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">find_unique_nodes</span><span class="p">(</span><span class="n">skeletons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all unique nodes from a list of skeletons.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            skeletons: The list of skeletons.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of unique `Node` objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">({</span><span class="n">node</span> <span class="k">for</span> <span class="n">skeleton</span> <span class="ow">in</span> <span class="n">skeletons</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="Skeleton.make_cattr"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.make_cattr">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_cattr</span><span class="p">(</span><span class="n">idx_to_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make cattr.Convert() for `Skeleton`.</span>
+
+<span class="sd">        Make a cattr.Converter() that registers structure/unstructure</span>
+<span class="sd">        hooks for Skeleton objects to handle serialization of skeletons.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx_to_node: A dict that maps node index to Node objects.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A cattr.Converter() instance for skeleton serialization</span>
+<span class="sd">            and deserialization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node_to_idx</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">idx_to_node</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="k">if</span> <span class="n">idx_to_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="n">_cattr</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">Converter</span><span class="p">()</span>
+        <span class="n">_cattr</span><span class="o">.</span><span class="n">register_unstructure_hook</span><span class="p">(</span>
+            <span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">node_to_idx</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">_cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">idx_to_node</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_cattr</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the name of the skeleton.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A string representing the name of the skeleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="nd">@name</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A skeleton object cannot change its name.</span>
+
+<span class="sd">        This property is immutable because it is used to hash skeletons.</span>
+<span class="sd">        If you want to rename a Skeleton you must use the class</span>
+<span class="sd">        method :code:`rename_skeleton`:</span>
+
+<span class="sd">        &gt;&gt;&gt; new_skeleton = Skeleton.rename_skeleton(</span>
+<span class="sd">        &gt;&gt;&gt;     skeleton=old_skeleton, name=&quot;New Name&quot;)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: The name of the Skeleton.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NotImplementedError: Error is always raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot change Skeleton name, it is immutable since &quot;</span>
+            <span class="s2">&quot;it is used for hashing. Create a copy of the skeleton &quot;</span>
+            <span class="s2">&quot;with new name using &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;new_skeleton = Skeleton.rename(skeleton, &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;))&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Skeleton.rename_skeleton"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.rename_skeleton">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">rename_skeleton</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">skeleton</span><span class="p">:</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make copy of skeleton with new name.</span>
+
+<span class="sd">        This property is immutable because it is used to hash skeletons.</span>
+<span class="sd">        If you want to rename a Skeleton you must use this class method.</span>
+
+<span class="sd">        &gt;&gt;&gt; new_skeleton = Skeleton.rename_skeleton(</span>
+<span class="sd">        &gt;&gt;&gt;     skeleton=old_skeleton, name=&quot;New Name&quot;)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            skeleton: The skeleton to copy.</span>
+<span class="sd">            name: The name of the new skeleton.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new deep copied skeleton with the changed name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_skeleton</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">new_skeleton</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
+        <span class="n">new_skeleton</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="n">new_skeleton</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of :class:`Node`s.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of :class:`Node`s</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">node_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of node names.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of node names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">edges</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Node</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of edge tuples.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of (src_node, dst_node)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">edge_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;edge_insert_idx&quot;</span><span class="p">],</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">BODY</span>
+        <span class="p">]</span>
+
+        <span class="c1"># We don&#39;t want to return the edge list in the order it is stored. We</span>
+        <span class="c1"># want to use the insertion order. Sort by the insertion index for each</span>
+        <span class="c1"># edge then drop it from the edge list.</span>
+        <span class="n">edge_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">edge_list</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">edge_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">edge_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of edge name tuples.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of (src_node.name, dst_node.name)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">edge_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;edge_insert_idx&quot;</span><span class="p">],</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dst</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">BODY</span>
+        <span class="p">]</span>
+
+        <span class="c1"># We don&#39;t want to return the edge list in the order it is stored. We</span>
+        <span class="c1"># want to use the insertion order. Sort by the insertion index for each</span>
+        <span class="c1"># edge then drop it from the edge list.</span>
+        <span class="n">edge_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">edge_list</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="p">[(</span><span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dst</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">edge_inds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of edges as node indices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of (src_node_ind, dst_node_ind), where indices are subscripts into</span>
+<span class="sd">            the Skeleton.nodes list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">src_node</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dst_node</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">src_node</span><span class="p">,</span> <span class="n">dst_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">edges_full</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of edge tuples with keys and attributes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of (src_node, dst_node, key, attributes)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">BODY</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symmetries</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Node</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of all symmetries without duplicates.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of (node1, node2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Find all symmetric edges</span>
+        <span class="n">symmetries</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">edge_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_type</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span>
+        <span class="p">]</span>
+        <span class="c1"># Get rid of duplicates</span>
+        <span class="n">symmetries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">symmetries</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">symmetries</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symmetries_full</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of all symmetries with keys and attributes.</span>
+
+<span class="sd">        Note: The returned list will contain duplicates (node1, node2)</span>
+<span class="sd">        and (node2, node1).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of (node1, node2, key, attr)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Find all symmetric edges</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span>
+        <span class="p">]</span>
+
+<div class="viewcode-block" id="Skeleton.node_to_index"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.node_to_index">[docs]</a>    <span class="k">def</span> <span class="nf">node_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the index of the node, accepts either `Node` or name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node: The name of the node or the Node object.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError if node cannot be found in skeleton.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The index of the node in the graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Skeleton.edge_to_index"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.edge_to_index">[docs]</a>    <span class="k">def</span> <span class="nf">edge_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the index of edge from source to destination.&quot;&quot;&quot;</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+        <span class="n">edge</span> <span class="o">=</span> <span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Skeleton.add_node"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a node representing an animal part to the skeleton.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: The name of the node to add to the skeleton.</span>
+<span class="sd">                This name must be unique within the skeleton.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If name is not unique.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot add nodes to the skeleton that are not str&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_names</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Skeleton already has a node named (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Skeleton.add_nodes"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.add_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a list of nodes representing animal parts to the skeleton.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name_list: List of strings representing the nodes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">name_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.delete_node"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.delete_node">[docs]</a>    <span class="k">def</span> <span class="nf">delete_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove a node from the skeleton.</span>
+
+<span class="sd">        The method removes a node from the skeleton and any edge that is</span>
+<span class="sd">        connected to it.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: The name of the node to remove</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If node cannot be found.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The node named (</span><span class="si">{}</span><span class="s2">) does not exist, cannot remove it.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.find_node"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.find_node">[docs]</a>    <span class="k">def</span> <span class="nf">find_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Find node in skeleton by name of node.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: The name of the :class:`Node` (or a :class:`Node`)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            `Node`, or None if no match found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Found multiple nodes named (</span><span class="si">{}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Skeleton.add_edge"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an edge between two nodes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source: The name of the source node.</span>
+<span class="sd">            destination: The name of the destination node.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If source or destination nodes cannot be found,</span>
+<span class="sd">                or if edge already exists between those nodes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+            <span class="n">source_node</span> <span class="o">=</span> <span class="n">source</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">source_node</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">source_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+            <span class="n">destination_node</span> <span class="o">=</span> <span class="n">destination</span>
+            <span class="n">destination</span> <span class="o">=</span> <span class="n">destination_node</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">destination_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">source_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Skeleton does not have source node named (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">destination_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Skeleton does not have destination node named (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">destination_node</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Skeleton already has an edge between (</span><span class="si">{}</span><span class="s2">) and (</span><span class="si">{}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">source</span><span class="p">,</span> <span class="n">destination</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span>
+            <span class="n">source_node</span><span class="p">,</span>
+            <span class="n">destination_node</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">EdgeType</span><span class="o">.</span><span class="n">BODY</span><span class="p">,</span>
+            <span class="n">edge_insert_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;num_edges_inserted&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;num_edges_inserted&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;num_edges_inserted&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.delete_edge"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.delete_edge">[docs]</a>    <span class="k">def</span> <span class="nf">delete_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete an edge between two nodes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source: The name of the source node.</span>
+<span class="sd">            destination: The name of the destination node.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If skeleton does not have either source node,</span>
+<span class="sd">                destination node, or edge between them.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+            <span class="n">source_node</span> <span class="o">=</span> <span class="n">source</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">source_node</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">source_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+            <span class="n">destination_node</span> <span class="o">=</span> <span class="n">destination</span>
+            <span class="n">destination</span> <span class="o">=</span> <span class="n">destination_node</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">destination_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">source_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Skeleton does not have source node named (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">destination_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Skeleton does not have destination node named (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">destination_node</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Skeleton has no edge between (</span><span class="si">{}</span><span class="s2">) and (</span><span class="si">{}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">source</span><span class="p">,</span> <span class="n">destination</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">destination_node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.clear_edges"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.clear_edges">[docs]</a>    <span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes all edges in skeleton.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_edge</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.add_symmetry"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.add_symmetry">[docs]</a>    <span class="k">def</span> <span class="nf">add_symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">node2</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Specify that two parts (nodes) in skeleton are symmetrical.</span>
+
+<span class="sd">        Certain parts of an animal body can be related as symmetrical</span>
+<span class="sd">        parts in a pair. For example, left and right hands of a person.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node1: The name of the first part in the symmetric pair</span>
+<span class="sd">            node2: The name of the second part in the symmetric pair</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If node1 and node2 match, or if there is already</span>
+<span class="sd">                a symmetry between them.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node1_node</span><span class="p">,</span> <span class="n">node2_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span>
+
+        <span class="c1"># We will represent symmetric pairs in the skeleton via additional edges in the _graph</span>
+        <span class="c1"># These edges will have a special attribute signifying they are not part of the skeleton itself</span>
+
+        <span class="k">if</span> <span class="n">node1</span> <span class="o">==</span> <span class="n">node2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add symmetry to the same node.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node1</span><span class="si">}</span><span class="s2"> is already symmetric with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node2</span><span class="si">}</span><span class="s2"> is already symmetric with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node1_node</span><span class="p">,</span> <span class="n">node2_node</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node2_node</span><span class="p">,</span> <span class="n">node1_node</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.delete_symmetry"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.delete_symmetry">[docs]</a>    <span class="k">def</span> <span class="nf">delete_symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node1</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">,</span> <span class="n">node2</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes a previously established symmetry between two nodes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node1: One node (by `Node` object or name) in symmetric pair.</span>
+<span class="sd">            node2: Other node in symmetric pair.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If there&#39;s no symmetry between node1 and node2.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node1_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span>
+        <span class="n">node2_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">node2_node</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">node1_node</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nodes </span><span class="si">{</span><span class="n">node1</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">node2</span><span class="si">}</span><span class="s2"> are not symmetric.&quot;</span><span class="p">)</span>
+
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">edge_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">node1_node</span><span class="p">,</span> <span class="n">node2_node</span><span class="p">],</span> <span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;type&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_type</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">remove_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.get_symmetry"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.get_symmetry">[docs]</a>    <span class="k">def</span> <span class="nf">get_symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the node symmetric with the specified node.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node: Node (by `Node` object or name) to query.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If node has more than one symmetry.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The symmetric :class:`Node`, None if no symmetry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="n">symmetry</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">dst</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">edge_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">node_node</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_type</span> <span class="o">==</span> <span class="n">EdgeType</span><span class="o">.</span><span class="n">SYMMETRY</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">symmetry</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">symmetry</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">symmetry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> has more than one symmetry.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.get_symmetry_name"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.get_symmetry_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_symmetry_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the name of the node symmetric with the specified node.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node: Node (by `Node` object or name) to query.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Name of symmetric node, None if no symmetry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">symmetric_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetry</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">symmetric_node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">symmetric_node</span><span class="o">.</span><span class="n">name</span></div>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the node data associated with skeleton node.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node_name: The name from which to retrieve data.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If node cannot be found.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary of data associated with this node.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skeleton does not have node named &#39;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">data</span><span class="p">()[</span><span class="n">node</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if specified node exists in skeleton.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node_name: the node name to query</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if node is in the skeleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_node</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Skeleton.relabel_node"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.relabel_node">[docs]</a>    <span class="k">def</span> <span class="nf">relabel_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Relabel a single node to a new name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            old_name: The old name of the node.</span>
+<span class="sd">            new_name: The new name of the node.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relabel_nodes</span><span class="p">({</span><span class="n">old_name</span><span class="p">:</span> <span class="n">new_name</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="Skeleton.relabel_nodes"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.relabel_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">relabel_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Relabel the nodes of the skeleton.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mapping: A dictionary with the old labels as keys and new</span>
+<span class="sd">                labels as values. A partial mapping is allowed.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If node already present with one of the new names.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">existing_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="k">for</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_node</span><span class="p">(</span><span class="n">new_name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot relabel a node to an existing name.&quot;</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">old_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span></div>
+
+        <span class="c1"># self._graph = nx.relabel_nodes(G=self._graph, mapping=mapping)</span>
+
+<div class="viewcode-block" id="Skeleton.has_node"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.has_node">[docs]</a>    <span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether the skeleton has a node.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: The name of the node to check for.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True for yes, False for no.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_names</span></div>
+
+<div class="viewcode-block" id="Skeleton.has_nodes"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.has_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">has_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether the skeleton has a list of nodes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            names: The list names of the nodes to check for.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True for yes, False for no.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">current_node_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_names</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_node_names</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Skeleton.has_edge"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.has_edge">[docs]</a>    <span class="k">def</span> <span class="nf">has_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dest_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether the skeleton has an edge.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source_name: The name of the source node for the edge.</span>
+<span class="sd">            dest_name: The name of the destination node for the edge.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True is yes, False if no.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_node</span><span class="p">,</span> <span class="n">destination_node</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">source_name</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">dest_name</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">destination_node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.to_dict"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.to_dict">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">,</span> <span class="n">node_to_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert skeleton to dict; used for saving as JSON.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obj: the :object:`Skeleton` to convert</span>
+<span class="sd">            node_to_idx: optional dict which maps :class:`Node`sto index</span>
+<span class="sd">                in some list. This is used when saving</span>
+<span class="sd">                :class:`Labels`where we want to serialize the</span>
+<span class="sd">                :class:`Nodes` outside the :class:`Skeleton` object.</span>
+<span class="sd">                If given, then we replace each :class:`Node` with</span>
+<span class="sd">                specified index before converting :class:`Skeleton`.</span>
+<span class="sd">                Otherwise, we convert :class:`Node` objects with the rest of</span>
+<span class="sd">                the :class:`Skeleton`.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dict with data from skeleton</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># This is a weird hack to serialize the whole _graph into a dict.</span>
+        <span class="c1"># I use the underlying to_json and parse it.</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">node_to_idx</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Skeleton.from_dict"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">node_to_idx</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create skeleton from dict; used for loading from JSON.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            d: the dict from which to deserialize</span>
+<span class="sd">            node_to_idx: optional dict which maps :class:`Node`sto index</span>
+<span class="sd">                in some list. This is used when saving</span>
+<span class="sd">                :class:`Labels`where we want to serialize the</span>
+<span class="sd">                :class:`Nodes` outside the :class:`Skeleton` object.</span>
+<span class="sd">                If given, then we replace each :class:`Node` with</span>
+<span class="sd">                specified index before converting :class:`Skeleton`.</span>
+<span class="sd">                Otherwise, we convert :class:`Node` objects with the rest of</span>
+<span class="sd">                the :class:`Skeleton`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`Skeleton`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="n">node_to_idx</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.from_names_and_edge_inds"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.from_names_and_edge_inds">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_names_and_edge_inds</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">node_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">],</span> <span class="n">edge_inds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create skeleton from a list of node names and edge indices.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node_names: List of strings defining the nodes.</span>
+<span class="sd">            edge_inds: List of tuples in the form (src_node_ind, dst_node_ind). If not</span>
+<span class="sd">                specified, the resulting skeleton will have no edges.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated skeleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_inds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="n">edge_inds</span><span class="p">:</span>
+                <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node_names</span><span class="p">[</span><span class="n">src</span><span class="p">],</span> <span class="n">node_names</span><span class="p">[</span><span class="n">dst</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">skeleton</span></div>
+
+<div class="viewcode-block" id="Skeleton.to_json"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_to_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the :class:`Skeleton` to a JSON representation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node_to_idx: optional dict which maps :class:`Node`sto index</span>
+<span class="sd">                in some list. This is used when saving</span>
+<span class="sd">                :class:`Labels`where we want to serialize the</span>
+<span class="sd">                :class:`Nodes` outside the :class:`Skeleton` object.</span>
+<span class="sd">                If given, then we replace each :class:`Node` with</span>
+<span class="sd">                specified index before converting :class:`Skeleton`.</span>
+<span class="sd">                Otherwise, we convert :class:`Node` objects with the rest of</span>
+<span class="sd">                the :class:`Skeleton`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A string containing the JSON representation of the skeleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">jsonpickle</span><span class="o">.</span><span class="n">set_encoder_options</span><span class="p">(</span><span class="s2">&quot;simplejson&quot;</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node_to_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">indexed_node_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">relabel_nodes</span><span class="p">(</span>
+                <span class="n">G</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">node_to_idx</span>
+            <span class="p">)</span>  <span class="c1"># map nodes to int</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">indexed_node_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span>
+
+        <span class="c1"># Encode to JSON</span>
+        <span class="n">json_str</span> <span class="o">=</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">json_graph</span><span class="o">.</span><span class="n">node_link_data</span><span class="p">(</span><span class="n">indexed_node_graph</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">json_str</span></div>
+
+<div class="viewcode-block" id="Skeleton.save_json"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.save_json">[docs]</a>    <span class="k">def</span> <span class="nf">save_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">node_to_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the :class:`Skeleton` as JSON file.</span>
+
+<span class="sd">        Output the complete skeleton to a file in JSON format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: The filename to save the JSON to.</span>
+<span class="sd">            node_to_idx: optional dict which maps :class:`Node`sto index</span>
+<span class="sd">                in some list. This is used when saving</span>
+<span class="sd">                :class:`Labels`where we want to serialize the</span>
+<span class="sd">                :class:`Nodes` outside the :class:`Skeleton` object.</span>
+<span class="sd">                If given, then we replace each :class:`Node` with</span>
+<span class="sd">                specified index before converting :class:`Skeleton`.</span>
+<span class="sd">                Otherwise, we convert :class:`Node` objects with the rest of</span>
+<span class="sd">                the :class:`Skeleton`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">json_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">node_to_idx</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.from_json"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.from_json">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">json_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">idx_to_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate :class:`Skeleton` from JSON string.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            json_str: The JSON encoded Skeleton.</span>
+<span class="sd">            idx_to_node: optional dict which maps an int (indexing a</span>
+<span class="sd">                list of :class:`Node` objects) to the already</span>
+<span class="sd">                deserialized :class:`Node`.</span>
+<span class="sd">                This should invert `node_to_idx` we used when saving.</span>
+<span class="sd">                If not given, then we&#39;ll assume each :class:`Node` was</span>
+<span class="sd">                left in the :class:`Skeleton` when it was saved.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of the `Skeleton` object decoded from the JSON.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">json_graph</span><span class="o">.</span><span class="n">node_link_graph</span><span class="p">(</span><span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">json_str</span><span class="p">))</span>
+
+        <span class="c1"># Replace graph node indices with corresponding nodes from node_map</span>
+        <span class="k">if</span> <span class="n">idx_to_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">relabel_nodes</span><span class="p">(</span><span class="n">G</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">idx_to_node</span><span class="p">)</span>
+
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
+        <span class="n">skeleton</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+        <span class="k">return</span> <span class="n">skeleton</span></div>
+
+<div class="viewcode-block" id="Skeleton.load_json"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.load_json">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_json</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">idx_to_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a skeleton from a JSON file.</span>
+
+<span class="sd">        This method will load the Skeleton from JSON file saved</span>
+<span class="sd">        with; :meth:`~Skeleton.save_json`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: The file that contains the JSON.</span>
+<span class="sd">            idx_to_node: optional dict which maps an int (indexing a</span>
+<span class="sd">                list of :class:`Node` objects) to the already</span>
+<span class="sd">                deserialized :class:`Node`.</span>
+<span class="sd">                This should invert `node_to_idx` we used when saving.</span>
+<span class="sd">                If not given, then we&#39;ll assume each :class:`Node` was</span>
+<span class="sd">                left in the :class:`Skeleton` when it was saved.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The `Skeleton` object stored in the JSON filename.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">skeleton</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">idx_to_node</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">skeleton</span></div>
+
+<div class="viewcode-block" id="Skeleton.load_hdf5"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.load_hdf5">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_hdf5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">H5FileRef</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a specific skeleton (by name) from the HDF5 file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file: The file name or open h5py.File</span>
+<span class="sd">            name: The name of the skeleton.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The specified `Skeleton` instance stored in the HDF5 file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">_file</span><span class="p">:</span>
+                <span class="n">skeletons</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_hdf5</span><span class="p">(</span><span class="n">_file</span><span class="p">)</span>  <span class="c1"># Load all skeletons</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">skeletons</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_hdf5</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">skeletons</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Skeleton.load_all_hdf5"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.load_all_hdf5">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_all_hdf5</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">H5FileRef</span><span class="p">,</span> <span class="n">return_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load all skeletons found in the HDF5 file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file: The file name or open h5py.File</span>
+<span class="sd">            return_dict: Whether the the return value should be a dict</span>
+<span class="sd">                where the keys are skeleton names and values the</span>
+<span class="sd">                corresponding skeleton. If False, then method will</span>
+<span class="sd">                return just a list of the skeletons.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The skeleton instances stored in the HDF5 file.</span>
+<span class="sd">            Either in List or Dict form.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">_file</span><span class="p">:</span>
+                <span class="n">skeletons</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_hdf5</span><span class="p">(</span><span class="n">_file</span><span class="p">)</span>  <span class="c1"># Load all skeletons</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">skeletons</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_hdf5</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">skeletons</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">skeletons</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_load_hdf5</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
+
+        <span class="n">skeletons</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">json_str</span> <span class="ow">in</span> <span class="n">file</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">skeletons</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">skeletons</span>
+
+<div class="viewcode-block" id="Skeleton.save_all_hdf5"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.save_all_hdf5">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">save_all_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">H5FileRef</span><span class="p">,</span> <span class="n">skeletons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;Skeleton&quot;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convenience method to save a list of skeletons to HDF5 file.</span>
+
+<span class="sd">        Skeletons are saved as attributes of a /skeleton group in the</span>
+<span class="sd">        file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file: The filename or the open h5py.File object.</span>
+<span class="sd">            skeletons: The list of skeletons to save.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If multiple skeletons have the same name.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make sure no skeleton has the same name</span>
+        <span class="n">unique_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">skeletons</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skeletons</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot save multiple Skeleton&#39;s with the same name.&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">skeleton</span> <span class="ow">in</span> <span class="n">skeletons</span><span class="p">:</span>
+            <span class="n">skeleton</span><span class="o">.</span><span class="n">save_hdf5</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Skeleton.save_hdf5"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.save_hdf5">[docs]</a>    <span class="k">def</span> <span class="nf">save_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">H5FileRef</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wrapper for HDF5 saving which takes either filename or h5py.File.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file: can be filename (string) or `h5py.File` object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">_file</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_save_hdf5</span><span class="p">(</span><span class="n">_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_hdf5</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_save_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Actual implementation of HDF5 saving.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file: The open h5py.File to write the skeleton data to.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># All skeleton will be put as sub-groups in the skeleton group</span>
+        <span class="k">if</span> <span class="s2">&quot;skeleton&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">all_sk_group</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;skeleton&quot;</span><span class="p">,</span> <span class="n">track_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">all_sk_group</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="s2">&quot;skeleton&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Write the dataset to JSON string, then store it in a string</span>
+        <span class="c1"># attribute</span>
+        <span class="n">all_sk_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">string_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span>
+
+<div class="viewcode-block" id="Skeleton.load_mat"><a class="viewcode-back" href="../../_autosummary/sleap.skeleton.html#sleap.skeleton.Skeleton.load_mat">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_mat</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Skeleton&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the skeleton from a Matlab MAT file.</span>
+
+<span class="sd">        This is to support backwards compatibility with old LEAP</span>
+<span class="sd">        MATLAB code and datasets.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filename: The name of the skeleton file</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of the skeleton.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Lets create a skeleton object, use the filename for the name since old LEAP</span>
+        <span class="c1"># skeletons did not have names.</span>
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="n">skel_mat</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">skel_mat</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">skel_mat</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># convert to scalar</span>
+        <span class="n">skel_mat</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">skel_mat</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># convert to 0-based indexing</span>
+
+        <span class="n">node_names</span> <span class="o">=</span> <span class="n">skel_mat</span><span class="p">[</span><span class="s2">&quot;nodeNames&quot;</span><span class="p">]</span>
+        <span class="n">node_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">]</span>
+        <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">skel_mat</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">])):</span>
+            <span class="n">edge</span> <span class="o">=</span> <span class="n">skel_mat</span><span class="p">[</span><span class="s2">&quot;edges&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span>
+                <span class="n">source</span><span class="o">=</span><span class="n">node_names</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">destination</span><span class="o">=</span><span class="n">node_names</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">skeleton</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">(name=</span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a hash from skeleton id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<span class="n">cattr</span><span class="o">.</span><span class="n">register_unstructure_hook</span><span class="p">(</span><span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">skeleton</span><span class="p">:</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">skeleton</span><span class="p">))</span>
+<span class="n">cattr</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span><span class="n">Skeleton</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">dicts</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="n">Skeleton</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">dicts</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

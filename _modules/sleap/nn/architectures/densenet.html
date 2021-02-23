@@ -1,0 +1,659 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.nn.architectures.densenet &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.architectures.densenet</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Implements wrappers for constructing (optionally pretrained) DenseNets.</span>
+
+<span class="sd">See original paper:</span>
+<span class="sd">https://arxiv.org/abs/1608.06993</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures</span> <span class="kn">import</span> <span class="n">common</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">keras_applications</span> <span class="kn">import</span> <span class="n">densenet</span> <span class="k">as</span> <span class="n">bb</span>
+
+<span class="n">layers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span>
+<span class="n">bb</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span>
+<span class="n">bb</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span>
+<span class="n">bb</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span>
+<span class="n">bb</span><span class="o">.</span><span class="n">keras_utils</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span>
+
+
+<div class="viewcode-block" id="DenseNet121"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.DenseNet121">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DenseNet121</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;DenseNet121 backbone.</span>
+
+<span class="sd">    This backbone has ~7M params.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_layers: Use upsampling instead of transposed convolutions.</span>
+<span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
+<span class="sd">        up_blocks: Number of upsampling steps to perform. The backbone reduces</span>
+<span class="sd">            the output scale by 1/32. If set to 5, outputs will be upsampled to the</span>
+<span class="sd">            input resolution.</span>
+<span class="sd">        refine_conv_up: If true, applies a 1x1 conv after each upsampling step.</span>
+<span class="sd">        pretrained: Load pretrained ImageNet weights for transfer learning. If</span>
+<span class="sd">            False, random weights are used for initialization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">upsampling_layers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">interp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">refine_conv_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="DenseNet121.output"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.DenseNet121.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the layers for this backbone and return the output tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width</span>
+<span class="sd">                that are divisible by `2^down_blocks.</span>
+<span class="sd">            num_output_channels: The number of output channels of the block. These</span>
+<span class="sd">                are the final output tensors on which intermediate supervision may be</span>
+<span class="sd">                applied.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span><span class="p">:</span>
+            <span class="c1"># Input should be rescaled from [0, 1] to [-1, 1] and needs to be 3 channels (RGB)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">scale_input</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">tile_channels</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Automatically downloads weights</span>
+        <span class="n">backbone_model</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">DenseNet121</span><span class="p">(</span>
+            <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">input_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;imagenet&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span>
+            <span class="n">layers</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span>
+            <span class="n">models</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="p">,</span>
+            <span class="n">utils</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Output size is reduced by factor of 32 (2 ** 5)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">backbone_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Upsampling blocks.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">common</span><span class="o">.</span><span class="n">upsampling_blocks</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">up_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">,</span>
+            <span class="n">upsampling_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_layers</span><span class="p">,</span>
+            <span class="n">refine_conv_up</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_conv_up</span><span class="p">,</span>
+            <span class="n">interp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">down_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of downsampling steps in the model.&quot;&quot;&quot;</span>
+
+        <span class="c1"># This is a fixed constant for this backbone.</span>
+        <span class="k">return</span> <span class="mi">5</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns relative scaling factor of this backbone.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DenseNet169"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.DenseNet169">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DenseNet169</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;DenseNet169 backbone.</span>
+
+<span class="sd">    This backbone has ~12.6M params.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_layers: Use upsampling instead of transposed convolutions.</span>
+<span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
+<span class="sd">        up_blocks: Number of upsampling steps to perform. The backbone reduces</span>
+<span class="sd">            the output scale by 1/32. If set to 5, outputs will be upsampled to the</span>
+<span class="sd">            input resolution.</span>
+<span class="sd">        refine_conv_up: If true, applies a 1x1 conv after each upsampling step.</span>
+<span class="sd">        pretrained: Load pretrained ImageNet weights for transfer learning. If</span>
+<span class="sd">            False, random weights are used for initialization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">upsampling_layers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">interp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">refine_conv_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="DenseNet169.output"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.DenseNet169.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the layers for this backbone and return the output tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width</span>
+<span class="sd">                that are divisible by `2^down_blocks.</span>
+<span class="sd">            num_output_channels: The number of output channels of the block. These</span>
+<span class="sd">                are the final output tensors on which intermediate supervision may be</span>
+<span class="sd">                applied.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span><span class="p">:</span>
+            <span class="c1"># Input should be rescaled from [0, 1] to [-1, 1] and needs to be 3 channels (RGB)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">scale_input</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">tile_channels</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Automatically downloads weights</span>
+        <span class="n">backbone_model</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">DenseNet169</span><span class="p">(</span>
+            <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">input_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;imagenet&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span>
+            <span class="n">layers</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span>
+            <span class="n">models</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="p">,</span>
+            <span class="n">utils</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Output size is reduced by factor of 32 (2 ** 5)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">backbone_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Upsampling blocks.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">common</span><span class="o">.</span><span class="n">upsampling_blocks</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">up_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">,</span>
+            <span class="n">upsampling_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_layers</span><span class="p">,</span>
+            <span class="n">refine_conv_up</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_conv_up</span><span class="p">,</span>
+            <span class="n">interp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">down_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of downsampling steps in the model.&quot;&quot;&quot;</span>
+
+        <span class="c1"># This is a fixed constant for this backbone.</span>
+        <span class="k">return</span> <span class="mi">5</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns relative scaling factor of this backbone.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DenseNet201"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.DenseNet201">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DenseNet201</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;DenseNet201 backbone.</span>
+
+<span class="sd">    This backbone has ~18.3M params.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        upsampling_layers: Use upsampling instead of transposed convolutions.</span>
+<span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
+<span class="sd">        up_blocks: Number of upsampling steps to perform. The backbone reduces</span>
+<span class="sd">            the output scale by 1/32. If set to 5, outputs will be upsampled to the</span>
+<span class="sd">            input resolution.</span>
+<span class="sd">        refine_conv_up: If true, applies a 1x1 conv after each upsampling step.</span>
+<span class="sd">        pretrained: Load pretrained ImageNet weights for transfer learning. If</span>
+<span class="sd">            False, random weights are used for initialization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">upsampling_layers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">interp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">refine_conv_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="DenseNet201.output"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.DenseNet201.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the layers for this backbone and return the output tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width</span>
+<span class="sd">                that are divisible by `2^down_blocks.</span>
+<span class="sd">            num_output_channels: The number of output channels of the block. These</span>
+<span class="sd">                are the final output tensors on which intermediate supervision may be</span>
+<span class="sd">                applied.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span><span class="p">:</span>
+            <span class="c1"># Input should be rescaled from [0, 1] to [-1, 1] and needs to be 3 channels (RGB)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">scale_input</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">tile_channels</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Automatically downloads weights</span>
+        <span class="n">backbone_model</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">DenseNet201</span><span class="p">(</span>
+            <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">input_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;imagenet&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span>
+            <span class="n">layers</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span>
+            <span class="n">models</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="p">,</span>
+            <span class="n">utils</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Output size is reduced by factor of 32 (2 ** 5)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">backbone_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Upsampling blocks.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">common</span><span class="o">.</span><span class="n">upsampling_blocks</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">up_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">,</span>
+            <span class="n">upsampling_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_layers</span><span class="p">,</span>
+            <span class="n">refine_conv_up</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_conv_up</span><span class="p">,</span>
+            <span class="n">interp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">down_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of downsampling steps in the model.&quot;&quot;&quot;</span>
+
+        <span class="c1"># This is a fixed constant for this backbone.</span>
+        <span class="k">return</span> <span class="mi">5</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns relative scaling factor of this backbone.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="GeneralizedDenseNet"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.GeneralizedDenseNet">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">GeneralizedDenseNet</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generalized version of the 4-block DenseNet backbone.</span>
+
+<span class="sd">    This allows for selecting the number of blocks in each dense layer, but cannot use</span>
+<span class="sd">    pretrained weights since the configuration may not have been previously used.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        n_dense_blocks_1: Number of blocks in dense layer 1.</span>
+<span class="sd">        n_dense_blocks_2: Number of blocks in dense layer 2.</span>
+<span class="sd">        n_dense_blocks_3: Number of blocks in dense layer 3.</span>
+<span class="sd">        n_dense_blocks_4: Number of blocks in dense layer 4.</span>
+<span class="sd">        upsampling_layers: Use upsampling instead of transposed convolutions.</span>
+<span class="sd">        interp: Method to use for interpolation when upsampling smaller features.</span>
+<span class="sd">        up_blocks: Number of upsampling steps to perform. The backbone reduces</span>
+<span class="sd">            the output scale by 1/32. If set to 5, outputs will be upsampled to the</span>
+<span class="sd">            input resolution.</span>
+<span class="sd">        refine_conv_up: If true, applies a 1x1 conv after each upsampling step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n_dense_blocks_1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">n_dense_blocks_2</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">n_dense_blocks_3</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">n_dense_blocks_4</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">upsampling_layers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">interp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">refine_conv_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="GeneralizedDenseNet.output"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.GeneralizedDenseNet.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the layers for this backbone and return the output tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input 4-D tf.Tensor or instantiated layer. Must have height and width</span>
+<span class="sd">                that are divisible by `2^down_blocks.</span>
+<span class="sd">            num_output_channels: The number of output channels of the block. These</span>
+<span class="sd">                are the final output tensors on which intermediate supervision may be</span>
+<span class="sd">                applied.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            x_out: tf.Tensor of the output of the block of with `num_output_channels` channels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+
+        <span class="c1"># Automatically downloads weights</span>
+        <span class="n">backbone_model</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">DenseNet</span><span class="p">(</span>
+            <span class="n">blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dense_blocks</span><span class="p">,</span>
+            <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">input_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span>
+            <span class="n">layers</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span>
+            <span class="n">models</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="p">,</span>
+            <span class="n">utils</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Output size is reduced by factor of 32 (2 ** 5)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">backbone_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Upsampling blocks.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">common</span><span class="o">.</span><span class="n">upsampling_blocks</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">up_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">,</span>
+            <span class="n">upsampling_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">upsampling_layers</span><span class="p">,</span>
+            <span class="n">refine_conv_up</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">refine_conv_up</span><span class="p">,</span>
+            <span class="n">interp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dense_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_dense_blocks_1</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_dense_blocks_2</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_dense_blocks_3</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_dense_blocks_4</span><span class="p">,</span>
+        <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">down_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of downsampling steps in the model.&quot;&quot;&quot;</span>
+
+        <span class="c1"># This is a fixed constant for this backbone.</span>
+        <span class="k">return</span> <span class="mi">5</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns relative scaling factor of this backbone.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">))</span></div>
+
+
+<span class="k">def</span> <span class="nf">make_backbone</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">stem_stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">stem_filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">return_mid_feats</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ZeroPadding2D</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))(</span><span class="n">x_in</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">stem_filters</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1/conv&quot;</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1/bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1/relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ZeroPadding2D</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">stem_stride</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pool1&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">x_mids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">transition_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;pool</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;conv</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">x_mids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1.001e-5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bn&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;UDenseNet_backbone&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_mid_feats</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">x_mids</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model</span>
+
+
+<span class="k">def</span> <span class="nf">make_head</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">output_channels</span><span class="p">,</span> <span class="n">up_blocks</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">mid_feats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">filters</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">up_blocks</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">feats</span>
+    <span class="n">x_mid_out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">up_blocks</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">(</span><span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mid_feats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">mid_feat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mid_feats</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">mid_feat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)([</span><span class="n">x</span><span class="p">,</span> <span class="n">mid_feat</span><span class="p">])</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x_mid_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">filters</span><span class="o">=</span><span class="n">output_channels</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+        <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_out&quot;</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">x_mid_out</span>
+
+
+<div class="viewcode-block" id="UDenseNet"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.UDenseNet">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">UDenseNet</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;UDenseNet backbone, a UNet-like architecture with skip connections to heads.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        stem_stride: Initial downsampling stride in the stem block.</span>
+<span class="sd">        stem_filters: Initial number of conv filters in the stem block.</span>
+<span class="sd">        dense_blocks: List of integers defining the size of each dense block. Can be of</span>
+<span class="sd">            any length &gt; 0.</span>
+<span class="sd">        output_scale: Scale of the output tensor relative to the input.</span>
+<span class="sd">        n_heads: Number of heads to produce. Intermediate heads will pass features from</span>
+<span class="sd">            every scale to the next head, starting from the first backbone with dense</span>
+<span class="sd">            blocks and transitions.</span>
+<span class="sd">        head_filters: Filters to use in each head block after concatenation with</span>
+<span class="sd">            previous filters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">stem_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">stem_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">dense_blocks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
+    <span class="n">output_scale</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">n_heads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">head_filters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">64</span>
+
+<div class="viewcode-block" id="UDenseNet.output"><a class="viewcode-back" href="../../../../training.html#sleap.nn.architectures.densenet.UDenseNet.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">n_output_channels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the layers for this backbone and return the output tensor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_in: Input 4-D tf.Tensor.</span>
+<span class="sd">            n_output_channels: Number of output channels.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tf.keras.Model with as many outputs as the n_heads attribute for this</span>
+<span class="sd">                model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">backbone</span><span class="p">,</span> <span class="n">backbone_mid_feats</span> <span class="o">=</span> <span class="n">make_backbone</span><span class="p">(</span>
+            <span class="n">x_in</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dense_blocks</span><span class="p">,</span>
+            <span class="n">stem_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_stride</span><span class="p">,</span>
+            <span class="n">stem_filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_filters</span><span class="p">,</span>
+            <span class="n">return_mid_feats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">output_scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_scales</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">output_scales</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_scales</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_heads</span>
+
+        <span class="n">heads_filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_filters</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">heads_filters</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">heads_filters</span> <span class="o">=</span> <span class="p">[</span><span class="n">heads_filters</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_heads</span>
+
+        <span class="n">head_input</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">output</span>
+        <span class="n">mid_feats</span> <span class="o">=</span> <span class="n">backbone_mid_feats</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">head</span><span class="p">,</span> <span class="p">(</span><span class="n">output_scale</span><span class="p">,</span> <span class="n">head_filters</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">output_scales</span><span class="p">,</span> <span class="n">heads_filters</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">output_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">output_scale</span><span class="p">)</span>
+            <span class="n">up_blocks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">output_size</span> <span class="o">/</span> <span class="n">backbone</span><span class="o">.</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+            <span class="n">x</span><span class="p">,</span> <span class="n">head_mid_feats</span> <span class="o">=</span> <span class="n">make_head</span><span class="p">(</span>
+                <span class="n">head_input</span><span class="p">,</span>
+                <span class="n">n_output_channels</span><span class="p">,</span>
+                <span class="n">up_blocks</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="n">head_filters</span><span class="p">,</span>
+                <span class="n">mid_feats</span><span class="o">=</span><span class="n">mid_feats</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;head</span><span class="si">{</span><span class="n">head</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="c1"># Update middle features by scale.</span>
+            <span class="n">old_mid_feat_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">mid_feats</span><span class="p">]</span>
+            <span class="n">new_mid_feat_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">head_mid_feats</span><span class="p">]</span>
+            <span class="n">all_mid_feat_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">old_mid_feat_sizes</span> <span class="o">+</span> <span class="n">new_mid_feat_sizes</span><span class="p">)</span>
+            <span class="n">next_mid_feats</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">feat_size</span> <span class="ow">in</span> <span class="n">all_mid_feat_sizes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">feat_size</span> <span class="ow">in</span> <span class="n">new_mid_feat_sizes</span><span class="p">:</span>
+                    <span class="n">next_mid_feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">head_mid_feats</span><span class="p">[</span><span class="n">new_mid_feat_sizes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">feat_size</span><span class="p">)]</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">next_mid_feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">mid_feats</span><span class="p">[</span><span class="n">old_mid_feat_sizes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">feat_size</span><span class="p">)]</span>
+                    <span class="p">)</span>
+            <span class="n">mid_feats</span> <span class="o">=</span> <span class="n">next_mid_feats</span>
+
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;UDenseNet&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">down_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of downsampling steps in the model.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_stride</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense_blocks</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial-part2.html">Tutorial, Part 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../howtos.html">How-Tos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

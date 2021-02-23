@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frequently Asked Questions &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Feature Reference" href="reference.html" />
+    <link rel="prev" title="How-Tos" href="howtos.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="frequently-asked-questions">
+<span id="faq"></span><h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="skeleton">
+<h2>Skeleton<a class="headerlink" href="#skeleton" title="Permalink to this headline">¶</a></h2>
+<p><strong>Can I add or remove nodes in the skeleton after I’ve already created instances?</strong></p>
+<p>Yes.</p>
+<p>Removing nodes is straightforward: just remove them. If you’re using part affinity fields for inference, you should make sure that the skeleton graph is still connected.</p>
+<p>Adding nodes is a little more complicated. First add the nodes to your skeleton. Then, to add these nodes to any instance which already exists, you’ll need to <strong>double-click</strong> on the instance (on the video frame image). The new nodes will be added and marked as “non-visible”; you’ll need to <strong>right-click</strong> on each node you want to make visible, and move it to the correct location.</p>
+<p><strong>Can I add or remove edges in the skeleton after I’ve already created instances?</strong></p>
+<p>Yes, adding or removed edges is straightforward and the change will be applied to all instances.</p>
+</div>
+<div class="section" id="pretraining">
+<h2>Pretraining<a class="headerlink" href="#pretraining" title="Permalink to this headline">¶</a></h2>
+<p><strong>How can I download pretrained weights to use for my backbones?</strong>
+Normally, pretrained weights will be automatically downloaded when the network is trained. This can be an issue when training in an environment that does not have internet access (e.g., HPC clusters). A simple solution is to manually trigger downloading of the pretrained weights in the same environment (e.g., the head node of a cluster). These one-liners will trigger weight downloading for the appropriate backbones:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.ResNet50(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.DenseNet121(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.DenseNet169(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.DenseNet201(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3))&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.25)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.5)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.75)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNet(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.0)&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.35)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.5)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=0.75)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.0)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.3)&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.MobileNetV2(weights=&#39;imagenet&#39;, include_top=False, input_shape=(256, 256, 3), alpha=1.4)&quot;</span>
+
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.NASNetMobile(weights=&#39;imagenet&#39;, include_top=False, input_shape=(224, 224, 3))&quot;</span>
+python -c <span class="s2">&quot;from tensorflow.keras import applications; applications.NASNetLarge(weights=&#39;imagenet&#39;, include_top=False, input_shape=(331, 331, 3))&quot;</span>
+</pre></div>
+</div>
+<p>Be sure to run these with the same <code class="docutils literal notranslate"><span class="pre">python</span></code> binary as will be used for training so the weights can be loaded from the disk appropriately.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial-part2.html">Tutorial, Part 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howtos.html">How-Tos</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#skeleton">Skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pretraining">Pretraining</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="howtos.html" title="previous chapter">How-Tos</a></li>
+      <li>Next: <a href="reference.html" title="next chapter">Feature Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/faq.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

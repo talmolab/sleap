@@ -1,0 +1,1667 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.commands &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.gui.dataviews" href="sleap.gui.dataviews.html" />
+    <link rel="prev" title="sleap.gui.color" href="sleap.gui.color.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.gui.commands">
+<span id="sleap-gui-commands"></span><h1>sleap.gui.commands<a class="headerlink" href="#module-sleap.gui.commands" title="Permalink to this headline">¶</a></h1>
+<p>Module for gui command context and commands objects.</p>
+<p>Each open project (i.e., <cite>MainWindow</cite>) will have its own <cite>CommandContext</cite>.
+The context enables commands to access and modify the <cite>GuiState</cite> and <cite>Labels</cite>,
+as well as potentially maintaining a command history (so we can add support for
+undo!). See <cite>sleap.gui.app</cite> for how the context is created and used.</p>
+<p>Every command will have both a method in <cite>CommandContext</cite> (this is what should
+be used to trigger the command, e.g., connected to the menu action) and a
+class which inherits from <cite>AppCommand</cite> (or a more specialized class such as
+<cite>NavCommand</cite>, <cite>GoIteratorCommand</cite>, or <cite>EditCommand</cite>). Note that this code relies
+on inheritance, so some care and attention is required.</p>
+<p>A typical command will override the <cite>ask</cite> and <cite>do_action</cite> methods. If the
+command updates something which affects the GUI, it should override the <cite>topic</cite>
+attribute (this then gets passed back to the <cite>update_callback</cite> from the context.
+If a command doesn’t require any input from the user, then it doesn’t need to
+override the <cite>ask</cite> method.</p>
+<p>If it’s not possible to separate the GUI “ask” and the non-GUI “do” code, then
+instead of <cite>ask</cite> and <cite>do_action</cite> you should add an <cite>ask_and_do</cite> method
+(for instance, <cite>DeleteDialogCommand</cite> and <cite>MergeProject</cite> show dialogues which
+handle both the GUI and the action). Ideally we’d endorse separation of “ask”
+and “do” for all commands (this is important if we’re going to implement undo)–
+for now it’s at least easy to see where this separation is violated.</p>
+<dl class="py class">
+<dt id="sleap.gui.commands.AddInstance">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">AddInstance</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddInstance" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.AddInstance.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddInstance.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddInstance.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.AddMissingInstanceNodes">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">AddMissingInstanceNodes</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddMissingInstanceNodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddMissingInstanceNodes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.AddMissingInstanceNodes.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddMissingInstanceNodes.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddMissingInstanceNodes.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.AddMissingInstanceNodes.get_rect_center_xy">
+<em class="property">static </em><code class="sig-name descname">get_rect_center_xy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rect</span><span class="p">:</span> <span class="n">PySide2.QtCore.QRectF</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddMissingInstanceNodes.get_rect_center_xy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddMissingInstanceNodes.get_rect_center_xy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns x, y at center of rect.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.AddMissingInstanceNodes.get_xy_in_rect">
+<em class="property">static </em><code class="sig-name descname">get_xy_in_rect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rect</span><span class="p">:</span> <span class="n">PySide2.QtCore.QRectF</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddMissingInstanceNodes.get_xy_in_rect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddMissingInstanceNodes.get_xy_in_rect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns random x, y coordinates within given rect.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.AddTrack">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">AddTrack</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddTrack" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.AddTrack.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddTrack.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddTrack.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.AddUserInstancesFromPredictions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">AddUserInstancesFromPredictions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddUserInstancesFromPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddUserInstancesFromPredictions" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.AddUserInstancesFromPredictions.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddUserInstancesFromPredictions.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddUserInstancesFromPredictions.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.AddVideo">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">AddVideo</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddVideo" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.AddVideo.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#AddVideo.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddVideo.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for adding video to project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.AddVideo.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AddVideo.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AddVideo.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.AppCommand">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">AppCommand</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#AppCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AppCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for specific commands.</p>
+<p>Note that this is not an abstract base class. For specific commands, you
+should override <cite>ask</cite> and/or <cite>do_action</cite> methods, or add an <cite>ask_and_do</cite>
+method. In many cases you’ll want to override the <cite>topics</cite> and <cite>does_edits</cite>
+attributes. That said, these are not virtual methods/attributes and have
+are implemented in the base class with default behaviors (i.e., doing
+nothing).</p>
+<p>You should not override <cite>execute</cite> or <cite>do_with_signal</cite>.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.commands.AppCommand.topics">
+<code class="sig-name descname">topics</code><a class="headerlink" href="#sleap.gui.commands.AppCommand.topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <cite>UpdateTopic</cite> items. Override this to indicate what
+should be updated after command is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.commands.AppCommand.does_edits">
+<code class="sig-name descname">does_edits</code><a class="headerlink" href="#sleap.gui.commands.AppCommand.does_edits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether command will modify data that could be saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.AppCommand.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#AppCommand.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AppCommand.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.AppCommand.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AppCommand.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AppCommand.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.AppCommand.do_with_signal">
+<em class="property">classmethod </em><code class="sig-name descname">do_with_signal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AppCommand.do_with_signal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AppCommand.do_with_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper to perform action and notify/track changes.</p>
+<p>Don’t override this method!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.AppCommand.execute">
+<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#AppCommand.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.AppCommand.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point for running command.</p>
+<p>This calls internal methods to gather information required for
+execution, perform the action, and notify about changes.</p>
+<p>Ideally, any information gathering should be performed in the <cite>ask</cite>
+method, and be added to the <cite>params</cite> dictionary which then gets
+passed to <cite>do_action</cite>. The <cite>ask</cite> method should not modify state.</p>
+<p>(This will make it easier to add support for undo,
+using an <cite>undo_action</cite> which will be given the same <cite>params</cite>
+dictionary.)</p>
+<p>If it’s not possible to easily separate information gathering from
+performing the action, the child class should implement <cite>ask_and_do</cite>,
+which it turn should call <cite>do_with_signal</cite> to notify about changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> – This is the <cite>CommandContext</cite> in which the command will
+execute. Commands will use this to access <cite>MainWindow</cite>,
+<cite>GuiState</cite>, and <cite>Labels</cite>.</p></li>
+<li><p><strong>params</strong> – Dictionary of any params for command.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.CheckForUpdates">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">CheckForUpdates</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#CheckForUpdates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CheckForUpdates" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.CheckForUpdates.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CheckForUpdates.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CheckForUpdates.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.CommandContext">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">CommandContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.gui.state.html#sleap.gui.state.GuiState" title="sleap.gui.state.GuiState">sleap.gui.state.GuiState</a></span></em>, <em class="sig-param"><span class="n">app</span><span class="p">:</span> <span class="n">MainWindow</span></em>, <em class="sig-param"><span class="n">update_callback</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Callable<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">change_stack</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="default_value">NOTHING</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context within in which commands are executed.</p>
+<p>When you create a new command, you should both create a class for the
+command (which inherits from <cite>CommandClass</cite>) and add a distinct method
+for the command in the <cite>CommandContext</cite> class. This method is what should
+be connected/called from other code to invoke the command.</p>
+<dl class="py attribute">
+<dt id="sleap.gui.commands.CommandContext.state">
+<code class="sig-name descname">state</code><a class="headerlink" href="#sleap.gui.commands.CommandContext.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <cite>GuiState</cite> object used to store state and pass messages.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.commands.CommandContext.app">
+<code class="sig-name descname">app</code><a class="headerlink" href="#sleap.gui.commands.CommandContext.app" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <cite>MainWindow</cite>, available for commands that modify the app.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.gui.commands.CommandContext.update_callback">
+<code class="sig-name descname">update_callback</code><a class="headerlink" href="#sleap.gui.commands.CommandContext.update_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback to receive update notifications.
+This function should accept a list of <cite>UpdateTopic</cite> items.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.addTrack">
+<code class="sig-name descname">addTrack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.addTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.addTrack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates new track and moves selected instance into this track.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.addVideo">
+<code class="sig-name descname">addVideo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.addVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.addVideo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for adding videos to project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.changestack_clear">
+<code class="sig-name descname">changestack_clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.changestack_clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.changestack_clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears stack of changes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.changestack_push">
+<code class="sig-name descname">changestack_push</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">change</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.changestack_push"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.changestack_push" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds to stack of changes made by user.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.changestack_savepoint">
+<code class="sig-name descname">changestack_savepoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.changestack_savepoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.changestack_savepoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Marks that project was just saved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.checkForUpdates">
+<code class="sig-name descname">checkForUpdates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.checkForUpdates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.checkForUpdates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for updates online.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.completeInstanceNodes">
+<code class="sig-name descname">completeInstanceNodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.completeInstanceNodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.completeInstanceNodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds missing nodes to given instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteAreaPredictions">
+<code class="sig-name descname">deleteAreaPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteAreaPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteAreaPredictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for deleting instances within some rect on frame images.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteClipPredictions">
+<code class="sig-name descname">deleteClipPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteClipPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteClipPredictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all predictions within selected range of video frames.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteDialog">
+<code class="sig-name descname">deleteDialog</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes using options selected in a dialog.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteEdge">
+<code class="sig-name descname">deleteEdge</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteEdge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes (currently selected) edge from skeleton.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteFrameLimitPredictions">
+<code class="sig-name descname">deleteFrameLimitPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteFrameLimitPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteFrameLimitPredictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for deleting instances beyond some number in each frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteFramePredictions">
+<code class="sig-name descname">deleteFramePredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteFramePredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteFramePredictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all predictions on current frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteLowScorePredictions">
+<code class="sig-name descname">deleteLowScorePredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteLowScorePredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteLowScorePredictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for deleting instances below some score threshold.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteNode">
+<code class="sig-name descname">deleteNode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes (currently selected) node from skeleton.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deletePredictions">
+<code class="sig-name descname">deletePredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deletePredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deletePredictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all predicted instances in project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteSelectedInstance">
+<code class="sig-name descname">deleteSelectedInstance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteSelectedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteSelectedInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes currently selected instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.deleteSelectedInstanceTrack">
+<code class="sig-name descname">deleteSelectedInstanceTrack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.deleteSelectedInstanceTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.deleteSelectedInstanceTrack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all instances from track of currently selected instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.execute">
+<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">command</span><span class="p">:</span> <span class="n">Type<span class="p">[</span><a class="reference internal" href="#sleap.gui.commands.AppCommand" title="sleap.gui.commands.AppCommand">sleap.gui.commands.AppCommand</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute command in this context, passing named arguments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.exportAnalysisFile">
+<code class="sig-name descname">exportAnalysisFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportAnalysisFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportAnalysisFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for exporting analysis h5 file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.exportFullPackage">
+<code class="sig-name descname">exportFullPackage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportFullPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportFullPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for exporting the dataset with any labeled frames and suggestions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.exportLabeledClip">
+<code class="sig-name descname">exportLabeledClip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportLabeledClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportLabeledClip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for exporting clip with visual annotations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.exportTrainingPackage">
+<code class="sig-name descname">exportTrainingPackage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportTrainingPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportTrainingPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for exporting the dataset with user-labeled images and suggestions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.exportUserLabelsPackage">
+<code class="sig-name descname">exportUserLabelsPackage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.exportUserLabelsPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.exportUserLabelsPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gui for exporting the dataset with user-labeled images.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.from_labels">
+<em class="property">classmethod </em><code class="sig-name descname">from_labels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.from_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.from_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a command context for use independently of GUI app.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.generateSuggestions">
+<code class="sig-name descname">generateSuggestions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.generateSuggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.generateSuggestions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates suggestions using given params dictionary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.gotoFrame">
+<code class="sig-name descname">gotoFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.gotoFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.gotoFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui to go to frame by number.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.gotoVideoAndFrame">
+<code class="sig-name descname">gotoVideoAndFrame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">frame_idx</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.gotoVideoAndFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.gotoVideoAndFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Activates video and goes to frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.importAnalysisFile">
+<code class="sig-name descname">importAnalysisFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.importAnalysisFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.importAnalysisFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports SLEAP analysis hdf5 files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.importCoco">
+<code class="sig-name descname">importCoco</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.importCoco"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.importCoco" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports COCO datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.importDLC">
+<code class="sig-name descname">importDLC</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.importDLC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.importDLC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports DeepLabCut datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.importDPK">
+<code class="sig-name descname">importDPK</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.importDPK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.importDPK" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports DeepPoseKit datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.importLEAP">
+<code class="sig-name descname">importLEAP</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.importLEAP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.importLEAP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports LEAP matlab datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.importPredictions">
+<code class="sig-name descname">importPredictions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.importPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.importPredictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts gui for importing another dataset into currently one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.labels">
+<em class="property">property </em><code class="sig-name descname">labels</code><a class="headerlink" href="#sleap.gui.commands.CommandContext.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias to app.labels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.newEdge">
+<code class="sig-name descname">newEdge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">src_node</span></em>, <em class="sig-param"><span class="n">dst_node</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.newEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.newEdge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds new edge to skeleton.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.newInstance">
+<code class="sig-name descname">newInstance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">copy_instance</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">init_method</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'best'</span></em>, <em class="sig-param"><span class="n">location</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>PySide2.QtCore.QPoint<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mark_complete</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.newInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.newInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new instance, copying node coordinates as appropriate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>copy_instance</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> (or
+<code class="xref py py-class docutils literal notranslate"><span class="pre">PredictedInstance</span></code>) which we want to copy.</p></li>
+<li><p><strong>init_method</strong> – Method to use for positioning nodes.</p></li>
+<li><p><strong>location</strong> – The location where instance should be added (if node init
+method supports custom location).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.newNode">
+<code class="sig-name descname">newNode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.newNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.newNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds new node to skeleton.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.newProject">
+<code class="sig-name descname">newProject</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.newProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.newProject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new project in a new window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.nextLabeledFrame">
+<code class="sig-name descname">nextLabeledFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.nextLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.nextLabeledFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes to labeled frame after current frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.nextSuggestedFrame">
+<code class="sig-name descname">nextSuggestedFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.nextSuggestedFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.nextSuggestedFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes to next suggested frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.nextTrackFrame">
+<code class="sig-name descname">nextTrackFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.nextTrackFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.nextTrackFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes to next frame on which a track starts.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.nextUserLabeledFrame">
+<code class="sig-name descname">nextUserLabeledFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.nextUserLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.nextUserLabeledFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes to next labeled frame with user instances.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openPrereleaseVersion">
+<code class="sig-name descname">openPrereleaseVersion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openPrereleaseVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openPrereleaseVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the current prerelease version.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openProject">
+<code class="sig-name descname">openProject</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">first_open</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openProject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows use to select and then open a saved project.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>first_open</strong> – Whether this is the first window opened. If True,
+then the new project is loaded into the current window
+rather than a new application window.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openSkeleton">
+<code class="sig-name descname">openSkeleton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openSkeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openSkeleton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for loading saved skeleton into project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openStableVersion">
+<code class="sig-name descname">openStableVersion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openStableVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openStableVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the current stable version.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.openWebsite">
+<code class="sig-name descname">openWebsite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.openWebsite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.openWebsite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a website from URL using the native system browser.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.prevSuggestedFrame">
+<code class="sig-name descname">prevSuggestedFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.prevSuggestedFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.prevSuggestedFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes to previous suggested frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.previousLabeledFrame">
+<code class="sig-name descname">previousLabeledFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.previousLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.previousLabeledFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes to labeled frame prior to current frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.removeVideo">
+<code class="sig-name descname">removeVideo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.removeVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.removeVideo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes selected video from project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.replaceVideo">
+<code class="sig-name descname">replaceVideo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.replaceVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.replaceVideo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for replacing videos to project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.saveProject">
+<code class="sig-name descname">saveProject</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.saveProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.saveProject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show gui to save project (or save as if not yet saved).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.saveProjectAs">
+<code class="sig-name descname">saveProjectAs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.saveProjectAs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.saveProjectAs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show gui to save project as a new file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.saveSkeleton">
+<code class="sig-name descname">saveSkeleton</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.saveSkeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.saveSkeleton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for saving skeleton from project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.selectToFrame">
+<code class="sig-name descname">selectToFrame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.selectToFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.selectToFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui to go to frame by number.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.setInstancePointVisibility">
+<code class="sig-name descname">setInstancePointVisibility</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n">Node</span></em>, <em class="sig-param"><span class="n">visible</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.setInstancePointVisibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.setInstancePointVisibility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggles visibility set for a node for an instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.setInstanceTrack">
+<code class="sig-name descname">setInstanceTrack</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.setInstanceTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.setInstanceTrack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets track for selected instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.setNodeName">
+<code class="sig-name descname">setNodeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">skeleton</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.setNodeName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.setNodeName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes name of node in skeleton.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.setNodeSymmetry">
+<code class="sig-name descname">setNodeSymmetry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">skeleton</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.setNodeSymmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.setNodeSymmetry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets node symmetry in skeleton.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.setPointLocations">
+<code class="sig-name descname">setPointLocations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instance</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance">sleap.instance.Instance</a></span></em>, <em class="sig-param"><span class="n">nodes_locations</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>Node<span class="p">, </span>Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.setPointLocations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.setPointLocations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets locations for node(s) for an instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.setTrackName">
+<code class="sig-name descname">setTrackName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.Track" title="sleap.instance.Track">sleap.instance.Track</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.setTrackName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.setTrackName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets name for track.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.signal_update">
+<code class="sig-name descname">signal_update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">what</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#sleap.gui.commands.UpdateTopic" title="sleap.gui.commands.UpdateTopic">sleap.gui.commands.UpdateTopic</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.signal_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.signal_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the update callback after data has been changed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.transposeInstance">
+<code class="sig-name descname">transposeInstance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.transposeInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.transposeInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transposes tracks for two instances.</p>
+<p>If there are only two instances, then this swaps tracks.
+Otherwise, it allows user to select the instances for which we want
+to swap tracks.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.CommandContext.updateEdges">
+<code class="sig-name descname">updateEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#CommandContext.updateEdges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.CommandContext.updateEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when edges in skeleton have been changed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteAllPredictions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteAllPredictions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteAllPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteAllPredictions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteAreaPredictions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteAreaPredictions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteAreaPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteAreaPredictions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteClipPredictions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteClipPredictions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteClipPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteClipPredictions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteDialogCommand">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteDialogCommand</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteDialogCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteDialogCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteEdge">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteEdge</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteEdge" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.DeleteEdge.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteEdge.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteEdge.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.DeleteEdge.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteEdge.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteEdge.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteFrameLimitPredictions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteFrameLimitPredictions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteFrameLimitPredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteFrameLimitPredictions" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.DeleteFrameLimitPredictions.ask">
+<em class="property">classmethod </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteFrameLimitPredictions.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteFrameLimitPredictions.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteFramePredictions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteFramePredictions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteFramePredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteFramePredictions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteLowScorePredictions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteLowScorePredictions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteLowScorePredictions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteLowScorePredictions" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.DeleteLowScorePredictions.ask">
+<em class="property">classmethod </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteLowScorePredictions.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteLowScorePredictions.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteNode">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteNode</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteNode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.DeleteNode.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteNode.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteNode.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteSelectedInstance">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteSelectedInstance</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteSelectedInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteSelectedInstance" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.DeleteSelectedInstance.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteSelectedInstance.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteSelectedInstance.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.DeleteSelectedInstanceTrack">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">DeleteSelectedInstanceTrack</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteSelectedInstanceTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteSelectedInstanceTrack" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.DeleteSelectedInstanceTrack.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#DeleteSelectedInstanceTrack.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.DeleteSelectedInstanceTrack.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.EditCommand">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">EditCommand</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#EditCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.EditCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for commands which change data in project.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportAnalysisFile">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportAnalysisFile</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportAnalysisFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportAnalysisFile" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ExportAnalysisFile.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportAnalysisFile.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportAnalysisFile.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ExportAnalysisFile.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportAnalysisFile.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportAnalysisFile.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportDatasetWithImages">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportDatasetWithImages</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ExportDatasetWithImages.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ExportDatasetWithImages.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportDatasetWithImages.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportDatasetWithImages.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportFullPackage">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportFullPackage</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportFullPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportFullPackage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportLabeledClip">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportLabeledClip</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledClip" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ExportLabeledClip.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledClip.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledClip.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ExportLabeledClip.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportLabeledClip.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportLabeledClip.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportTrainingPackage">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportTrainingPackage</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportTrainingPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportTrainingPackage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ExportUserLabelsPackage">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ExportUserLabelsPackage</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ExportUserLabelsPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ExportUserLabelsPackage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.FakeApp">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">FakeApp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels">sleap.io.dataset.Labels</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#FakeApp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.FakeApp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use if you want to execute commands independently of the GUI app.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GenerateSuggestions">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GenerateSuggestions</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GenerateSuggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GenerateSuggestions" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.GenerateSuggestions.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#GenerateSuggestions.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GenerateSuggestions.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoFrameGui">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoFrameGui</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoFrameGui"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoFrameGui" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.GoFrameGui.ask">
+<em class="property">classmethod </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#GoFrameGui.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoFrameGui.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.GoFrameGui.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoFrameGui.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoFrameGui.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoIteratorCommand">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoIteratorCommand</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoIteratorCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoIteratorCommand" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.GoIteratorCommand.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoIteratorCommand.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoIteratorCommand.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoNextLabeledFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoNextLabeledFrame</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoNextLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoNextLabeledFrame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoNextSuggestedFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoNextSuggestedFrame</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoNextSuggestedFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoNextSuggestedFrame" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.GoNextSuggestedFrame.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoNextSuggestedFrame.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoNextSuggestedFrame.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoNextTrackFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoNextTrackFrame</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoNextTrackFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoNextTrackFrame" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.GoNextTrackFrame.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoNextTrackFrame.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoNextTrackFrame.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoNextUserLabeledFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoNextUserLabeledFrame</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoNextUserLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoNextUserLabeledFrame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoPrevSuggestedFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoPrevSuggestedFrame</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoPrevSuggestedFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoPrevSuggestedFrame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.GoPreviousLabeledFrame">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">GoPreviousLabeledFrame</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#GoPreviousLabeledFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.GoPreviousLabeledFrame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ImportAnalysisFile">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ImportAnalysisFile</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportAnalysisFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportAnalysisFile" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ImportAnalysisFile.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportAnalysisFile.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportAnalysisFile.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ImportAnalysisFile.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportAnalysisFile.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportAnalysisFile.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ImportCoco">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ImportCoco</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportCoco"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportCoco" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ImportCoco.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportCoco.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportCoco.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ImportCoco.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportCoco.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportCoco.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ImportDeepLabCut">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ImportDeepLabCut</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportDeepLabCut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportDeepLabCut" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ImportDeepLabCut.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportDeepLabCut.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportDeepLabCut.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ImportDeepLabCut.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportDeepLabCut.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportDeepLabCut.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ImportDeepPoseKit">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ImportDeepPoseKit</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportDeepPoseKit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportDeepPoseKit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ImportDeepPoseKit.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportDeepPoseKit.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportDeepPoseKit.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ImportDeepPoseKit.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportDeepPoseKit.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportDeepPoseKit.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ImportLEAP">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ImportLEAP</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportLEAP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportLEAP" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ImportLEAP.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportLEAP.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportLEAP.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ImportLEAP.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ImportLEAP.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ImportLEAP.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.InstanceDeleteCommand">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">InstanceDeleteCommand</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#InstanceDeleteCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.InstanceDeleteCommand" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.InstanceDeleteCommand.ask">
+<em class="property">classmethod </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#InstanceDeleteCommand.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.InstanceDeleteCommand.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.InstanceDeleteCommand.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#InstanceDeleteCommand.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.InstanceDeleteCommand.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.MergeProject">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">MergeProject</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#MergeProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.MergeProject" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.NavCommand">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">NavCommand</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#NavCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.NavCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.NewEdge">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">NewEdge</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#NewEdge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.NewEdge" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.NewEdge.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#NewEdge.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.NewEdge.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.NewNode">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">NewNode</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#NewNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.NewNode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.NewNode.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#NewNode.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.NewNode.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.NewProject">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">NewProject</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#NewProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.NewProject" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.NewProject.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#NewProject.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.NewProject.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.OpenPrereleaseVersion">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenPrereleaseVersion</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenPrereleaseVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenPrereleaseVersion" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenPrereleaseVersion.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenPrereleaseVersion.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenPrereleaseVersion.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.OpenProject">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenProject</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenProject" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenProject.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenProject.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenProject.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.OpenProject.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenProject.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenProject.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.OpenSkeleton">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenSkeleton</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenSkeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenSkeleton" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenSkeleton.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenSkeleton.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenSkeleton.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.OpenSkeleton.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenSkeleton.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenSkeleton.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.OpenStableVersion">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenStableVersion</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenStableVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenStableVersion" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenStableVersion.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenStableVersion.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenStableVersion.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.OpenWebsite">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">OpenWebsite</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenWebsite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenWebsite" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.OpenWebsite.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#OpenWebsite.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.OpenWebsite.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.RemoveVideo">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">RemoveVideo</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#RemoveVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.RemoveVideo" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.RemoveVideo.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#RemoveVideo.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.RemoveVideo.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.RemoveVideo.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#RemoveVideo.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.RemoveVideo.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.ReplaceVideo">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">ReplaceVideo</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#ReplaceVideo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ReplaceVideo" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.ReplaceVideo.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#ReplaceVideo.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ReplaceVideo.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows gui for replacing videos in project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.ReplaceVideo.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#ReplaceVideo.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.ReplaceVideo.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SaveProject">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SaveProject</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveProject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveProject" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SaveProject.ask">
+<em class="property">classmethod </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveProject.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveProject.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SaveProjectAs">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SaveProjectAs</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveProjectAs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveProjectAs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SaveProjectAs.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveProjectAs.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveProjectAs.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.SaveProjectAs.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveProjectAs.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveProjectAs.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SaveSkeleton">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SaveSkeleton</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveSkeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveSkeleton" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SaveSkeleton.ask">
+<em class="property">static </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveSkeleton.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveSkeleton.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.SaveSkeleton.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SaveSkeleton.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SaveSkeleton.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SelectToFrameGui">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SelectToFrameGui</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SelectToFrameGui"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SelectToFrameGui" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SelectToFrameGui.ask">
+<em class="property">classmethod </em><code class="sig-name descname">ask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/sleap/gui/commands.html#SelectToFrameGui.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SelectToFrameGui.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for information gathering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Whether to perform action. By default returns True, but this is
+where we should return False if we prompt user for confirmation
+and they abort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.commands.SelectToFrameGui.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SelectToFrameGui.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SelectToFrameGui.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SetInstancePointLocations">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SetInstancePointLocations</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetInstancePointLocations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetInstancePointLocations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets locations for node(s) for an instance.</p>
+<p>Note: It’s important that this command does <em>not</em> update the visual
+scene, since this would redraw the frame and create new visual objects.
+The calling code is responsible for updating the visual scene.</p>
+<dl class="simple">
+<dt>Params:</dt><dd><p>instance: The instance
+nodes_locations: A dictionary of data to set
+* keys are nodes (or node names)
+* values are (x, y) coordinate tuples.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.commands.SetInstancePointLocations.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetInstancePointLocations.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetInstancePointLocations.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SetInstancePointVisibility">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SetInstancePointVisibility</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetInstancePointVisibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetInstancePointVisibility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggles visibility set for a node for an instance.</p>
+<p>Note: It’s important that this command does <em>not</em> update the visual
+scene, since this would redraw the frame and create new visual objects.
+The calling code is responsible for updating the visual scene.</p>
+<dl class="simple">
+<dt>Params:</dt><dd><p>instance: The instance
+node: The <cite>Node</cite> (or name string)
+visible: Whether to set or clear visibility for node</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.commands.SetInstancePointVisibility.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetInstancePointVisibility.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetInstancePointVisibility.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SetNodeName">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SetNodeName</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetNodeName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetNodeName" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SetNodeName.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetNodeName.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetNodeName.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SetNodeSymmetry">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SetNodeSymmetry</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetNodeSymmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetNodeSymmetry" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SetNodeSymmetry.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetNodeSymmetry.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetNodeSymmetry.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SetSelectedInstanceTrack">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SetSelectedInstanceTrack</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetSelectedInstanceTrack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetSelectedInstanceTrack" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SetSelectedInstanceTrack.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetSelectedInstanceTrack.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetSelectedInstanceTrack.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.SetTrackName">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">SetTrackName</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetTrackName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetTrackName" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.SetTrackName.do_action">
+<em class="property">static </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#SetTrackName.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.SetTrackName.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.TransposeInstances">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">TransposeInstances</code><a class="reference internal" href="../_modules/sleap/gui/commands.html#TransposeInstances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.TransposeInstances" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="sleap.gui.commands.TransposeInstances.do_action">
+<em class="property">classmethod </em><code class="sig-name descname">do_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#sleap.gui.commands.CommandContext" title="sleap.gui.commands.CommandContext">sleap.gui.commands.CommandContext</a></span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#TransposeInstances.do_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.TransposeInstances.do_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for performing action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.commands.UpdateTopic">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.commands.</code><code class="sig-name descname">UpdateTopic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/commands.html#UpdateTopic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.commands.UpdateTopic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Topics so context can tell callback what was updated by the command.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.metrics.html">sleap.gui.dialogs.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.mpl.html">sleap.gui.widgets.mpl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.gui.color.html" title="previous chapter">sleap.gui.color</a></li>
+      <li>Next: <a href="sleap.gui.dataviews.html" title="next chapter">sleap.gui.dataviews</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.gui.commands.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

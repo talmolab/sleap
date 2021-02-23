@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>How-Tos &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="Tutorial, Part 2" href="tutorial-part2.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="how-tos">
+<span id="howtos"></span><h1>How-Tos<a class="headerlink" href="#how-tos" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="#training-package"><span class="std std-ref">Export a training package</span></a> when you’ve created a project with training data on one computer and you want to <strong>move your training data</strong> for training models on a different computer.</p>
+<p><a class="reference internal" href="#colab"><span class="std std-ref">Run training and/or inference on Colab</span></a> when you have a project with labeled training data and you’d like to run training or inference in a <strong>Colab</strong> notebook.</p>
+<p><a class="reference internal" href="#remote-train"><span class="std std-ref">Remote training</span></a> when you have a project with training data and you want to train on a different machine using a <strong>command-line interface</strong>.</p>
+<p><a class="reference internal" href="#remote-inference"><span class="std std-ref">Remote inference</span></a> when you trained models and you want to run inference on a different machine using a <strong>command-line interface</strong>.</p>
+<p><a class="reference internal" href="#choosing-models"><span class="std std-ref">Choosing a set of models</span></a> provides information about the types of models you should.</p>
+<p><a class="reference internal" href="#merging"><span class="std std-ref">Add more training data to a project</span></a> when you have predictions that aren’t in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.</p>
+<p><a class="reference internal" href="#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> provides tips and tools you can use to speed up proofreading when you’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</p>
+<div class="section" id="training-and-inference">
+<h2>Training and Inference<a class="headerlink" href="#training-and-inference" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="export-a-training-package">
+<span id="training-package"></span><h3>Export a training package<a class="headerlink" href="#export-a-training-package" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You’ve created a project with training data on one computer, and you want to use a different computer for training models. This could be another desktop with a GPU, an HPC cluster, or a Colab notebook.</em></p>
+<p>The easiest way to move your training data to another machine is to export a <strong>training package</strong>. This is a single HDF5 file which contains both labeled data as well as the images which will be used for training. This makes it easy to transport your training data since you won’t have to worry about paths to your video files.</p>
+<p>To export a training package, use the “<strong>Export Training Package…</strong>” command in the “Predict” menu of the GUI app.</p>
+<p>Pretty much anything you can do with a regular SLEAP file (i.e., a labels file or a predictions file), you can do with a training package file. In particular, you can:</p>
+<ul class="simple">
+<li><p>open a training package in the GUI (you can only see frames with labeled data, since only these are included in the training package)</p></li>
+<li><p>use a training package as the <code class="code docutils literal notranslate"><span class="pre">labels_path</span></code> parameter to the <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> command-line interface</p></li>
+</ul>
+</div>
+<div class="section" id="run-training-and-or-inference-on-colab">
+<span id="colab"></span><h3>Run training and/or inference on Colab<a class="headerlink" href="#run-training-and-or-inference-on-colab" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You already have a project with labeled training data and you’d like to run training or inference in a Colab notebook.</em></p>
+<p><a class="reference external" href="https://colab.research.google.com/drive/1jLS4UQ8p-DCQE8WET8w8i8Jf2Apxsq47">This notebook</a> will walk you through the process.</p>
+<p>You’ll need a <a class="reference external" href="https://www.google.com/drive/">Google Drive</a> where you can upload your training data (as a tracking package file), store models and predictions.</p>
+</div>
+<div class="section" id="remote-training">
+<span id="remote-train"></span><h3>Remote training<a class="headerlink" href="#remote-training" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You already have a project with training data and you want to train on a different machine using a command-line interface.</em></p>
+<p>You need three things to run training:</p>
+<ol class="arabic simple">
+<li><p>You need to install SLEAP on the remote machine where you’ll run training.</p></li>
+<li><p>Labels and images to use for training.</p></li>
+<li><p>A training profile which defines the training parameters (e.g., learning rate, image augmentation methods).</p></li>
+</ol>
+<p><strong>Installing SLEAP</strong>:</p>
+<p>See the <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> instructions.</p>
+<p><strong>Training labels and images</strong>:</p>
+<p>Usually the easiest and best way to make the training labels and images available is to export a training package and copy that to the remote machine. See the instructions above to <a class="reference internal" href="#training-package"><span class="std std-ref">Export a training package</span></a>.</p>
+<p>Although it’s easiest if you bundle the labels and images into training package, there are alternatives. If the files are already on a shared network drive, it may be possible to use the original labels project and videos for training. But this can be tricky, because often the full paths to the files will be different when accessed from different machines (i.e., different paths on Windows and Linux machines or different paths from how the network drive is mounted). To use the original labels and video files, you’ll either need to ensure that the file paths to videos used in the project are the same on the remote machine as on the local machine where you last saved the project, <strong>or</strong> if all the video files have distinct filenames, you can place the videos inside the same directory which contains the labels project file.</p>
+<p>But in most cases it’s best to create a training package and just use that for remote training.</p>
+<p><strong>Training profile</strong>:</p>
+<p>SLEAP comes with “default” training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the <a class="reference external" href="https://github.com/murthylab/sleap/tree/master/sleap/training_profiles">training_profiles</a> directory of the SLEAP package can be used by specifying it’s filename (e.g., <code class="code docutils literal notranslate"><span class="pre">default_confmaps.json</span></code>) as the training profile—the full path isn’t required.</p>
+<p>You can also use a custom training profile. There’s a GUI <strong>training editor</strong> which gives you access to many of the profile parameters (<code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sleap.gui.training_editor</span></code>, as described in the <a class="reference internal" href="reference.html#reference"><span class="std std-ref">Feature Reference</span></a>), or you can directly edit a profile <code class="code docutils literal notranslate"><span class="pre">.json</span></code> file in a text editor. To use a custom training profile, you’ll need to specify the full path to the file when you run training.</p>
+<p><strong>Command-line training</strong>:</p>
+<p>Once you have your training package (or labels project file) and training profile, you can run training like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">train</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">your</span><span class="o">/</span><span class="n">training_profile</span><span class="o">.</span><span class="n">json</span> <span class="n">another</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">training_package</span><span class="o">.</span><span class="n">h5</span>
+</pre></div>
+</div>
+<p>The model will be saved in the <code class="code docutils literal notranslate"><span class="pre">models/</span></code> directory within the same directory as the <strong>training package</strong> (in this case, <code class="code docutils literal notranslate"><span class="pre">another/path/to/models/run_name/</span></code>). You can specify the <code class="code docutils literal notranslate"><span class="pre">run_name</span></code> to use when saving the model with the <code class="code docutils literal notranslate"><span class="pre">-o</span></code> argument, otherwise the run name will include a timestamp, the output type and model architecture.</p>
+</div>
+<div class="section" id="remote-inference">
+<span id="id1"></span><h3>Remote inference<a class="headerlink" href="#remote-inference" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You already have models and you want to run inference on a different machine using a command-line interface.</em></p>
+<p>Here’s what you need to run inference:</p>
+<ol class="arabic simple">
+<li><p>You need to install SLEAP on the remote machine where you’ll run training.</p></li>
+<li><p>You need a compatible set of trained model files.</p></li>
+<li><p>You need a video for which you want predictions.</p></li>
+</ol>
+<p><strong>Installing SLEAP</strong>:</p>
+<p>See the <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> instructions.</p>
+<p><strong>Trained models</strong></p>
+<p>When you train a model, you’ll get a directory with the <cite>run_name</cite> of the model. This will typically be something like <code class="code docutils literal notranslate"><span class="pre">191205_162402.UNet.confmaps</span></code> (i.e., <code class="code docutils literal notranslate"><span class="pre">&lt;timestamp&gt;.&lt;architecture&gt;.&lt;output</span> <span class="pre">type&gt;</span></code>), although you can also specify the run name in the training command-line interface.</p>
+<p>The model directory will contain two or three files:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">training_job.json</span></code> is the training profile used to train the model, together with some additional information about the trained model. Amongst other things, this specifies the network architecture of the model.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">best_model.h5</span></code> and/or <code class="code docutils literal notranslate"><span class="pre">final_model.h5</span></code> are the weights for the trained model.</p></li>
+</ul>
+<p>You’ll need this entire directory for each model you’re going to use for inference.</p>
+<p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a class="reference internal" href="#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
+<p>For this example, let’s suppose you have three models: confidence maps (confmaps), part affinity fields (pafs), and centroids. This is the typical case for multi-instance predictions.</p>
+<p><strong>Video</strong></p>
+<p>SLEAP uses OpenCV to read a variety of video formats including <cite>mp4</cite> and <cite>avi</cite> files. You’ll just need the file path to run inference on such a video file.</p>
+<p>SLEAP can also read videos stored as a datasets inside an HDF5 file. To run inference on an HDF5 video, you’ll need the file path, the dataset path, and whether the video data is formatted is formatted as <cite>(channels, images, height, width)</cite> or <cite>(images, height, width, channels)</cite>.</p>
+<p>For this example, let’s suppose you’re working with an HDF5 video at <code class="code docutils literal notranslate"><span class="pre">path/to/video.h5</span></code>, and the video data is stored in the <code class="code docutils literal notranslate"><span class="pre">video/</span></code> dataset with channels as the index.</p>
+<p><strong>Command-line inference</strong>:</p>
+<p>To run inference, you’ll call <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> with the paths to each trained model and your video file, like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">track</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">video</span><span class="o">.</span><span class="n">h5</span> \
+<span class="o">--</span><span class="n">video</span><span class="o">.</span><span class="n">dataset</span> <span class="n">video</span> <span class="o">--</span><span class="n">video</span><span class="o">.</span><span class="n">input_format</span> <span class="n">channels_last</span> \
+<span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="mf">191205_162402.</span><span class="n">UNet</span><span class="o">.</span><span class="n">confmaps</span> \
+<span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="mf">191205_163413.</span><span class="n">LeapCNN</span><span class="o">.</span><span class="n">pafs</span> \
+<span class="o">-</span><span class="n">m</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="mf">191205_170118.</span><span class="n">UNet</span><span class="o">.</span><span class="n">centroids</span> \
+</pre></div>
+</div>
+<p>(The order of the models doesn’t matter.)</p>
+<p>This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the <code class="code docutils literal notranslate"><span class="pre">--frames</span> <span class="pre">123-456</span></code> command-line argument.</p>
+<p>This will give you predictions frame-by-frame, but will not connect those predictions across frames into <cite>tracks</cite>. If you want cross-frame identity tracking, you’ll need to choose a tracker and specify this from the command-line with the <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span></code> argument. For optical flow, use <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">flow</span></code>. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">simple</span> <span class="pre">--tracking.similarity</span> <span class="pre">centroid</span></code>.</p>
+<p>It’s also possible to run tracking separately after you’ve generated a predictions file (see <a class="reference internal" href="reference.html#reference"><span class="std std-ref">Feature Reference</span></a>). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.</p>
+<p>When inference is finished, it will save the predictions in a new HDF5 file. This file has the same format as a standard SLEAP project file, and you can use the GUI to proofread this file or merge the predictions into an existing SLEAP project. The file will be in the same directory as the video and the filename will be <code class="code docutils literal notranslate"><span class="pre">{video</span> <span class="pre">filename}.predictions.h5</span></code>.</p>
+</div>
+<div class="section" id="choosing-a-set-of-models">
+<span id="choosing-models"></span><h3>Choosing a set of models<a class="headerlink" href="#choosing-a-set-of-models" title="Permalink to this headline">¶</a></h3>
+<p>Inference will run in different modes depending on the output types of the models you supply. SLEAP currently support four different output types:</p>
+<ol class="arabic simple">
+<li><p><strong>Confidence maps</strong> (confmaps) are used to predict point locations.</p></li>
+<li><p><strong>Part affinity fields</strong> (pafs) are used to connect points which belong to the same animal instance.</p></li>
+<li><p><strong>Centroids</strong> are used to crop the video frame around each animal instance.</p></li>
+<li><p><strong>Top-down confidence maps</strong> (topdown) are used to predict point locations for a <em>single</em> instance at the center of a cropped image.</p></li>
+</ol>
+<p>When there’s only a <strong>single</strong> instance in the video, run with confidence maps. Centroids are optional.</p>
+<p>When there are <strong>multiple</strong> instances in the video, you have two options:</p>
+<ol class="arabic simple">
+<li><p>Confidence maps (<em>required</em>) and part affinity fields (<em>required</em>), with centroids <em>optional</em>.</p></li>
+<li><p>Top-down confidence maps and centroids (<em>required</em>).</p></li>
+</ol>
+<p>Note that top-down confidence maps rely on centroid cropping, since they’re trained to give predictions for the single instance centered in the (cropped) image.</p>
+<p>Inference (when run from the GUI or the command-line interface) will deduce the correct mode from the set of models it’s given:</p>
+<ul class="simple">
+<li><p>Confidence maps =&gt; single-instance mode on full images</p></li>
+<li><p>Confidence maps + part affinity fields =&gt; multi-instance mode on full images</p></li>
+<li><p>Confidence maps + part affinity fields + centroids =&gt; multi-instance mode on centroid crops</p></li>
+<li><p>Top-down confidence maps + centroids =&gt; multi-instance mode on centroid crops</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="improving-predictions">
+<h2>Improving predictions<a class="headerlink" href="#improving-predictions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="add-more-training-data-to-a-project">
+<span id="merging"></span><h3>Add more training data to a project<a class="headerlink" href="#add-more-training-data-to-a-project" title="Permalink to this headline">¶</a></h3>
+<p><em>Case: You have predictions that aren’t in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.</em></p>
+<p>All of your training data must be in a single SLEAP project file (or training package), so if you have data in multiple files, you’ll need to merge them before you can train on the entire set of data.</p>
+<p>When you run inference from the GUI, the predictions will be added to the same project as your training data (they’ll also be saved in a separate file). When you run inference from the command-line, they’ll only be in a separate file.</p>
+<p>If you open a separate predictions file, make corrections there and train a new model from that file, then new models will be trained from scratch using only those corrections. The new models will not be trained on any of the original data that was used to train the previous models—i.e., the models used to generate these predictions. Usually you’ll want to include both the original data and the new corrections.</p>
+<p><strong>Note</strong> that uncorrected predictions will never be used for training. Only predictions which you’ve “converted” into an editable instance will be used for training. To convert a predicted instance into an editable instance, you can <strong>double-click</strong> on the predicted instance or use the “<strong>Add Instance</strong>” command in the “Labels” menu (there’s also a keyboard shortcut). As you might guess, once you have an editable instance you can move nodes and toggle their “visibility” (see the <a class="reference internal" href="tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a> if you’re not familiar with how to do this). When you’ve created an editable instance from a predicted instance, the predicted instance will no longer be shown, although it will re-appear if you delete the editable instance.</p>
+<p>Let’s suppose we have a project file and a predictions file with corrections, and we’d like to merge the corrections into the original project file.</p>
+<p>If you want to merge <em>only</em> the corrections, then you should first make a copy of the predictions file. You can either just copy the file itself, or make a copy from the GUI using “<strong>Save As..</strong>” in the “File” menu. Open the copy of the file in the GUI and use the “<strong>Delete All Predictions…</strong>” command in the “Predictions” menu to remove all of the predicted instances from the file. Save and you’ll be left with a file which just contains your corrections.</p>
+<p>Open the original project file (or whatever file you want to merge <strong>into</strong>). Then, use the “<strong>Merge Data From…</strong>” command in the “File” menu. You’ll need to select the file <strong>from which</strong> you are getting the data to merge—this would be the file with your corrected predictions.</p>
+<p>You’ll then see a window with information about the merge:</p>
+<p><img alt="clean-merge" src="docs/_static/clean-merge.jpg" /></p>
+<p>If there are no merge conflicts, then you can click “<strong>Finish Merge</strong>. If the two files contain conflicts—frames from the same video which both have editable instances or both have predicted instances—then you’ll need to decide how to resolve the conflicts. You can choose to use the “base” version (i.e., the original project file <strong>into which</strong> you are merging), the “new” version (i.e., from the predictions file with the data which you’re adding to the original project), or neither. Whichever you choose, you’ll also get all of the frames which can be merged without conflicts.</p>
+<p>After merging you should save (or save a copy of the project with the “<strong>Save As…</strong>” command). Once you have a single project file which contains both your old and new training data, you can train new models (or <a class="reference internal" href="#training-package"><span class="std std-ref">Export a training package</span></a> for training on another machine).</p>
+</div>
+</div>
+<div class="section" id="tracking-and-proofreading">
+<span id="proofreading"></span><h2>Tracking and proofreading<a class="headerlink" href="#tracking-and-proofreading" title="Permalink to this headline">¶</a></h2>
+<p><em>Case: You’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</em></p>
+<p>The basics of <a class="reference internal" href="tutorial-part2.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> are covered in <a class="reference internal" href="tutorial-part2.html#part2"><span class="std std-ref">Tutorial, Part 2</span></a>. You should go read that if you haven’t already. Here we’ll go into more details.</p>
+<div class="section" id="tracking-methods">
+<h3>Tracking methods<a class="headerlink" href="#tracking-methods" title="Permalink to this headline">¶</a></h3>
+<p>The process of predicting instances frame-by-frame and the process of putting these together into <strong>tracks</strong> (i.e., identities across frames) are distinct, although it’s common to run them together during the inference pipeline. Obviously you can only track identities after you’ve predicted instances, but once you have predictions, it’s easy to then run tracking by itself to try out different methods and parameters.</p>
+<p>The tracking process itself is fairly modular. You pick a method for generating match candidates, you pick a method for determining the similarity between matches (i.e., a cost function for a match), and you pick a method for selecting the best combinations of matches.</p>
+<p>If you’re getting poor results, you may want to try out different methods and parameters. Changing the <strong>track window</strong> and the <strong>similarity</strong> method—both explained below—can make a big difference.</p>
+<p><strong>Candidate Generation</strong></p>
+<p>The “simple” candidate method (<code class="code docutils literal notranslate"><span class="pre">--tracker</span> <span class="pre">simple</span></code>) will simply try to match each instance against all the instances from some number of prior frames.</p>
+<p>The “flow” candidate method (<code class="code docutils literal notranslate"><span class="pre">--tracker</span> <span class="pre">flow</span></code>) uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Lucas–Kanade_method">Lukas–Kanade method</a> to estimate optical flow and then tries to match instances in a frame against flow-shifted instances from some number of prior frames.</p>
+<p>For each of these methods, you can specify how many prior frames are used for generating match candidates with the <code class="code docutils literal notranslate"><span class="pre">--track_window</span></code> argument.</p>
+<p><strong>Similarity</strong></p>
+<p>You can determine the quality of a match by looking at all of the points for each instance (<code class="code docutils literal notranslate"><span class="pre">--similarity</span> <span class="pre">instance</span></code>), the centroids (<code class="code docutils literal notranslate"><span class="pre">--similarity</span> <span class="pre">instance</span></code>), or the intersection over union (<code class="code docutils literal notranslate"><span class="pre">--similarity</span> <span class="pre">iou</span></code>).</p>
+<p><strong>Match</strong></p>
+<p>You can determine whether we match tracks “greedily” (<code class="code docutils literal notranslate"><span class="pre">--match</span> <span class="pre">greedy</span></code>), picking the best match first, and the next best of the remaining candidates, each in turn, <strong>or</strong> we use “Hungarian” matching (<code class="code docutils literal notranslate"><span class="pre">--match</span> <span class="pre">hungarian</span></code>) which minimizes the total cost of all the matches.</p>
+</div>
+<div class="section" id="more-training-data">
+<h3>More training data?<a class="headerlink" href="#more-training-data" title="Permalink to this headline">¶</a></h3>
+<p>Often your models will fail to predict <em>all</em> of the instances on <em>all</em> of the frames. Even if you’re happy enough with the result since you can interpolate missing data, it’s possible that the missing instances will cause problems when we try to determine track identities across frames, so if your tracking results are poor, you may wish to <a class="reference internal" href="#merging"><span class="std std-ref">Add more training data to a project</span></a>.</p>
+</div>
+<div class="section" id="the-track-cleaning-script">
+<h3>The “track cleaning” script<a class="headerlink" href="#the-track-cleaning-script" title="Permalink to this headline">¶</a></h3>
+<p>There’s an experimental command-line utility which tries to match up lost identities. You need to give it a predictions file which already has track assignments, and specify how many instances there should be. It looks for frames where there’s exactly one lost identity and exactly one newly spawned identity, and it joins these into a single track. Suppose you have a predictions file at <code class="code docutils literal notranslate"><span class="pre">path/to/predictions.h5</span></code> and you want to end up with three distinct tracks. You can run</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">sleap</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">trackcleaner</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">predictions</span><span class="o">.</span><span class="n">h5</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>This will result in a new file at <code class="code docutils literal notranslate"><span class="pre">path/to/predictions.cleaned.h5</span></code>. This file has the same format as the SLEAP labels and predictions files.</p>
+<p>The main worry is that this script will connect identities which should be distinct, so that in place of <strong>lost</strong> identities you’ll now have more <strong>mistaken</strong> identities, which can be harder to locate when proofreading. Tools and techniques for finding <strong>mistaken</strong> identities during proofreading are explained below.</p>
+</div>
+<div class="section" id="color-palettes">
+<h3>Color palettes<a class="headerlink" href="#color-palettes" title="Permalink to this headline">¶</a></h3>
+<p>When you’re proofreading track identities, the first step should always be to enable “<strong>Color Predicted Instances</strong>” in the View menu. Choosing the right color palette can also make a difference. If there are a small number of instances you’re tracking, the “five+” palette will make it easier to see instances which were assigned to later tracks, both in on the video frame:</p>
+<p><img alt="orange-leg" src="docs/_static/orange-leg.jpg" /></p>
+<p>and on the seekbar:</p>
+<p><img alt="orange-track" src="docs/_static/orange-track.jpg" /></p>
+<p>If there are a large number of instances you’re tracking, then a palette with a large number of distinct colors can make it easier to see each distinct instance. The “alphabet” palette has 26 visually distinctive colors.</p>
+<p>Sometimes the background in the video will make it hard to see certain colors in a palette. It’s possible to edit palettes, as explained in the <a class="reference internal" href="reference.html#view"><span class="std std-ref">View</span></a> menu section of the <a class="reference internal" href="reference.html#reference"><span class="std std-ref">Feature Reference</span></a>.</p>
+</div>
+<div class="section" id="id2">
+<h3>Proofreading<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>As discussed in the <a class="reference internal" href="tutorial-part2.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> section of <a class="reference internal" href="tutorial-part2.html#part2"><span class="std std-ref">Tutorial, Part 2</span></a>, there are two main types of mistakes made by the tracking code: lost identities and mistaken
+identities.</p>
+<p><strong>Lost Identities:</strong> The code may fail to identity an instance in one
+frame with any instances from previous frames.</p>
+<p>Here’s a strategy that works well for fixing <strong>lost</strong> identities:</p>
+<ol class="arabic simple">
+<li><p>Turn on colors for predicted instances and use a good color palette (as explained above).</p></li>
+<li><p>Turn on track <strong>trails</strong> using the “<strong>Show Trails</strong>” command in the “View” menu. These trails show where instances in each track were in prior frames. You can determine how many prior frames by setting the “<strong>Trail Length</strong>” (also in the “View” menu).</p></li>
+<li><p>Use the keyboard shortcut for the “<strong>Next Track Spawn Frame</strong>” command in the “Go” menu to jump to frames where a new track identity is spawned.</p></li>
+<li><p>Select the instance with the new track identity—either use the mouse, type a number key to jump to that instance, or use the <strong>`</strong> key to cycle through instances.</p></li>
+<li><p>The color of the track trail may help you determine which track identity should have been used.</p></li>
+<li><p>Hold down the <strong>Control</strong> key (or <strong>Command</strong> key on a Mac) with an instance already selected and you’ll see a color-coded list of numbered tracks, like so:</p></li>
+</ol>
+<p><img alt="track-fixing-list" src="docs/_static/track-fixing-list.jpg" /></p>
+<p>You can then type the number key listed next to the track (while still holding down the control or command key) to assign the selected instance to the corresponding track. In the image above, you’d want to type <strong>command-1</strong> to assign the orange instance to the red “F” track.</p>
+<p><strong>Mistaken Identities:</strong> The code may misidentify which instance goes in
+which track.</p>
+<p>Mistake identities are harder to correct since there’s no certain way to find them—if we knew where they were, then we wouldn’t have gotten them wrong in the first place. But there are some strategies to make it easier to locate them in your predictions.</p>
+<p>One strategy is to set the trail length to <strong>50</strong> and jump through the predictions 50 frames at a time using the <strong>down arrow</strong> key. It’s usually possible to see identity swaps by looking at the shape of the track trails, as here:</p>
+<p><img alt="swap-trails" src="docs/_static/swap-trails.jpg" /></p>
+<p>The downside of this method is that when you find the 50-frames which contain a swap, you’ll then have to go through the frames individually to find exactly where the swap occurs. (You may want to turn off trails while doing this, since they can make it harder to see where the instances are in the current frame, and they also make it slower to move between frames.)</p>
+<p>Another strategy is to generate <strong>velocity</strong>-based frame suggestions:</p>
+<p><img alt="velocity-suggestions" src="docs/_static/velocity-suggestions.jpg" /></p>
+<p>In the “<strong>Labeling Suggestions</strong>” panel, choose the “velocity” method. You should select a node with a relatively stable position relative to the position of the body (i.e., not an appendage), and start with the default threshold.</p>
+<p>If there are far too many frame suggestions, then make the threshold higher. If there aren’t very many, you might try lowering the threshold (or this may indicate that this method won’t work well for this file).</p>
+<p>Once you’re happy with the number of suggested frames, you can step between these (use the keyboard shortcut for the “<strong>Next Suggestion</strong>” command in the “Go” menu) and quickly review whether this is in fact a swap by looking at the track trails or reviewing adjacent frames. If you’ve found a swap, either use the keyboard shortcut for the “<strong>Transpose Instance Tracks</strong>” command in the “Labels” menu, or select one of the swapped instances and use <strong>Control</strong> (or command) plus a number key, just like you do for fixing lost identities (as explained above).</p>
+</div>
+<div class="section" id="orientation">
+<span id="id3"></span><h3>Orientation<a class="headerlink" href="#orientation" title="Permalink to this headline">¶</a></h3>
+<p>In some cases it may be difficult to see the orientation of the predicted instances. You can make it easier to see the orientation by changing the style of the edges drawn between nodes from thin lines (as shown above) to <strong>wedges</strong>, as shown here:</p>
+<p><img alt="wedges" src="docs/_static/wedges.jpg" /></p>
+<p>The wedges point from each <strong>source</strong> node to its <strong>destination</strong> node(s) in your skeleton. You can set the edge style using the “<strong>Edge Style</strong>” submenu in the “View” menu.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial-part2.html">Tutorial, Part 2</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How-Tos</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training-and-inference">Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#improving-predictions">Improving predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tracking-and-proofreading">Tracking and proofreading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="tutorial-part2.html" title="previous chapter">Tutorial, Part 2</a></li>
+      <li>Next: <a href="faq.html" title="next chapter">Frequently Asked Questions</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/howtos.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

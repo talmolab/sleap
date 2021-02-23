@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.overlays.base &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.overlays.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base classes for overlays.</span>
+
+<span class="sd">Overlays are used for showing additional visuals on top of a video frame (i.e.,</span>
+<span class="sd">a `QtVideoPlayer` object). Overlay objects are created in the main GUI app,</span>
+<span class="sd">which then automatically calls the `add_to_scene` for each loaded overlay after</span>
+<span class="sd">drawing a frame (i.e., when user navigates to a new frame or something changes</span>
+<span class="sd">so that current frame must be redrawn).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.providers</span> <span class="kn">import</span> <span class="n">VideoReader</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.inference</span> <span class="kn">import</span> <span class="n">VisualPredictor</span>
+
+
+<div class="viewcode-block" id="BaseOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.base.html#sleap.gui.overlays.base.BaseOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BaseOverlay</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for overlays.</span>
+
+<span class="sd">    Most overlays need rely on the `Labels` from which to get data and need the</span>
+<span class="sd">    `QtVideoPlayer` to which a `QGraphicsObject` item will be added, so these</span>
+<span class="sd">    attributes are included in the base class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Labels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">player</span><span class="p">:</span> <span class="n">QtVideoPlayer</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ModelData"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.base.html#sleap.gui.overlays.base.ModelData">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ModelData</span><span class="p">(</span><span class="n">Sequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sequence-type object which generates predictions for specified frames.&quot;&quot;&quot;</span>
+
+    <span class="n">predictor</span><span class="p">:</span> <span class="n">VisualPredictor</span>
+    <span class="n">result_key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">video</span><span class="p">:</span> <span class="n">Video</span>
+    <span class="n">output_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">adjust_vals</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Data data for frame i from predictor.&quot;&quot;&quot;</span>
+        <span class="c1"># Get predictions for frame i</span>
+        <span class="n">frame_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">VideoReader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+        <span class="c1"># We just want the single image results</span>
+        <span class="n">frame_result</span> <span class="o">=</span> <span class="n">frame_result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">result_key</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjust_vals</span><span class="p">:</span>
+            <span class="n">frame_result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">frame_result</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Determine output scale by comparing original image with model output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="n">frame_result</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">frame_result</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">num_frames</span></div>
+
+
+<div class="viewcode-block" id="DataOverlay"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.overlays.base.html#sleap.gui.overlays.base.DataOverlay">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DataOverlay</span><span class="p">(</span><span class="n">BaseOverlay</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for confidence maps/part affinity fields overlays.</span>
+
+<span class="sd">    These overlays use a `ModelData` class which provides the confidence maps/</span>
+<span class="sd">    part affinity fields for the frame (by running inference with a model).</span>
+<span class="sd">    They could easily be modified to use another &quot;data&quot; class, e.g., one</span>
+<span class="sd">    which load saved confidence maps/part affinity fields from a file.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data: instance of a class such that you can use `data[frame_idx]`</span>
+<span class="sd">            to get the data (e.g., confmaps) for a given frame.</span>
+<span class="sd">        overlay_class: determines how the data will be shown, i.e., as</span>
+<span class="sd">            confidence maps or as a quiver plot (for part affinity fields).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">overlay_class</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;ConfMapsPlot&quot;</span><span class="p">,</span> <span class="s2">&quot;MultiQuiverPlot&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">add_to_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlay_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">img_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">]</span>
+        <span class="n">img_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">output_scale</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span>
+            <span class="n">to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span>
+            <span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">overlay_class</span><span class="p">(</span><span class="n">img_data</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">img_scale</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">to</span><span class="p">:</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsScene</span><span class="p">,</span>
+        <span class="n">what</span><span class="p">:</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsObject</span><span class="p">,</span>
+        <span class="n">where</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="n">to</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">what</span><span class="p">)</span>
+        <span class="n">what</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="o">*</span><span class="n">where</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_predictor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VisualPredictor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VisualPredictor</span><span class="o">.</span><span class="n">from_trained_models</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_predictor</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">make_predictor</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_predictor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">predictor</span><span class="p">:</span> <span class="n">VisualPredictor</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">show_pafs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="c1"># imports here so we don&#39;t get circular dependencies</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.confmaps</span> <span class="kn">import</span> <span class="n">ConfMapsPlot</span>
+        <span class="kn">from</span> <span class="nn">sleap.gui.overlays.pafs</span> <span class="kn">import</span> <span class="n">MultiQuiverPlot</span>
+
+        <span class="k">if</span> <span class="n">show_pafs</span><span class="p">:</span>
+            <span class="n">result_key</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">part_affinity_fields_key_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result_key</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">confidence_maps_key_name</span>
+
+        <span class="n">data_object</span> <span class="o">=</span> <span class="n">ModelData</span><span class="p">(</span><span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span> <span class="n">result_key</span><span class="o">=</span><span class="n">result_key</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">)</span>
+
+        <span class="c1"># Determine whether to use confmap or paf overlay</span>
+        <span class="k">if</span> <span class="n">show_pafs</span><span class="p">:</span>
+            <span class="n">overlay_class</span> <span class="o">=</span> <span class="n">MultiQuiverPlot</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">overlay_class</span> <span class="o">=</span> <span class="n">ConfMapsPlot</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_object</span><span class="p">,</span> <span class="n">overlay_class</span><span class="o">=</span><span class="n">overlay_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<span class="n">h5_colors</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">142</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">89</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">142</span><span class="p">,</span> <span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">89</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">173</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">112</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">70</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">,</span> <span class="mi">173</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">108</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">188</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">117</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">96</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">60</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">158</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">98</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">158</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">98</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">96</span><span class="p">,</span> <span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">60</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">188</span><span class="p">,</span> <span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">117</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">79</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">104</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">94</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">204</span><span class="p">,</span> <span class="mi">196</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">127</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">165</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">103</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">119</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">74</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">51</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">89</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">55</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">135</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">84</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">204</span><span class="p">,</span> <span class="mi">181</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">113</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">81</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">113</span><span class="p">,</span> <span class="mi">127</span><span class="p">],</span>
+<span class="p">]</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

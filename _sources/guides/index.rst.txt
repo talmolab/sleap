@@ -1,7 +1,7 @@
 .. _guides:
 
-Detailed Guides
-===============
+Guides
+=======
 
 Getting better results
 ----------------------
@@ -34,7 +34,7 @@ All Guides
 ----------
 
 .. toctree::
-    :maxdepth: 2
+    :caption: Guides
     :glob:
 
     *

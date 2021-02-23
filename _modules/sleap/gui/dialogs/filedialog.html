@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.dialogs.filedialog &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.dialogs.filedialog</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Wrappers for Qt File Dialogs.</span>
+
+<span class="sd">The main improvement is logic which determines whether to use native or non-</span>
+<span class="sd">native file dialogs. Native dialogs are usually better but don&#39;t work correctly</span>
+<span class="sd">on (some?) Ubuntu systems.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
+
+
+<div class="viewcode-block" id="FileDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.filedialog.html#sleap.gui.dialogs.filedialog.FileDialog">[docs]</a><span class="k">class</span> <span class="nc">FileDialog</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Substitute for QFileDialog; see class methods for details.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FileDialog.open"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.filedialog.html#sleap.gui.dialogs.filedialog.FileDialog.open">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wrapper for `QFileDialog.getOpenFileName()`</span>
+
+<span class="sd">        Uses non-native file dialog if USE_NON_NATIVE_FILE env var set.</span>
+
+<span class="sd">        Passes along everything except empty &quot;options&quot; arg.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_non_native_if_set</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileDialog.openMultiple"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.filedialog.html#sleap.gui.dialogs.filedialog.FileDialog.openMultiple">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">openMultiple</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wrapper for `QFileDialog.getOpenFileNames()`</span>
+
+<span class="sd">        Uses non-native file dialog if USE_NON_NATIVE_FILE env var set.</span>
+
+<span class="sd">        Passes along everything except empty &quot;options&quot; arg.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_non_native_if_set</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileNames</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileDialog.save"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.filedialog.html#sleap.gui.dialogs.filedialog.FileDialog.save">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrapper for `QFileDialog.getSaveFileName()`</span>
+
+<span class="sd">        Uses non-native file dialog if USE_NON_NATIVE_FILE env var set.</span>
+
+<span class="sd">        Passes along everything except empty &quot;options&quot; arg.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_non_native</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_non_native_if_set</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># The non-native file dialog doesn&#39;t add file extensions from the</span>
+        <span class="c1"># file-type menu in the dialog, so we need to do this ourselves.</span>
+        <span class="k">if</span> <span class="n">is_non_native</span> <span class="ow">and</span> <span class="s2">&quot;filter&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s2">&quot;dir&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;dir&quot;</span><span class="p">]</span>
+            <span class="n">filters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;filter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">filters</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;.slp&quot;</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.slp&quot;</span><span class="p">):</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">.slp&quot;</span>
+
+        <span class="n">filename</span><span class="p">,</span> <span class="nb">filter</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Make sure filename has appropriate file extension.</span>
+        <span class="k">if</span> <span class="n">is_non_native</span> <span class="ow">and</span> <span class="nb">filter</span><span class="p">:</span>
+            <span class="c1"># Get ext from selected filter (i.e., file type).</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">(</span><span class="se">\\</span><span class="s2">*(</span><span class="se">\\</span><span class="s2">.[a-z]+)&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="n">filter_ext</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="c1"># If ext isn&#39;t already at end of filename, add it.</span>
+                <span class="k">if</span> <span class="n">filter_ext</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">filter_ext</span><span class="p">):</span>
+                    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}{</span><span class="n">filter_ext</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">return</span> <span class="n">filename</span><span class="p">,</span> <span class="nb">filter</span></div>
+
+<div class="viewcode-block" id="FileDialog.openDir"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.filedialog.html#sleap.gui.dialogs.filedialog.FileDialog.openDir">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">openDir</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrapper for `QFileDialog.getExistingDirectory()`</span>
+
+<span class="sd">        Uses non-native file dialog if USE_NON_NATIVE_FILE env var set.</span>
+
+<span class="sd">        Passes along everything except empty &quot;options&quot; arg.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_non_native_if_set</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">is_non_native</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">is_linux</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;linux&quot;</span><span class="p">)</span>
+        <span class="n">env_var_set</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;USE_NON_NATIVE_FILE&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_linux</span> <span class="ow">or</span> <span class="n">env_var_set</span><span class="p">:</span>
+            <span class="n">is_non_native</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;options&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span> <span class="o">|=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">DontUseNativeDialog</span>
+
+        <span class="c1"># Make sure we don&#39;t send empty options argument</span>
+        <span class="k">if</span> <span class="s2">&quot;options&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]:</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">is_non_native</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

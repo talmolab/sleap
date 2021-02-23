@@ -1,0 +1,5 @@
+﻿sleap.gui.overlays.confmaps
+===========================
+
+.. automodule:: sleap.gui.overlays.confmaps
+   :members:

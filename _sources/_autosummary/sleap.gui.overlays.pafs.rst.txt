@@ -1,0 +1,5 @@
+﻿sleap.gui.overlays.pafs
+=======================
+
+.. automodule:: sleap.gui.overlays.pafs
+   :members:

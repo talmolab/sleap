@@ -1,0 +1,479 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.data.normalization &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.data.normalization</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Transformers for normalizing data formats.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.utils</span> <span class="kn">import</span> <span class="n">expand_to_rank</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">PreprocessingConfig</span>
+
+
+<div class="viewcode-block" id="ensure_min_image_rank"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_min_image_rank">[docs]</a><span class="k">def</span> <span class="nf">ensure_min_image_rank</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Expand the image to a minimum rank of 3 by adding single dimensions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Tensor of any rank and dtype.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The expanded image to a minimum rank of 3.</span>
+
+<span class="sd">        If the input was rank-2, it is assumed be of shape (height, width), so a</span>
+<span class="sd">        singleton channels axis is appended to produce a tensor of shape</span>
+<span class="sd">        (height, width, 1).</span>
+
+<span class="sd">        If the image was already of rank &gt;= 3, it will be returned without changes.</span>
+
+<span class="sd">    See also: sleap.nn.data.utils.expand_to_rank</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expand_to_rank</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="ensure_float"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_float">[docs]</a><span class="k">def</span> <span class="nf">ensure_float</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert the image to a tf.float32.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Tensor of any dtype.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor of the same shape as `image` but with dtype tf.float32. If the image</span>
+<span class="sd">        was already of tf.float32 dtype, it will not be changed.</span>
+
+<span class="sd">        If the input was of an integer type, it will be scaled to the range [0, 1]</span>
+<span class="sd">        according to the dtype&#39;s maximum value.</span>
+
+<span class="sd">    See also: tf.image.convert_image_dtype</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">convert_image_dtype</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ensure_int"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_int">[docs]</a><span class="k">def</span> <span class="nf">ensure_int</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the image to a tf.uint8.</span>
+
+<span class="sd">    If the image is a floating dtype, then converts and scales data from [0, 1]</span>
+<span class="sd">    to [0, 255] as needed. Otherwise, returns image as is.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Tensor of any dtype.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor of the same shape as `image` but with dtype tf.uint8.</span>
+<span class="sd">        If the image was not a floating dtype, then it will not be changed.</span>
+
+<span class="sd">        If the input was float with range [0, 1], it will be scaled to [0, 255].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Tensors have is_floating attribute, ndarrays don&#39;t.</span>
+    <span class="n">is_float</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;is_floating&quot;</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">convert_image_dtype</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="ensure_grayscale"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_grayscale">[docs]</a><span class="k">def</span> <span class="nf">ensure_grayscale</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert image to grayscale if in RGB format.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Tensor of any dtype of shape (height, width, channels). Channels are</span>
+<span class="sd">            expected to be 1 or 3.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A grayscale image of shape (height, width, 1) of the same dtype as the input.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the image had channels not equal to 1 or 3.</span>
+
+<span class="sd">    See also: tf.image.rgb_to_grayscale</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">rgb_to_grayscale</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="ensure_rgb"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_rgb">[docs]</a><span class="k">def</span> <span class="nf">ensure_rgb</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert image to RGB if in grayscale format.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Tensor of any dtype of shape (height, width, channels). Channels are</span>
+<span class="sd">            expected to be 1 or 3.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A grayscale image of shape (height, width, 1) of the same dtype as the input.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the image had channels not equal to 1 or 3.</span>
+
+<span class="sd">    See also: tf.image.grayscale_to_rgb</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">grayscale_to_rgb</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="convert_rgb_to_bgr"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.convert_rgb_to_bgr">[docs]</a><span class="k">def</span> <span class="nf">convert_rgb_to_bgr</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert an RGB image to BGR format by reversing the channel order.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Tensor of any dtype with shape (..., 3) in RGB format. If grayscale, the</span>
+<span class="sd">            image will be converted to RGB first.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The input image with the channels axis reversed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reverse</span><span class="p">(</span><span class="n">ensure_rgb</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="scale_image_range"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.scale_image_range">[docs]</a><span class="k">def</span> <span class="nf">scale_image_range</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">min_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">max_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Scale the range of image values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Tensor of any shape of dtype tf.float32 with values in the range [0, 1].</span>
+<span class="sd">        min_val: The minimum number that values will be scaled to.</span>
+<span class="sd">        max_val: The maximum number that values will be scaled to.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The scaled image of the same shape and dtype tf.float32. Values in the input</span>
+<span class="sd">        that were 0 will now be scaled to `min_val`, and values that were 1.0 will be</span>
+<span class="sd">        scaled to `max_val`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="p">(</span><span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">))</span> <span class="o">+</span> <span class="n">min_val</span></div>
+
+
+<div class="viewcode-block" id="scale_to_imagenet_tf_mode"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.scale_to_imagenet_tf_mode">[docs]</a><span class="k">def</span> <span class="nf">scale_to_imagenet_tf_mode</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Scale images according to the &quot;tf&quot; preprocessing mode.</span>
+
+<span class="sd">    This applies the preprocessing operations implemented in `tf.keras.applications` for</span>
+<span class="sd">    models pretrained on ImageNet.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Any image tensor of rank &gt;= 2.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The preprocessed image of dtype tf.float32 and shape (..., height, width, 3)</span>
+<span class="sd">        with RGB channel ordering.</span>
+
+<span class="sd">        Values will be in the range [-1.0, 1.0].</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        The preprocessing steps applied are:</span>
+<span class="sd">            1. If needed, expand to rank-3 by adding singleton dimensions to the end.</span>
+<span class="sd">               This assumes rank-2 images are grayscale of shape (height, width) and</span>
+<span class="sd">               will be expanded to (height, width, 1).</span>
+<span class="sd">            2. Convert to RGB if not already in 3 channel format.</span>
+<span class="sd">            3. Convert to tf.float32 in the range [0.0, 1.0].</span>
+<span class="sd">            4. Scale the values to the range [-1.0, 1.0].</span>
+
+<span class="sd">        This preprocessing mode is required when using pretrained ResNetV2, MobileNetV1,</span>
+<span class="sd">        MobileNetV2 and NASNet models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_min_image_rank</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># at least [height, width, 1]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_rgb</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># 3 channels</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_float</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># float32 in [0., 1.]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">scale_image_range</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># float32 in [-1, 1]</span>
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="scale_to_imagenet_caffe_mode"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.scale_to_imagenet_caffe_mode">[docs]</a><span class="k">def</span> <span class="nf">scale_to_imagenet_caffe_mode</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Scale images according to the &quot;caffe&quot; preprocessing mode.</span>
+
+<span class="sd">    This applies the preprocessing operations implemented in `tf.keras.applications` for</span>
+<span class="sd">    models pretrained on ImageNet.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Any image tensor of rank &gt;= 2. If rank &gt;=3, the last axis is assumed to</span>
+<span class="sd">            be of size 3 corresponding to RGB-ordered channels.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The preprocessed image of dtype tf.float32 and shape (..., height, width, 3)</span>
+<span class="sd">        with BGR channel ordering.</span>
+
+<span class="sd">        Values will be in the approximate range of [-127.5, 127.5].</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        The preprocessing steps applied are:</span>
+<span class="sd">            1. If needed, expand to rank-3 by adding singleton dimensions to the end.</span>
+<span class="sd">               This assumes rank-2 images are grayscale of shape (height, width) and</span>
+<span class="sd">               will be expanded to (height, width, 1).</span>
+<span class="sd">            2. Convert to RGB if not already in 3 channel format.</span>
+<span class="sd">            3. Reverse the channel ordering to convert RGB to BGR format.</span>
+<span class="sd">            4. Convert to tf.float32 in the range [0.0, 1.0].</span>
+<span class="sd">            5. Scale the values to the range [0.0, 255.0].</span>
+<span class="sd">            6. Subtract the ImageNet mean values (103.939, 116.779, 123.68) for channels</span>
+<span class="sd">               in BGR format.</span>
+
+<span class="sd">        This preprocessing mode is required when using pretrained ResNetV1 models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_min_image_rank</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># at least [height, width, 1]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_rgb</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># 3 channels</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">convert_rgb_to_bgr</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># reverse channel order</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_float</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># float32 in range [0., 1.]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">scale_image_range</span><span class="p">(</span>
+        <span class="n">image</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mf">255.0</span>
+    <span class="p">)</span>  <span class="c1"># float32 in range [0, 255]</span>
+    <span class="n">imagenet_mean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span>
+        <span class="p">[</span><span class="mf">103.939</span><span class="p">,</span> <span class="mf">116.779</span><span class="p">,</span> <span class="mf">123.68</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span>
+    <span class="p">)</span>  <span class="c1"># [B, G, R]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">-</span> <span class="n">expand_to_rank</span><span class="p">(</span>
+        <span class="n">imagenet_mean</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="p">)</span>  <span class="c1"># subtract from channels</span>
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="scale_to_imagenet_torch_mode"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.scale_to_imagenet_torch_mode">[docs]</a><span class="k">def</span> <span class="nf">scale_to_imagenet_torch_mode</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Scale images according to the &quot;torch&quot; preprocessing mode.</span>
+
+<span class="sd">    This applies the preprocessing operations implemented in `tf.keras.applications` for</span>
+<span class="sd">    models pretrained on ImageNet.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image: Any image tensor of rank &gt;= 2. If rank &gt;=3, the last axis is assumed to</span>
+<span class="sd">            be of size 3 corresponding to RGB-ordered channels.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The preprocessed image of dtype tf.float32 and shape (..., height, width, 3)</span>
+<span class="sd">        with RGB channel ordering.</span>
+
+<span class="sd">        Values will be in the approximate range of [-0.5, 0.5].</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        The preprocessing steps applied are:</span>
+<span class="sd">            1. If needed, expand to rank-3 by adding singleton dimensions to the end.</span>
+<span class="sd">               This assumes rank-2 images are grayscale of shape (height, width) and</span>
+<span class="sd">               will be expanded to (height, width, 1).</span>
+<span class="sd">            2. Convert to RGB if not already in 3 channel format.</span>
+<span class="sd">            3. Convert to tf.float32 in the range [0.0, 1.0].</span>
+<span class="sd">            4. Subtract the ImageNet mean values (0.485, 0.456, 0.406) for channels in</span>
+<span class="sd">               RGB format.</span>
+<span class="sd">            5. Divide by the ImageNet standard deviation values (0.229, 0.224, 0.225)</span>
+<span class="sd">               for channels in RGB format.</span>
+
+<span class="sd">        This preprocessing mode is required when using pretrained DenseNet models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_min_image_rank</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># at least [height, width, 1]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_rgb</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># 3 channels</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ensure_float</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># float32 in range [0., 1.]</span>
+    <span class="n">imagenet_mean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">([</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>  <span class="c1"># [R, G, B]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">-</span> <span class="n">expand_to_rank</span><span class="p">(</span>
+        <span class="n">imagenet_mean</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="p">)</span>  <span class="c1"># subtract from channels</span>
+    <span class="n">imagenet_std</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">([</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>  <span class="c1"># [R, G, B]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">/</span> <span class="n">expand_to_rank</span><span class="p">(</span><span class="n">imagenet_std</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">image</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="Normalizer"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.Normalizer">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Normalizer</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Data transformer to normalize images.</span>
+
+<span class="sd">    This is useful as a transformation to data streams that require specific data ranges</span>
+<span class="sd">    such as for pretrained models with specific preprocessing constraints.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        image_key: String name of the key containing the images to normalize.</span>
+<span class="sd">        ensure_float: If True, converts the image to a `tf.float32` if not already.</span>
+<span class="sd">        ensure_rgb: If True, converts the image to RGB if not already.</span>
+<span class="sd">        ensure_grayscale: If True, converts the image to grayscale if not already.</span>
+<span class="sd">        imagenet_mode: Specifies an ImageNet-based normalization mode commonly used in</span>
+<span class="sd">            `tf.keras.applications`-based pretrained models. No effect if not set.</span>
+<span class="sd">            Valid values are:</span>
+<span class="sd">            &quot;tf&quot;: Values will be scaled to [-1, 1], expanded to RGB if grayscale.</span>
+<span class="sd">            &quot;caffe&quot;: Values will be scaled to [0, 255], expanded to RGB if grayscale,</span>
+<span class="sd">                RGB channels flipped to BGR, and subtracted by a fixed mean.</span>
+<span class="sd">            &quot;torch&quot;: Values will be scaled to [0, 1], expanded to RGB if grayscale,</span>
+<span class="sd">                subtracted by a fixed mean, and scaled by fixed standard deviation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">image_key</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;image&quot;</span>
+    <span class="n">ensure_float</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">ensure_rgb</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">ensure_grayscale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">imagenet_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+            <span class="n">attr</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="s2">&quot;tf&quot;</span><span class="p">,</span> <span class="s2">&quot;caffe&quot;</span><span class="p">,</span> <span class="s2">&quot;torch&quot;</span><span class="p">])</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="Normalizer.from_config"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.Normalizer.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">PreprocessingConfig</span><span class="p">,</span> <span class="n">image_key</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;image&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Normalizer&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Build an instance of this class from its configuration options.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: An `PreprocessingConfig` instance with the desired parameters.</span>
+<span class="sd">            image_key: String name of the key containing the images to normalize.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of this class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">image_key</span><span class="o">=</span><span class="n">image_key</span><span class="p">,</span>
+            <span class="n">ensure_float</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">ensure_rgb</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">ensure_rgb</span><span class="p">,</span>
+            <span class="n">ensure_grayscale</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">ensure_grayscale</span><span class="p">,</span>
+            <span class="n">imagenet_mode</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">imagenet_mode</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that incoming elements are expected to have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that outgoing elements will have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_keys</span>
+
+<div class="viewcode-block" id="Normalizer.transform_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.normalization.html#sleap.nn.data.normalization.Normalizer.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_input</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a dataset that contains centroids computed from the inputs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ds_input: A dataset with image key specified in the `image_key` attribute.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `tf.data.Dataset` with elements containing the same images with</span>
+<span class="sd">            normalization applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">example</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local processing function for dataset mapping.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_float</span><span class="p">:</span>
+                <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensure_float</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_rgb</span><span class="p">:</span>
+                <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensure_rgb</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_grayscale</span><span class="p">:</span>
+                <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensure_grayscale</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imagenet_mode</span> <span class="o">==</span> <span class="s2">&quot;tf&quot;</span><span class="p">:</span>
+                <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_to_imagenet_tf_mode</span><span class="p">(</span>
+                    <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imagenet_mode</span> <span class="o">==</span> <span class="s2">&quot;caffe&quot;</span><span class="p">:</span>
+                <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_to_imagenet_caffe_mode</span><span class="p">(</span>
+                    <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imagenet_mode</span> <span class="o">==</span> <span class="s2">&quot;torch&quot;</span><span class="p">:</span>
+                <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_to_imagenet_torch_mode</span><span class="p">(</span>
+                    <span class="n">example</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_key</span><span class="p">]</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">example</span>
+
+        <span class="c1"># Map transformation.</span>
+        <span class="n">ds_output</span> <span class="o">=</span> <span class="n">ds_input</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="n">normalize</span><span class="p">,</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">ds_output</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

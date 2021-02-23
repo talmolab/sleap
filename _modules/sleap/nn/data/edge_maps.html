@@ -1,0 +1,457 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.data.edge_maps &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.data.edge_maps</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Transformers for generating edge confidence maps and part affinity fields.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">sleap</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">expand_to_rank</span><span class="p">,</span>
+    <span class="n">make_grid_vectors</span><span class="p">,</span>
+    <span class="n">gaussian_pdf</span><span class="p">,</span>
+    <span class="n">ensure_list</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="distance_to_edge"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.distance_to_edge">[docs]</a><span class="k">def</span> <span class="nf">distance_to_edge</span><span class="p">(</span>
+    <span class="n">points</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">edge_source</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">edge_destination</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Compute pairwise distance between points and undirected edges.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        points: Tensor of dtype tf.float32 of shape (d_0, ..., d_n, 2) where the last</span>
+<span class="sd">            axis corresponds to x- and y-coordinates. Distances will be broadcast across</span>
+<span class="sd">            all point dimensions.</span>
+<span class="sd">        edge_source: Tensor of dtype tf.float32 of shape (n_edges, 2) where the last</span>
+<span class="sd">            axis corresponds to x- and y-coordinates of the source points of each edge.</span>
+<span class="sd">        edge_destination: Tensor of dtype tf.float32 of shape (n_edges, 2) where the</span>
+<span class="sd">            last axis corresponds to x- and y-coordinates of the source points of each</span>
+<span class="sd">            edge.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor of dtype tf.float32 of shape (d_0, ..., d_n, n_edges) where the first</span>
+<span class="sd">        axes correspond to the initial dimensions of `points`, and the last indicates</span>
+<span class="sd">        the distance of each point to each edge.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure all points are at least rank 2.</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">expand_to_rank</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">edge_source</span> <span class="o">=</span> <span class="n">expand_to_rank</span><span class="p">(</span><span class="n">edge_source</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">edge_destination</span> <span class="o">=</span> <span class="n">expand_to_rank</span><span class="p">(</span><span class="n">edge_destination</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Compute number of point dimensions.</span>
+    <span class="n">n_pt_dims</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1"># Direction vector.</span>
+    <span class="n">direction_vector</span> <span class="o">=</span> <span class="n">edge_destination</span> <span class="o">-</span> <span class="n">edge_source</span>  <span class="c1"># (n_edges, 2)</span>
+
+    <span class="c1"># Edge length.</span>
+    <span class="n">edge_length</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">direction_vector</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span>
+    <span class="p">)</span>  <span class="c1"># (n_edges,)</span>
+
+    <span class="c1"># Adjust query points relative to edge source point.</span>
+    <span class="n">source_relative_points</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">expand_to_rank</span><span class="p">(</span>
+        <span class="n">edge_source</span><span class="p">,</span> <span class="n">n_pt_dims</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="p">)</span>  <span class="c1"># (..., n_edges, 2)</span>
+
+    <span class="c1"># Project points to edge line.</span>
+    <span class="n">line_projections</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span>
+        <span class="n">source_relative_points</span> <span class="o">*</span> <span class="n">expand_to_rank</span><span class="p">(</span><span class="n">direction_vector</span><span class="p">,</span> <span class="n">n_pt_dims</span> <span class="o">+</span> <span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span>
+    <span class="p">)</span> <span class="o">/</span> <span class="n">expand_to_rank</span><span class="p">(</span>
+        <span class="n">edge_length</span><span class="p">,</span> <span class="n">n_pt_dims</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">)</span>  <span class="c1"># (..., n_edges)</span>
+
+    <span class="c1"># Crop to line segment.</span>
+    <span class="n">line_projections</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">line_projections</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># (..., n_edges)</span>
+
+    <span class="c1"># Compute distance from each point to the edge.</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">line_projections</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">expand_to_rank</span><span class="p">(</span><span class="n">direction_vector</span><span class="p">,</span> <span class="n">n_pt_dims</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">-</span> <span class="n">source_relative_points</span>
+        <span class="p">),</span>
+        <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>  <span class="c1"># (..., n_edges)</span>
+
+    <span class="k">return</span> <span class="n">distances</span></div>
+
+
+<div class="viewcode-block" id="make_edge_maps"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.make_edge_maps">[docs]</a><span class="k">def</span> <span class="nf">make_edge_maps</span><span class="p">(</span>
+    <span class="n">xv</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">yv</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">edge_source</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">edge_destination</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate confidence maps for a set of undirected edges.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xv: Sampling grid vector for x-coordinates of shape (grid_width,) and dtype</span>
+<span class="sd">            tf.float32. This can be generated by</span>
+<span class="sd">            `sleap.nn.data.utils.make_grid_vectors`.</span>
+<span class="sd">        yv: Sampling grid vector for y-coordinates of shape (grid_height,) and dtype</span>
+<span class="sd">            tf.float32. This can be generated by</span>
+<span class="sd">            `sleap.nn.data.utils.make_grid_vectors`.</span>
+<span class="sd">        edge_source: Tensor of dtype tf.float32 of shape (n_edges, 2) where the last</span>
+<span class="sd">            axis corresponds to x- and y-coordinates of the source points of each edge.</span>
+<span class="sd">        edge_destination: Tensor of dtype tf.float32 of shape (n_edges, 2) where the</span>
+<span class="sd">            last axis corresponds to x- and y-coordinates of the destination points of</span>
+<span class="sd">            each edge.</span>
+<span class="sd">        sigma: Standard deviation of the 2D Gaussian distribution sampled to generate</span>
+<span class="sd">            confidence maps.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A set of confidence maps corresponding to the probability of each point on a</span>
+<span class="sd">        sampling grid being on each edge. These will be in a tensor of shape</span>
+<span class="sd">        (grid_height, grid_width, n_edges) of dtype tf.float32.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sampling_grid</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span> <span class="n">yv</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (height, width, 2)</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">distance_to_edge</span><span class="p">(</span>
+        <span class="n">sampling_grid</span><span class="p">,</span> <span class="n">edge_source</span><span class="o">=</span><span class="n">edge_source</span><span class="p">,</span> <span class="n">edge_destination</span><span class="o">=</span><span class="n">edge_destination</span>
+    <span class="p">)</span>
+    <span class="n">edge_maps</span> <span class="o">=</span> <span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">edge_maps</span></div>
+
+
+<div class="viewcode-block" id="make_pafs"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.make_pafs">[docs]</a><span class="k">def</span> <span class="nf">make_pafs</span><span class="p">(</span>
+    <span class="n">xv</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">yv</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">edge_source</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">edge_destination</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate part affinity fields for a set of directed edges.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xv: Sampling grid vector for x-coordinates of shape (grid_width,) and dtype</span>
+<span class="sd">            tf.float32. This can be generated by</span>
+<span class="sd">            `sleap.nn.data.utils.make_grid_vectors`.</span>
+<span class="sd">        yv: Sampling grid vector for y-coordinates of shape (grid_height,) and dtype</span>
+<span class="sd">            tf.float32. This can be generated by</span>
+<span class="sd">            `sleap.nn.data.utils.make_grid_vectors`.</span>
+<span class="sd">        edge_source: Tensor of dtype tf.float32 of shape (n_edges, 2) where the last</span>
+<span class="sd">            axis corresponds to x- and y-coordinates of the source points of each edge.</span>
+<span class="sd">        edge_destination: Tensor of dtype tf.float32 of shape (n_edges, 2) where the</span>
+<span class="sd">            last axis corresponds to x- and y-coordinates of the destination points of</span>
+<span class="sd">            each edge.</span>
+<span class="sd">        sigma: Standard deviation of the 2D Gaussian distribution sampled to generate</span>
+<span class="sd">            the edge maps for masking the PAFs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A set of part affinity fields corresponding to the unit vector pointing along</span>
+<span class="sd">        the direction of each edge weighted by the probability of each point on a</span>
+<span class="sd">        sampling grid being on each edge. These will be in a tensor of shape</span>
+<span class="sd">        (grid_height, grid_width, n_edges, 2) of dtype tf.float32. The last axis</span>
+<span class="sd">        corresponds to the x- and y-coordinates of the unit vectors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">unit_vectors</span> <span class="o">=</span> <span class="n">edge_destination</span> <span class="o">-</span> <span class="n">edge_source</span>
+    <span class="n">unit_vectors</span> <span class="o">=</span> <span class="n">unit_vectors</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">unit_vectors</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">edge_confidence_map</span> <span class="o">=</span> <span class="n">make_edge_maps</span><span class="p">(</span>
+        <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
+        <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
+        <span class="n">edge_source</span><span class="o">=</span><span class="n">edge_source</span><span class="p">,</span>
+        <span class="n">edge_destination</span><span class="o">=</span><span class="n">edge_destination</span><span class="p">,</span>
+        <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">pafs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">edge_confidence_map</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">expand_to_rank</span><span class="p">(</span>
+        <span class="n">unit_vectors</span><span class="p">,</span> <span class="mi">4</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">pafs</span></div>
+
+
+<div class="viewcode-block" id="make_multi_pafs"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.make_multi_pafs">[docs]</a><span class="k">def</span> <span class="nf">make_multi_pafs</span><span class="p">(</span>
+    <span class="n">xv</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">yv</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">edge_sources</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">edge_destinations</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Make multiple instance PAFs with max reduction.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xv: Sampling grid vector for x-coordinates of shape (grid_width,) and dtype</span>
+<span class="sd">            tf.float32. This can be generated by</span>
+<span class="sd">            `sleap.nn.data.utils.make_grid_vectors`.</span>
+<span class="sd">        yv: Sampling grid vector for y-coordinates of shape (grid_height,) and dtype</span>
+<span class="sd">            tf.float32. This can be generated by</span>
+<span class="sd">            `sleap.nn.data.utils.make_grid_vectors`.</span>
+<span class="sd">        edge_sources: Tensor of dtype tf.float32 of shape (n_instances, n_edges, 2)</span>
+<span class="sd">            where the last axis corresponds to x- and y-coordinates of the source points</span>
+<span class="sd">            of each edge.</span>
+<span class="sd">        edge_destinations: Tensor of dtype tf.float32 of shape (n_instances, n_edges, 2)</span>
+<span class="sd">            where the last axis corresponds to x- and y-coordinates of the destination</span>
+<span class="sd">            points of each edge.</span>
+<span class="sd">        sigma: Standard deviation of the 2D Gaussian distribution sampled to generate</span>
+<span class="sd">            the edge maps for masking the PAFs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A set of part affinity fields generated for each instance. These will be in a</span>
+<span class="sd">        tensor of shape (grid_height, grid_width, n_edges, 2). If multiple instance</span>
+<span class="sd">        PAFs are defined on the same pixel, they will be summed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grid_height</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">yv</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">grid_width</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">xv</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_edges</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">edge_sources</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n_instances</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">edge_sources</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pafs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">grid_height</span><span class="p">,</span> <span class="n">grid_width</span><span class="p">,</span> <span class="n">n_edges</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_instances</span><span class="p">):</span>
+        <span class="n">paf</span> <span class="o">=</span> <span class="n">make_pafs</span><span class="p">(</span>
+            <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
+            <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
+            <span class="n">edge_source</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">edge_sources</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">edge_destination</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">edge_destinations</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pafs</span> <span class="o">+=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">is_nan</span><span class="p">(</span><span class="n">paf</span><span class="p">),</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">paf</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pafs</span></div>
+
+
+<div class="viewcode-block" id="get_edge_points"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.get_edge_points">[docs]</a><span class="k">def</span> <span class="nf">get_edge_points</span><span class="p">(</span>
+    <span class="n">instances</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">edge_inds</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Return the points in each instance that form a directed graph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        instances: A tensor of shape (n_instances, n_nodes, 2) and dtype tf.float32</span>
+<span class="sd">            containing instance points where the last axis corresponds to (x, y) pixel</span>
+<span class="sd">            coordinates on the image. This must be rank-3 even if a single instance is</span>
+<span class="sd">            present.</span>
+<span class="sd">        edge_inds: A tensor of shape (n_edges, 2) and dtype tf.int32 containing the node</span>
+<span class="sd">            indices that define a directed graph, where the last axis corresponds to the</span>
+<span class="sd">            source and destination node indices.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (edge_sources, edge_destinations) containing the edge and destination</span>
+<span class="sd">        points respectively. Both will be tensors of shape (n_instances, n_edges, 2),</span>
+<span class="sd">        where the last axis corresponds to (x, y) pixel coordinates on the image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source_inds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">edge_inds</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">destination_inds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">edge_inds</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">edge_sources</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">instances</span><span class="p">,</span> <span class="n">source_inds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">edge_destinations</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">instances</span><span class="p">,</span> <span class="n">destination_inds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">edge_sources</span><span class="p">,</span> <span class="n">edge_destinations</span></div>
+
+
+<div class="viewcode-block" id="PartAffinityFieldsGenerator"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PartAffinityFieldsGenerator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Transformer to generate part affinity fields.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        sigma: Standard deviation of the 2D Gaussian distribution sampled to weight the</span>
+<span class="sd">            part affinity fields by their distance to the edges. This defines the spread</span>
+<span class="sd">            in units of the input image&#39;s grid, i.e., it does not take scaling in</span>
+<span class="sd">            previous steps into account.</span>
+<span class="sd">        output_stride: Relative stride of the generated confidence maps. This is</span>
+<span class="sd">            effectively the reciprocal of the output scale, i.e., increase this to</span>
+<span class="sd">            generate confidence maps that are smaller than the input images.</span>
+<span class="sd">        skeletons: List of `sleap.Skeleton`s to use for looking up the index of the</span>
+<span class="sd">            edges.</span>
+<span class="sd">        flatten_channels: If False, the generated tensors are of shape</span>
+<span class="sd">            [height, width, n_edges, 2]. If True, generated tensors are of shape</span>
+<span class="sd">            [height, width, n_edges * 2] by flattening the last 2 axes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">skeletons</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">sleap</span><span class="o">.</span><span class="n">Skeleton</span><span class="p">]]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">ensure_list</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">flatten_channels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that incoming elements are expected to have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;instances&quot;</span><span class="p">,</span> <span class="s2">&quot;skeleton_inds&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys that outgoing elements will have.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_keys</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;part_affinity_fields&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="PartAffinityFieldsGenerator.transform_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ds</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a dataset that contains the generated confidence maps.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_ds: A dataset with elements that contain the keys &quot;image&quot;,</span>
+<span class="sd">                &quot;instances&quot; and &quot;skeleton_inds&quot;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `tf.data.Dataset` with the same keys as the input, as well as</span>
+<span class="sd">            &quot;part_affinity_fields&quot;.</span>
+
+<span class="sd">            The &quot;part_affinity_fields&quot; key will be a tensor of shape</span>
+<span class="sd">            (grid_height, grid_width, n_edges, 2) containing the combined part affinity</span>
+<span class="sd">            fields of all instances in the frame.</span>
+
+<span class="sd">            If the `flatten_channels` attribute is set to True, the last 2 axes of the</span>
+<span class="sd">            &quot;part_affinity_fields&quot; are flattened to produce a tensor of shape</span>
+<span class="sd">            (grid_height, grid_width, n_edges * 2). This is a convenient form when</span>
+<span class="sd">            training models as a rank-4 (batched) tensor will generally be expected.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            The output stride is relative to the current scale of the image. To map</span>
+<span class="sd">            points on the part affinity fields to the raw image, first multiply them by</span>
+<span class="sd">            the output stride, and then scale the x- and y-coordinates by the &quot;scale&quot;</span>
+<span class="sd">            key.</span>
+
+<span class="sd">            Importantly, the sigma will be proportional to the current image grid, not</span>
+<span class="sd">            the original grid prior to scaling operations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Infer image dimensions to generate sampling grid.</span>
+        <span class="n">test_example</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">input_ds</span><span class="p">))</span>
+        <span class="n">image_height</span> <span class="o">=</span> <span class="n">test_example</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">image_width</span> <span class="o">=</span> <span class="n">test_example</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Generate sampling grid vectors.</span>
+        <span class="n">xv</span><span class="p">,</span> <span class="n">yv</span> <span class="o">=</span> <span class="n">make_grid_vectors</span><span class="p">(</span>
+            <span class="n">image_height</span><span class="o">=</span><span class="n">image_height</span><span class="p">,</span>
+            <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">grid_height</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">yv</span><span class="p">)</span>
+        <span class="n">grid_width</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xv</span><span class="p">)</span>
+
+        <span class="c1"># Pull out edge indices.</span>
+        <span class="c1"># TODO: Multi-skeleton support.</span>
+        <span class="n">edge_inds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skeletons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">edge_inds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">n_edges</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_inds</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">generate_pafs</span><span class="p">(</span><span class="n">example</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Local processing function for dataset mapping.&quot;&quot;&quot;</span>
+            <span class="n">edge_sources</span><span class="p">,</span> <span class="n">edge_destinations</span> <span class="o">=</span> <span class="n">get_edge_points</span><span class="p">(</span>
+                <span class="n">example</span><span class="p">[</span><span class="s2">&quot;instances&quot;</span><span class="p">],</span> <span class="n">edge_inds</span>
+            <span class="p">)</span>
+            <span class="n">edge_sources</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ensure_shape</span><span class="p">(</span><span class="n">edge_sources</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_edges</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">edge_destinations</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ensure_shape</span><span class="p">(</span><span class="n">edge_destinations</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_edges</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+            <span class="n">pafs</span> <span class="o">=</span> <span class="n">make_multi_pafs</span><span class="p">(</span>
+                <span class="n">xv</span><span class="o">=</span><span class="n">xv</span><span class="p">,</span>
+                <span class="n">yv</span><span class="o">=</span><span class="n">yv</span><span class="p">,</span>
+                <span class="n">edge_sources</span><span class="o">=</span><span class="n">edge_sources</span><span class="p">,</span>
+                <span class="n">edge_destinations</span><span class="o">=</span><span class="n">edge_destinations</span><span class="p">,</span>
+                <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">pafs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ensure_shape</span><span class="p">(</span><span class="n">pafs</span><span class="p">,</span> <span class="p">(</span><span class="n">grid_height</span><span class="p">,</span> <span class="n">grid_width</span><span class="p">,</span> <span class="n">n_edges</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatten_channels</span><span class="p">:</span>
+                <span class="n">pafs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pafs</span><span class="p">,</span> <span class="p">[</span><span class="n">grid_height</span><span class="p">,</span> <span class="n">grid_width</span><span class="p">,</span> <span class="n">n_edges</span> <span class="o">*</span> <span class="mi">2</span><span class="p">])</span>
+                <span class="n">pafs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ensure_shape</span><span class="p">(</span><span class="n">pafs</span><span class="p">,</span> <span class="p">(</span><span class="n">grid_height</span><span class="p">,</span> <span class="n">grid_width</span><span class="p">,</span> <span class="n">n_edges</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+
+            <span class="n">example</span><span class="p">[</span><span class="s2">&quot;part_affinity_fields&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pafs</span>
+
+            <span class="k">return</span> <span class="n">example</span>
+
+        <span class="c1"># Map transformation.</span>
+        <span class="n">output_ds</span> <span class="o">=</span> <span class="n">input_ds</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="n">generate_pafs</span><span class="p">,</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">output_ds</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

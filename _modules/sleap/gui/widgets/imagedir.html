@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.widgets.imagedir &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.widgets.imagedir</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Qt widget for showing images from a directory.</span>
+
+<span class="sd">There&#39;s a seekbar to move between images, and an optional drop-down menu</span>
+<span class="sd">to select different filename filters (e.g., &quot;validation.*.png&quot;).</span>
+
+<span class="sd">The typical use-case is to show predictions for each training epoch on the</span>
+<span class="sd">training/validation images. For this use-case, there&#39;s a factory method which</span>
+<span class="sd">creates widgets with relevant filters from a given training run path.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.widgets.video</span> <span class="kn">import</span> <span class="n">QtVideoPlayer</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
+
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
+
+
+<div class="viewcode-block" id="QtImageDirectoryWidget"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.imagedir.html#sleap.gui.widgets.imagedir.QtImageDirectoryWidget">[docs]</a><span class="k">class</span> <span class="nc">QtImageDirectoryWidget</span><span class="p">(</span><span class="n">QtVideoPlayer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Qt widget (window) for showing images from directory with seekbar.</span>
+
+<span class="sd">    Call `poll()` method to check directory for new files.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        directory: The path for which to search for image files.</span>
+<span class="sd">        filters: Filename filters, given as (display name, filter)-tuples,</span>
+<span class="sd">            e.g., (&quot;Validation&quot;, &quot;validation.*.png&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Text</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="o">=</span> <span class="n">directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">=</span> <span class="n">filters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">QtImageDirectoryWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seekbar</span><span class="o">.</span><span class="n">tick_index_offset</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># show frame numbers indexed by 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changedPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">vp</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">select_idx</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_win_title_for_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">360</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">addItems</span><span class="p">([</span><span class="nb">filter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="nb">filter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">setFilter</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">setFilter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_win_title_for_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get window title to use based on specified frame.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">frame_idx</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">frame_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span>
+            <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="QtImageDirectoryWidget.setFilter"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.imagedir.html#sleap.gui.widgets.imagedir.QtImageDirectoryWidget.setFilter">[docs]</a>    <span class="k">def</span> <span class="nf">setFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set filter (by number) for which files in directory to show.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_idx</span> <span class="o">=</span> <span class="n">filter_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_current_filter_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;*&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="QtImageDirectoryWidget.poll"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.imagedir.html#sleap.gui.widgets.imagedir.QtImageDirectoryWidget.poll">[docs]</a>    <span class="k">def</span> <span class="nf">poll</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Re-scans directory (using current filter) and updates widget.&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_filter_mask</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Polling: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">files</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">files</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
+            <span class="n">was_on_last_image</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">was_on_last_image</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">last_frame_idx</span><span class="p">:</span>
+                <span class="n">was_on_last_image</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="n">files</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_image_filenames</span><span class="p">(</span><span class="n">filenames</span><span class="o">=</span><span class="n">files</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">was_on_last_image</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">last_frame_idx</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">last_frame_idx</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="QtImageDirectoryWidget.make_training_vizualizer"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.imagedir.html#sleap.gui.widgets.imagedir.QtImageDirectoryWidget.make_training_vizualizer">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_training_vizualizer</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">run_path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;QtImageDirectoryWidget&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Factory method for only currently use-case of this widget.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            run_path: The run path directory for model, should contain viz</span>
+<span class="sd">                subdirectory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Instance of `QtImageDirectoryWidget` widget.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">run_path</span><span class="p">,</span> <span class="s2">&quot;viz&quot;</span><span class="p">)</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;Validation&quot;</span><span class="p">,</span> <span class="s2">&quot;validation.*.png&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Training&quot;</span><span class="p">,</span> <span class="s2">&quot;train.*.png&quot;</span><span class="p">)]</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">QtImageDirectoryWidget</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">win</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="n">QApplication</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="c1"># run_path = &quot;tests/data/json_format_v1/models/200420_100503.centroid.70&quot;</span>
+    <span class="c1"># window = QtImageDirectoryWidget.make_training_vizualizer(run_path)</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">QtImageDirectoryWidget</span><span class="p">(</span>
+        <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;tests/data/videos/&quot;</span><span class="p">,</span>
+        <span class="n">filters</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;JPEG&quot;</span><span class="p">,</span> <span class="s2">&quot;*.jpg&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Robot 1&quot;</span><span class="p">,</span> <span class="s2">&quot;*1.jpg&quot;</span><span class="p">)],</span>
+    <span class="p">)</span>
+
+    <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

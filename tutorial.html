@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tutorial &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial, Part 2" href="tutorial-part2.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tutorial">
+<span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>Before you can use SLEAP, you’ll need to install it. Follow the
+instructions at <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> to install SLEAP and
+start the GUI app.</p>
+<p>There are three main stages of using SLEAP:</p>
+<ol class="arabic simple">
+<li><p>Creating a project, opening a movie and defining the skeleton;</p></li>
+<li><p>Labeling and learning, labeling of video frames assisted by network
+predictions;</p></li>
+<li><p>Prediction and proofreading, final network predictions of body-part
+positions and proofreading of track identities in full videos.</p></li>
+</ol>
+<p>This tutorial covers stage 1 and the first half of stage 2. For the rest of the process, see <a class="reference internal" href="tutorial-part2.html#part2"><span class="std std-ref">Tutorial, Part 2</span></a>.</p>
+<div class="section" id="stage-1-creating-a-project">
+<h2>Stage 1: Creating a project<a class="headerlink" href="#stage-1-creating-a-project" title="Permalink to this headline">¶</a></h2>
+<p>When you first start SLEAP you’ll see an open dialog. Since you don’t
+yet have a project to open, click “<strong>Cancel</strong>” and you’ll be left with a
+new, empty project.</p>
+<div class="section" id="opening-a-video">
+<h3>Opening a video<a class="headerlink" href="#opening-a-video" title="Permalink to this headline">¶</a></h3>
+<p>Add a <strong>video</strong> by clicking the “<strong>Add Video</strong>” button in the “Videos” panel
+on the right side of the main window.</p>
+<p><img alt="image0" src="docs/_static/add-video.gif" /></p>
+<p>You’ll then be able to select one or more video files and click “<strong>Open</strong>”.
+SLEAP currently supports mp4, avi, and h5 files. For mp4 and avi files,
+you’ll be asked whether to import the video as grayscale. For h5 files,
+you’ll be asked the dataset and whether the video is stored with
+channels first or last.</p>
+<p><img alt="image1" src="docs/_static/video-options.gif" /></p>
+</div>
+<div class="section" id="creating-the-skeleton">
+<h3>Creating the Skeleton<a class="headerlink" href="#creating-the-skeleton" title="Permalink to this headline">¶</a></h3>
+<p>Create a new <strong>skeleton</strong> using the “Skeleton” panel on the right side
+of the main window.</p>
+<p>Use the “<strong>New Node</strong>” button to add a node (i.e., joint or body part).
+Double-click the node name to rename it (hit enter after you type the
+new name). Repeat until you have created all your nodes. You then need
+to connect the nodes with edges. Directly to the left of the “Add edge”
+button you’ll see two drop-down menus. Use these to select a pair of
+nodes, and then click “<strong>Add Edge</strong>”. Repeat until you’ve entered all the
+edges.</p>
+<p><img alt="image2" src="docs/_static/add-skeleton.gif" /></p>
+</div>
+</div>
+<div class="section" id="stage-2a-initial-labeling">
+<h2>Stage 2a: Initial Labeling<a class="headerlink" href="#stage-2a-initial-labeling" title="Permalink to this headline">¶</a></h2>
+<p>We start by assembling a candidate group of images to label. You can
+either pick your own frames or let the system suggest a set of frames
+using the “Labeling Suggestions” panel. SLEAP can give you random or
+evenly-spaced samples, or it can try to give you distinctive groups of
+frames by taking the image features into account.</p>
+<p>For now, let’s just get 20 random frames. Choose “sample” as the method and “random” as the sampling method, then click “<strong>Generate Suggestions</strong>”.</p>
+<p><img alt="image3" src="docs/_static/suggestions.jpg" /></p>
+<div class="section" id="labeling-the-first-frame">
+<h3>Labeling the first frame<a class="headerlink" href="#labeling-the-first-frame" title="Permalink to this headline">¶</a></h3>
+<p>Start by adding an <strong>instance</strong> of the skeleton to the current image by
+clicking the “<strong>Add Instance</strong>” button in the Instances panel. The
+first instance will have its points located at random. Move the points
+to their appropriate positions by dragging with the mouse. Use the mouse
+scroll-wheel to <strong>zoom</strong>.</p>
+<p><img alt="image4" src="docs/_static/labeling.gif" /></p>
+<p>You can <strong>move the entire instance</strong> by holding down the Alt key while
+you click and drag the instance. You can <strong>rotate the instance</strong> by
+using the scroll-wheel while holding down the Alt key (or Option on a Mac).</p>
+<p>For body parts that are not visible in the frame, right-click the node
+(or its name) to <strong>toggle visibility</strong>. The node will appear smaller to show
+that it’s marked as “not visible”. If you can determine where an
+occluded node would be in the image, you may label it as “visible” in
+order to train the model to predict the node even when it’s occluded.</p>
+<p><img alt="image5" src="docs/_static/toggle-visibility.gif" /></p>
+</div>
+<div class="section" id="saving">
+<h3>Saving<a class="headerlink" href="#saving" title="Permalink to this headline">¶</a></h3>
+<p>Since this is a new project, you’ll need to select a location and name
+the first time you save. SLEAP will ask you to save before closing any
+project that has been changed to avoid losing any work. Note: There is
+not yet an “undo” feature built into SLEAP. If you want to make
+temporary changes to a project, use the “<strong>Save As…</strong>” command first to save
+a copy of your project.</p>
+</div>
+<div class="section" id="labeling-more-frames">
+<h3>Labeling more frames<a class="headerlink" href="#labeling-more-frames" title="Permalink to this headline">¶</a></h3>
+<p>After labeling the first frame saving the project, it’s time to label
+more frames. Node positions will be copied from the instances in the
+prior labeled frame to increase labeling speed. Since you generated a list
+of suggested frames, you can go to the next frame in the labeling set by clicking “<strong>Next</strong>” under the list of suggested frames.</p>
+<p>You can also always pick a frame to label by using the seekbar under
+the video.</p>
+<p>Try adding an instance by <strong>right-clicking</strong> on the location of the animal in the video. You’ll see a pop-up menu with options for how we determine the initial node placement. Feel free to try the different options.</p>
+<p>There’s no need to be consistent about which animal you label with which
+instance for the case of multiple animals. For instance, suppose you
+have a male and a female. It’s fine to label the male with the blue
+instance in some frames and the orange instance in others. Tracking (and
+track proofreading) is the final stage in the workflow and occurs after
+predicting body part locations.</p>
+<p>When you label a frame, it’s best if you can label all the instances of
+your animal in the frame. Otherwise, the models may learn to not
+identify things that look like the instances you didn’t label.</p>
+</div>
+</div>
+<div class="section" id="quick-training-and-inference">
+<h2>Quick Training and Inference<a class="headerlink" href="#quick-training-and-inference" title="Permalink to this headline">¶</a></h2>
+<p>Let’s see how quickly we can train models and start getting some predictions.</p>
+<p>Start by labeling about 10 frames—this should be enough to at least get some initial results. Once you have the frames labeled, save your project.</p>
+<p>Now you’re ready to train some models! To run training, select “<strong>Run Training…</strong>” from the “Predict”
+menu. For this tutorial, let’s use the default settings for training and predict on 20 random frames.</p>
+<p><img alt="image6" src="docs/_static/training-dialog.jpg" /></p>
+<p>The default settings will train three models: one for confidence maps, one for part affinity fields, and one for centroids. The models will be trained in that order. You should see a window which shows you a graph of training and validation loss for each model as it trains.</p>
+<p>Just for this tutorial, let’s stop each training session after about 10 epochs. This should take a minute or two for each model (assuming you have a usable GPU!), and should be good enough to get some initial predictions.</p>
+<p>After each model is trained, inference will run and if everything is successful, you should get a dialog telling you how many frames got predictions. Frames with labels will be marked in the seekbar, so try clicking on the newly marked frames or use the “<strong>Next Labeled Frame</strong>” command in the “Go” menu to step through frames with labels.</p>
+<p>For the next steps, continue on to <a class="reference internal" href="tutorial-part2.html#part2"><span class="std std-ref">Tutorial, Part 2</span></a>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#stage-1-creating-a-project">Stage 1: Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stage-2a-initial-labeling">Stage 2a: Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-training-and-inference">Quick Training and Inference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial-part2.html">Tutorial, Part 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howtos.html">How-Tos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="tutorial-part2.html" title="next chapter">Tutorial, Part 2</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/tutorial.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,377 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.architectures.unet &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.architectures.unet</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides a generalized implementation of UNet.</span>
+
+<span class="sd">See the `UNet` class docstring for more information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.architectures</span> <span class="kn">import</span> <span class="n">encoder_decoder</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">UNetConfig</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+
+<div class="viewcode-block" id="PoolingBlock"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.PoolingBlock">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PoolingBlock</span><span class="p">(</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderBlock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pooling-only encoder block.</span>
+
+<span class="sd">    Used to compensate for UNet having a skip source before the pooling, so the blocks</span>
+<span class="sd">    need to end with a conv, not the pooling layer. This is added to the end of the</span>
+<span class="sd">    encoder stack to ensure that the number of down blocks is equal to the number of</span>
+<span class="sd">    pooling steps.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        pool: If True, applies max pooling at the end of the block.</span>
+<span class="sd">        pooling_stride: Stride of the max pooling operation. If 1, the output of this</span>
+<span class="sd">            block will be at the same stride (== 1/scale) as the input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pool</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">pooling_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="PoolingBlock.make_block"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.PoolingBlock.make_block">[docs]</a>    <span class="k">def</span> <span class="nf">make_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_in</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;conv_block&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the encoder block from an input tensor.&quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">(</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pooling_stride</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_last_pool&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+
+<div class="viewcode-block" id="UNet"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">UNet</span><span class="p">(</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">EncoderDecoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;UNet encoder-decoder architecture for fully convolutional networks.</span>
+
+<span class="sd">    This is the canonical architecture described in `Ronneberger et al., 2015</span>
+<span class="sd">    &lt;https://arxiv.org/abs/1505.04597&gt;`_.</span>
+
+<span class="sd">    The default configuration with 4 down/up blocks and 64 base filters has ~34.5M</span>
+<span class="sd">    parameters.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        filters: Base number of filters in the first encoder block. More filters will</span>
+<span class="sd">            increase the representational capacity of the network at the cost of memory</span>
+<span class="sd">            and runtime.</span>
+<span class="sd">        filters_rate: Factor to increase the number of filters by in each block.</span>
+<span class="sd">        kernel_size: Size of convolutional kernels (== height == width).</span>
+<span class="sd">        stem_kernel_size: Size of convolutional kernels in stem blocks.</span>
+<span class="sd">        stem_blocks: If &gt;0, will create additional &quot;down&quot; blocks for initial</span>
+<span class="sd">            downsampling. These will be configured identically to the down blocks below.</span>
+<span class="sd">        down_blocks: Number of blocks with pooling in the encoder. More down blocks will</span>
+<span class="sd">        convs_per_block: Number of convolutions in each block. More convolutions per</span>
+<span class="sd">            block will increase the representational capacity of the network at the cost</span>
+<span class="sd">            of memory and runtime.</span>
+<span class="sd">            increase the effective maximum receptive field.</span>
+<span class="sd">        up_blocks: Number of blocks with upsampling in the decoder. If this is equal to</span>
+<span class="sd">            `down_blocks`, the output of this network will be at the same stride (scale)</span>
+<span class="sd">            as the input.</span>
+<span class="sd">        middle_block: If True, add an additional block at the end of the encoder.</span>
+<span class="sd">        up_interpolate: If True, use bilinear interpolation instead of transposed</span>
+<span class="sd">            convolutions for upsampling. Interpolation is faster but transposed</span>
+<span class="sd">            convolutions may be able to learn richer or more complex upsampling to</span>
+<span class="sd">            recover details from higher scales. If using transposed convolutions, the</span>
+<span class="sd">            number of filters are determined by `filters` and `filters_rate` to</span>
+<span class="sd">            progressively decrease the number of filters at each step.</span>
+<span class="sd">        block_contraction: If True, reduces the number of filters at the end of middle</span>
+<span class="sd">            and decoder blocks. This has the effect of introducing an additional</span>
+<span class="sd">            bottleneck before each upsampling step. The original implementation does not</span>
+<span class="sd">            do this, but the CARE implementation does.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This bears some differences with other implementations, particularly with</span>
+<span class="sd">        respect to the skip connection source tensors in the encoder. In the original,</span>
+<span class="sd">        the skip connection is formed from the output of the convolutions in each</span>
+<span class="sd">        encoder block, not the pooling step. This results in skip connections starting</span>
+<span class="sd">        at the first stride level as well as subsequent ones.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">filters_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">stem_kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">convs_per_block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">stem_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">down_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">middle_block</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">up_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">up_interpolate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">block_contraction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stem_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Define the downsampling stem.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span><span class="p">):</span>
+            <span class="n">block_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="n">block</span><span class="p">))</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">(</span>
+                    <span class="n">pool</span><span class="o">=</span><span class="p">(</span><span class="n">block</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">pool_before_convs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">pooling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">num_convs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convs_per_block</span><span class="p">,</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stem_kernel_size</span><span class="p">,</span>
+                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Always finish with a pooling block to account for pooling before convs.</span>
+        <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PoolingBlock</span><span class="p">(</span><span class="n">pool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pooling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">blocks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">encoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Define the encoder stack.&quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span><span class="p">):</span>
+            <span class="n">block_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="p">(</span><span class="n">block</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">(</span>
+                    <span class="n">pool</span><span class="o">=</span><span class="p">(</span><span class="n">block</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">pool_before_convs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">pooling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">num_convs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convs_per_block</span><span class="p">,</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Always finish with a pooling block to account for pooling before convs.</span>
+        <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PoolingBlock</span><span class="p">(</span><span class="n">pool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pooling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="c1"># Create a middle block (like the CARE implementation).</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">middle_block</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convs_per_block</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># First convs are one exponent higher than the last encoder block.</span>
+                <span class="n">block_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">filters</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span><span class="p">))</span>
+                <span class="p">)</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">(</span>
+                        <span class="n">pool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">pool_before_convs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">pooling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                        <span class="n">num_convs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convs_per_block</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span>
+                        <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                        <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                        <span class="n">block_prefix</span><span class="o">=</span><span class="s2">&quot;_middle_expand&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_contraction</span><span class="p">:</span>
+                <span class="c1"># Contract the channels with an exponent lower than the last encoder block.</span>
+                <span class="n">block_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">filters</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Keep the block output filters the same.</span>
+                <span class="n">block_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">filters</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span><span class="p">))</span>
+                <span class="p">)</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleConvBlock</span><span class="p">(</span>
+                    <span class="n">pool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">pool_before_convs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">pooling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">num_convs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="n">block_filters</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+                    <span class="n">block_prefix</span><span class="o">=</span><span class="s2">&quot;_middle_contract&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">blocks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">decoder_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleUpsamplingBlock</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Define the decoder stack.&quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">up_blocks</span><span class="p">):</span>
+            <span class="n">block_filters_in</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filters</span>
+                <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">block</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_contraction</span><span class="p">:</span>
+                <span class="n">block_filters_out</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">filters</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters_rate</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">down_blocks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_blocks</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">block</span><span class="p">))</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">block_filters_out</span> <span class="o">=</span> <span class="n">block_filters_in</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">encoder_decoder</span><span class="o">.</span><span class="n">SimpleUpsamplingBlock</span><span class="p">(</span>
+                    <span class="n">upsampling_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">transposed_conv</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_interpolate</span><span class="p">),</span>
+                    <span class="n">transposed_conv_filters</span><span class="o">=</span><span class="n">block_filters_in</span><span class="p">,</span>
+                    <span class="n">transposed_conv_kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">transposed_conv_batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">interp_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
+                    <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">skip_add</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">refine_convs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convs_per_block</span><span class="p">,</span>
+                    <span class="n">refine_convs_first_filters</span><span class="o">=</span><span class="n">block_filters_in</span><span class="p">,</span>
+                    <span class="n">refine_convs_filters</span><span class="o">=</span><span class="n">block_filters_out</span><span class="p">,</span>
+                    <span class="n">refine_convs_kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">refine_convs_batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">blocks</span>
+
+<div class="viewcode-block" id="UNet.from_config"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">UNetConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;UNet&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a model from a set of configuration parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: An `UNetConfig` instance with the desired parameters.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instance of this class with the specified configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stem_blocks</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">stem_stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stem_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">stem_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">down_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="n">stem_blocks</span>
+        <span class="n">up_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_stride</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">output_stride</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">filters_rate</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">filters_rate</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">stem_kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+            <span class="n">convs_per_block</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">stem_blocks</span><span class="o">=</span><span class="n">stem_blocks</span><span class="p">,</span>
+            <span class="n">down_blocks</span><span class="o">=</span><span class="n">down_blocks</span><span class="p">,</span>
+            <span class="n">middle_block</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">middle_block</span><span class="p">,</span>
+            <span class="n">up_blocks</span><span class="o">=</span><span class="n">up_blocks</span><span class="p">,</span>
+            <span class="n">up_interpolate</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">up_interpolate</span><span class="p">,</span>
+            <span class="n">stacks</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

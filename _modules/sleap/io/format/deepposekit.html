@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.io.format.deepposekit &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.io.format.deepposekit</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Adaptor for reading DeepPoseKit datasets (HDF5).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">.adaptor</span> <span class="kn">import</span> <span class="n">Adaptor</span><span class="p">,</span> <span class="n">SleapObjectType</span>
+<span class="kn">from</span> <span class="nn">.filehandle</span> <span class="kn">import</span> <span class="n">FileHandle</span>
+
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Track</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span><span class="p">,</span> <span class="n">Skeleton</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+
+<div class="viewcode-block" id="LabelsDeepPoseKitAdaptor"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deepposekit.html#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor">[docs]</a><span class="k">class</span> <span class="nc">LabelsDeepPoseKitAdaptor</span><span class="p">(</span><span class="n">Adaptor</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">handles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SleapObjectType</span><span class="o">.</span><span class="n">labels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;h5&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_exts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;h5&quot;</span><span class="p">,</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;DeepPoseKit Dataset HDF5&quot;</span>
+
+<div class="viewcode-block" id="LabelsDeepPoseKitAdaptor.can_read_file"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deepposekit.html#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_read_file">[docs]</a>    <span class="k">def</span> <span class="nf">can_read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">does_match_ext</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_hdf5</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;pose&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsDeepPoseKitAdaptor.can_write_filename"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deepposekit.html#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_write_filename">[docs]</a>    <span class="k">def</span> <span class="nf">can_write_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="LabelsDeepPoseKitAdaptor.does_read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deepposekit.html#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_read">[docs]</a>    <span class="k">def</span> <span class="nf">does_read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsDeepPoseKitAdaptor.does_write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deepposekit.html#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_write">[docs]</a>    <span class="k">def</span> <span class="nf">does_write</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="LabelsDeepPoseKitAdaptor.read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deepposekit.html#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.read">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">,</span> <span class="n">video_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">skeleton_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Labels</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">file</span>
+
+        <span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
+        <span class="n">skeleton_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">skeleton_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
+        <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">skeleton_data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">nodes</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">swap</span> <span class="ow">in</span> <span class="n">skeleton_data</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span>
+                <span class="n">skeleton</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="n">lfs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">pose_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;pose&quot;</span><span class="p">][:]</span>
+
+        <span class="n">track_count</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">,</span> <span class="n">node_count</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">pose_matrix</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">Track</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Track </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">track_count</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">frame_count</span><span class="p">):</span>
+            <span class="n">lf_instances</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">track_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">track_count</span><span class="p">):</span>
+                <span class="n">points_array</span> <span class="o">=</span> <span class="n">pose_matrix</span><span class="p">[</span><span class="n">track_idx</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points_array</span><span class="p">)):</span>
+                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">score</span> <span class="o">=</span> <span class="n">points_array</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+                    <span class="n">points</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>  <span class="c1"># TODO: score</span>
+
+                <span class="n">inst</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span>
+                    <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">track</span><span class="o">=</span><span class="n">tracks</span><span class="p">[</span><span class="n">track_idx</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="n">points</span>
+                <span class="p">)</span>
+                <span class="n">lf_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+            <span class="n">lfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">lf_instances</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">lfs</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

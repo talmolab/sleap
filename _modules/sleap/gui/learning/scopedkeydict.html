@@ -1,0 +1,302 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.learning.scopedkeydict &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.learning.scopedkeydict</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Conversion between flat (form data) and hierarchical (config object) dicts.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">cattr</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">TrainingJobConfig</span><span class="p">,</span> <span class="n">ModelConfig</span>
+
+
+<div class="viewcode-block" id="ScopedKeyDict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.ScopedKeyDict">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ScopedKeyDict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to support conversion between flat and hierarchical dictionaries.</span>
+
+<span class="sd">    Flat dictionaries have scoped keys, e.g., &quot;foo.bar&quot;. These typically come</span>
+<span class="sd">    from user-editable forms.</span>
+
+<span class="sd">    Hierarchical dictionaries have dictionaries as values of other dictionaries,</span>
+<span class="sd">    e.g., `{&quot;foo&quot;: {&quot;bar&quot;: ... } }`. These are typically used when serializing</span>
+<span class="sd">    and deserializing objects.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        key_val_dict: Data stores in a *flat* dictionary with scoped keys.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">key_val_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ScopedKeyDict.set_hierarchical_key_val"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.ScopedKeyDict.set_hierarchical_key_val">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">set_hierarchical_key_val</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">current_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets value in hierarchical dict via scoped key.&quot;&quot;&quot;</span>
+        <span class="c1"># Ignore &quot;private&quot; keys starting with &quot;_&quot;</span>
+        <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;_&quot;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">current_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">top_key</span><span class="p">,</span> <span class="o">*</span><span class="n">subkey_list</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">top_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_dict</span><span class="p">:</span>
+                <span class="n">current_dict</span><span class="p">[</span><span class="n">top_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">subkey</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subkey_list</span><span class="p">)</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">set_hierarchical_key_val</span><span class="p">(</span><span class="n">current_dict</span><span class="p">[</span><span class="n">top_key</span><span class="p">],</span> <span class="n">subkey</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ScopedKeyDict.to_hierarchical_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.ScopedKeyDict.to_hierarchical_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_hierarchical_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Converts internal flat dictionary to hierarchical dictionary.&quot;&quot;&quot;</span>
+        <span class="n">hierarch_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_val_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_hierarchical_key_val</span><span class="p">(</span><span class="n">hierarch_dict</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hierarch_dict</span></div>
+
+<div class="viewcode-block" id="ScopedKeyDict.from_hierarchical_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.ScopedKeyDict.from_hierarchical_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_hierarchical_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">hierarch_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructs object (with flat dict) from hierarchical dictionary.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">key_val_dict</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">_make_flattened_dict</span><span class="p">(</span><span class="n">hierarch_dict</span><span class="p">))</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_make_flattened_dict</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">hierarch_dicts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">scope_string</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">flattened_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">hierarch_dicts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Dict</span><span class="p">):</span>
+                <span class="c1"># Dict so recurse adding node to scope string</span>
+                <span class="n">flattened_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="bp">cls</span><span class="o">.</span><span class="n">_make_flattened_dict</span><span class="p">(</span>
+                        <span class="n">hierarch_dicts</span><span class="o">=</span><span class="n">val</span><span class="p">,</span>
+                        <span class="n">scope_string</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">_subscope_key</span><span class="p">(</span><span class="n">scope_string</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Leafs (non-dict)</span>
+                <span class="n">flattened_dict</span><span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="n">_subscope_key</span><span class="p">(</span><span class="n">scope_string</span><span class="p">,</span> <span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">flattened_dict</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_subscope_key</span><span class="p">(</span><span class="n">scope_string</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">scope_string</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">scope_string</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="apply_cfg_transforms_to_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.apply_cfg_transforms_to_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">apply_cfg_transforms_to_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transforms data from form to correct data types before converting to object.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        key_val_dict: Flat dictionary from :py:class:`TrainingEditorWidget`.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        None, modifies dict in place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;outputs.tags&quot;</span> <span class="ow">in</span> <span class="n">key_val_dict</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;outputs.tags&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;outputs.tags&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">tag</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;outputs.tags&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">if</span> <span class="s2">&quot;_ensure_channels&quot;</span> <span class="ow">in</span> <span class="n">key_val_dict</span><span class="p">:</span>
+        <span class="n">ensure_channels</span> <span class="o">=</span> <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;_ensure_channels&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">ensure_rgb</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">ensure_grayscale</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">ensure_channels</span> <span class="o">==</span> <span class="s2">&quot;rgb&quot;</span><span class="p">:</span>
+            <span class="n">ensure_rgb</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">ensure_channels</span> <span class="o">==</span> <span class="s2">&quot;grayscale&quot;</span><span class="p">:</span>
+            <span class="n">ensure_grayscale</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;data.preprocessing.ensure_rgb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensure_rgb</span>
+        <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;data.preprocessing.ensure_grayscale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensure_grayscale</span>
+
+    <span class="k">if</span> <span class="s2">&quot;model.backbone.resnet.upsampling.skip_connections&quot;</span> <span class="ow">in</span> <span class="n">key_val_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;model.backbone.resnet.upsampling.skip_connections&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">key_val_dict</span><span class="p">[</span><span class="s2">&quot;model.backbone.resnet.upsampling.skip_connections&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Overwrite backbone strides with stride from head.</span>
+    <span class="n">backbone_name</span> <span class="o">=</span> <span class="n">find_backbone_name_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backbone_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_stride</span><span class="p">,</span> <span class="n">output_stride</span> <span class="o">=</span> <span class="n">resolve_strides_from_key_val_dict</span><span class="p">(</span>
+            <span class="n">key_val_dict</span><span class="p">,</span> <span class="n">backbone_name</span>
+        <span class="p">)</span>
+        <span class="n">key_val_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.output_stride&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_stride</span>
+        <span class="n">key_val_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.max_stride&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_stride</span></div>
+
+
+<div class="viewcode-block" id="find_backbone_name_from_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.find_backbone_name_from_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">find_backbone_name_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the backbone model name from the config dictionary.&quot;&quot;&quot;</span>
+    <span class="n">backbone_name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_val_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;model.backbone.&quot;</span><span class="p">):</span>
+            <span class="n">backbone_name</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">backbone_name</span></div>
+
+
+<div class="viewcode-block" id="resolve_strides_from_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.resolve_strides_from_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">resolve_strides_from_key_val_dict</span><span class="p">(</span>
+    <span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">backbone_name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Find the valid max and output strides from the config dictionary.&quot;&quot;&quot;</span>
+    <span class="n">max_stride</span> <span class="o">=</span> <span class="n">key_val_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.max_stride&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_stride</span> <span class="o">=</span> <span class="n">key_val_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;model.backbone.</span><span class="si">{</span><span class="n">backbone_name</span><span class="si">}</span><span class="s2">.output_stride&quot;</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s2">&quot;model.heads.centered_instance.output_stride&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model.heads.centroid.output_stride&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model.heads.multi_instance.confmaps.output_stride&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model.heads.multi_instance.pafs.output_stride&quot;</span><span class="p">,</span>
+    <span class="p">]:</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="n">key_val_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stride</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">stride</span><span class="p">)</span>
+            <span class="n">max_stride</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_stride</span><span class="p">),</span> <span class="n">stride</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stride</span>
+            <span class="p">)</span>
+            <span class="n">output_stride</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">output_stride</span><span class="p">),</span> <span class="n">stride</span><span class="p">)</span> <span class="k">if</span> <span class="n">output_stride</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stride</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output_stride</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_stride</span> <span class="o">=</span> <span class="n">max_stride</span>
+
+    <span class="k">return</span> <span class="n">max_stride</span><span class="p">,</span> <span class="n">output_stride</span></div>
+
+
+<div class="viewcode-block" id="make_training_config_from_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.make_training_config_from_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">make_training_config_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingJobConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make :py:class:`TrainingJobConfig` object from flat dictionary.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        key_val_dict: Flat dictionary from :py:class:`TrainingEditorWidget`.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        The :py:class:`TrainingJobConfig` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">apply_cfg_transforms_to_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span>
+    <span class="n">cfg_dict</span> <span class="o">=</span> <span class="n">ScopedKeyDict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span><span class="o">.</span><span class="n">to_hierarchical_dict</span><span class="p">()</span>
+
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">,</span> <span class="n">TrainingJobConfig</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cfg</span></div>
+
+
+<div class="viewcode-block" id="make_model_config_from_key_val_dict"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.learning.scopedkeydict.html#sleap.gui.learning.scopedkeydict.make_model_config_from_key_val_dict">[docs]</a><span class="k">def</span> <span class="nf">make_model_config_from_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make :py:class:`ModelConfig` object from flat dictionary.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        key_val_dict: Flat dictionary from :py:class:`TrainingEditorWidget`.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        The :py:class:`ModelConfig` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">apply_cfg_transforms_to_key_val_dict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span>
+    <span class="n">cfg_dict</span> <span class="o">=</span> <span class="n">ScopedKeyDict</span><span class="p">(</span><span class="n">key_val_dict</span><span class="p">)</span><span class="o">.</span><span class="n">to_hierarchical_dict</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s2">&quot;model&quot;</span> <span class="ow">in</span> <span class="n">cfg_dict</span><span class="p">:</span>
+        <span class="n">cfg_dict</span> <span class="o">=</span> <span class="n">cfg_dict</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">cattr</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">,</span> <span class="n">ModelConfig</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

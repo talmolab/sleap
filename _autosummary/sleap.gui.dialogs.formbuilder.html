@@ -1,0 +1,664 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.dialogs.formbuilder &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.gui.dialogs.importvideos" href="sleap.gui.dialogs.importvideos.html" />
+    <link rel="prev" title="sleap.gui.dialogs.filedialog" href="sleap.gui.dialogs.filedialog.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.gui.dialogs.formbuilder">
+<span id="sleap-gui-dialogs-formbuilder"></span><h1>sleap.gui.dialogs.formbuilder<a class="headerlink" href="#module-sleap.gui.dialogs.formbuilder" title="Permalink to this headline">¶</a></h1>
+<p>Widgets and dialogues for YAML-based forms.</p>
+<p>Most of the time you can use <a class="reference internal" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget" title="sleap.gui.dialogs.formbuilder.YamlFormWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">YamlFormWidget</span></code></a>. If you want to show
+the widget as a model dialog, <a class="reference internal" href="#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog" title="sleap.gui.dialogs.formbuilder.FormBuilderModalDialog"><code class="xref py py-class docutils literal notranslate"><span class="pre">FormBuilderModalDialog</span></code></a> makes this
+a little more convenient (it provides methods for adding a message for the
+dialog and for getting the results when the dialog is closed).</p>
+<p>Example of form widget:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="p">(</span><span class="n">yaml_file</span><span class="o">=</span><span class="s2">&quot;example.yaml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span><span class="o">.</span><span class="n">mainAction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">my_function</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>my_function will get called with form data when user clicks the main button
+(main button has type “button” and default “main action”)</p>
+<p>Example of modal dialog:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">FormBuilderModalDialog</span><span class="p">(</span><span class="n">form_name</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The results will be empty dictionary if the user hit “cancel”, otherwise it
+will contain all data from form (dict keys matching names of fields).</p>
+<p>The logic which creates each form field based on the data from the YAML file
+is <a href="#id1"><span class="problematic" id="id2">:py:method:`FormBuilderLayout.add_item()`</span></a>. Look there if you want to know
+what’s supported in the YAML file, what exactly each field type does, or if you
+want to add a new type of supported form field.</p>
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.FieldComboWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">FieldComboWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result_as_idx</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">add_blank_option</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FieldComboWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FieldComboWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom ComboBox-style widget with method to easily add set of options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result_as_idx</strong> – If True, then set/get for value will use idx of option
+rather than string.</p></li>
+<li><p><strong>add_blank_option</strong> – If True, then blank (“”) option will be added at
+beginning of list (which will return “” as val instead of idx if
+result_as_idx is True).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FieldComboWidget.set_options">
+<code class="sig-name descname">set_options</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">options_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">select_item</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FieldComboWidget.set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FieldComboWidget.set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets list of menu options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options_list</strong> – List of items (strings) to show in menu.</p></li>
+<li><p><strong>select_item</strong> – Item to select initially.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">FormBuilderLayout</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">items_to_create</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">field_options_lists</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom <cite>QFormLayout</cite> which populates itself from list of form fields.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>items_to_create</strong> – list of form items, each item in list is a dictionary
+with information about item. see :py:<a class="reference internal" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form" title="sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_form()</span></code></a> for details
+about the keys/values. typically this list comes straight from a
+YAML file.</p></li>
+<li><p><strong>field_options_lists</strong> – allows you to set list of options to use for “list”
+fields (i.e., <a class="reference internal" href="#sleap.gui.dialogs.formbuilder.FieldComboWidget" title="sleap.gui.dialogs.formbuilder.FieldComboWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">FieldComboWidget</span></code></a> or
+<a class="reference internal" href="#sleap.gui.dialogs.formbuilder.TextOrListWidget" title="sleap.gui.dialogs.formbuilder.TextOrListWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextOrListWidget</span></code></a> widgets)
+when creating the form programmatically, instead of having options
+as “options” key of dictionary (which typically would be hard-coded
+in YAML).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form">
+<code class="sig-name descname">build_form</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">items_to_create</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.build_form"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds widgets to form layout for each item in items_to_create.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>items_to_create</strong> – <p>list of dictionaries with keys</p>
+<ul class="simple">
+<li><p>name: used as key when we return form data as dict</p></li>
+<li><p>label: string to show in form</p></li>
+<li><p>type: supports double, int, bool, list, button, stack</p></li>
+<li><p>default: default value for form field</p></li>
+<li><p>[options]: comma separated list of options,
+used for list or stack field-types</p></li>
+<li><p>for stack, array of dicts w/ form data for each stack page</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p>A “stack” has a dropdown menu that determines which stack page to show.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.find_field">
+<code class="sig-name descname">find_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.find_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.find_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds form fields by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>field_name</strong> – Name of field to find.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of field widgets, including any in active stacked widget.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.get_form_data">
+<code class="sig-name descname">get_form_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.get_form_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.get_form_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets all user-editable data from the widgets in the form layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>value for each user-editable widget in layout</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Dict with key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.get_widget_value">
+<em class="property">static </em><code class="sig-name descname">get_widget_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">widget</span><span class="p">:</span> <span class="n">PySide2.QtWidgets.QWidget</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.get_widget_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.get_widget_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value of form field.</p>
+<p>This determines the method appropriate for the type of widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>widget</strong> – The widget for which to return value.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>value (can be bool, numeric, string, or None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.setEnabled">
+<code class="sig-name descname">setEnabled</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">arg__1</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.setEnabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.setEnabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_enabled">
+<code class="sig-name descname">set_field_enabled</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">is_enabled</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.set_field_enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets whether the field is enabled/disabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_options">
+<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">options_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets custom list of options for specified field.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_form_data">
+<code class="sig-name descname">set_form_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.set_form_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_form_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set specified user-editable data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – dictionary of data, key should match field name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_widget_value">
+<em class="property">static </em><code class="sig-name descname">set_widget_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">widget</span><span class="p">:</span> <span class="n">PySide2.QtWidgets.QWidget</span></em>, <em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.set_widget_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.set_widget_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set value for specific widget.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.stacked">
+<em class="property">property </em><code class="sig-name descname">stacked</code><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.stacked" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of all “stack” widgets in form.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderLayout.update_field_options">
+<code class="sig-name descname">update_field_options</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderLayout.update_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.update_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates options list for every field with custom list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderModalDialog">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">FormBuilderModalDialog</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">form_widget</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget" title="sleap.gui.dialogs.formbuilder.YamlFormWidget">sleap.gui.dialogs.formbuilder.YamlFormWidget</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">form_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderModalDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Blocking modal dialog to use with <a class="reference internal" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget" title="sleap.gui.dialogs.formbuilder.YamlFormWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">YamlFormWidget</span></code></a> widget.</p>
+<p>You can either initialize with a <a class="reference internal" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget" title="sleap.gui.dialogs.formbuilder.YamlFormWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">YamlFormWidget</span></code></a> widget, or
+provide the name of the YAML form (i.e., the string you’d pass to
+<a class="reference internal" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.from_name" title="sleap.gui.dialogs.formbuilder.YamlFormWidget.from_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">YamlFormWidget.from_name()</span></code></a>).</p>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.add_message">
+<code class="sig-name descname">add_message</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderModalDialog.add_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.add_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds text message between form fields and buttons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.get_results">
+<code class="sig-name descname">get_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderModalDialog.get_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.get_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows dialog, blocks till submitted, returns dict of form data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.set_message">
+<code class="sig-name descname">set_message</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#FormBuilderModalDialog.set_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.FormBuilderModalDialog.set_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds/replaces text message between form fields and buttons.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.OptionalSpinWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">OptionalSpinWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">'int'</span></em>, <em class="sig-param"><span class="n">none_string</span><span class="o">=</span><span class="default_value">'none'</span></em>, <em class="sig-param"><span class="n">none_label</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#OptionalSpinWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.OptionalSpinWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numeric (spin) widget with checkbox to disable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> – can be “int” or “double”.</p></li>
+<li><p><strong>none_string</strong> – value to use when numeric entry is disabled; i.e., widget
+returns this as value if checkbox is set, and setting value to this
+will make the checkbox checked.</p></li>
+<li><p><strong>note_label</strong> – text to show next to checkbox; defaults to none_string (in
+title case).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.ResizingStackedWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">ResizingStackedWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#ResizingStackedWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.ResizingStackedWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>QStackedWidget that updates its sizeHint and minimumSizeHint as needed.</p>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.ResizingStackedWidget.minimumSizeHint">
+<code class="sig-name descname">minimumSizeHint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#ResizingStackedWidget.minimumSizeHint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.ResizingStackedWidget.minimumSizeHint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Qt method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.ResizingStackedWidget.sizeHint">
+<code class="sig-name descname">sizeHint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#ResizingStackedWidget.sizeHint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.ResizingStackedWidget.sizeHint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Qt method.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">StackBuilderWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stack_data</span></em>, <em class="sig-param"><span class="n">field_options_lists</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget that shows different subforms depending on menu selection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stack_data</strong> – Dictionary for field from <cite>items_to_create</cite>.
+The “options” key will give the list of options to show in
+menu. Each of the “options” will also be the key of a dictionary
+within stack_data that has the same structure as the dictionary
+passed to <a class="reference internal" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form" title="sleap.gui.dialogs.formbuilder.FormBuilderLayout.build_form"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FormBuilderLayout.build_form()</span></code></a>.</p></li>
+<li><p><strong>field_options_list</strong> – passed to stacked forms, see
+<a class="reference internal" href="#sleap.gui.dialogs.formbuilder.FormBuilderLayout" title="sleap.gui.dialogs.formbuilder.FormBuilderLayout"><code class="xref py py-class docutils literal notranslate"><span class="pre">FormBuilderLayout</span></code></a> for details.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget.find_field">
+<code class="sig-name descname">find_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget.find_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget.find_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns result of find_field method on currently shown subform.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget.get_data">
+<code class="sig-name descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value from currently shown subform.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget.setEnabled">
+<code class="sig-name descname">setEnabled</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">arg__1</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget.setEnabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget.setEnabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget.setValue">
+<code class="sig-name descname">setValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets value of menu.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget.set_field_options">
+<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget.set_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls set_field_options for every subform.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget.switch_to_idx">
+<code class="sig-name descname">switch_to_idx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idx</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget.switch_to_idx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget.switch_to_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switch currently shown widget from stack.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.StackBuilderWidget.value">
+<code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StackBuilderWidget.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StackBuilderWidget.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value of menu.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.StringListWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">StringListWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">delim</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#StringListWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.StringListWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free-form text field which converts value to/from list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>delim</strong> – the list delimiter to use; note that list values won’t be
+trimmed, so “,” and “item a, item b” will result in
+[“item a”, ” item b”].</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.TextOrListWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">TextOrListWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result_as_idx</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">add_blank_option</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#TextOrListWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.TextOrListWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget with free-form text field or drop-down menu.</p>
+<p>The “text” or “list” mode can be set using <cite>setMode</cite> method.</p>
+<p>This widget is useful when we want a drop-down menu but need to fall back
+to a text field when (e.g.) the current value isn’t in list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result_as_idx</strong> – If True, then set/get for value will use idx of option
+rather than string.</p></li>
+<li><p><strong>add_blank_option</strong> – If True, then blank (“”) option will be added at
+beginning of list (which will return “” as val instead of idx if
+result_as_idx is True).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.formbuilder.</code><code class="sig-name descname">YamlFormWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">yaml_file</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">which_form</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'main'</span></em>, <em class="sig-param"><span class="n">field_options_lists</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>list<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#YamlFormWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget which shows form created from a YAML file.</p>
+<p>Typically you’ll want to save the YAML in <cite>sleap/config/</cite> and use the
+<a class="reference internal" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.from_name" title="sleap.gui.dialogs.formbuilder.YamlFormWidget.from_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_name()</span></code></a> method to make the form (e.g., if your form data is in
+<cite>sleap/config/foo.yaml</cite>, then you can create form like so:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">widget</span> <span class="o">=</span> <span class="n">YamlFormWidget</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>yaml_file</strong> – filename of YAML file to load.</p></li>
+<li><p><strong>which_form</strong> (<em>optional</em>) – key to form in YAML file, default is “main”.
+this allows a single YAML file to contain data for multiple forms.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget.buttons">
+<em class="property">property </em><code class="sig-name descname">buttons</code><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.buttons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of buttons in form (so we can connect to handlers).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget.fields">
+<em class="property">property </em><code class="sig-name descname">fields</code><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>widget} fields in form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Return a dict of {name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget.from_name">
+<em class="property">classmethod </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">form_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget" title="sleap.gui.dialogs.formbuilder.YamlFormWidget">sleap.gui.dialogs.formbuilder.YamlFormWidget</a><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#YamlFormWidget.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.from_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate class from the short name of form (e.g., “suggestions”).</p>
+<p>Short name is converted to path to YAML file in <cite>sleap/config/</cite>,
+and then class is instantiated using this path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>form_name</strong> – Short name of form, corresponds to name of YAML file.</p></li>
+<li><p><strong>args</strong> – Positional args passed to class initializer.</p></li>
+<li><p><strong>kwargs</strong> – Named args passed to class initializer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Instance of <cite>YamlFormWidget</cite> class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget.get_form_data">
+<code class="sig-name descname">get_form_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#YamlFormWidget.get_form_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.get_form_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dict of form data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget.set_field_options">
+<code class="sig-name descname">set_field_options</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">options_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#YamlFormWidget.set_field_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.set_field_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets option list for specified field.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget.set_form_data">
+<code class="sig-name descname">set_form_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#YamlFormWidget.set_form_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.set_form_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set data for form from dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.formbuilder.YamlFormWidget.trigger_main_action">
+<code class="sig-name descname">trigger_main_action</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/formbuilder.html#YamlFormWidget.trigger_main_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.formbuilder.YamlFormWidget.trigger_main_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emit mainAction signal with form data.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.metrics.html">sleap.gui.dialogs.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.mpl.html">sleap.gui.widgets.mpl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.gui.dialogs.filedialog.html" title="previous chapter">sleap.gui.dialogs.filedialog</a></li>
+      <li>Next: <a href="sleap.gui.dialogs.importvideos.html" title="next chapter">sleap.gui.dialogs.importvideos</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.gui.dialogs.formbuilder.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

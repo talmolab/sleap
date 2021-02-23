@@ -1,0 +1,422 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.dialogs.merge &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.dialogs.merge</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Gui for merging two labels files with options to resolve conflicts.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">LabeledFrame</span>
+<span class="kn">from</span> <span class="nn">sleap.io.dataset</span> <span class="kn">import</span> <span class="n">Labels</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+<span class="n">USE_BASE_STRING</span> <span class="o">=</span> <span class="s2">&quot;Use base, discard conflicting new instances&quot;</span>
+<span class="n">USE_NEW_STRING</span> <span class="o">=</span> <span class="s2">&quot;Use new, discard conflicting base instances&quot;</span>
+<span class="n">USE_NEITHER_STRING</span> <span class="o">=</span> <span class="s2">&quot;Discard all conflicting instances&quot;</span>
+<span class="n">CLEAN_STRING</span> <span class="o">=</span> <span class="s2">&quot;Accept clean merge&quot;</span>
+
+
+<div class="viewcode-block" id="MergeDialog"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeDialog">[docs]</a><span class="k">class</span> <span class="nc">MergeDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog window for complex merging of two SLEAP datasets.</span>
+
+<span class="sd">    This will immediately merge any labeled frames that can be cleanly merged,</span>
+<span class="sd">    show summary of merge and prompt user about how to handle merge conflict,</span>
+<span class="sd">    and then finish merge (resolving conflicts as the user requested).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates merge dialog and begins merging.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            base_labels: The base dataset into which we&#39;re inserting data.</span>
+<span class="sd">            new_labels: New dataset from which we&#39;re getting data to insert.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">MergeDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_labels</span> <span class="o">=</span> <span class="n">base_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span> <span class="o">=</span> <span class="n">new_labels</span>
+
+        <span class="n">merged</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_new</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">complex_merge_between</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span>
+        <span class="p">)</span>
+
+        <span class="n">merge_total</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">merge_frames</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">vid_frame_list</span> <span class="ow">in</span> <span class="n">merged</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="c1"># number of frames for this video</span>
+            <span class="n">merge_frames</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vid_frame_list</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="c1"># number of instances across frames for this video</span>
+            <span class="n">merge_total</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">((</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">vid_frame_list</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="n">merged_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cleanly merged </span><span class="si">{</span><span class="n">merge_total</span><span class="si">}</span><span class="s2"> instances&quot;</span>
+        <span class="k">if</span> <span class="n">merge_total</span><span class="p">:</span>
+            <span class="n">merged_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; across </span><span class="si">{</span><span class="n">merge_frames</span><span class="si">}</span><span class="s2"> frames&quot;</span>
+        <span class="n">merged_text</span> <span class="o">+=</span> <span class="s2">&quot;.&quot;</span>
+        <span class="n">merged_label</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="n">merged_text</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">merged_label</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">merge_total</span><span class="p">:</span>
+            <span class="n">merge_table</span> <span class="o">=</span> <span class="n">MergeTable</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">merge_table</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">:</span>
+            <span class="n">conflict_text</span> <span class="o">=</span> <span class="s2">&quot;There are no conflicts.&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">conflict_text</span> <span class="o">=</span> <span class="s2">&quot;Merge conflicts:&quot;</span>
+
+        <span class="n">conflict_label</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="n">conflict_text</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">conflict_label</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">:</span>
+            <span class="n">conflict_table</span> <span class="o">=</span> <span class="n">ConflictTable</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_new</span>
+            <span class="p">)</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">conflict_table</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_method</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge_method</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">USE_NEW_STRING</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge_method</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">USE_BASE_STRING</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge_method</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">USE_NEITHER_STRING</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge_method</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">CLEAN_STRING</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_method</span><span class="p">)</span>
+
+        <span class="n">buttons</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="p">()</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="s2">&quot;Finish Merge&quot;</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialogButtonBox</span><span class="o">.</span><span class="n">AcceptRole</span><span class="p">)</span>
+        <span class="n">buttons</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finishMerge</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">buttons</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MergeDialog.finishMerge"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeDialog.finishMerge">[docs]</a>    <span class="k">def</span> <span class="nf">finishMerge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finishes merge process, possibly resolving conflicts.</span>
+
+<span class="sd">        This is connected to `accepted` signal.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            None.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If no valid merge method was selected in dialog.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">merge_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_method</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">merge_method</span> <span class="o">==</span> <span class="n">USE_BASE_STRING</span><span class="p">:</span>
+            <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">merge_method</span> <span class="o">==</span> <span class="n">USE_NEW_STRING</span><span class="p">:</span>
+            <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_new</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">merge_method</span> <span class="ow">in</span> <span class="p">(</span><span class="n">USE_NEITHER_STRING</span><span class="p">,</span> <span class="n">CLEAN_STRING</span><span class="p">):</span>
+            <span class="n">Labels</span><span class="o">.</span><span class="n">finish_complex_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_labels</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No valid merge method selected.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ConflictTable"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.ConflictTable">[docs]</a><span class="k">class</span> <span class="nc">ConflictTable</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Qt table view for summarizing merge conflicts.</span>
+
+<span class="sd">    Arguments are passed through to the table view object.</span>
+
+<span class="sd">    The two lists of `LabeledFrame` objects should be correlated (idx in one will</span>
+<span class="sd">    match idx of the conflicting frame in other).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        base_labels: The base dataset.</span>
+<span class="sd">        extra_base: `LabeledFrame` objects from base that conflicted.</span>
+<span class="sd">        extra_new: `LabeledFrame` objects from new dataset that conflicts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">base_labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+        <span class="n">extra_base</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">],</span>
+        <span class="n">extra_new</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConflictTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">ConflictTableModel</span><span class="p">(</span><span class="n">base_labels</span><span class="p">,</span> <span class="n">extra_base</span><span class="p">,</span> <span class="n">extra_new</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ConflictTableModel"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.ConflictTableModel">[docs]</a><span class="k">class</span> <span class="nc">ConflictTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Qt table model for summarizing merge conflicts.</span>
+
+<span class="sd">    See :class:`ConflictTable`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_props</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">,</span> <span class="s2">&quot;base&quot;</span><span class="p">,</span> <span class="s2">&quot;new&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">base_labels</span><span class="p">:</span> <span class="n">Labels</span><span class="p">,</span>
+        <span class="n">extra_base</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">],</span>
+        <span class="n">extra_new</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConflictTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_labels</span> <span class="o">=</span> <span class="n">base_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span> <span class="o">=</span> <span class="n">extra_base</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_new</span> <span class="o">=</span> <span class="n">extra_new</span>
+
+<div class="viewcode-block" id="ConflictTableModel.data"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.ConflictTableModel.data">[docs]</a>    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span> <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
+
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rowCount</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;video&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span>
+                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;frame&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">frame_idx</span>
+                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;base&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">show_instance_type_counts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;new&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">show_instance_type_counts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_new</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ConflictTableModel.rowCount"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.ConflictTableModel.rowCount">[docs]</a>    <span class="k">def</span> <span class="nf">rowCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_base</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConflictTableModel.columnCount"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.ConflictTableModel.columnCount">[docs]</a>    <span class="k">def</span> <span class="nf">columnCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConflictTableModel.headerData"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.ConflictTableModel.headerData">[docs]</a>    <span class="k">def</span> <span class="nf">headerData</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">orientation</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Orientation</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">section</span>
+        <span class="k">return</span> <span class="kc">None</span></div></div>
+
+
+<div class="viewcode-block" id="MergeTable"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeTable">[docs]</a><span class="k">class</span> <span class="nc">MergeTable</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTableView</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Qt table view for summarizing cleanly merged frames.</span>
+
+<span class="sd">    Arguments are passed through to the table view object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        merged: The frames that were cleanly merged.</span>
+<span class="sd">            See :meth:`Labels.complex_merge_between` for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">merged</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MergeTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">MergeTableModel</span><span class="p">(</span><span class="n">merged</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MergeTableModel"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeTableModel">[docs]</a><span class="k">class</span> <span class="nc">MergeTableModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractTableModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Qt table model for summarizing merge conflicts.</span>
+
+<span class="sd">    See :class:`MergeTable`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_props</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">,</span> <span class="s2">&quot;merged instances&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">merged</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s2">&quot;Video&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;Instance&quot;</span><span class="p">]]]):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MergeTableModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merged</span> <span class="o">=</span> <span class="n">merged</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="n">frame_instance_list</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">[</span><span class="n">video</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span>
+                        <span class="n">filename</span><span class="o">=</span><span class="n">video</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                        <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span>
+                        <span class="n">instances</span><span class="o">=</span><span class="n">frame_instance_list</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="MergeTableModel.data"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeTableModel.data">[docs]</a>    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span> <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()]</span>
+
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rowCount</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;video&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;frame&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">prop</span> <span class="o">==</span> <span class="s2">&quot;merged instances&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">show_instance_type_counts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s2">&quot;instances&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MergeTableModel.rowCount"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeTableModel.rowCount">[docs]</a>    <span class="k">def</span> <span class="nf">rowCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MergeTableModel.columnCount"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeTableModel.columnCount">[docs]</a>    <span class="k">def</span> <span class="nf">columnCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MergeTableModel.headerData"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.MergeTableModel.headerData">[docs]</a>    <span class="k">def</span> <span class="nf">headerData</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">orientation</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Orientation</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_props</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">orientation</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">section</span>
+        <span class="k">return</span> <span class="kc">None</span></div></div>
+
+
+<div class="viewcode-block" id="show_instance_type_counts"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.dialogs.merge.html#sleap.gui.dialogs.merge.show_instance_type_counts">[docs]</a><span class="k">def</span> <span class="nf">show_instance_type_counts</span><span class="p">(</span><span class="n">instance_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;Instance&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns string of instance counts to show in table.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        instance_list: The list of instances to count.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        String with numbers of user/predicted instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prediction_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">inst</span><span class="p">:</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">),</span> <span class="n">instance_list</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">user_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">instance_list</span><span class="p">)</span> <span class="o">-</span> <span class="n">prediction_count</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">user_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">prediction_count</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="c1">#     file_a = &quot;tests/data/json_format_v1/centered_pair.json&quot;</span>
+    <span class="c1">#     file_b = &quot;tests/data/json_format_v2/centered_pair_predictions.json&quot;</span>
+    <span class="n">file_a</span> <span class="o">=</span> <span class="s2">&quot;files/merge/a.h5&quot;</span>
+    <span class="n">file_b</span> <span class="o">=</span> <span class="s2">&quot;files/merge/b.h5&quot;</span>
+
+    <span class="n">base_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">file_a</span><span class="p">)</span>
+    <span class="n">new_labels</span> <span class="o">=</span> <span class="n">Labels</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">file_b</span><span class="p">)</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">()</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">MergeDialog</span><span class="p">(</span><span class="n">base_labels</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">)</span>
+    <span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.io.format.deeplabcut &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.io.format.deeplabcut</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Adaptor for reading DeepLabCut datasets.</span>
+
+<span class="sd">This can either read a CSV file with labeled frames for a single video,</span>
+<span class="sd">or a YAML file which potentially contains multiple videos.</span>
+
+<span class="sd">The adaptor was created by manually inspecting DeepLabCut files and there&#39;s no</span>
+<span class="sd">guarantee that it will perfectly import all data (especially metadata).</span>
+
+<span class="sd">If the adaptor can find full video files for the annotated frames, then the</span>
+<span class="sd">full videos will be used in the resulting SLEAP dataset. Otherwise, we&#39;ll</span>
+<span class="sd">create a video object which wraps the individual frame images.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">sleap</span> <span class="kn">import</span> <span class="n">Labels</span><span class="p">,</span> <span class="n">Video</span><span class="p">,</span> <span class="n">Skeleton</span>
+<span class="kn">from</span> <span class="nn">sleap.instance</span> <span class="kn">import</span> <span class="n">Instance</span><span class="p">,</span> <span class="n">LabeledFrame</span><span class="p">,</span> <span class="n">Point</span>
+<span class="kn">from</span> <span class="nn">sleap.util</span> <span class="kn">import</span> <span class="n">find_files_by_suffix</span>
+
+<span class="kn">from</span> <span class="nn">.adaptor</span> <span class="kn">import</span> <span class="n">Adaptor</span><span class="p">,</span> <span class="n">SleapObjectType</span>
+<span class="kn">from</span> <span class="nn">.filehandle</span> <span class="kn">import</span> <span class="n">FileHandle</span>
+
+
+<div class="viewcode-block" id="LabelsDeepLabCutCsvAdaptor"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor">[docs]</a><span class="k">class</span> <span class="nc">LabelsDeepLabCutCsvAdaptor</span><span class="p">(</span><span class="n">Adaptor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads DeepLabCut csv file with labeled frames for single video.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">handles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SleapObjectType</span><span class="o">.</span><span class="n">labels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;csv&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_exts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;DeepLabCut Dataset CSV&quot;</span>
+
+<div class="viewcode-block" id="LabelsDeepLabCutCsvAdaptor.can_read_file"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.can_read_file">[docs]</a>    <span class="k">def</span> <span class="nf">can_read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">does_match_ext</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># TODO: add checks for valid deeplabcut csv</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutCsvAdaptor.can_write_filename"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.can_write_filename">[docs]</a>    <span class="k">def</span> <span class="nf">can_write_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutCsvAdaptor.does_read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.does_read">[docs]</a>    <span class="k">def</span> <span class="nf">does_read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutCsvAdaptor.does_write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.does_write">[docs]</a>    <span class="k">def</span> <span class="nf">does_write</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutCsvAdaptor.read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.read">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">,</span> <span class="n">full_video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Labels</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">read_frames</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">full_video</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutCsvAdaptor.make_video_for_image_list"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.make_video_for_image_list">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_video_for_image_list</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">image_dir</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Video</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Video object from frame images.&quot;&quot;&quot;</span>
+
+        <span class="c1"># the image filenames in the csv may not match where the user has them</span>
+        <span class="c1"># so we&#39;ll change the directory to match where the user has the csv</span>
+        <span class="k">def</span> <span class="nf">fix_img_path</span><span class="p">(</span><span class="n">img_dir</span><span class="p">,</span> <span class="n">img_filename</span><span class="p">):</span>
+            <span class="n">img_filename</span> <span class="o">=</span> <span class="n">img_filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+            <span class="n">img_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">img_filename</span><span class="p">)</span>
+            <span class="n">img_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">img_dir</span><span class="p">,</span> <span class="n">img_filename</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">img_filename</span>
+
+        <span class="n">filenames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">fix_img_path</span><span class="p">(</span><span class="n">image_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">),</span> <span class="n">filenames</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_image_filenames</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read_frames</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">,</span>
+        <span class="n">skeleton</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Skeleton</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">full_video</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Video</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LabeledFrame</span><span class="p">]:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">filename</span>
+
+        <span class="c1"># Read CSV file.</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+        <span class="c1"># Check if this is in the new multi-animal format.</span>
+        <span class="n">is_multianimal</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;individuals&quot;</span>
+
+        <span class="k">if</span> <span class="n">is_multianimal</span><span class="p">:</span>
+            <span class="c1"># Reload with additional header rows if using new format.</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+            <span class="c1"># Pull out animal and node names from the columns.</span>
+            <span class="n">animal_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">node_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">animal_name</span><span class="p">,</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">:][::</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">animal_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">animal_names</span><span class="p">:</span>
+                    <span class="n">animal_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">animal_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">node_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">:</span>
+                    <span class="n">node_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create the skeleton from the list of nodes in the csv file.</span>
+            <span class="c1"># Note that DeepLabCut doesn&#39;t have edges, so these will need to be</span>
+            <span class="c1"># added by user later.</span>
+            <span class="n">node_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">skeleton</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
+            <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+
+        <span class="c1"># Get list of all images filenames.</span>
+        <span class="n">img_files</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">full_video</span><span class="p">:</span>
+            <span class="n">video</span> <span class="o">=</span> <span class="n">full_video</span>
+            <span class="n">index_frames_by_original_index</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create the Video object</span>
+            <span class="n">img_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">video</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_video_for_image_list</span><span class="p">(</span><span class="n">img_dir</span><span class="p">,</span> <span class="n">img_files</span><span class="p">)</span>
+
+            <span class="c1"># The frames in the video we created will be indexed from 0 to N</span>
+            <span class="c1"># rather than having their index from the original source video.</span>
+            <span class="n">index_frames_by_original_index</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">lfs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+
+            <span class="c1"># Figure out frame index to use.</span>
+            <span class="k">if</span> <span class="n">index_frames_by_original_index</span><span class="p">:</span>
+                <span class="c1"># Extract &quot;0123&quot; from &quot;path/img0123.png&quot; as original frame index.</span>
+                <span class="n">frame_idx_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;(?&lt;=img)(</span><span class="se">\\</span><span class="s2">d+)(?=</span><span class="se">\\</span><span class="s2">.png)&quot;</span><span class="p">,</span> <span class="n">img_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">frame_idx_match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">frame_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">frame_idx_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Unable to determine frame index for image </span><span class="si">{</span><span class="n">img_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">frame_idx</span> <span class="o">=</span> <span class="n">i</span>
+
+            <span class="n">instances</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">is_multianimal</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">animal_name</span> <span class="ow">in</span> <span class="n">animal_names</span><span class="p">:</span>
+                    <span class="n">any_not_missing</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="c1"># Get points for each node.</span>
+                    <span class="n">instance_points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">:</span>
+                        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">data</span><span class="p">[(</span><span class="n">animal_name</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)][</span><span class="n">i</span><span class="p">],</span>
+                            <span class="n">data</span><span class="p">[(</span><span class="n">animal_name</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)][</span><span class="n">i</span><span class="p">],</span>
+                        <span class="p">)</span>
+                        <span class="n">instance_points</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="o">~</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">)):</span>
+                            <span class="n">any_not_missing</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">if</span> <span class="n">any_not_missing</span><span class="p">:</span>
+                        <span class="c1"># Create instance with points.</span>
+                        <span class="n">instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">Instance</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">instance_points</span><span class="p">)</span>
+                        <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Get points for each node.</span>
+                <span class="n">instance_points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">:</span>
+                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="p">[(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)][</span><span class="n">i</span><span class="p">],</span> <span class="n">data</span><span class="p">[(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)][</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">instance_points</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+                <span class="c1"># Create instance with points assuming there&#39;s a single instance per</span>
+                <span class="c1"># frame.</span>
+                <span class="n">instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Instance</span><span class="p">(</span><span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">instance_points</span><span class="p">))</span>
+
+            <span class="c1"># Create LabeledFrame and add it to list.</span>
+            <span class="n">lfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">LabeledFrame</span><span class="p">(</span><span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">instances</span><span class="o">=</span><span class="n">instances</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">lfs</span></div>
+
+
+<div class="viewcode-block" id="LabelsDeepLabCutYamlAdaptor"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor">[docs]</a><span class="k">class</span> <span class="nc">LabelsDeepLabCutYamlAdaptor</span><span class="p">(</span><span class="n">Adaptor</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">handles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SleapObjectType</span><span class="o">.</span><span class="n">labels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;yaml&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_exts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;yml&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;DeepLabCut Dataset YAML&quot;</span>
+
+<div class="viewcode-block" id="LabelsDeepLabCutYamlAdaptor.can_read_file"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.can_read_file">[docs]</a>    <span class="k">def</span> <span class="nf">can_read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">does_match_ext</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s2">&quot;video_sets&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutYamlAdaptor.can_write_filename"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.can_write_filename">[docs]</a>    <span class="k">def</span> <span class="nf">can_write_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutYamlAdaptor.does_read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.does_read">[docs]</a>    <span class="k">def</span> <span class="nf">does_read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutYamlAdaptor.does_write"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.does_write">[docs]</a>    <span class="k">def</span> <span class="nf">does_write</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="LabelsDeepLabCutYamlAdaptor.read"><a class="viewcode-back" href="../../../../_autosummary/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutYamlAdaptor.read">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">FileHandle</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,)</span> <span class="o">-&gt;</span> <span class="n">Labels</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">filename</span>
+
+        <span class="c1"># Load data from the YAML file</span>
+        <span class="n">project_data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
+
+        <span class="c1"># Create skeleton which we&#39;ll use for each video</span>
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">()</span>
+        <span class="n">skeleton</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">project_data</span><span class="p">[</span><span class="s2">&quot;bodyparts&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Get subdirectories of videos and labeled data</span>
+        <span class="n">root_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">videos_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_dir</span><span class="p">,</span> <span class="s2">&quot;videos&quot;</span><span class="p">)</span>
+        <span class="n">labeled_data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_dir</span><span class="p">,</span> <span class="s2">&quot;labeled-data&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">labeled_data_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_iterator</span><span class="p">:</span>
+            <span class="n">data_subdirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">file</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">file_iterator</span> <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+
+        <span class="n">labeled_frames</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Each subdirectory of labeled data corresponds to a video.</span>
+        <span class="c1"># We&#39;ll go through each and import the labeled frames.</span>
+
+        <span class="k">for</span> <span class="n">data_subdir</span> <span class="ow">in</span> <span class="n">data_subdirs</span><span class="p">:</span>
+            <span class="n">csv_files</span> <span class="o">=</span> <span class="n">find_files_by_suffix</span><span class="p">(</span>
+                <span class="n">data_subdir</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;CollectedData&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.csv&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">csv_files</span><span class="p">:</span>
+                <span class="n">csv_path</span> <span class="o">=</span> <span class="n">csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># Try to find a full video corresponding to this subdir.</span>
+                <span class="c1"># If subdirectory is foo, we look for foo.mp4 in videos dir.</span>
+
+                <span class="n">shortname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_subdir</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">video_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">videos_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">.mp4&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">video_path</span><span class="p">):</span>
+                    <span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># When no video is found, the individual frame images</span>
+                    <span class="c1"># stored in the labeled data subdir will be used.</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Unable to find </span><span class="si">{</span><span class="n">video_path</span><span class="si">}</span><span class="s2"> so using individual frame images.&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="c1"># Import the labeled fraems</span>
+                <span class="n">labeled_frames</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="n">LabelsDeepLabCutCsvAdaptor</span><span class="o">.</span><span class="n">read_frames</span><span class="p">(</span>
+                        <span class="n">FileHandle</span><span class="p">(</span><span class="n">csv_path</span><span class="p">),</span> <span class="n">full_video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">skeleton</span><span class="o">=</span><span class="n">skeleton</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No csv data file found in </span><span class="si">{</span><span class="n">data_subdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Labels</span><span class="p">(</span><span class="n">labeled_frames</span><span class="o">=</span><span class="n">labeled_frames</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

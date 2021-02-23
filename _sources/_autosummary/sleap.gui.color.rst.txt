@@ -1,0 +1,5 @@
+﻿sleap.gui.color
+===============
+
+.. automodule:: sleap.gui.color
+   :members:

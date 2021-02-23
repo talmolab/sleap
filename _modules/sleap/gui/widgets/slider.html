@@ -1,0 +1,1463 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.widgets.slider &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.widgets.slider</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Drop-in replacement for QSlider with additional features.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtGui</span> <span class="kn">import</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QKeyEvent</span><span class="p">,</span> <span class="n">QPolygonF</span><span class="p">,</span> <span class="n">QPainterPath</span>
+
+<span class="kn">from</span> <span class="nn">sleap.gui.color</span> <span class="kn">import</span> <span class="n">ColorManager</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+
+<span class="c1"># for debug, we can filter out short tracks from slider</span>
+<span class="n">SEEKBAR_MIN_TRACK_LEN_TO_SHOW</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<div class="viewcode-block" id="SliderMark"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.SliderMark">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SliderMark</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to hold data for an individual mark on the slider.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        type: Type of the mark, options are:</span>
+<span class="sd">            * &quot;simple&quot;     (single value)</span>
+<span class="sd">            * &quot;simple_thin&quot; (    ditto   )</span>
+<span class="sd">            * &quot;filled&quot;</span>
+<span class="sd">            * &quot;open&quot;</span>
+<span class="sd">            * &quot;predicted&quot;</span>
+<span class="sd">            * &quot;tick&quot;</span>
+<span class="sd">            * &quot;tick_column&quot;</span>
+<span class="sd">            * &quot;track&quot;      (range of values)</span>
+<span class="sd">        val: Beginning of mark range</span>
+<span class="sd">        end_val: End of mark range (for &quot;track&quot; marks)</span>
+<span class="sd">        row: The row that the mark goes in; used for tracks.</span>
+<span class="sd">        color: Color of mark, can be string or (r, g, b) tuple.</span>
+<span class="sd">        filled: Whether the mark is shown filled (solid color).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">val</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">end_val</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">row</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">track</span><span class="p">:</span> <span class="s2">&quot;Track&quot;</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_color</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns color of mark.&quot;&quot;&quot;</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">simple</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="n">simple_thin</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="n">filled</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+            <span class="nb">open</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+            <span class="n">predicted</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">170</span><span class="p">,</span> <span class="mi">247</span><span class="p">),</span>  <span class="c1"># light blue</span>
+            <span class="n">tick</span><span class="o">=</span><span class="s2">&quot;lightGray&quot;</span><span class="p">,</span>
+            <span class="n">tick_column</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">colors</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">colors</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
+
+    <span class="nd">@color</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets color of mark.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">QColor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns color of mark as `QColor`.&quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">QColor</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether mark is filled or open.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;open&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">top_pad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tick_column&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">40</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tick&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="mi">2</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bottom_pad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tick_column&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">200</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tick&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="mi">2</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">visual_width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;open&quot;</span><span class="p">,</span> <span class="s2">&quot;filled&quot;</span><span class="p">,</span> <span class="s2">&quot;tick&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;tick_column&quot;</span><span class="p">,</span> <span class="s2">&quot;simple&quot;</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">get_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">container_height</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">container_height</span>
+        <span class="c1"># if self.padded:</span>
+        <span class="n">height</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_pad</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_pad</span>
+
+        <span class="k">return</span> <span class="n">height</span></div>
+
+
+<div class="viewcode-block" id="VideoSlider"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider">[docs]</a><span class="k">class</span> <span class="nc">VideoSlider</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsView</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Drop-in replacement for QSlider with additional features.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        orientation: ignored (here for compatibility with QSlider)</span>
+<span class="sd">        min: initial minimum value</span>
+<span class="sd">        max: initial maximum value</span>
+<span class="sd">        val: initial value</span>
+<span class="sd">        marks: initial set of values to mark on slider</span>
+<span class="sd">            this can be either</span>
+<span class="sd">            * list of values to mark</span>
+<span class="sd">            * list of (track, value)-tuples to mark</span>
+
+<span class="sd">    Signals:</span>
+<span class="sd">        mousePressed: triggered on Qt event</span>
+<span class="sd">        mouseMoved: triggered on Qt event</span>
+<span class="sd">        mouseReleased: triggered on Qt event</span>
+<span class="sd">        keyPress: triggered on Qt event</span>
+<span class="sd">        keyReleased: triggered on Qt event</span>
+<span class="sd">        valueChanged: triggered when value of slider changes</span>
+<span class="sd">        selectionChanged: triggered when slider range selection changes</span>
+<span class="sd">        heightUpdated: triggered when the height of slider changes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mousePressed</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">mouseMoved</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">mouseReleased</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">keyPress</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">QKeyEvent</span><span class="p">)</span>
+    <span class="n">keyRelease</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="n">QKeyEvent</span><span class="p">)</span>
+    <span class="n">valueChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">selectionChanged</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="n">heightUpdated</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">orientation</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># for compatibility with QSlider</span>
+        <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">marks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VideoSlider</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QGraphicsScene</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setScene</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Expanding</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setHorizontalScrollBarPolicy</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setVerticalScrollBarPolicy</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOff</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMouseTracking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_val_tooltip</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tick_index_offset</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoom_factor</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_track_rows</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_tracks_stacked</span> <span class="o">=</span> <span class="mi">120</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_track_stack_skip_count</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_label_height</span> <span class="o">=</span> <span class="mi">20</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_graph_height</span> <span class="o">=</span> <span class="mi">40</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_label_height</span>  <span class="c1"># room for frame labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span> <span class="o">=</span> <span class="mi">19</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFont</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span><span class="o">.</span><span class="n">setPixelSize</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Add border rect</span>
+        <span class="n">outline_rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span> <span class="o">=</span> <span class="n">outline_rect</span>
+        <span class="c1"># self.outlineBox = self.scene.addRect(outline_rect)</span>
+        <span class="c1"># self.outlineBox.setPen(QPen(QColor(&quot;black&quot;, alpha=0)))</span>
+
+        <span class="c1"># Add drag handle rect</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle_width</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="n">handle_rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRect</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_top</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_height</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMinimumHeight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMaximumHeight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addRect</span><span class="p">(</span><span class="n">handle_rect</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span>
+
+        <span class="c1"># Add (hidden) rect to highlight selection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addRect</span><span class="p">(</span>
+            <span class="n">QtCore</span><span class="o">.</span><span class="n">QRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">outline_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">255</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoom_box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addRect</span><span class="p">(</span>
+            <span class="n">QtCore</span><span class="o">.</span><span class="n">QRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">outline_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoom_box</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">64</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoom_box</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoom_box</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">setBackgroundBrush</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="nb">min</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="nb">max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="n">marks</span><span class="p">)</span>
+
+        <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poly</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addPath</span><span class="p">(</span><span class="n">QPainterPath</span><span class="p">(),</span> <span class="n">pen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="o">.</span><span class="n">brush</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw_header</span><span class="p">()</span>
+
+    <span class="c1"># Methods to match API for QSlider</span>
+
+<div class="viewcode-block" id="VideoSlider.value"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns value of slider.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_main</span></div>
+
+<div class="viewcode-block" id="VideoSlider.setValue"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setValue">[docs]</a>    <span class="k">def</span> <span class="nf">setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets value of slider.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_val_main</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensureVisible</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_width</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoSlider.setMinimum"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setMinimum">[docs]</a>    <span class="k">def</span> <span class="nf">setMinimum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets minimum value for slider.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span> <span class="o">=</span> <span class="nb">min</span></div>
+
+<div class="viewcode-block" id="VideoSlider.setMaximum"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setMaximum">[docs]</a>    <span class="k">def</span> <span class="nf">setMaximum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets maximum value for slider.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span> <span class="o">=</span> <span class="nb">max</span></div>
+
+<div class="viewcode-block" id="VideoSlider.setEnabled"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">setEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set whether the slider is enabled.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enabled</span> <span class="o">=</span> <span class="n">val</span></div>
+
+<div class="viewcode-block" id="VideoSlider.enabled"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.enabled">[docs]</a>    <span class="k">def</span> <span class="nf">enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether slider is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enabled</span></div>
+
+    <span class="c1"># Methods for working with visual positions (mapping to and from, redrawing)</span>
+
+    <span class="k">def</span> <span class="nf">_update_visual_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the visual x position of handle and slider annotations.&quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span><span class="p">:</span>
+                <span class="n">width_in_frames</span> <span class="o">=</span> <span class="n">mark</span><span class="o">.</span><span class="n">end_val</span> <span class="o">-</span> <span class="n">mark</span><span class="o">.</span><span class="n">val</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">width_in_frames</span><span class="p">))</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="n">mark</span><span class="o">.</span><span class="n">visual_width</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">mark</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">:</span>
+                <span class="n">label_x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                    <span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">label_x</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+            <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span>
+            <span class="n">rect</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+            <span class="n">rect</span><span class="o">.</span><span class="n">setHeight</span><span class="p">(</span>
+                <span class="n">mark</span><span class="o">.</span><span class="n">get_height</span><span class="p">(</span>
+                    <span class="n">container_height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_min_max_slider_heights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tracks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_rows</span>
+        <span class="k">if</span> <span class="n">tracks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span>
+            <span class="n">max_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Start with padding height</span>
+            <span class="n">extra_height</span> <span class="o">=</span> <span class="mi">8</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span>
+            <span class="n">min_height</span> <span class="o">=</span> <span class="n">extra_height</span>
+            <span class="n">max_height</span> <span class="o">=</span> <span class="n">extra_height</span>
+
+            <span class="c1"># Add height for tracks</span>
+            <span class="n">min_height</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">tracks</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+            <span class="n">max_height</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">tracks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_tracks_stacked</span><span class="p">)</span>
+
+            <span class="c1"># Make sure min/max height is at least 19, even if few tracks</span>
+            <span class="n">min_height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span><span class="p">,</span> <span class="n">min_height</span><span class="p">)</span>
+            <span class="n">max_height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_height</span><span class="p">,</span> <span class="n">max_height</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">min_height</span><span class="p">,</span> <span class="n">max_height</span>
+
+    <span class="k">def</span> <span class="nf">_update_slider_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the height of the slider.&quot;&quot;&quot;</span>
+
+        <span class="n">min_height</span><span class="p">,</span> <span class="n">max_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_min_max_slider_heights</span><span class="p">()</span>
+
+        <span class="c1"># TODO: find the current height of the scrollbar</span>
+        <span class="c1"># self.horizontalScrollBar().height() gives the wrong value</span>
+        <span class="n">scrollbar_height</span> <span class="o">=</span> <span class="mi">18</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMaximumHeight</span><span class="p">(</span><span class="n">max_height</span> <span class="o">+</span> <span class="n">scrollbar_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMinimumHeight</span><span class="p">(</span><span class="n">min_height</span> <span class="o">+</span> <span class="n">scrollbar_height</span><span class="p">)</span>
+
+        <span class="c1"># Redraw all marks with new height and y position</span>
+        <span class="n">marks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMarks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="n">marks</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">resizeEvent</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heightUpdated</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_toPos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts slider value to x position on slider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            val: The slider value.</span>
+<span class="sd">            center: Whether to offset by half the width of drag handle,</span>
+<span class="sd">                so that plotted location will light up with center of handle.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            x position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span>
+        <span class="n">x</span> <span class="o">/=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slider_width</span>
+        <span class="k">if</span> <span class="n">center</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">_toVal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Converts x position to slider value.&quot;&quot;&quot;</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">val</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slider_width</span>
+        <span class="n">val</span> <span class="o">*=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_slider_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns visual width of slider.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">slider_visible_value_range</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Value range that&#39;s visible given current size and zoom.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_mark_area_height</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">max_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_min_max_slider_heights</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">max_height</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value_range</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">box_rect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_box_rect</span>
+
+    <span class="nd">@box_rect</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">box_rect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rect</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_box_rect</span> <span class="o">=</span> <span class="n">rect</span>
+
+        <span class="c1"># Update the scene rect so that it matches how much space we</span>
+        <span class="c1"># currently want for drawing everything.</span>
+        <span class="n">rect</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSceneRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+    <span class="c1"># Methods for range selection and zoom</span>
+
+<div class="viewcode-block" id="VideoSlider.clearSelection"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.clearSelection">[docs]</a>    <span class="k">def</span> <span class="nf">clearSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clears selection endpoints.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.startSelection"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.startSelection">[docs]</a>    <span class="k">def</span> <span class="nf">startSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds initial selection endpoint.</span>
+
+<span class="sd">        Called when user starts dragging to select range in slider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            val: value of endpoint</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoSlider.endSelection"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.endSelection">[docs]</a>    <span class="k">def</span> <span class="nf">endSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">update</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add final selection endpoint.</span>
+
+<span class="sd">        Called during or after the user is dragging to select range.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            val: value of endpoint</span>
+<span class="sd">            update:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If we want to update endpoint and there&#39;s already one, remove it</span>
+        <span class="k">if</span> <span class="n">update</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="c1"># Add the selection endpoint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw_selection</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="c1"># Emit signal (even if user selected same region as before)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selectionChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">getSelection</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="VideoSlider.setSelection"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setSelection">[docs]</a>    <span class="k">def</span> <span class="nf">setSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_val</span><span class="p">,</span> <span class="n">end_val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Selects clip from start_val to end_val.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">startSelection</span><span class="p">(</span><span class="n">start_val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endSelection</span><span class="p">(</span><span class="n">end_val</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoSlider.hasSelection"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.hasSelection">[docs]</a>    <span class="k">def</span> <span class="nf">hasSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if a clip is selected, False otherwise.&quot;&quot;&quot;</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSelection</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span></div>
+
+<div class="viewcode-block" id="VideoSlider.getSelection"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.getSelection">[docs]</a>    <span class="k">def</span> <span class="nf">getSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns start and end value of current selection endpoints.&quot;&quot;&quot;</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span></div>
+
+    <span class="k">def</span> <span class="nf">_draw_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_selection_box_positions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_draw_zoom_box</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_selection_box_positions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zoom_box</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_selection_box_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box_object</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update box item on slider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            box_object: The box to update</span>
+<span class="sd">            a: one endpoint value</span>
+<span class="sd">            b: other endpoint value</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">start_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">end_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">box_rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRect</span><span class="p">(</span>
+            <span class="n">start_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span><span class="p">,</span> <span class="n">end_pos</span> <span class="o">-</span> <span class="n">start_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">height</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+        <span class="n">box_object</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">box_rect</span><span class="p">)</span>
+        <span class="n">box_object</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_update_selection_boxes_on_resize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">box_object</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zoom_box</span><span class="p">):</span>
+            <span class="n">rect</span> <span class="o">=</span> <span class="n">box_object</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span>
+            <span class="n">rect</span><span class="o">.</span><span class="n">setHeight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle_height</span><span class="p">)</span>
+            <span class="n">box_object</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_box</span><span class="o">.</span><span class="n">isVisible</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw_selection</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">getSelection</span><span class="p">())</span>
+
+<div class="viewcode-block" id="VideoSlider.moveSelectionAnchor"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.moveSelectionAnchor">[docs]</a>    <span class="k">def</span> <span class="nf">moveSelectionAnchor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Moves selection anchor in response to mouse position.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: x position of mouse</span>
+<span class="sd">            y: y position of mouse</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+        <span class="n">anchor_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">startSelection</span><span class="p">(</span><span class="n">anchor_val</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw_selection</span><span class="p">(</span><span class="n">anchor_val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="VideoSlider.releaseSelectionAnchor"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.releaseSelectionAnchor">[docs]</a>    <span class="k">def</span> <span class="nf">releaseSelectionAnchor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finishes selection in response to mouse release.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: x position of mouse</span>
+<span class="sd">            y: y position of mouse</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+        <span class="n">anchor_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endSelection</span><span class="p">(</span><span class="n">anchor_val</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">moveZoomDrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_zoom_start_val&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_start_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">current_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw_zoom_box</span><span class="p">(</span><span class="n">current_val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_start_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">releaseZoomDrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoom_box</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="n">val_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_start_val</span>
+        <span class="n">val_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">val_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">val_a</span><span class="p">,</span> <span class="n">val_b</span><span class="p">)</span>
+        <span class="n">val_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">val_a</span><span class="p">,</span> <span class="n">val_b</span><span class="p">)</span>
+
+        <span class="c1"># pad the zoom</span>
+        <span class="n">val_range</span> <span class="o">=</span> <span class="n">val_end</span> <span class="o">-</span> <span class="n">val_start</span>
+        <span class="n">val_start</span> <span class="o">-=</span> <span class="n">val_range</span> <span class="o">*</span> <span class="mf">0.05</span>
+        <span class="n">val_end</span> <span class="o">+=</span> <span class="n">val_range</span> <span class="o">*</span> <span class="mf">0.05</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setZoomRange</span><span class="p">(</span><span class="n">val_start</span><span class="p">,</span> <span class="n">val_end</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_start_val</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">setZoomRange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+
+        <span class="n">zoom_val_range</span> <span class="o">=</span> <span class="n">end_val</span> <span class="o">-</span> <span class="n">start_val</span>
+        <span class="k">if</span> <span class="n">zoom_val_range</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zoom_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_range</span> <span class="o">/</span> <span class="n">zoom_val_range</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zoom_factor</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">resizeEvent</span><span class="p">()</span>
+
+        <span class="n">center_val</span> <span class="o">=</span> <span class="n">start_val</span> <span class="o">+</span> <span class="n">zoom_val_range</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">center_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">center_val</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">centerOn</span><span class="p">(</span><span class="n">center_pos</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Methods for modifying marks on slider</span>
+
+<div class="viewcode-block" id="VideoSlider.setNumberOfTracks"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setNumberOfTracks">[docs]</a>    <span class="k">def</span> <span class="nf">setNumberOfTracks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">track_rows</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the number of tracks to show in slider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            track_rows: the number of tracks to show</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_track_rows</span> <span class="o">=</span> <span class="n">track_rows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_slider_height</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.clearMarks"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.clearMarks">[docs]</a>    <span class="k">def</span> <span class="nf">clearMarks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clears all marked values for slider.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_mark_items&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_mark_labels&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># holds mark position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># holds visual Qt object for plotting mark</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.setMarks"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setMarks">[docs]</a>    <span class="k">def</span> <span class="nf">setMarks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">SliderMark</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Sets all marked values for the slider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            marks: iterable with all values to mark</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clearMarks</span><span class="p">()</span>
+
+        <span class="c1"># Add tick marks first so they&#39;re behind other marks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_tick_marks</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">marks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="n">marks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mark</span><span class="p">,</span> <span class="n">SliderMark</span><span class="p">):</span>
+                    <span class="n">mark</span> <span class="o">=</span> <span class="n">SliderMark</span><span class="p">(</span><span class="s2">&quot;simple&quot;</span><span class="p">,</span> <span class="n">mark</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addMark</span><span class="p">(</span><span class="n">mark</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_visual_positions</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.setTickMarks"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setTickMarks">[docs]</a>    <span class="k">def</span> <span class="nf">setTickMarks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Resets which tick marks to show.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_tick_marks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_tick_marks</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_clear_tick_marks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_tick_marks&quot;</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeMark</span><span class="p">(</span><span class="n">mark</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_tick_marks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">val_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slider_visible_value_range</span>
+
+        <span class="k">if</span> <span class="n">val_range</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="n">val_order</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val_order</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="k">while</span> <span class="n">val_range</span> <span class="o">//</span> <span class="n">val_order</span> <span class="o">&gt;</span> <span class="mi">24</span><span class="p">:</span>
+                <span class="n">val_order</span> <span class="o">*=</span> <span class="mi">10</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">tick_pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span> <span class="o">+</span> <span class="n">val_order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">val_order</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SliderMark</span><span class="p">(</span><span class="s2">&quot;tick&quot;</span><span class="p">,</span> <span class="n">tick_pos</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">tick_mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tick_marks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addMark</span><span class="p">(</span><span class="n">tick_mark</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VideoSlider.removeMark"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.removeMark">[docs]</a>    <span class="k">def</span> <span class="nf">removeMark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mark</span><span class="p">:</span> <span class="n">SliderMark</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Removes an individual mark.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">[</span><span class="n">mark</span><span class="p">])</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">])</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">mark</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">mark</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoSlider.getMarks"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.getMarks">[docs]</a>    <span class="k">def</span> <span class="nf">getMarks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns list of marks.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">mark</span> <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span> <span class="k">if</span> <span class="n">mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="nb">type</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span></div>
+
+<div class="viewcode-block" id="VideoSlider.addMark"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.addMark">[docs]</a>    <span class="k">def</span> <span class="nf">addMark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_mark</span><span class="p">:</span> <span class="n">SliderMark</span><span class="p">,</span> <span class="n">update</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds a marked value to the slider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_mark: value to mark</span>
+<span class="sd">            update: Whether to redraw slider with new mark.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check if mark is within slider range</span>
+        <span class="k">if</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_mark</span><span class="p">)</span>
+
+        <span class="n">v_top_pad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">v_bottom_pad</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">v_top_pad</span> <span class="o">+=</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">top_pad</span>
+        <span class="n">v_bottom_pad</span> <span class="o">+=</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">bottom_pad</span>
+
+        <span class="n">width</span> <span class="o">=</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">visual_width</span>
+
+        <span class="n">v_offset</span> <span class="o">=</span> <span class="n">v_top_pad</span>
+        <span class="k">if</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span><span class="p">:</span>
+            <span class="n">v_offset</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_track_vertical_pos</span><span class="p">(</span>
+                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_track_column_row</span><span class="p">(</span><span class="n">new_mark</span><span class="o">.</span><span class="n">row</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">height</span> <span class="o">=</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">get_height</span><span class="p">(</span>
+            <span class="n">container_height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span>
+        <span class="p">)</span>
+
+        <span class="n">color</span> <span class="o">=</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">QColor</span>
+        <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">brush</span> <span class="o">=</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">color</span><span class="p">)</span> <span class="k">if</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">filled</span> <span class="k">else</span> <span class="n">QBrush</span><span class="p">()</span>
+
+        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addRect</span><span class="p">(</span><span class="o">-</span><span class="n">width</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">v_offset</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">pen</span><span class="p">,</span> <span class="n">brush</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span>
+
+        <span class="k">if</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tick&quot;</span><span class="p">:</span>
+            <span class="c1"># Show tick mark behind other slider marks</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># Add a text label to show in header area</span>
+            <span class="n">mark_label_text</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_mark</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">tick_index_offset</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># sci notation if large</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_labels</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addSimpleText</span><span class="p">(</span>
+                <span class="n">mark_label_text</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_font</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">new_mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span><span class="p">:</span>
+            <span class="c1"># Show tracks over tick marks</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Show in front of tick marks and behind track lines</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_items</span><span class="p">[</span><span class="n">new_mark</span><span class="p">]</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_visual_positions</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_track_column_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_row</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the column and row for a given track index.</span>
+
+<span class="sd">        If there are many tracks we &quot;wrap&quot; around to showing tracks at the top</span>
+<span class="sd">        of the slider (so that it&#39;s not too tall). Each time we &quot;wrap&quot; back to</span>
+<span class="sd">        the top is a new &quot;column&quot; which starts at &quot;row&quot; 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">raw_row</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_tracks_stacked</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">raw_row</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rows_after_first_col</span> <span class="o">=</span> <span class="n">raw_row</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_tracks_stacked</span>
+            <span class="n">rows_per_later_cols</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_max_tracks_stacked</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_stack_skip_count</span>
+            <span class="p">)</span>
+
+            <span class="n">rows_down</span> <span class="o">=</span> <span class="n">rows_after_first_col</span> <span class="o">%</span> <span class="n">rows_per_later_cols</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="p">(</span><span class="n">rows_after_first_col</span> <span class="o">//</span> <span class="n">rows_per_later_cols</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="k">return</span> <span class="n">col</span><span class="p">,</span> <span class="n">rows_down</span>
+
+    <span class="k">def</span> <span class="nf">_get_track_vertical_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns visible vertical position of track in given column and row.</span>
+
+<span class="sd">        The &quot;column&quot; and &quot;row&quot; are given by _get_track_column_row.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">col</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">row</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_stack_skip_count</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_track_height</span> <span class="o">*</span> <span class="n">row</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_is_track_in_new_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether this track is at the top of a new column.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">row_down</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_track_column_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">row_down</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c1"># Methods for header graph</span>
+
+<div class="viewcode-block" id="VideoSlider.setHeaderSeries"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setHeaderSeries">[docs]</a>    <span class="k">def</span> <span class="nf">setHeaderSeries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show header graph with specified series.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            series: {frame number: series value} dict.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">series</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">series</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_label_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_graph_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw_header</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_slider_height</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.clearHeader"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.clearHeader">[docs]</a>    <span class="k">def</span> <span class="nf">clearHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove header graph from slider.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_label_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_slider_height</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_header_series_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="p">,</span> <span class="s2">&quot;keys&quot;</span><span class="p">):</span>
+            <span class="n">series_frame_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">series_frame_max</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">series_frame_max</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_header_series_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Yields (frame idx, val) for header series items.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="p">,</span> <span class="s2">&quot;items&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">yield</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="p">)):</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">yield</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">_draw_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Draws the header graph.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">headerSeries</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="n">QPainterPath</span><span class="p">())</span>
+            <span class="k">return</span>
+
+        <span class="n">series_frame_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_header_series_len</span><span class="p">()</span>
+
+        <span class="n">step</span> <span class="o">=</span> <span class="n">series_frame_max</span> <span class="o">//</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_slider_width</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">series_frame_max</span> <span class="o">//</span> <span class="n">step</span> <span class="o">*</span> <span class="n">step</span>
+
+        <span class="n">sampled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">count</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_series_items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
+                <span class="n">sampled</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="n">sampled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">sampled</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">count</span> <span class="o">//</span> <span class="n">step</span><span class="p">,</span> <span class="n">step</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span> <span class="o">*</span> <span class="n">step</span><span class="p">:</span> <span class="n">sampled</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span> <span class="o">//</span> <span class="n">step</span><span class="p">)}</span>
+
+        <span class="n">series_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">sampled</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">series_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">sampled</span><span class="p">)</span>
+        <span class="n">series_scale</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_header_graph_height</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">series_max</span> <span class="o">-</span> <span class="n">series_min</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">toYPos</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span> <span class="o">-</span> <span class="p">((</span><span class="n">val</span> <span class="o">-</span> <span class="n">series_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">series_scale</span><span class="p">)</span>
+
+        <span class="n">step_chart</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># use steps rather than smooth line</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">toYPos</span><span class="p">(</span><span class="n">series_min</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">toYPos</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">step_chart</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="n">step</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">toYPos</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
+        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_toPos</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">series</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">toYPos</span><span class="p">(</span><span class="n">series_min</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Convert to list of QtCore.QPointF objects</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">starmap</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QPointF</span><span class="p">,</span> <span class="n">points</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointsToPath</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_pointsToPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QPointF</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QPainterPath</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Converts list of `QtCore.QPointF` objects to a `QPainterPath`.&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">addPolygon</span><span class="p">(</span><span class="n">QPolygonF</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+    <span class="c1"># Methods for working with slider handle</span>
+
+    <span class="k">def</span> <span class="nf">mapMouseXToHandleX</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+<div class="viewcode-block" id="VideoSlider.moveHandle"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.moveHandle">[docs]</a>    <span class="k">def</span> <span class="nf">moveHandle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Move handle in response to mouse position.</span>
+
+<span class="sd">        Emits valueChanged signal if value of slider changed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: x position of mouse</span>
+<span class="sd">            y: y position of mouse</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapMouseXToHandleX</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># snap to nearby mark within handle</span>
+        <span class="n">mark_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">mark</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span><span class="p">]</span>
+        <span class="n">handle_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">handle_right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">marks_in_handle</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">mark</span> <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="n">mark_vals</span> <span class="k">if</span> <span class="n">handle_left</span> <span class="o">&lt;</span> <span class="n">mark</span> <span class="o">&lt;</span> <span class="n">handle_right</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">marks_in_handle</span><span class="p">:</span>
+            <span class="n">marks_in_handle</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">val</span><span class="p">),</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="n">val</span><span class="p">))</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">marks_in_handle</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">old</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">old</span> <span class="o">!=</span> <span class="n">val</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_val_main</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_handle_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns y position of top of handle (i.e., header height).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_handle_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outline_rect</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns visual height of handle.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            outline_rect: The rect of the outline box for the slider. This</span>
+<span class="sd">                is only required when calling during initialization (when the</span>
+<span class="sd">                outline box doesn&#39;t yet exist).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Height of handle in pixels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_area_height</span>
+
+    <span class="c1"># Methods for selection of contiguously marked ranges of frames</span>
+
+<div class="viewcode-block" id="VideoSlider.contiguousSelectionMarksAroundVal"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.contiguousSelectionMarksAroundVal">[docs]</a>    <span class="k">def</span> <span class="nf">contiguousSelectionMarksAroundVal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Selects contiguously marked frames around value.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isMarkedVal</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="n">dec_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStartContiguousMark</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">inc_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getEndContiguousMark</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSelection</span><span class="p">(</span><span class="n">dec_val</span><span class="p">,</span> <span class="n">inc_val</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoSlider.getStartContiguousMark"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.getStartContiguousMark">[docs]</a>    <span class="k">def</span> <span class="nf">getStartContiguousMark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns first marked value in contiguously marked region around val.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">last_val</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="n">dec_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_contiguous_marked_val</span><span class="p">(</span><span class="n">last_val</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">last_val</span> <span class="o">&gt;</span> <span class="n">dec_val</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_min</span><span class="p">:</span>
+            <span class="n">last_val</span> <span class="o">=</span> <span class="n">dec_val</span>
+            <span class="n">dec_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_contiguous_marked_val</span><span class="p">(</span><span class="n">last_val</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dec_val</span></div>
+
+<div class="viewcode-block" id="VideoSlider.getEndContiguousMark"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.getEndContiguousMark">[docs]</a>    <span class="k">def</span> <span class="nf">getEndContiguousMark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns last marked value in contiguously marked region around val.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">last_val</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="n">inc_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inc_contiguous_marked_val</span><span class="p">(</span><span class="n">last_val</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">last_val</span> <span class="o">&lt;</span> <span class="n">inc_val</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_max</span><span class="p">:</span>
+            <span class="n">last_val</span> <span class="o">=</span> <span class="n">inc_val</span>
+            <span class="n">inc_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inc_contiguous_marked_val</span><span class="p">(</span><span class="n">last_val</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">inc_val</span></div>
+
+    <span class="k">def</span> <span class="nf">getMarksAtVal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">SliderMark</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">mark</span>
+            <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">mark</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">val</span> <span class="ow">and</span> <span class="n">mark</span><span class="o">.</span><span class="n">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;tick&quot;</span><span class="p">,</span> <span class="s2">&quot;tick_column&quot;</span><span class="p">))</span>
+            <span class="ow">or</span> <span class="p">(</span><span class="n">mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">mark</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;=</span> <span class="n">val</span> <span class="o">&lt;</span> <span class="n">mark</span><span class="o">.</span><span class="n">end_val</span><span class="p">)</span>
+        <span class="p">]</span>
+
+<div class="viewcode-block" id="VideoSlider.isMarkedVal"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.isMarkedVal">[docs]</a>    <span class="k">def</span> <span class="nf">isMarkedVal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether value has mark.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMarksAtVal</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_dec_contiguous_marked_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decrements value within contiguously marked range if possible.&quot;&quot;&quot;</span>
+        <span class="n">dec_val</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">mark</span><span class="o">.</span><span class="n">val</span>
+                <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span>
+                <span class="k">if</span> <span class="n">mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">mark</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;</span> <span class="n">val</span> <span class="o">&lt;=</span> <span class="n">mark</span><span class="o">.</span><span class="n">end_val</span>
+            <span class="p">),</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">val</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">dec_val</span> <span class="o">&lt;</span> <span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dec_val</span>
+
+        <span class="k">if</span> <span class="n">val</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mark</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">val</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c1"># Return original value if we can&#39;t decrement it w/in contiguous range</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">_inc_contiguous_marked_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Increments value within contiguously marked range if possible.&quot;&quot;&quot;</span>
+        <span class="n">inc_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">mark</span><span class="o">.</span><span class="n">end_val</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span>
+                <span class="k">if</span> <span class="n">mark</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;track&quot;</span> <span class="ow">and</span> <span class="n">mark</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;=</span> <span class="n">val</span> <span class="o">&lt;</span> <span class="n">mark</span><span class="o">.</span><span class="n">end_val</span>
+            <span class="p">),</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">val</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">inc_val</span> <span class="o">&gt;</span> <span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">inc_val</span>
+
+        <span class="k">if</span> <span class="n">val</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mark</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_marks</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">val</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># Return original value if we can&#39;t decrement it w/in contiguous range</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="c1"># Method for cursor</span>
+
+<div class="viewcode-block" id="VideoSlider.setTooltipCallable"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.setTooltipCallable">[docs]</a>    <span class="k">def</span> <span class="nf">setTooltipCallable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tooltip_callable</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets function to get tooltip text for given value in slider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tooltip_callable: a function which takes the value which the user</span>
+<span class="sd">                is hovering over and returns the tooltip text to show (if any)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_val_tooltip</span> <span class="o">=</span> <span class="n">tooltip_callable</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_cursor_for_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setCursor</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">CrossCursor</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AltModifier</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setCursor</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SizeHorCursor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span>
+
+    <span class="c1"># Methods which override QGraphicsView</span>
+
+<div class="viewcode-block" id="VideoSlider.resizeEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.resizeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">resizeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override method to update visual size when necessary.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">outline_rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span>
+        <span class="n">handle_rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span>
+
+        <span class="n">outline_rect</span><span class="o">.</span><span class="n">setHeight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mark_area_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_height</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">visual_width</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">visual_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">drawn_width</span> <span class="o">=</span> <span class="n">visual_width</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">zoom_factor</span>
+
+        <span class="n">outline_rect</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="n">drawn_width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span> <span class="o">=</span> <span class="n">outline_rect</span>
+
+        <span class="n">handle_rect</span><span class="o">.</span><span class="n">setTop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle_top</span><span class="p">)</span>
+        <span class="n">handle_rect</span><span class="o">.</span><span class="n">setHeight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">handle_rect</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_selection_boxes_on_resize</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setTickMarks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_visual_positions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw_header</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">VideoSlider</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">resizeEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoSlider.mousePressEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override method to move handle for mouse press/drag.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scenePos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapToScene</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+
+        <span class="c1"># Do nothing if not enabled</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="c1"># Do nothing if click outside slider area</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">scenePos</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="n">move_function</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">release_function</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_cursor_for_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+        <span class="c1"># Shift : selection</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
+            <span class="n">move_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">moveSelectionAnchor</span>
+            <span class="n">release_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">releaseSelectionAnchor</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">()</span>
+
+        <span class="c1"># No modifier : go to frame</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoModifier</span><span class="p">:</span>
+            <span class="n">move_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">moveHandle</span>
+            <span class="n">release_function</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Alt (option) : zoom</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AltModifier</span><span class="p">:</span>
+            <span class="n">move_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">moveZoomDrag</span>
+            <span class="n">release_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">releaseZoomDrag</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>  <span class="c1"># mouse events shouldn&#39;t be passed to video widgets</span>
+
+        <span class="c1"># Connect to signals</span>
+        <span class="k">if</span> <span class="n">move_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mouseMoved</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">move_function</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">release_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">release_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">move_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mouseMoved</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">move_function</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mouseReleased</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">done</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mouseReleased</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">done</span><span class="p">)</span>
+
+        <span class="c1"># Emit signal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mouseMoved</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">scenePos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mousePressed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">scenePos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="VideoSlider.mouseMoveEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.mouseMoveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override method to emit mouseMoved signal on drag.&quot;&quot;&quot;</span>
+        <span class="n">scenePos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapToScene</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+
+        <span class="c1"># Update cursor type based on current modifier key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_cursor_for_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+        <span class="c1"># Show tooltip with information about frame under mouse</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_val_tooltip</span><span class="p">:</span>
+            <span class="n">hover_frame_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapMouseXToHandleX</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">()))</span>
+            <span class="n">tooltip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_val_tooltip</span><span class="p">(</span><span class="n">hover_frame_idx</span><span class="p">)</span>
+            <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QToolTip</span><span class="o">.</span><span class="n">showText</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">globalPos</span><span class="p">(),</span> <span class="n">tooltip</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mouseMoved</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">scenePos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="VideoSlider.mouseReleaseEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.mouseReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override method to emit mouseReleased signal on release.&quot;&quot;&quot;</span>
+        <span class="n">scenePos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapToScene</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mouseReleased</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">scenePos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="VideoSlider.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override method to move handle for mouse double-click.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scenePos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapToScene</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+
+        <span class="c1"># Do nothing if not enabled</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="c1"># Do nothing if click outside slider area</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">scenePos</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contiguousSelectionMarksAroundVal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_toVal</span><span class="p">(</span><span class="n">scenePos</span><span class="o">.</span><span class="n">x</span><span class="p">()))</span></div>
+
+<div class="viewcode-block" id="VideoSlider.leaveEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.leaveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">leaveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.keyPressEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.keyPressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Catch event and emit signal so something else can handle event.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_cursor_for_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keyPress</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.keyReleaseEvent"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.keyReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">keyReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Catch event and emit signal so something else can handle event.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keyRelease</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoSlider.boundingRect"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_rect</span></div>
+
+<div class="viewcode-block" id="VideoSlider.paint"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.VideoSlider.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VideoSlider</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">paint</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># Map meaning of mark to the type of mark</span>
+<div class="viewcode-block" id="SemanticMarkType"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.SemanticMarkType">[docs]</a><span class="k">class</span> <span class="nc">SemanticMarkType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="s2">&quot;simple&quot;</span>
+    <span class="n">predicted_no_track</span> <span class="o">=</span> <span class="s2">&quot;simple_thin&quot;</span>
+    <span class="n">suggested_with_user</span> <span class="o">=</span> <span class="s2">&quot;filled&quot;</span>
+    <span class="n">suggested_with_nothing</span> <span class="o">=</span> <span class="s2">&quot;open&quot;</span>
+    <span class="n">suggested_with_predicted</span> <span class="o">=</span> <span class="s2">&quot;predicted&quot;</span></div>
+
+
+<div class="viewcode-block" id="set_slider_marks_from_labels"><a class="viewcode-back" href="../../../../_autosummary/sleap.gui.widgets.slider.html#sleap.gui.widgets.slider.set_slider_marks_from_labels">[docs]</a><span class="k">def</span> <span class="nf">set_slider_marks_from_labels</span><span class="p">(</span>
+    <span class="n">slider</span><span class="p">:</span> <span class="n">VideoSlider</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="s2">&quot;Labels&quot;</span><span class="p">,</span>
+    <span class="n">video</span><span class="p">:</span> <span class="s2">&quot;Video&quot;</span><span class="p">,</span>
+    <span class="n">color_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ColorManager</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets slider marks using track information from `Labels` object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        slider: the slider we&#39;re updating</span>
+<span class="sd">        labels: the dataset with tracks and labeled frames</span>
+<span class="sd">        video: the video for which to show marks</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">color_manager</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">color_manager</span> <span class="o">=</span> <span class="n">ColorManager</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="c1"># Make function which can be used to get tooltip text when hovering</span>
+    <span class="c1"># over a given value (i.e., frame index) in the slider.</span>
+    <span class="k">def</span> <span class="nf">get_val_tooltip</span><span class="p">(</span><span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">tooltip</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Frame </span><span class="si">{</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">frame_mark_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">mark</span><span class="o">.</span><span class="n">type</span> <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="n">slider</span><span class="o">.</span><span class="n">getMarksAtVal</span><span class="p">(</span><span class="n">idx</span><span class="p">)}</span>
+
+        <span class="k">if</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">frame_mark_types</span><span class="p">:</span>
+            <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">user labeled&quot;</span>
+        <span class="k">elif</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">predicted_no_track</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">frame_mark_types</span><span class="p">:</span>
+            <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">prediction without track identity&quot;</span>
+        <span class="k">elif</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">suggested_with_user</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">frame_mark_types</span><span class="p">:</span>
+            <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">suggested frame with user labels&quot;</span>
+        <span class="k">elif</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">suggested_with_nothing</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">frame_mark_types</span><span class="p">:</span>
+            <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">suggested frame (no labels)&quot;</span>
+        <span class="k">elif</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">suggested_with_predicted</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">frame_mark_types</span><span class="p">:</span>
+            <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">suggested frame with prediction&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;track&quot;</span> <span class="ow">in</span> <span class="n">frame_mark_types</span><span class="p">:</span>
+            <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">prediction with track identity&quot;</span>
+
+        <span class="n">lf</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lf</span><span class="p">:</span>
+            <span class="n">lf</span> <span class="o">=</span> <span class="n">lf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">user_instance_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">user_instances</span><span class="p">)</span>
+            <span class="n">pred_instance_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">predicted_instances</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">pred_instance_count</span><span class="p">:</span>
+                <span class="n">tooltip</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">pred_instance_count</span><span class="si">}</span><span class="s2"> predicted instance&quot;</span>
+                <span class="k">if</span> <span class="n">pred_instance_count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;s&quot;</span>
+
+            <span class="k">if</span> <span class="n">user_instance_count</span><span class="p">:</span>
+                <span class="n">tooltip</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">user_instance_count</span><span class="si">}</span><span class="s2"> user instance&quot;</span>
+                <span class="k">if</span> <span class="n">user_instance_count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">tooltip</span> <span class="o">+=</span> <span class="s2">&quot;s&quot;</span>
+
+        <span class="k">return</span> <span class="n">tooltip</span>
+
+    <span class="c1"># Set slider to use this function for getting tooltip text</span>
+    <span class="n">slider</span><span class="o">.</span><span class="n">setTooltipCallable</span><span class="p">(</span><span class="n">get_val_tooltip</span><span class="p">)</span>
+
+    <span class="c1">##########################################</span>
+    <span class="c1"># Make the slider marks for this dataset #</span>
+    <span class="c1">##########################################</span>
+
+    <span class="n">lfs</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+
+    <span class="n">slider_marks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">track_row</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Add marks with track</span>
+    <span class="n">track_occupancy</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">get_track_occupancy</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">track_occupancy</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">track_row</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">slider</span><span class="o">.</span><span class="n">_is_track_in_new_column</span><span class="p">(</span><span class="n">track_row</span><span class="p">):</span>
+                <span class="n">slider_marks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">SliderMark</span><span class="p">(</span><span class="s2">&quot;tick_column&quot;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="n">track_occupancy</span><span class="p">[</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">track_len</span> <span class="o">=</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">start</span>
+
+            <span class="c1"># for debugging we can only show tracks above certain length</span>
+            <span class="k">if</span> <span class="n">track_len</span> <span class="o">&gt;</span> <span class="n">SEEKBAR_MIN_TRACK_LEN_TO_SHOW</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">occupancy_range</span> <span class="ow">in</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="n">track</span><span class="p">]</span><span class="o">.</span><span class="n">list</span><span class="p">:</span>
+                    <span class="n">slider_marks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">SliderMark</span><span class="p">(</span>
+                            <span class="s2">&quot;track&quot;</span><span class="p">,</span>
+                            <span class="n">val</span><span class="o">=</span><span class="n">occupancy_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="n">end_val</span><span class="o">=</span><span class="n">occupancy_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                            <span class="n">row</span><span class="o">=</span><span class="n">track_row</span><span class="p">,</span>
+                            <span class="n">color</span><span class="o">=</span><span class="n">color_manager</span><span class="o">.</span><span class="n">get_track_color</span><span class="p">(</span><span class="n">track</span><span class="p">),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="n">track_row</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Frames with instance without track</span>
+    <span class="n">untracked_frames</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">track_occupancy</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">occupancy_range</span> <span class="ow">in</span> <span class="n">track_occupancy</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">.</span><span class="n">list</span><span class="p">:</span>
+            <span class="n">untracked_frames</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">occupancy_range</span><span class="p">)})</span>
+
+    <span class="n">labeled_marks</span> <span class="o">=</span> <span class="p">{</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lfs</span><span class="p">}</span>
+    <span class="n">user_labeled</span> <span class="o">=</span> <span class="p">{</span><span class="n">lf</span><span class="o">.</span><span class="n">frame_idx</span> <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">lfs</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">user_instances</span><span class="p">)}</span>
+    <span class="n">suggested_frames</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">get_video_suggestions</span><span class="p">(</span><span class="n">video</span><span class="p">))</span>
+
+    <span class="n">all_simple_frames</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">all_simple_frames</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">untracked_frames</span><span class="p">)</span>
+    <span class="n">all_simple_frames</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">suggested_frames</span><span class="p">)</span>
+    <span class="n">all_simple_frames</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">user_labeled</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">all_simple_frames</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">suggested_frames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">user_labeled</span><span class="p">:</span>
+                <span class="c1"># suggested frame with user labeled instances</span>
+                <span class="n">mark_type</span> <span class="o">=</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">suggested_with_user</span>
+            <span class="k">elif</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">labeled_marks</span><span class="p">:</span>
+                <span class="c1"># suggested frame with only predicted instances</span>
+                <span class="n">mark_type</span> <span class="o">=</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">suggested_with_predicted</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># suggested frame without any instances</span>
+                <span class="n">mark_type</span> <span class="o">=</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">suggested_with_nothing</span>
+        <span class="k">elif</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">user_labeled</span><span class="p">:</span>
+            <span class="c1"># frame with user labeled instances</span>
+            <span class="n">mark_type</span> <span class="o">=</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">user</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># no user instances, predicted instance without track identity</span>
+            <span class="n">mark_type</span> <span class="o">=</span> <span class="n">SemanticMarkType</span><span class="o">.</span><span class="n">predicted_no_track</span>
+
+        <span class="n">mark_type</span> <span class="o">=</span> <span class="n">mark_type</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="n">slider_marks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SliderMark</span><span class="p">(</span><span class="n">mark_type</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">))</span>
+
+    <span class="n">slider</span><span class="o">.</span><span class="n">setNumberOfTracks</span><span class="p">(</span><span class="n">track_row</span><span class="p">)</span>  <span class="c1"># total number of tracks to show</span>
+    <span class="n">slider</span><span class="o">.</span><span class="n">setMarks</span><span class="p">(</span><span class="n">slider_marks</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="n">window</span> <span class="o">=</span> <span class="n">VideoSlider</span><span class="p">(</span>
+        <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="nb">max</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">val</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="n">marks</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>  <span class="c1"># ((0,10),(0,15),(1,10),(1,11),(2,12)), tracks=3</span>
+    <span class="p">)</span>
+
+    <span class="n">window</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

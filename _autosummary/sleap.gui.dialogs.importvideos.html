@@ -1,0 +1,488 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.gui.dialogs.importvideos &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.gui.dialogs.merge" href="sleap.gui.dialogs.merge.html" />
+    <link rel="prev" title="sleap.gui.dialogs.formbuilder" href="sleap.gui.dialogs.formbuilder.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.gui.dialogs.importvideos">
+<span id="sleap-gui-dialogs-importvideos"></span><h1>sleap.gui.dialogs.importvideos<a class="headerlink" href="#module-sleap.gui.dialogs.importvideos" title="Permalink to this headline">¶</a></h1>
+<p>Interface to handle the UI for importing videos.</p>
+<p>Usage:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">import_list</span> <span class="o">=</span> <span class="n">ImportVideos</span><span class="p">()</span><span class="o">.</span><span class="n">ask</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will show the user a file-selection dialog, and then a second dialog
+to select the import parameters for each file.</p>
+<p>It returns a list with data about each file selected by the user.
+In particular, we’ll have the name of the file and all of the parameters
+relevant for that specific type of file. It also includes a reference
+to the relevant method of <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code>.</p>
+<p>For each <cite>item</cite> in <cite>import_list</cite>, we can load the video by calling this
+method while passing the user-selected params as the named parameters:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vid</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">](</span><span class="o">**</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt id="sleap.gui.dialogs.importvideos.ImportItemWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.importvideos.</code><code class="sig-name descname">ImportItemWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">import_type</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportItemWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportItemWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget for selecting parameters with preview when importing video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – Full path to selected video file.</p></li>
+<li><p><strong>import_type</strong> (<em>dict</em>) – Data about user-selectable import parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportItemWidget.boundingRect">
+<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportItemWidget.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportItemWidget.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportItemWidget.get_data">
+<code class="sig-name descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportItemWidget.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportItemWidget.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all data (fixed and user-selected) for imported video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dict with data for this video.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportItemWidget.is_enabled">
+<code class="sig-name descname">is_enabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportItemWidget.is_enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportItemWidget.is_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Am I enabled?</p>
+<p>Our UI provides a way to enable/disable this item (file).
+We only want to import enabled items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Am I enabled?</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportItemWidget.paint">
+<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">painter</span></em>, <em class="sig-param"><span class="n">option</span></em>, <em class="sig-param"><span class="n">widget</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportItemWidget.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportItemWidget.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportItemWidget.update_video">
+<code class="sig-name descname">update_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">initial</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportItemWidget.update_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportItemWidget.update_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update preview video using current param values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>initial</strong> – if True, then get video settings that are used by
+the <cite>Video</cite> object when they aren’t specified as params</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamDialog">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.importvideos.</code><code class="sig-name descname">ImportParamDialog</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filenames</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamDialog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dialog for selecting parameters with preview when importing video.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filenames</strong> (<em>list</em>) – List of files we want to import.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamDialog.boundingRect">
+<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamDialog.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamDialog.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamDialog.get_data">
+<code class="sig-name descname">get_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">import_result</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamDialog.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamDialog.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get results from import.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>import_result</strong> (<em>optional</em>) – If specified, we’ll insert data into this.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of dicts with data for each (enabled) imported file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamDialog.paint">
+<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">painter</span></em>, <em class="sig-param"><span class="n">option</span></em>, <em class="sig-param"><span class="n">widget</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamDialog.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamDialog.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.importvideos.</code><code class="sig-name descname">ImportParamWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">import_type</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget for allowing user to select video parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – file path/name</p></li>
+<li><p><strong>import_type</strong> – data about the parameters for this type of video</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Object is a widget with the UI for params specific to this video type.</p>
+</div>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamWidget.boundingRect">
+<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamWidget.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamWidget.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamWidget.get_values">
+<code class="sig-name descname">get_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">only_required</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamWidget.get_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamWidget.get_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get current user-selected values for import parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>only_required</strong> – Only return the parameters that are required
+for instantiating <cite>Video</cite> object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict of param keys/values.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It’s easiest if the return dict matches the arguments we need
+for the Video object, so we’ll add the file name to the dict
+even though it’s not a user-selectable param.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamWidget.make_layout">
+<code class="sig-name descname">make_layout</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtWidgets.QLayout<a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamWidget.make_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamWidget.make_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the layout of widgets for user-selected import parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamWidget.paint">
+<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">painter</span></em>, <em class="sig-param"><span class="n">option</span></em>, <em class="sig-param"><span class="n">widget</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamWidget.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamWidget.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportParamWidget.set_values_from_video">
+<code class="sig-name descname">set_values_from_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportParamWidget.set_values_from_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportParamWidget.set_values_from_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the form fields using attributes on video.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.importvideos.ImportVideos">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.importvideos.</code><code class="sig-name descname">ImportVideos</code><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportVideos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportVideos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to handle video importing UI.</p>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.ImportVideos.ask">
+<code class="sig-name descname">ask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#ImportVideos.ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.ImportVideos.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the import UI.</p>
+<ol class="arabic simple">
+<li><p>Show file selection dialog.</p></li>
+<li><p>Show import parameter dialog with widget for each file.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>None.</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List with dict of the parameters for each file to import.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="sleap.gui.dialogs.importvideos.VideoPreviewWidget">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.gui.dialogs.importvideos.</code><code class="sig-name descname">VideoPreviewWidget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#VideoPreviewWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.VideoPreviewWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widget to show video preview. Based on <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>video</strong> – the video to show</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This widget is used by ImportItemWidget.</p>
+</div>
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.VideoPreviewWidget.boundingRect">
+<code class="sig-name descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PySide2.QtCore.QRectF<a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#VideoPreviewWidget.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.VideoPreviewWidget.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.VideoPreviewWidget.clear_video">
+<code class="sig-name descname">clear_video</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#VideoPreviewWidget.clear_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.VideoPreviewWidget.clear_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the video preview.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.VideoPreviewWidget.load_video">
+<code class="sig-name descname">load_video</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">video</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video">sleap.io.video.Video</a></span></em>, <em class="sig-param"><span class="n">initial_frame</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#VideoPreviewWidget.load_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.VideoPreviewWidget.load_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the video preview and display label text.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.VideoPreviewWidget.paint">
+<code class="sig-name descname">paint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">painter</span></em>, <em class="sig-param"><span class="n">option</span></em>, <em class="sig-param"><span class="n">widget</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#VideoPreviewWidget.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.VideoPreviewWidget.paint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method required by Qt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.gui.dialogs.importvideos.VideoPreviewWidget.plot">
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idx</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/gui/dialogs/importvideos.html#VideoPreviewWidget.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.gui.dialogs.importvideos.VideoPreviewWidget.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show the video preview.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.metrics.html">sleap.gui.dialogs.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.mpl.html">sleap.gui.widgets.mpl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.gui.dialogs.formbuilder.html" title="previous chapter">sleap.gui.dialogs.formbuilder</a></li>
+      <li>Next: <a href="sleap.gui.dialogs.merge.html" title="next chapter">sleap.gui.dialogs.merge</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.gui.dialogs.importvideos.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

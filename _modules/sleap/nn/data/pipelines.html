@@ -1,0 +1,890 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.data.pipelines &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.data.pipelines</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module defines high level pipeline configurations from providers/transformers.</span>
+
+<span class="sd">The `Pipeline` class has the capability to create sequences of data I/O and processing</span>
+<span class="sd">operations wrapped in a `tf.data`-based pipeline.</span>
+
+<span class="sd">This allows for convenient ways to configure individual variants of common pipelines, as</span>
+<span class="sd">well as to define training vs inference versions based on the same configurations.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">import</span> <span class="nn">sleap</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.providers</span> <span class="kn">import</span> <span class="n">LabelsReader</span><span class="p">,</span> <span class="n">VideoReader</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.augmentation</span> <span class="kn">import</span> <span class="n">AugmentationConfig</span><span class="p">,</span> <span class="n">ImgaugAugmenter</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.normalization</span> <span class="kn">import</span> <span class="n">Normalizer</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.resizing</span> <span class="kn">import</span> <span class="n">Resizer</span><span class="p">,</span> <span class="n">PointsRescaler</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.instance_centroids</span> <span class="kn">import</span> <span class="n">InstanceCentroidFinder</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.instance_cropping</span> <span class="kn">import</span> <span class="n">InstanceCropper</span><span class="p">,</span> <span class="n">PredictedInstanceCropper</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.confidence_maps</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MultiConfidenceMapGenerator</span><span class="p">,</span>
+    <span class="n">InstanceConfidenceMapGenerator</span><span class="p">,</span>
+    <span class="n">SingleInstanceConfidenceMapGenerator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.edge_maps</span> <span class="kn">import</span> <span class="n">PartAffinityFieldsGenerator</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.dataset_ops</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Shuffler</span><span class="p">,</span>
+    <span class="n">Batcher</span><span class="p">,</span>
+    <span class="n">Unbatcher</span><span class="p">,</span>
+    <span class="n">Repeater</span><span class="p">,</span>
+    <span class="n">Prefetcher</span><span class="p">,</span>
+    <span class="n">Preloader</span><span class="p">,</span>
+    <span class="n">LambdaFilter</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.training</span> <span class="kn">import</span> <span class="n">KeyMapper</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.general</span> <span class="kn">import</span> <span class="n">KeyFilter</span><span class="p">,</span> <span class="n">KeyRenamer</span><span class="p">,</span> <span class="n">KeyDeviceMover</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.inference</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">KerasModelPredictor</span><span class="p">,</span>
+    <span class="n">GlobalPeakFinder</span><span class="p">,</span>
+    <span class="n">MockGlobalPeakFinder</span><span class="p">,</span>
+    <span class="n">LocalPeakFinder</span><span class="p">,</span>
+    <span class="n">PredictedCenterInstanceNormalizer</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.paf_grouping</span> <span class="kn">import</span> <span class="n">PartAffinityFieldInstanceGrouper</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.data.utils</span> <span class="kn">import</span> <span class="n">ensure_list</span>
+
+<span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="n">DataConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
+<span class="kn">from</span> <span class="nn">sleap.nn.heads</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MultiInstanceConfmapsHead</span><span class="p">,</span>
+    <span class="n">PartAffinityFieldsHead</span><span class="p">,</span>
+    <span class="n">CentroidConfmapsHead</span><span class="p">,</span>
+    <span class="n">CenteredInstanceConfmapsHead</span><span class="p">,</span>
+    <span class="n">SingleInstanceConfmapsHead</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">PROVIDERS</span> <span class="o">=</span> <span class="p">(</span><span class="n">LabelsReader</span><span class="p">,</span> <span class="n">VideoReader</span><span class="p">)</span>
+<span class="n">TRANSFORMERS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ImgaugAugmenter</span><span class="p">,</span>
+    <span class="n">Normalizer</span><span class="p">,</span>
+    <span class="n">Resizer</span><span class="p">,</span>
+    <span class="n">InstanceCentroidFinder</span><span class="p">,</span>
+    <span class="n">InstanceCropper</span><span class="p">,</span>
+    <span class="n">MultiConfidenceMapGenerator</span><span class="p">,</span>
+    <span class="n">InstanceConfidenceMapGenerator</span><span class="p">,</span>
+    <span class="n">PartAffinityFieldsGenerator</span><span class="p">,</span>
+    <span class="n">SingleInstanceConfidenceMapGenerator</span><span class="p">,</span>
+    <span class="n">Shuffler</span><span class="p">,</span>
+    <span class="n">Batcher</span><span class="p">,</span>
+    <span class="n">Unbatcher</span><span class="p">,</span>
+    <span class="n">Repeater</span><span class="p">,</span>
+    <span class="n">Prefetcher</span><span class="p">,</span>
+    <span class="n">Preloader</span><span class="p">,</span>
+    <span class="n">LambdaFilter</span><span class="p">,</span>
+    <span class="n">KeyMapper</span><span class="p">,</span>
+    <span class="n">KerasModelPredictor</span><span class="p">,</span>
+    <span class="n">GlobalPeakFinder</span><span class="p">,</span>
+    <span class="n">MockGlobalPeakFinder</span><span class="p">,</span>
+    <span class="n">LocalPeakFinder</span><span class="p">,</span>
+    <span class="n">PredictedInstanceCropper</span><span class="p">,</span>
+    <span class="n">PredictedCenterInstanceNormalizer</span><span class="p">,</span>
+    <span class="n">KeyFilter</span><span class="p">,</span>
+    <span class="n">KeyRenamer</span><span class="p">,</span>
+    <span class="n">KeyDeviceMover</span><span class="p">,</span>
+    <span class="n">PartAffinityFieldInstanceGrouper</span><span class="p">,</span>
+    <span class="n">PointsRescaler</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">Provider</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;Provider&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">PROVIDERS</span><span class="p">)</span>
+<span class="n">Transformer</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;Transformer&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">TRANSFORMERS</span><span class="p">)</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Pipeline</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pipeline composed of providers and transformers.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        providers: A single or a list of data providers.</span>
+<span class="sd">        transformers: A single or a list of transformers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">providers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">converter</span><span class="o">=</span><span class="n">ensure_list</span><span class="p">,</span> <span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">transformers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Transformer</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">converter</span><span class="o">=</span><span class="n">ensure_list</span><span class="p">,</span> <span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Pipeline.from_blocks"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.from_blocks">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_blocks</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">blocks</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">Union</span><span class="p">[</span><span class="n">Provider</span><span class="p">,</span> <span class="n">Transformer</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Provider</span><span class="p">,</span> <span class="n">Transformer</span><span class="p">]]</span>
+        <span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a pipeline from a sequence of providers and transformers.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sequence: List or tuple of providers and transformer instances.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An instantiated pipeline with all blocks chained.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">PROVIDERS</span> <span class="o">+</span> <span class="n">TRANSFORMERS</span><span class="p">):</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">blocks</span><span class="p">]</span>
+        <span class="n">providers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">transformers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">PROVIDERS</span><span class="p">):</span>
+                <span class="n">providers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">TRANSFORMERS</span><span class="p">):</span>
+                <span class="n">transformers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unrecognized pipeline block type (index = </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">block</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">providers</span><span class="p">,</span> <span class="n">transformers</span><span class="o">=</span><span class="n">transformers</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Pipeline.from_pipelines"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.from_pipelines">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_pipelines</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pipelines</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="s2">&quot;Pipeline&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a new pipeline instance by chaining together multiple pipelines.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pipelines: A sequence of `Pipeline` instances.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new `Pipeline` instance formed by concatenating the individual pipelines.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">pipeline</span> <span class="ow">in</span> <span class="n">pipelines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">PROVIDERS</span> <span class="o">+</span> <span class="n">TRANSFORMERS</span><span class="p">):</span>
+                <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pipeline</span><span class="o">.</span><span class="n">providers</span><span class="p">)</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pipeline</span><span class="o">.</span><span class="n">transformers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Overload for + operator concatenation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_pipelines</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Pipeline&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Overload for | operator concatenation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_pipelines</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Pipeline.append"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Pipeline&quot;</span><span class="p">,</span> <span class="n">Transformer</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Transformer</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Append one or more blocks to this pipeline instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: A single `Pipeline`, `Transformer` or list of `Transformer`s to</span>
+<span class="sd">                append to the end of this pipeline.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If blocks provided are not a `Pipeline`, `Transformer` or list</span>
+<span class="sd">                of `Transformer`s.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">TRANSFORMERS</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">TRANSFORMERS</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">other</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transformers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot append blocks that are not pipelines or transformers.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s2">&quot;providers&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s2">&quot;transformers&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">providers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">providers</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">transformers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot append blocks that are not pipelines or transformers.&quot;</span>
+            <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Pipeline&quot;</span><span class="p">,</span> <span class="n">Transformer</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Transformer</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Overload for += for appending blocks to existing instance.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__ior__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Pipeline&quot;</span><span class="p">,</span> <span class="n">Transformer</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Overload for |= for appending blocks to existing instance.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Pipeline.validate_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.validate_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">validate_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Check that all pipeline blocks meet the data requirements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The final keys that will be present in each example.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If keys required for a block are dropped at some point in the</span>
+<span class="sd">                pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">example_keys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">provider</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">providers</span><span class="p">:</span>
+            <span class="n">example_keys</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">provider</span><span class="o">.</span><span class="n">output_keys</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">transformer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformers</span><span class="p">):</span>
+            <span class="c1"># Required keys that are in the example:</span>
+            <span class="n">input_keys_in_example</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="nb">set</span><span class="p">(</span><span class="n">example_keys</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">transformer</span><span class="o">.</span><span class="n">input_keys</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Required keys that are missing from the example:</span>
+            <span class="n">input_keys_not_in_example</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="nb">set</span><span class="p">(</span><span class="n">transformer</span><span class="o">.</span><span class="n">input_keys</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">example_keys</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Keys in the example that are not required by transformer:</span>
+            <span class="n">extra_example_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">example_keys</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">transformer</span><span class="o">.</span><span class="n">output_keys</span><span class="p">))</span>
+
+            <span class="c1"># Keys that the transformer will output:</span>
+            <span class="n">output_keys</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">output_keys</span>
+
+            <span class="c1"># Check that all the required inputs are in the example.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_keys_not_in_example</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Missing required keys for transformer (index = </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;type = </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">input_keys_not_in_example</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Available: </span><span class="si">{</span><span class="n">extra_example_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># The new example keys will be the outputs of the transformer and the</span>
+            <span class="c1"># previous extraneous keys.</span>
+            <span class="n">example_keys</span> <span class="o">=</span> <span class="n">output_keys</span> <span class="o">+</span> <span class="n">extra_example_keys</span>
+
+        <span class="k">return</span> <span class="n">example_keys</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the keys in examples from a dataset generated from this pipeline.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_pipeline</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Pipeline.make_dataset"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.make_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">make_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a dataset instance that generates examples from the pipeline.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The instantiated `tf.data.Dataset` pipeline that generates examples with the</span>
+<span class="sd">            keys in the `output_keys` attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that the pipeline can be instantiated.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_pipeline</span><span class="p">()</span>
+
+        <span class="c1"># Create providers.</span>
+        <span class="c1"># TODO: Multi-provider pipelines by merging the example dictionaries.</span>
+        <span class="c1">#       Need something like an optional side-packet into in providers. Or a</span>
+        <span class="c1">#       transformer that just merges all the keys after a Dataset.zip?</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">providers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">make_dataset</span><span class="p">()</span>
+
+        <span class="c1"># Apply transformers.</span>
+        <span class="k">for</span> <span class="n">transformer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformers</span><span class="p">:</span>
+            <span class="c1"># t0 = time.time()</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform_dataset</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+            <span class="c1"># logger.debug(f&quot;{transformer.__class__.__name__}:\t\t{time.time() - t0}&quot;)</span>
+
+        <span class="k">return</span> <span class="n">ds</span></div>
+
+<div class="viewcode-block" id="Pipeline.run"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Build and evaluate the pipeline.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of example dictionaries after processing the pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_dataset</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="BottomUpPipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BottomUpPipeline</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pipeline builder for confidence maps + part affinity fields models.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data_config: Data-related configuration.</span>
+<span class="sd">        optimization_config: Optimization-related configuration.</span>
+<span class="sd">        confmaps_head: Instantiated head describing the output confidence maps tensor.</span>
+<span class="sd">        pafs_head: Instantiated head describing the output PAFs tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_config</span><span class="p">:</span> <span class="n">DataConfig</span>
+    <span class="n">optimization_config</span><span class="p">:</span> <span class="n">OptimizationConfig</span>
+    <span class="n">confmaps_head</span><span class="p">:</span> <span class="n">MultiInstanceConfmapsHead</span>
+    <span class="n">pafs_head</span><span class="p">:</span> <span class="n">PartAffinityFieldsHead</span>
+
+<div class="viewcode-block" id="BottomUpPipeline.make_base_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_base_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_base_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create base pipeline with input data only.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce input examples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="BottomUpPipeline.make_training_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_training_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_training_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create full training pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce all data keys required for</span>
+<span class="sd">            training.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys</span>
+<span class="sd">            with the appropriate format for the instantiated `tf.keras.Model`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">preload_data</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Preloader</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">online_shuffling</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Shuffler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">shuffle_buffer_size</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">ImgaugAugmenter</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">augmentation_config</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">MultiConfidenceMapGenerator</span><span class="p">(</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmaps_head</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmaps_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">centroids</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">PartAffinityFieldsGenerator</span><span class="p">(</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pafs_head</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pafs_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">skeletons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">,</span>
+            <span class="n">flatten_channels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
+            <span class="c1"># Batching before repeating is preferred since it preserves epoch boundaries</span>
+            <span class="c1"># such that no sample is repeated within the epoch. But this breaks if there</span>
+            <span class="c1"># are fewer samples than the batch size.</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">prefetch</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="BottomUpPipeline.make_viz_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_viz_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_viz_pipeline</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">keras_model</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create visualization pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+<span class="sd">            keras_model: A `tf.keras.Model` that can be used for inference.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to fetch data and run inference to generate</span>
+<span class="sd">            predictions useful for visualization during training.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_base_pipeline</span><span class="p">(</span><span class="n">data_provider</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KerasModelPredictor</span><span class="p">(</span>
+            <span class="n">keras_model</span><span class="o">=</span><span class="n">keras_model</span><span class="p">,</span>
+            <span class="n">model_input_keys</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span>
+            <span class="n">model_output_keys</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;predicted_confidence_maps&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;predicted_part_affinity_fields&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">LocalPeakFinder</span><span class="p">(</span>
+            <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">confmaps_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_confidence_maps&quot;</span><span class="p">,</span>
+            <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_peaks&quot;</span><span class="p">,</span>
+            <span class="n">peak_vals_key</span><span class="o">=</span><span class="s2">&quot;predicted_peak_confidences&quot;</span><span class="p">,</span>
+            <span class="n">peak_sample_inds_key</span><span class="o">=</span><span class="s2">&quot;predicted_peak_sample_inds&quot;</span><span class="p">,</span>
+            <span class="n">peak_channel_inds_key</span><span class="o">=</span><span class="s2">&quot;predicted_peak_channel_inds&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># TODO: PAF grouping inference</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div></div>
+
+
+<div class="viewcode-block" id="CentroidConfmapsPipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CentroidConfmapsPipeline</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pipeline builder for centroid confidence map models.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data_config: Data-related configuration.</span>
+<span class="sd">        optimization_config: Optimization-related configuration.</span>
+<span class="sd">        centroid_confmap_head: Instantiated head describing the output centroid</span>
+<span class="sd">            confidence maps tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_config</span><span class="p">:</span> <span class="n">DataConfig</span>
+    <span class="n">optimization_config</span><span class="p">:</span> <span class="n">OptimizationConfig</span>
+    <span class="n">centroid_confmap_head</span><span class="p">:</span> <span class="n">CentroidConfmapsHead</span>
+
+<div class="viewcode-block" id="CentroidConfmapsPipeline.make_base_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_base_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_base_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create base pipeline with input data only.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce input examples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCentroidFinder</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">instance_cropping</span><span class="p">,</span>
+            <span class="n">skeletons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="CentroidConfmapsPipeline.make_training_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_training_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_training_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create full training pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce all data keys required for</span>
+<span class="sd">            training.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys</span>
+<span class="sd">            with the appropriate format for the instantiated `tf.keras.Model`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">preload_data</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Preloader</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">online_shuffling</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Shuffler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">shuffle_buffer_size</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">ImgaugAugmenter</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">augmentation_config</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCentroidFinder</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">instance_cropping</span><span class="p">,</span>
+            <span class="n">skeletons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">MultiConfidenceMapGenerator</span><span class="p">(</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_confmap_head</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_confmap_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">centroids</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
+            <span class="c1"># Batching before repeating is preferred since it preserves epoch boundaries</span>
+            <span class="c1"># such that no sample is repeated within the epoch. But this breaks if there</span>
+            <span class="c1"># are fewer samples than the batch size.</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">prefetch</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="CentroidConfmapsPipeline.make_viz_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_viz_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_viz_pipeline</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">keras_model</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create visualization pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+<span class="sd">            keras_model: A `tf.keras.Model` that can be used for inference.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to fetch data and run inference to generate</span>
+<span class="sd">            predictions useful for visualization during training.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_base_pipeline</span><span class="p">(</span><span class="n">data_provider</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KerasModelPredictor</span><span class="p">(</span>
+            <span class="n">keras_model</span><span class="o">=</span><span class="n">keras_model</span><span class="p">,</span>
+            <span class="n">model_input_keys</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span>
+            <span class="n">model_output_keys</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_confidence_maps&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">LocalPeakFinder</span><span class="p">(</span>
+            <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_confmap_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_confidence_maps&quot;</span><span class="p">,</span>
+            <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroids&quot;</span><span class="p">,</span>
+            <span class="n">peak_vals_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_confidences&quot;</span><span class="p">,</span>
+            <span class="n">peak_sample_inds_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_sample_inds&quot;</span><span class="p">,</span>
+            <span class="n">peak_channel_inds_key</span><span class="o">=</span><span class="s2">&quot;predicted_centroid_channel_inds&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div></div>
+
+
+<div class="viewcode-block" id="TopdownConfmapsPipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TopdownConfmapsPipeline</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pipeline builder for instance-centered confidence map models.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data_config: Data-related configuration.</span>
+<span class="sd">        optimization_config: Optimization-related configuration.</span>
+<span class="sd">        instance_confmap_head: Instantiated head describing the output centered</span>
+<span class="sd">            confidence maps tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_config</span><span class="p">:</span> <span class="n">DataConfig</span>
+    <span class="n">optimization_config</span><span class="p">:</span> <span class="n">OptimizationConfig</span>
+    <span class="n">instance_confmap_head</span><span class="p">:</span> <span class="n">CenteredInstanceConfmapsHead</span>
+
+<div class="viewcode-block" id="TopdownConfmapsPipeline.make_base_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_base_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_base_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create base pipeline with input data only.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce input examples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCentroidFinder</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">instance_cropping</span><span class="p">,</span>
+            <span class="n">skeletons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCropper</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">instance_cropping</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="TopdownConfmapsPipeline.make_training_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_training_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_training_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create full training pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce all data keys required for</span>
+<span class="sd">            training.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys</span>
+<span class="sd">            with the appropriate format for the instantiated `tf.keras.Model`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">preload_data</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Preloader</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">online_shuffling</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Shuffler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">shuffle_buffer_size</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">ImgaugAugmenter</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">augmentation_config</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCentroidFinder</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">instance_cropping</span><span class="p">,</span>
+            <span class="n">skeletons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceCropper</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">instance_cropping</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">InstanceConfidenceMapGenerator</span><span class="p">(</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_confmap_head</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_confmap_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">all_instances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
+            <span class="c1"># Batching before repeating is preferred since it preserves epoch boundaries</span>
+            <span class="c1"># such that no sample is repeated within the epoch. But this breaks if there</span>
+            <span class="c1"># are fewer samples than the batch size.</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">prefetch</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="TopdownConfmapsPipeline.make_viz_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_viz_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_viz_pipeline</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">keras_model</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create visualization pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+<span class="sd">            keras_model: A `tf.keras.Model` that can be used for inference.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to fetch data and run inference to generate</span>
+<span class="sd">            predictions useful for visualization during training.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_base_pipeline</span><span class="p">(</span><span class="n">data_provider</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KerasModelPredictor</span><span class="p">(</span>
+            <span class="n">keras_model</span><span class="o">=</span><span class="n">keras_model</span><span class="p">,</span>
+            <span class="n">model_input_keys</span><span class="o">=</span><span class="s2">&quot;instance_image&quot;</span><span class="p">,</span>
+            <span class="n">model_output_keys</span><span class="o">=</span><span class="s2">&quot;predicted_instance_confidence_maps&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">GlobalPeakFinder</span><span class="p">(</span>
+            <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_instance_confidence_maps&quot;</span><span class="p">,</span>
+            <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_center_instance_points&quot;</span><span class="p">,</span>
+            <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_confmap_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div></div>
+
+
+<div class="viewcode-block" id="SingleInstanceConfmapsPipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SingleInstanceConfmapsPipeline</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pipeline builder for single-instance confidence map models.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data_config: Data-related configuration.</span>
+<span class="sd">        optimization_config: Optimization-related configuration.</span>
+<span class="sd">        single_instance_confmap_head: Instantiated head describing the output confidence</span>
+<span class="sd">            maps tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_config</span><span class="p">:</span> <span class="n">DataConfig</span>
+    <span class="n">optimization_config</span><span class="p">:</span> <span class="n">OptimizationConfig</span>
+    <span class="n">single_instance_confmap_head</span><span class="p">:</span> <span class="n">SingleInstanceConfmapsHead</span>
+
+<div class="viewcode-block" id="SingleInstanceConfmapsPipeline.make_base_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_base_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_base_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create base pipeline with input data only.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce input examples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="SingleInstanceConfmapsPipeline.make_training_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_training_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_training_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create full training pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to produce all data keys required for</span>
+<span class="sd">            training.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys</span>
+<span class="sd">            with the appropriate format for the instantiated `tf.keras.Model`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">providers</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">preload_data</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Preloader</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">online_shuffling</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Shuffler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">shuffle_buffer_size</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">ImgaugAugmenter</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">augmentation_config</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Normalizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Resizer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">)</span>
+
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">SingleInstanceConfidenceMapGenerator</span><span class="p">(</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">single_instance_confmap_head</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+            <span class="n">output_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">single_instance_confmap_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_provider</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
+            <span class="c1"># Batching before repeating is preferred since it preserves epoch boundaries</span>
+            <span class="c1"># such that no sample is repeated within the epoch. But this breaks if there</span>
+            <span class="c1"># are fewer samples than the batch size.</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Batcher</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_config</span><span class="o">.</span><span class="n">prefetch</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">pipeline</span></div>
+
+<div class="viewcode-block" id="SingleInstanceConfmapsPipeline.make_viz_pipeline"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_viz_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">make_viz_pipeline</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">:</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">keras_model</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create visualization pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_provider: A `Provider` that generates data examples, typically a</span>
+<span class="sd">                `LabelsReader` instance.</span>
+<span class="sd">            keras_model: A `tf.keras.Model` that can be used for inference.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A `Pipeline` instance configured to fetch data and run inference to generate</span>
+<span class="sd">            predictions useful for visualization during training.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_base_pipeline</span><span class="p">(</span><span class="n">data_provider</span><span class="o">=</span><span class="n">data_provider</span><span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Prefetcher</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">Repeater</span><span class="p">()</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">KerasModelPredictor</span><span class="p">(</span>
+            <span class="n">keras_model</span><span class="o">=</span><span class="n">keras_model</span><span class="p">,</span>
+            <span class="n">model_input_keys</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span>
+            <span class="n">model_output_keys</span><span class="o">=</span><span class="s2">&quot;predicted_confidence_maps&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pipeline</span> <span class="o">+=</span> <span class="n">GlobalPeakFinder</span><span class="p">(</span>
+            <span class="n">confmaps_key</span><span class="o">=</span><span class="s2">&quot;predicted_confidence_maps&quot;</span><span class="p">,</span>
+            <span class="n">peaks_key</span><span class="o">=</span><span class="s2">&quot;predicted_points&quot;</span><span class="p">,</span>
+            <span class="n">peak_vals_key</span><span class="o">=</span><span class="s2">&quot;predicted_confidences&quot;</span><span class="p">,</span>
+            <span class="n">confmaps_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">single_instance_confmap_head</span><span class="o">.</span><span class="n">output_stride</span><span class="p">,</span>
+            <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipeline</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

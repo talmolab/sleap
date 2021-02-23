@@ -1,0 +1,392 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inference &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GUI" href="gui.html" />
+    <link rel="prev" title="Training" href="training.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="inference">
+<h1>Inference<a class="headerlink" href="#inference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sleap.nn.inference">
+<span id="sleap-nn-inference"></span><h2>sleap.nn.inference<a class="headerlink" href="#module-sleap.nn.inference" title="Permalink to this headline">¶</a></h2>
+<p>Class and command-line interface for running inference with trained models.</p>
+<dl class="class">
+<dt id="sleap.nn.inference.Predictor">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">Predictor</code><span class="sig-paren">(</span><em class="sig-param">policies: Dict[str, object], tracker_takes_img: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encapsulates the inference pipeline.</p>
+<dl class="attribute">
+<dt id="sleap.nn.inference.Predictor.policies">
+<code class="sig-name descname">policies</code><a class="headerlink" href="#sleap.nn.inference.Predictor.policies" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary with objects for different parts of the pipeline:</p>
+<ul class="simple">
+<li><p>“centroid”: Instance of <cite>region_proposal.CentroidPredictor</cite></p></li>
+<li><p>“region”: Instance of <cite>region_proposal.RegionProposalExtractor</cite></p></li>
+<li><p>“confmap”: Instance of <cite>peak_finding.ConfmapPeakFinder</cite></p></li>
+<li><p>“paf”: Instance of <cite>paf_grouping.PAFGrouper</cite></p></li>
+<li><p>“tracking”: Instance of <cite>tracking.Tracker</cite></p></li>
+<li><p>“previous_predictions”: <cite>predicted.PredictedInstancePredictor</cite></p></li>
+</ul>
+</dd></dl>
+
+<p>Note: the pipeline will be determined by which policies are given.</p>
+<dl class="method">
+<dt id="sleap.nn.inference.Predictor.make_labeled_frames">
+<code class="sig-name descname">make_labeled_frames</code><span class="sig-paren">(</span><em class="sig-param">instances_chunk: Dict[int, List[PredictedInstance]], frame_inds, sample_inds, video: Video</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.make_labeled_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.make_labeled_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes LabeledFrame objects for all predictions in chunk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.Predictor.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">video_filename: str</em>, <em class="sig-param">frames: Optional[List[int]] = None</em>, <em class="sig-param">video_kwargs: Optional[dict] = None</em><span class="sig-paren">)</span> &#x2192; List[sleap.instance.LabeledFrame]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs entire inference pipeline on frames from a video file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.Predictor.predict_chunk">
+<code class="sig-name descname">predict_chunk</code><span class="sig-paren">(</span><em class="sig-param">img_chunk</em>, <em class="sig-param">chunk_ind</em>, <em class="sig-param">chunk_size</em>, <em class="sig-param">frame_inds=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.predict_chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.predict_chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the inference components of pipeline for a chunk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.Predictor.track_chunk">
+<code class="sig-name descname">track_chunk</code><span class="sig-paren">(</span><em class="sig-param">predicted_instances_chunk</em>, <em class="sig-param">frame_inds</em>, <em class="sig-param">sample_inds</em>, <em class="sig-param">img_chunk</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.track_chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.track_chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs tracker for each frame in chunk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.inference.Predictor.track_next_sample">
+<code class="sig-name descname">track_next_sample</code><span class="sig-paren">(</span><em class="sig-param">untracked_instances: List[PredictedInstance], t: int = None, img=None</em><span class="sig-paren">)</span> &#x2192; List[PredictedInstance]<a class="reference internal" href="_modules/sleap/nn/inference.html#Predictor.track_next_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.Predictor.track_next_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs tracker for a single frame.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.inference.main">
+<code class="sig-prename descclassname">sleap.nn.inference.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/inference.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.inference.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>CLI for running inference.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sleap.nn.tracking">
+<span id="sleap-nn-tracking"></span><h2>sleap.nn.tracking<a class="headerlink" href="#module-sleap.nn.tracking" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sleap.nn.tracking.FlowCandidateMaker">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">FlowCandidateMaker</code><span class="sig-paren">(</span><em class="sig-param">min_points: int = 0, img_scale: float = 1.0, of_window_size: int = 21, of_max_levels: int = 3, save_shifted_instances: bool = False, shifted_instances: Dict[Tuple[int, int], List[sleap.nn.tracking.ShiftedInstance]] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#FlowCandidateMaker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.FlowCandidateMaker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for producing optical flow shift matching candidates.</p>
+<dl class="method">
+<dt id="sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances">
+<em class="property">static </em><code class="sig-name descname">flow_shift_instances</code><span class="sig-paren">(</span><em class="sig-param">ref_instances: List[InstanceType], ref_img: numpy.ndarray, new_img: numpy.ndarray, min_shifted_points: int = 0, scale: float = 1.0, window_size: int = 21, max_levels: int = 3</em><span class="sig-paren">)</span> &#x2192; List[sleap.nn.tracking.ShiftedInstance]<a class="reference internal" href="_modules/sleap/nn/tracking.html#FlowCandidateMaker.flow_shift_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates instances in a new frame by applying optical flow displacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref_instances</strong> – Reference instances in the previous frame.</p></li>
+<li><p><strong>ref_img</strong> – Previous frame image as a numpy array.</p></li>
+<li><p><strong>new_img</strong> – New frame image as a numpy array.</p></li>
+<li><p><strong>min_shifted_points</strong> – Minimum number of points that must be detected in the new
+frame in order to generate a new shifted instance.</p></li>
+<li><p><strong>scale</strong> – Factor to scale the images by when computing optical flow. Decrease this
+to increase performance at the cost of finer accuracy. Sometimes decreasing
+the image scale can improve performance with fast movements.</p></li>
+<li><p><strong>window_size</strong> – Optical flow window size to consider at each pyramid scale level.</p></li>
+<li><p><strong>max_levels</strong> – Number of pyramid scale levels to consider. This is different from
+the scale parameter, which determines the initial image scaling.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of ShiftedInstances with the optical flow displacements applied to the
+reference instance points. Points that are not found will be represented as
+NaNs in the points array for each shifted instance.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function relies on the Lucas-Kanade method for optical flow estimation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.tracking.FlowTracker">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">FlowTracker</code><span class="sig-paren">(</span><em class="sig-param">track_window: int = 5</em>, <em class="sig-param">cleaner: Optional[Callable] = None</em>, <em class="sig-param">min_new_track_points: int = 0</em>, <em class="sig-param">track_matching_queue: Deque[sleap.nn.tracking.MatchedInstance] = NOTHING</em>, <em class="sig-param">spawned_tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">save_tracked_instances: bool = False</em>, <em class="sig-param">tracked_instances: Dict[int</em>, <em class="sig-param">List[InstanceType]] = NOTHING</em>, <em class="sig-param">similarity_function: Callable = &lt;function instance_similarity&gt;</em>, <em class="sig-param">matching_function: Callable = &lt;function greedy_matching&gt;</em>, <em class="sig-param">candidate_maker: object = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#FlowTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.FlowTracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Tracker pre-configured to use optical flow shifted candidates.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.tracking.SimpleCandidateMaker">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">SimpleCandidateMaker</code><span class="sig-paren">(</span><em class="sig-param">min_points: int = 0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#SimpleCandidateMaker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.SimpleCandidateMaker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for producing list of matching candidates from prior frames.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.tracking.SimpleTracker">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">SimpleTracker</code><span class="sig-paren">(</span><em class="sig-param">track_window: int = 5</em>, <em class="sig-param">cleaner: Optional[Callable] = None</em>, <em class="sig-param">min_new_track_points: int = 0</em>, <em class="sig-param">track_matching_queue: Deque[sleap.nn.tracking.MatchedInstance] = NOTHING</em>, <em class="sig-param">spawned_tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">save_tracked_instances: bool = False</em>, <em class="sig-param">tracked_instances: Dict[int</em>, <em class="sig-param">List[InstanceType]] = NOTHING</em>, <em class="sig-param">similarity_function: Callable = &lt;function instance_iou&gt;</em>, <em class="sig-param">matching_function: Callable = &lt;function hungarian_matching&gt;</em>, <em class="sig-param">candidate_maker: object = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#SimpleTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.SimpleTracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Tracker pre-configured to use simple, non-image-based candidates.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.tracking.TrackCleaner">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">TrackCleaner</code><span class="sig-paren">(</span><em class="sig-param">instance_count: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#TrackCleaner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.TrackCleaner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for merging breaks in the predicted tracks.</p>
+<p>Method:
+1. You specify how many instances there should be in each frame.
+2. The lowest scoring instances beyond this limit are deleting from each frame.
+3. Going frame by frame, any time there’s exactly one missing track and exactly</p>
+<blockquote>
+<div><p>one new track, we merge the new track into the missing track.</p>
+</div></blockquote>
+<p>You should review the results to check for “swaps”. This can be done using the
+velocity threshold suggestion method.</p>
+<dl class="attribute">
+<dt id="sleap.nn.tracking.TrackCleaner.instance_count">
+<code class="sig-name descname">instance_count</code><a class="headerlink" href="#sleap.nn.tracking.TrackCleaner.instance_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of instances we want per frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.tracking.TrackCleaner.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">frames: List[LabeledFrame]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#TrackCleaner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.TrackCleaner.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to merge tracks for given frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frames</strong> – The list of <cite>LabeldFrame</cite> objects with predictions.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None; modifies frames in place.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sleap.nn.tracking.Tracker">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">Tracker</code><span class="sig-paren">(</span><em class="sig-param">track_window: int = 5</em>, <em class="sig-param">similarity_function: Callable = &lt;function instance_similarity&gt;</em>, <em class="sig-param">matching_function: Callable = &lt;function greedy_matching&gt;</em>, <em class="sig-param">candidate_maker: object = NOTHING</em>, <em class="sig-param">cleaner: Optional[Callable] = None</em>, <em class="sig-param">min_new_track_points: int = 0</em>, <em class="sig-param">track_matching_queue: Deque[sleap.nn.tracking.MatchedInstance] = NOTHING</em>, <em class="sig-param">spawned_tracks: List[sleap.instance.Track] = NOTHING</em>, <em class="sig-param">save_tracked_instances: bool = False</em>, <em class="sig-param">tracked_instances: Dict[int</em>, <em class="sig-param">List[InstanceType]] = NOTHING</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#Tracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instance pose tracker.</p>
+<p>Use by instantiated with the desired parameters and then calling the
+<cite>track</cite> method for each frame.</p>
+<dl class="attribute">
+<dt id="sleap.nn.tracking.Tracker.track_window">
+<code class="sig-name descname">track_window</code><a class="headerlink" href="#sleap.nn.tracking.Tracker.track_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>How many frames back to look for candidate instances to
+match instances in the current frame against.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.tracking.Tracker.similarity_function">
+<code class="sig-name descname">similarity_function</code><a class="headerlink" href="#sleap.nn.tracking.Tracker.similarity_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that returns a numeric pairwise
+instance similarity value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.tracking.Tracker.matching_function">
+<code class="sig-name descname">matching_function</code><a class="headerlink" href="#sleap.nn.tracking.Tracker.matching_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that takes a matrix of pairwise similarities
+and determines the matches to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.tracking.Tracker.candidate_maker">
+<code class="sig-name descname">candidate_maker</code><a class="headerlink" href="#sleap.nn.tracking.Tracker.candidate_maker" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class instance with a <cite>get_candidates</cite> method
+which returns a list of Instances-like objects  which we can match
+the predicted instances in a frame against.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.tracking.Tracker.cleaner">
+<code class="sig-name descname">cleaner</code><a class="headerlink" href="#sleap.nn.tracking.Tracker.cleaner" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class with a <cite>run</cite> method which attempts to clean tracks
+after the other tracking has run for all frames.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sleap.nn.tracking.Tracker.min_new_track_points">
+<code class="sig-name descname">min_new_track_points</code><a class="headerlink" href="#sleap.nn.tracking.Tracker.min_new_track_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>We won’t spawn a new track for an instance with
+fewer than this many points.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.tracking.Tracker.final_pass">
+<code class="sig-name descname">final_pass</code><span class="sig-paren">(</span><em class="sig-param">frames: List[sleap.instance.LabeledFrame]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sleap/nn/tracking.html#Tracker.final_pass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker.final_pass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called after tracking has run on all chunks.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.tracking.Tracker.track">
+<code class="sig-name descname">track</code><span class="sig-paren">(</span><em class="sig-param">untracked_instances: List[InstanceType], img: Optional[numpy.ndarray] = None, t: int = None</em><span class="sig-paren">)</span> &#x2192; List[InstanceType]<a class="reference internal" href="_modules/sleap/nn/tracking.html#Tracker.track"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker.track" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a single step of tracking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>untracked_instances</strong> – List of instances to assign to tracks.</p></li>
+<li><p><strong>img</strong> – Image data of the current frame for flow shifting.</p></li>
+<li><p><strong>t</strong> – Current timestep. If not provided, increments from the internal queue.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of the instances that were tracked.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sleap.nn.tracking.Tracker.unique_tracks_in_queue">
+<em class="property">property </em><code class="sig-name descname">unique_tracks_in_queue</code><a class="headerlink" href="#sleap.nn.tracking.Tracker.unique_tracks_in_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the unique tracks in the matching queue.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.tracking.centroid_distance">
+<code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">centroid_distance</code><span class="sig-paren">(</span><em class="sig-param">ref_instance: InstanceType</em>, <em class="sig-param">query_instance: InstanceType</em>, <em class="sig-param">cache: dict = {}</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/sleap/nn/tracking.html#centroid_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.centroid_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the negative distance between the centroids of two instances.</p>
+<p>Uses <cite>cache</cite> dictionary (created with function so it persists between calls)
+since without cache this method is significantly slower than others.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.tracking.greedy_matching">
+<code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">greedy_matching</code><span class="sig-paren">(</span><em class="sig-param">cost_matrix: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; List[Tuple[int, int]]<a class="reference internal" href="_modules/sleap/nn/tracking.html#greedy_matching"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.greedy_matching" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs greedy bipartite matching.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.tracking.hungarian_matching">
+<code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">hungarian_matching</code><span class="sig-paren">(</span><em class="sig-param">cost_matrix: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; List[Tuple[int, int]]<a class="reference internal" href="_modules/sleap/nn/tracking.html#hungarian_matching"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.hungarian_matching" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for Hungarian matching algorithm in scipy.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.tracking.instance_iou">
+<code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">instance_iou</code><span class="sig-paren">(</span><em class="sig-param">ref_instance: InstanceType</em>, <em class="sig-param">query_instance: InstanceType</em>, <em class="sig-param">cache: dict = {}</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/sleap/nn/tracking.html#instance_iou"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.instance_iou" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes IOU between bounding boxes of instances.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sleap.nn.tracking.instance_similarity">
+<code class="sig-prename descclassname">sleap.nn.tracking.</code><code class="sig-name descname">instance_similarity</code><span class="sig-paren">(</span><em class="sig-param">ref_instance: InstanceType</em>, <em class="sig-param">query_instance: InstanceType</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/sleap/nn/tracking.html#instance_similarity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.tracking.instance_similarity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes similarity between instances.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial-part2.html">Tutorial, Part 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howtos.html">How-Tos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Misc</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="api.html">Developer API</a><ul>
+      <li>Previous: <a href="training.html" title="previous chapter">Training</a></li>
+      <li>Next: <a href="gui.html" title="next chapter">GUI</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/inference.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

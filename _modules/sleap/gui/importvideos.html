@@ -1,0 +1,648 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>sleap.gui.importvideos &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.gui.importvideos</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Interface to handle the UI for importing videos.</span>
+
+<span class="sd">Usage:</span>
+
+<span class="sd">&gt;&gt;&gt; import_list = ImportVideos().go()</span>
+
+<span class="sd">This will show the user a file-selection dialog, and then a second dialog</span>
+<span class="sd">to select the import parameters for each file.</span>
+
+<span class="sd">It returns a list with data about each file selected by the user.</span>
+<span class="sd">In particular, we&#39;ll have the name of the file and all of the parameters</span>
+<span class="sd">relevant for that specific type of file. It also includes a reference</span>
+<span class="sd">to the relevant method of :class:`Video`.</span>
+
+<span class="sd">For each `item` in `import_list`, we can load the video by calling this</span>
+<span class="sd">method while passing the user-selected params as the named parameters:</span>
+
+<span class="sd">&gt;&gt;&gt; vid = item[&quot;video_class&quot;](**item[&quot;params&quot;])</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">Signal</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="n">QApplication</span><span class="p">,</span> <span class="n">QLayout</span><span class="p">,</span> <span class="n">QVBoxLayout</span><span class="p">,</span> <span class="n">QHBoxLayout</span><span class="p">,</span> <span class="n">QFrame</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="n">QFileDialog</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QLabel</span><span class="p">,</span> <span class="n">QScrollArea</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">QPushButton</span><span class="p">,</span>
+    <span class="n">QButtonGroup</span><span class="p">,</span>
+    <span class="n">QRadioButton</span><span class="p">,</span>
+    <span class="n">QCheckBox</span><span class="p">,</span>
+    <span class="n">QComboBox</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sleap.gui.video</span> <span class="kn">import</span> <span class="n">GraphicsView</span>
+<span class="kn">from</span> <span class="nn">sleap.io.video</span> <span class="kn">import</span> <span class="n">Video</span>
+<span class="kn">from</span> <span class="nn">sleap.gui.filedialog</span> <span class="kn">import</span> <span class="n">FileDialog</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">qimage2ndarray</span>
+
+
+<div class="viewcode-block" id="ImportVideos"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportVideos">[docs]</a><span class="k">class</span> <span class="nc">ImportVideos</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class to handle video importing UI.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ImportVideos.go"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportVideos.go">[docs]</a>    <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the import UI.</span>
+<span class="sd">        </span>
+<span class="sd">        1. Show file selection dialog.</span>
+<span class="sd">        2. Show import parameter dialog with widget for each file.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            None.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            List with dict of the parameters for each file to import.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">filenames</span><span class="p">,</span> <span class="nb">filter</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">openMultiple</span><span class="p">(</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;Select videos to import...&quot;</span><span class="p">,</span>  <span class="c1"># dialogue title</span>
+            <span class="s2">&quot;.&quot;</span><span class="p">,</span>  <span class="c1"># initial path</span>
+            <span class="s2">&quot;Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">importer</span> <span class="o">=</span> <span class="n">ImportParamDialog</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span>
+            <span class="n">importer</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">importer</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">))</span>
+            <span class="n">importer</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span></div></div>
+
+
+<div class="viewcode-block" id="ImportParamDialog"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamDialog">[docs]</a><span class="k">class</span> <span class="nc">ImportParamDialog</span><span class="p">(</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dialog for selecting parameters with preview when importing video.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        filenames (list): List of files we want to import.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImportParamDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">import_widgets</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Video Import Options&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">import_types</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;video_type&quot;</span><span class="p">:</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="s2">&quot;h5,hdf5&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;video_class&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">,</span>
+                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;function_menu&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="s2">&quot;_get_h5_dataset_options&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;input_format&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;radio&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="s2">&quot;channels_first,channels_last&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># we can&#39;t currently auto-detect</span>
+                    <span class="p">},</span>
+                <span class="p">],</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;video_type&quot;</span><span class="p">:</span> <span class="s2">&quot;mp4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="s2">&quot;mp4,avi&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;video_class&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_media</span><span class="p">,</span>
+                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;grayscale&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;check&quot;</span><span class="p">}],</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;video_type&quot;</span><span class="p">:</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="s2">&quot;npy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;video_class&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">,</span>
+                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;video_type&quot;</span><span class="p">:</span> <span class="s2">&quot;imgstore&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;video_class&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="o">.</span><span class="n">from_filename</span><span class="p">,</span>
+                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="p">},</span>
+        <span class="p">]</span>
+
+        <span class="n">outer_layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="n">scroll_widget</span> <span class="o">=</span> <span class="n">QScrollArea</span><span class="p">()</span>
+        <span class="c1"># scroll_widget.setWidgetResizable(False)</span>
+        <span class="n">scroll_widget</span><span class="o">.</span><span class="n">setVerticalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOn</span><span class="p">)</span>
+        <span class="n">scroll_widget</span><span class="o">.</span><span class="n">setHorizontalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOff</span><span class="p">)</span>
+
+        <span class="n">scroll_items_widget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">scroll_layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+                <span class="n">this_type</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">import_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_types</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">import_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;match&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">file_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span>
+                            <span class="nb">tuple</span><span class="p">(</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;match&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span>
+                        <span class="p">):</span>
+                            <span class="n">this_type</span> <span class="o">=</span> <span class="n">import_type</span>
+                            <span class="k">break</span>
+                <span class="k">if</span> <span class="n">this_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">import_item_widget</span> <span class="o">=</span> <span class="n">ImportItemWidget</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">this_type</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">import_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">import_item_widget</span><span class="p">)</span>
+                    <span class="n">scroll_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">import_item_widget</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;No match found for file type.&quot;</span><span class="p">)</span>
+        <span class="n">scroll_items_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">scroll_layout</span><span class="p">)</span>
+        <span class="n">scroll_widget</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="n">scroll_items_widget</span><span class="p">)</span>
+        <span class="n">outer_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">scroll_widget</span><span class="p">)</span>
+
+        <span class="n">button_layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">cancel_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Cancel&quot;</span><span class="p">)</span>
+        <span class="n">import_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Import&quot;</span><span class="p">)</span>
+        <span class="n">import_button</span><span class="o">.</span><span class="n">setDefault</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">button_layout</span><span class="o">.</span><span class="n">addStretch</span><span class="p">()</span>
+        <span class="n">button_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">cancel_button</span><span class="p">)</span>
+        <span class="n">button_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">import_button</span><span class="p">)</span>
+
+        <span class="n">outer_layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">button_layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">outer_layout</span><span class="p">)</span>
+
+        <span class="n">import_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">)</span>
+        <span class="n">cancel_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reject</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImportParamDialog.get_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamDialog.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">import_result</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method to get results from import.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            import_result (optional): If specified, we&#39;ll insert data into this.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of dicts with data for each (enabled) imported file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># we don&#39;t want to set default to [] because that persists</span>
+        <span class="k">if</span> <span class="n">import_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">import_result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">import_item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_widgets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">import_item</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">():</span>
+                <span class="n">import_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">import_item</span><span class="o">.</span><span class="n">get_data</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">import_result</span></div>
+
+<div class="viewcode-block" id="ImportParamDialog.boundingRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamDialog.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QRectF</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QRectF</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ImportParamDialog.paint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamDialog.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="ImportItemWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportItemWidget">[docs]</a><span class="k">class</span> <span class="nc">ImportItemWidget</span><span class="p">(</span><span class="n">QFrame</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Widget for selecting parameters with preview when importing video.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path (str): Full path to selected video file.</span>
+<span class="sd">        import_type (dict): Data about user-selectable import parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">import_type</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImportItemWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span> <span class="o">=</span> <span class="n">import_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">import_item_layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled_checkbox_widget</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled_checkbox_widget</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">import_item_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enabled_checkbox_widget</span><span class="p">)</span>
+
+        <span class="c1"># import_item_layout.addWidget(QLabel(self.file_path))</span>
+        <span class="n">inner_layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_widget</span> <span class="o">=</span> <span class="n">ImportParamWidget</span><span class="p">(</span>
+            <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span> <span class="n">import_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">import_type</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preview_widget</span> <span class="o">=</span> <span class="n">VideoPreviewWidget</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preview_widget</span><span class="o">.</span><span class="n">setFixedSize</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled_checkbox_widget</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">state</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_widget</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Checked</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">inner_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options_widget</span><span class="p">)</span>
+        <span class="n">inner_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preview_widget</span><span class="p">)</span>
+        <span class="n">import_item_layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">inner_layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">import_item_layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFrameStyle</span><span class="p">(</span><span class="n">QFrame</span><span class="o">.</span><span class="n">Panel</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_widget</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_video</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_video</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImportItemWidget.is_enabled"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportItemWidget.is_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">is_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Am I enabled?</span>
+
+<span class="sd">        Our UI provides a way to enable/disable this item (file).</span>
+<span class="sd">        We only want to import enabled items.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean: Am I enabled?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_checkbox_widget</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ImportItemWidget.get_data"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportItemWidget.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get all data (fixed and user-selected) for imported video.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict with data for this video.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">video_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_widget</span><span class="o">.</span><span class="n">get_values</span><span class="p">(),</span>
+            <span class="s2">&quot;video_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;video_type&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;video_class&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">video_data</span></div>
+
+<div class="viewcode-block" id="ImportItemWidget.update_video"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportItemWidget.update_video">[docs]</a>    <span class="k">def</span> <span class="nf">update_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update preview video using current param values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            initial: if True, then get video settings that are used by</span>
+<span class="sd">                the `Video` object when they aren&#39;t specified as params</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">video_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_widget</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">only_required</span><span class="o">=</span><span class="n">initial</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">](</span><span class="o">**</span><span class="n">video_params</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">preview_widget</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to load video with these parameters. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># if we got an error showing video with those settings, clear the video preview</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">preview_widget</span><span class="o">.</span><span class="n">clear_video</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">initial</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">options_widget</span><span class="o">.</span><span class="n">set_values_from_video</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImportItemWidget.boundingRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportItemWidget.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QRectF</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QRectF</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ImportItemWidget.paint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportItemWidget.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="ImportParamWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamWidget">[docs]</a><span class="k">class</span> <span class="nc">ImportParamWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Widget for allowing user to select video parameters.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path: file path/name</span>
+<span class="sd">        import_type: data about the parameters for this type of video</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Object is a widget with the UI for params specific to this video type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">import_type</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImportParamWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span> <span class="o">=</span> <span class="n">import_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget_elements</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">option_layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_layout</span><span class="p">()</span>
+        <span class="c1"># self.changed.connect( lambda: print(self.get_values()) )</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">option_layout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImportParamWidget.make_layout"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamWidget.make_layout">[docs]</a>    <span class="k">def</span> <span class="nf">make_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QLayout</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Builds the layout of widgets for user-selected import parameters.&quot;&quot;&quot;</span>
+
+        <span class="n">param_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span>
+        <span class="n">widget_layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">widget_elements</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">param_item</span> <span class="ow">in</span> <span class="n">param_list</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">param_item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">param_item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="n">param_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;options&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;radio&quot;</span><span class="p">:</span>
+                <span class="n">radio_group</span> <span class="o">=</span> <span class="n">QButtonGroup</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+                <span class="n">option_list</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="n">selected_option</span> <span class="o">=</span> <span class="n">option_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">option_list</span><span class="p">:</span>
+                    <span class="n">btn_widget</span> <span class="o">=</span> <span class="n">QRadioButton</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="n">selected_option</span><span class="p">:</span>
+                        <span class="n">btn_widget</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">widget_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">btn_widget</span><span class="p">)</span>
+                    <span class="n">radio_group</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="n">btn_widget</span><span class="p">)</span>
+                <span class="n">radio_group</span><span class="o">.</span><span class="n">buttonToggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+                <span class="n">widget_elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">radio_group</span>
+            <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;check&quot;</span><span class="p">:</span>
+                <span class="n">check_widget</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">check_widget</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+                <span class="n">widget_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">check_widget</span><span class="p">)</span>
+                <span class="n">widget_elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_widget</span>
+            <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;function_menu&quot;</span><span class="p">:</span>
+                <span class="n">list_widget</span> <span class="o">=</span> <span class="n">QComboBox</span><span class="p">()</span>
+                <span class="c1"># options has name of method which returns list of options</span>
+                <span class="n">option_list</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">)()</span>
+                <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">option_list</span><span class="p">:</span>
+                    <span class="n">list_widget</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+                <span class="n">list_widget</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="o">.</span><span class="n">emit</span><span class="p">())</span>
+                <span class="n">widget_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">list_widget</span><span class="p">)</span>
+                <span class="n">widget_elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">list_widget</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">widget_elements</span> <span class="o">=</span> <span class="n">widget_elements</span>
+        <span class="k">return</span> <span class="n">widget_layout</span></div>
+
+<div class="viewcode-block" id="ImportParamWidget.get_values"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamWidget.get_values">[docs]</a>    <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">only_required</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method to get current user-selected values for import parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            only_required: Only return the parameters that are required</span>
+<span class="sd">                for instantiating `Video` object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict of param keys/values.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            It&#39;s easiest if the return dict matches the arguments we need</span>
+<span class="sd">            for the Video object, so we&#39;ll add the file name to the dict</span>
+<span class="sd">            even though it&#39;s not a user-selectable param.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">param_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span>
+        <span class="n">param_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">param_values</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span>
+        <span class="k">for</span> <span class="n">param_item</span> <span class="ow">in</span> <span class="n">param_list</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">param_item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">param_item</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="n">is_required</span> <span class="o">=</span> <span class="n">param_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">only_required</span> <span class="ow">or</span> <span class="n">is_required</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;radio&quot;</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget_elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">checkedButton</span><span class="p">()</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;check&quot;</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget_elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;function_menu&quot;</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget_elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">param_values</span></div>
+
+<div class="viewcode-block" id="ImportParamWidget.set_values_from_video"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamWidget.set_values_from_video">[docs]</a>    <span class="k">def</span> <span class="nf">set_values_from_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the form fields using attributes on video.&quot;&quot;&quot;</span>
+        <span class="n">param_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_type</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">param_list</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+                <span class="n">widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget_elements</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;isChecked&quot;</span><span class="p">):</span>
+                    <span class="n">widget</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">):</span>
+                    <span class="n">widget</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;currentText&quot;</span><span class="p">):</span>
+                    <span class="n">widget</span><span class="o">.</span><span class="n">setCurrentText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">):</span>
+                    <span class="n">widget</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_h5_dataset_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method to get a list of all datasets in hdf5 file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of datasets in the hdf5 file for our import item.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This is used to populate the &quot;function_menu&quot;-type param.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_h5_datasets</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">options</span>
+
+    <span class="k">def</span> <span class="nf">_find_h5_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">data_object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Recursively find datasets in hdf5 file.&quot;&quot;&quot;</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data_object</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_object</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">h5py</span><span class="o">.</span><span class="n">_hl</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_object</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                    <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_object</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">h5py</span><span class="o">.</span><span class="n">_hl</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+                <span class="n">options</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_find_h5_datasets</span><span class="p">(</span><span class="n">data_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">key</span><span class="p">,</span> <span class="n">data_object</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">options</span>
+
+<div class="viewcode-block" id="ImportParamWidget.boundingRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamWidget.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QRectF</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QRectF</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ImportParamWidget.paint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.ImportParamWidget.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="VideoPreviewWidget"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.VideoPreviewWidget">[docs]</a><span class="k">class</span> <span class="nc">VideoPreviewWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Widget to show video preview. Based on :class:`Video` class.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        video: the video to show</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This widget is used by ImportItemWidget.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VideoPreviewWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># widgets to include</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">GraphicsView</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">()</span>
+        <span class="c1"># layout for widgets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">video</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VideoPreviewWidget.clear_video"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.VideoPreviewWidget.clear_video">[docs]</a>    <span class="k">def</span> <span class="nf">clear_video</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the video preview.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoPreviewWidget.load_video"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.VideoPreviewWidget.load_video">[docs]</a>    <span class="k">def</span> <span class="nf">load_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">:</span> <span class="n">Video</span><span class="p">,</span> <span class="n">initial_frame</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load the video preview and display label text.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="n">video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_idx</span> <span class="o">=</span> <span class="n">initial_frame</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;(</span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">), </span><span class="si">%d</span><span class="s2"> f, </span><span class="si">%d</span><span class="s2"> c&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">frames</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">channels</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">initial_frame</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoPreviewWidget.plot"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.VideoPreviewWidget.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show the video preview.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Get image data</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="c1"># Clear existing objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="c1"># Convert ndarray to QImage</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">qimage2ndarray</span><span class="o">.</span><span class="n">array2qimage</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="c1"># Display image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">setImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VideoPreviewWidget.boundingRect"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.VideoPreviewWidget.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QRectF</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QRectF</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VideoPreviewWidget.paint"><a class="viewcode-back" href="../../../gui.html#sleap.gui.importvideos.VideoPreviewWidget.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method required by Qt.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="n">import_list</span> <span class="o">=</span> <span class="n">ImportVideos</span><span class="p">()</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">import_item</span> <span class="ow">in</span> <span class="n">import_list</span><span class="p">:</span>
+        <span class="n">vid</span> <span class="o">=</span> <span class="n">import_item</span><span class="p">[</span><span class="s2">&quot;video_class&quot;</span><span class="p">](</span><span class="o">**</span><span class="n">import_item</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;Imported video data: (</span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">), </span><span class="si">%d</span><span class="s2"> f, </span><span class="si">%d</span><span class="s2"> c&quot;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">vid</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">frames</span><span class="p">,</span> <span class="n">vid</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
+        <span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial-part2.html">Tutorial, Part 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../howtos.html">How-Tos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

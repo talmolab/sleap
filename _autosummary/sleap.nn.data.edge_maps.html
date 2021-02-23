@@ -1,0 +1,456 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.data.edge_maps &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sleap.nn.data.general" href="sleap.nn.data.general.html" />
+    <link rel="prev" title="sleap.nn.data.dataset_ops" href="sleap.nn.data.dataset_ops.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sleap.nn.data.edge_maps">
+<span id="sleap-nn-data-edge-maps"></span><h1>sleap.nn.data.edge_maps<a class="headerlink" href="#module-sleap.nn.data.edge_maps" title="Permalink to this headline">¶</a></h1>
+<p>Transformers for generating edge confidence maps and part affinity fields.</p>
+<dl class="py class">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">sleap.nn.data.edge_maps.</code><code class="sig-name descname">PartAffinityFieldsGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sigma</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">output_stride</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">skeletons</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flatten_channels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sleap/nn/data/edge_maps.html#PartAffinityFieldsGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transformer to generate part affinity fields.</p>
+<dl class="py attribute">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.sigma">
+<code class="sig-name descname">sigma</code><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard deviation of the 2D Gaussian distribution sampled to weight the
+part affinity fields by their distance to the edges. This defines the spread
+in units of the input image’s grid, i.e., it does not take scaling in
+previous steps into account.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_stride">
+<code class="sig-name descname">output_stride</code><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Relative stride of the generated confidence maps. This is
+effectively the reciprocal of the output scale, i.e., increase this to
+generate confidence maps that are smaller than the input images.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.skeletons">
+<code class="sig-name descname">skeletons</code><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.skeletons" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a href="#id1"><span class="problematic" id="id2">`</span></a>sleap.Skeleton`s to use for looking up the index of the
+edges.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.flatten_channels">
+<code class="sig-name descname">flatten_channels</code><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.flatten_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>If False, the generated tensors are of shape
+[height, width, n_edges, 2]. If True, generated tensors are of shape
+[height, width, n_edges * 2] by flattening the last 2 axes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.input_keys">
+<em class="property">property </em><code class="sig-name descname">input_keys</code><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.input_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the keys that incoming elements are expected to have.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_keys">
+<em class="property">property </em><code class="sig-name descname">output_keys</code><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the keys that outgoing elements will have.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset">
+<code class="sig-name descname">transform_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_ds</span><span class="p">:</span> <span class="n">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.data.ops.dataset_ops.DatasetV2<a class="reference internal" href="../_modules/sleap/nn/data/edge_maps.html#PartAffinityFieldsGenerator.transform_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a dataset that contains the generated confidence maps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys “image”,
+“instances” and “skeleton_inds”.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A <cite>tf.data.Dataset</cite> with the same keys as the input, as well as
+“part_affinity_fields”.</p>
+<p>The “part_affinity_fields” key will be a tensor of shape
+(grid_height, grid_width, n_edges, 2) containing the combined part affinity
+fields of all instances in the frame.</p>
+<p>If the <cite>flatten_channels</cite> attribute is set to True, the last 2 axes of the
+“part_affinity_fields” are flattened to produce a tensor of shape
+(grid_height, grid_width, n_edges * 2). This is a convenient form when
+training models as a rank-4 (batched) tensor will generally be expected.</p>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The output stride is relative to the current scale of the image. To map
+points on the part affinity fields to the raw image, first multiply them by
+the output stride, and then scale the x- and y-coordinates by the “scale”
+key.</p>
+<p>Importantly, the sigma will be proportional to the current image grid, not
+the original grid prior to scaling operations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.edge_maps.distance_to_edge">
+<code class="sig-prename descclassname">sleap.nn.data.edge_maps.</code><code class="sig-name descname">distance_to_edge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_source</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_destination</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/edge_maps.html#distance_to_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.distance_to_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute pairwise distance between points and undirected edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – Tensor of dtype tf.float32 of shape (d_0, …, d_n, 2) where the last
+axis corresponds to x- and y-coordinates. Distances will be broadcast across
+all point dimensions.</p></li>
+<li><p><strong>edge_source</strong> – Tensor of dtype tf.float32 of shape (n_edges, 2) where the last
+axis corresponds to x- and y-coordinates of the source points of each edge.</p></li>
+<li><p><strong>edge_destination</strong> – Tensor of dtype tf.float32 of shape (n_edges, 2) where the
+last axis corresponds to x- and y-coordinates of the source points of each
+edge.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tensor of dtype tf.float32 of shape (d_0, …, d_n, n_edges) where the first
+axes correspond to the initial dimensions of <cite>points</cite>, and the last indicates
+the distance of each point to each edge.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.edge_maps.get_edge_points">
+<code class="sig-prename descclassname">sleap.nn.data.edge_maps.</code><code class="sig-name descname">get_edge_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instances</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_inds</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>tensorflow.python.framework.ops.Tensor<span class="p">, </span>tensorflow.python.framework.ops.Tensor<span class="p">]</span><a class="reference internal" href="../_modules/sleap/nn/data/edge_maps.html#get_edge_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.get_edge_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the points in each instance that form a directed graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instances</strong> – A tensor of shape (n_instances, n_nodes, 2) and dtype tf.float32
+containing instance points where the last axis corresponds to (x, y) pixel
+coordinates on the image. This must be rank-3 even if a single instance is
+present.</p></li>
+<li><p><strong>edge_inds</strong> – A tensor of shape (n_edges, 2) and dtype tf.int32 containing the node
+indices that define a directed graph, where the last axis corresponds to the
+source and destination node indices.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of (edge_sources, edge_destinations) containing the edge and destination
+points respectively. Both will be tensors of shape (n_instances, n_edges, 2),
+where the last axis corresponds to (x, y) pixel coordinates on the image.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.edge_maps.make_edge_maps">
+<code class="sig-prename descclassname">sleap.nn.data.edge_maps.</code><code class="sig-name descname">make_edge_maps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">yv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_source</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_destination</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/edge_maps.html#make_edge_maps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_edge_maps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate confidence maps for a set of undirected edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xv</strong> – Sampling grid vector for x-coordinates of shape (grid_width,) and dtype
+tf.float32. This can be generated by
+<cite>sleap.nn.data.utils.make_grid_vectors</cite>.</p></li>
+<li><p><strong>yv</strong> – Sampling grid vector for y-coordinates of shape (grid_height,) and dtype
+tf.float32. This can be generated by
+<cite>sleap.nn.data.utils.make_grid_vectors</cite>.</p></li>
+<li><p><strong>edge_source</strong> – Tensor of dtype tf.float32 of shape (n_edges, 2) where the last
+axis corresponds to x- and y-coordinates of the source points of each edge.</p></li>
+<li><p><strong>edge_destination</strong> – Tensor of dtype tf.float32 of shape (n_edges, 2) where the
+last axis corresponds to x- and y-coordinates of the destination points of
+each edge.</p></li>
+<li><p><strong>sigma</strong> – Standard deviation of the 2D Gaussian distribution sampled to generate
+confidence maps.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A set of confidence maps corresponding to the probability of each point on a
+sampling grid being on each edge. These will be in a tensor of shape
+(grid_height, grid_width, n_edges) of dtype tf.float32.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.edge_maps.make_multi_pafs">
+<code class="sig-prename descclassname">sleap.nn.data.edge_maps.</code><code class="sig-name descname">make_multi_pafs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">yv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_sources</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_destinations</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/edge_maps.html#make_multi_pafs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_multi_pafs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make multiple instance PAFs with max reduction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xv</strong> – Sampling grid vector for x-coordinates of shape (grid_width,) and dtype
+tf.float32. This can be generated by
+<cite>sleap.nn.data.utils.make_grid_vectors</cite>.</p></li>
+<li><p><strong>yv</strong> – Sampling grid vector for y-coordinates of shape (grid_height,) and dtype
+tf.float32. This can be generated by
+<cite>sleap.nn.data.utils.make_grid_vectors</cite>.</p></li>
+<li><p><strong>edge_sources</strong> – Tensor of dtype tf.float32 of shape (n_instances, n_edges, 2)
+where the last axis corresponds to x- and y-coordinates of the source points
+of each edge.</p></li>
+<li><p><strong>edge_destinations</strong> – Tensor of dtype tf.float32 of shape (n_instances, n_edges, 2)
+where the last axis corresponds to x- and y-coordinates of the destination
+points of each edge.</p></li>
+<li><p><strong>sigma</strong> – Standard deviation of the 2D Gaussian distribution sampled to generate
+the edge maps for masking the PAFs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A set of part affinity fields generated for each instance. These will be in a
+tensor of shape (grid_height, grid_width, n_edges, 2). If multiple instance
+PAFs are defined on the same pixel, they will be summed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="sleap.nn.data.edge_maps.make_pafs">
+<code class="sig-prename descclassname">sleap.nn.data.edge_maps.</code><code class="sig-name descname">make_pafs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">yv</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_source</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">edge_destination</span><span class="p">:</span> <span class="n">tensorflow.python.framework.ops.Tensor</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.python.framework.ops.Tensor<a class="reference internal" href="../_modules/sleap/nn/data/edge_maps.html#make_pafs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_pafs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate part affinity fields for a set of directed edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xv</strong> – Sampling grid vector for x-coordinates of shape (grid_width,) and dtype
+tf.float32. This can be generated by
+<cite>sleap.nn.data.utils.make_grid_vectors</cite>.</p></li>
+<li><p><strong>yv</strong> – Sampling grid vector for y-coordinates of shape (grid_height,) and dtype
+tf.float32. This can be generated by
+<cite>sleap.nn.data.utils.make_grid_vectors</cite>.</p></li>
+<li><p><strong>edge_source</strong> – Tensor of dtype tf.float32 of shape (n_edges, 2) where the last
+axis corresponds to x- and y-coordinates of the source points of each edge.</p></li>
+<li><p><strong>edge_destination</strong> – Tensor of dtype tf.float32 of shape (n_edges, 2) where the
+last axis corresponds to x- and y-coordinates of the destination points of
+each edge.</p></li>
+<li><p><strong>sigma</strong> – Standard deviation of the 2D Gaussian distribution sampled to generate
+the edge maps for masking the PAFs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A set of part affinity fields corresponding to the unit vector pointing along
+the direction of each edge weighted by the probability of each point on a
+sampling grid being on each edge. These will be in a tensor of shape
+(grid_height, grid_width, n_edges, 2) of dtype tf.float32. The last axis
+corresponds to the x- and y-coordinates of the unit vectors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sleap.diagnostic.html">sleap.diagnostic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.prefs.html">sleap.prefs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.rangelist.html">sleap.rangelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.version.html">sleap.version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.app.html">sleap.gui.app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.color.html">sleap.gui.color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.commands.html">sleap.gui.commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dataviews.html">sleap.gui.dataviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.release_checker.html">sleap.gui.release_checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.shortcuts.html">sleap.gui.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.state.html">sleap.gui.state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.suggestions.html">sleap.gui.suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.delete.html">sleap.gui.dialogs.delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.export_clip.html">sleap.gui.dialogs.export_clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.filedialog.html">sleap.gui.dialogs.filedialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.formbuilder.html">sleap.gui.dialogs.formbuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.importvideos.html">sleap.gui.dialogs.importvideos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.merge.html">sleap.gui.dialogs.merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.message.html">sleap.gui.dialogs.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.metrics.html">sleap.gui.dialogs.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.missingfiles.html">sleap.gui.dialogs.missingfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.dialogs.shortcuts.html">sleap.gui.dialogs.shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.configs.html">sleap.gui.learning.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.datagen.html">sleap.gui.learning.datagen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.dialog.html">sleap.gui.learning.dialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.receptivefield.html">sleap.gui.learning.receptivefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.runners.html">sleap.gui.learning.runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.learning.scopedkeydict.html">sleap.gui.learning.scopedkeydict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.anchors.html">sleap.gui.overlays.anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.base.html">sleap.gui.overlays.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.confmaps.html">sleap.gui.overlays.confmaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.instance.html">sleap.gui.overlays.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.pafs.html">sleap.gui.overlays.pafs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.overlays.tracks.html">sleap.gui.overlays.tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.imagedir.html">sleap.gui.widgets.imagedir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.mpl.html">sleap.gui.widgets.mpl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.multicheck.html">sleap.gui.widgets.multicheck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.slider.html">sleap.gui.widgets.slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.gui.widgets.video.html">sleap.gui.widgets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">Developer API</a><ul>
+      <li>Previous: <a href="sleap.nn.data.dataset_ops.html" title="previous chapter">sleap.nn.data.dataset_ops</a></li>
+      <li>Next: <a href="sleap.nn.data.general.html" title="next chapter">sleap.nn.data.general</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_autosummary/sleap.nn.data.edge_maps.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

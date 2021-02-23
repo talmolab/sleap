@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.callbacks &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.callbacks</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Training-related tf.keras callbacks.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">jsonpickle</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">zmq</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TrainingControllerZMQ"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.TrainingControllerZMQ">[docs]</a><span class="k">class</span> <span class="nc">TrainingControllerZMQ</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="s2">&quot;tcp://127.0.0.1:9000&quot;</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">poll_timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic</span> <span class="o">=</span> <span class="n">topic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">poll_timeout</span>
+
+        <span class="c1"># Initialize ZMQ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUB</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Training controller subscribed to: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2"> (topic: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># TODO: catch/throw exception about failure to connect</span>
+
+        <span class="c1"># Callback initialization</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Closing the training controller socket/context.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TrainingControllerZMQ.on_batch_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.TrainingControllerZMQ.on_batch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Called at the end of a training batch. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">recv_string</span><span class="p">())</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received control message: </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Stop training</span>
+            <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;stop&quot;</span><span class="p">:</span>
+                <span class="c1"># self.model is set when training begins in Model.fit_generator</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">stop_training</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Adjust learning rate</span>
+            <span class="k">elif</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;set_lr&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_lr</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="s2">&quot;lr&quot;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TrainingControllerZMQ.set_lr"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.TrainingControllerZMQ.set_lr">[docs]</a>    <span class="k">def</span> <span class="nf">set_lr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adjust the model learning rate.</span>
+
+<span class="sd">        This is the based off of the implementation used in the native learning rate</span>
+<span class="sd">        scheduling callbacks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)):</span>
+            <span class="n">lr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lr</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ProgressReporterZMQ"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ProgressReporterZMQ">[docs]</a><span class="k">class</span> <span class="nc">ProgressReporterZMQ</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="s2">&quot;tcp://127.0.0.1:9001&quot;</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">&quot;not_set&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">what</span> <span class="o">=</span> <span class="n">what</span>
+        <span class="c1"># Initialize ZMQ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">PUB</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Progress reporter publishing on: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2"> for: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO: catch/throw exception about failure to connect</span>
+
+        <span class="c1"># Callback initialization</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Closing the reporter controller/context.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">LINGER</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># url = self.socket.LAST_ENDPOINT</span>
+        <span class="c1"># self.socket.unbind(url)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">term</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_train_begin"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ProgressReporterZMQ.on_train_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the beginning of training.</span>
+<span class="sd">        Subclasses should override for any actions to run.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            logs: dict, currently no data is passed to this argument for this method</span>
+<span class="sd">                but that may change in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span>
+            <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">&quot;train_begin&quot;</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">))</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_batch_begin"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ProgressReporterZMQ.on_batch_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A backwards compatibility alias for `on_train_batch_begin`.&quot;&quot;&quot;</span>
+        <span class="c1"># self.logger.info(&quot;batch_begin&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span>
+            <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">&quot;batch_begin&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_batch_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ProgressReporterZMQ.on_batch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A backwards compatibility alias for `on_train_batch_end`.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span>
+            <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">&quot;batch_end&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_epoch_begin"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ProgressReporterZMQ.on_epoch_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the start of an epoch.</span>
+<span class="sd">        Subclasses should override for any actions to run. This function should only</span>
+<span class="sd">        be called during train mode.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            epoch: integer, index of epoch.</span>
+<span class="sd">            logs: dict, currently no data is passed to this argument for this method</span>
+<span class="sd">                but that may change in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span>
+            <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">&quot;epoch_begin&quot;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_epoch_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ProgressReporterZMQ.on_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the end of an epoch.</span>
+<span class="sd">        Subclasses should override for any actions to run. This function should only</span>
+<span class="sd">        be called during train mode.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            epoch: integer, index of epoch.</span>
+<span class="sd">            logs: dict, metric results for this training epoch, and for the</span>
+<span class="sd">                validation epoch if validation is performed. Validation result keys</span>
+<span class="sd">                are prefixed with `val_`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span>
+            <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">&quot;epoch_end&quot;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProgressReporterZMQ.on_train_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ProgressReporterZMQ.on_train_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the end of training.</span>
+<span class="sd">        Subclasses should override for any actions to run.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            logs: dict, currently no data is passed to this argument for this method</span>
+<span class="sd">                but that may change in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send_string</span><span class="p">(</span>
+            <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">&quot;train_end&quot;</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">))</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ModelCheckpointOnEvent"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ModelCheckpointOnEvent">[docs]</a><span class="k">class</span> <span class="nc">ModelCheckpointOnEvent</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback for model checkpointing on a fixed event.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        filepath: Path to save model to.</span>
+<span class="sd">        event: Event to trigger model saving (&quot;train_start&quot; or &quot;train_end&quot;).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;train_end&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="n">event</span>
+
+        <span class="c1"># Callback initialization</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ModelCheckpointOnEvent.on_train_begin"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ModelCheckpointOnEvent.on_train_begin">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the start of training.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">event</span> <span class="o">==</span> <span class="s2">&quot;train_begin&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ModelCheckpointOnEvent.on_epoch_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ModelCheckpointOnEvent.on_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the end of each epoch.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">event</span> <span class="o">==</span> <span class="s2">&quot;epoch_end&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;%&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">%</span> <span class="n">epoch</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ModelCheckpointOnEvent.on_train_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.ModelCheckpointOnEvent.on_train_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the end of training.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">event</span> <span class="o">==</span> <span class="s2">&quot;train_end&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TensorBoardMatplotlibWriter"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.TensorBoardMatplotlibWriter">[docs]</a><span class="k">class</span> <span class="nc">TensorBoardMatplotlibWriter</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback for writing image summaries with visualizations during training.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        logdir: Path to log directory.</span>
+<span class="sd">        plot_fn: Function with no arguments that returns a matplotlib figure handle.</span>
+<span class="sd">        tag: Text to append to the summary label in TensorBoard.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">log_dir</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+        <span class="n">plot_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">Figure</span><span class="p">],</span>
+        <span class="n">tag</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;viz&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_dir</span> <span class="o">=</span> <span class="n">log_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_fn</span> <span class="o">=</span> <span class="n">plot_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tag</span> <span class="o">=</span> <span class="n">tag</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">create_file_writer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_dir</span><span class="p">)</span>
+
+        <span class="c1"># Callback initialization</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TensorBoardMatplotlibWriter.on_epoch_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.TensorBoardMatplotlibWriter.on_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at the end of each epoch.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Call plotting function.</span>
+        <span class="n">figure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_fn</span><span class="p">()</span>
+
+        <span class="c1"># Render to in-memory PNG.</span>
+        <span class="n">image_buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+        <span class="n">figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="n">pad_inches</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">figure</span><span class="p">)</span>
+
+        <span class="c1"># Convert PNG to tensor.</span>
+        <span class="n">image_buffer</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">image_tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_png</span><span class="p">(</span><span class="n">image_buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span> <span class="n">channels</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Log to TensorBoard.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_writer</span><span class="o">.</span><span class="n">as_default</span><span class="p">():</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">image_tensor</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">epoch</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MatplotlibSaver"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.MatplotlibSaver">[docs]</a><span class="k">class</span> <span class="nc">MatplotlibSaver</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback for saving images rendered with matplotlib during training.</span>
+
+<span class="sd">    This is useful for saving visualizations of the training to disk. It will be called</span>
+<span class="sd">    at the end of each epoch.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        plot_fn: Function with no arguments that returns a matplotlib figure handle.</span>
+<span class="sd">            See `sleap.nn.training.Trainer.visualize_predictions` for example.</span>
+<span class="sd">        save_folder: Path to a directory to save images to. This folder will be created</span>
+<span class="sd">            if it does not exist.</span>
+<span class="sd">        prefix: String that will be prepended to the filenames. This is useful for</span>
+<span class="sd">            indicating which dataset the visualization was sampled from, for example.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        This will save images with the naming pattern:</span>
+<span class="sd">            &quot;{save_folder}/{prefix}.{epoch}.png&quot;</span>
+<span class="sd">        or:</span>
+<span class="sd">            &quot;{save_folder}/{epoch}.png&quot;</span>
+<span class="sd">        if a prefix is not specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">save_folder</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
+        <span class="n">plot_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">Figure</span><span class="p">],</span>
+        <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize callback.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_folder</span> <span class="o">=</span> <span class="n">save_folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_fn</span> <span class="o">=</span> <span class="n">plot_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MatplotlibSaver.on_epoch_end"><a class="viewcode-back" href="../../../_autosummary/sleap.nn.callbacks.html#sleap.nn.callbacks.MatplotlibSaver.on_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save figure at the end of each epoch.&quot;&quot;&quot;</span>
+        <span class="c1"># Call plotting function.</span>
+        <span class="n">figure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_fn</span><span class="p">()</span>
+
+        <span class="c1"># Check if output folder exists.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_folder</span><span class="p">)</span>
+
+        <span class="c1"># Build filename.</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+        <span class="n">figure_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">epoch</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Save rendered figure.</span>
+        <span class="n">figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">figure_path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="n">pad_inches</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">figure</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

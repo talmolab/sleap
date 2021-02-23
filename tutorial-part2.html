@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tutorial, Part 2 &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="How-Tos" href="howtos.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tutorial-part-2">
+<span id="part2"></span><h1>Tutorial, Part 2<a class="headerlink" href="#tutorial-part-2" title="Permalink to this headline">¶</a></h1>
+<p>At this point you should have created a project and labeled enough frames to train an initial model and get some predictions. If haven’t yet completed these steps, go back to the first part of the <a class="reference internal" href="tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>.</p>
+<div class="section" id="prediction-assisted-labeling">
+<h2>Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permalink to this headline">¶</a></h2>
+<p><em>Prediction-assisted labeling</em> has two main goals. First, it speeds up the labeling
+process as it is faster to correct a predicted instance which is mostly
+correct than it is to add a new instance from scratch. Second, it
+provides feedback about where your model does well and where it does
+poorly, and this should give you a better idea of which frames will be
+most useful to label.</p>
+<p>To run training, select “<strong>Run Training…</strong>” from the “Predict”
+menu. This trains new models using the frames that you’ve already
+labeled in your project, and then uses these models to predict instances
+in the suggested frames that you haven’t yet labeled (or on other random
+frames). This process can take a while, and since it runs on your
+machine, you should only try it if you have a GPU installed.</p>
+<p><img alt="image6" src="docs/_static/training-dialog.jpg" /></p>
+<p>By default, training uses the training settings which we’ve found to work
+well on a wide range of videos. We train a “centroid” model on 1/4 scale
+images and then use this to crop where we think there are instances
+during inference. Another pair of models are trained on unscaled,
+cropped images. The “confidence map” model is used to infer node
+locations, and the “part affinity field” model is used to infer the
+edges that connect nodes.</p>
+<p>There are a few hyperparameters that you can control for active
+learning:</p>
+<ul class="simple">
+<li><p><strong>Crop size</strong> ensures that the box for our crop is at least a
+given size instead of using the tightest crop that will bound any
+labeled instance.</p></li>
+<li><p><strong>Sigma</strong> controls the size of the confidence map gaussians and part
+affinity fields used for training.</p></li>
+<li><p><strong>Batch Size</strong> determines how many samples are used to train the
+neural network at one time. If you get an error that your GPU ran out
+of memory while training, you should try a smaller batch size.</p></li>
+</ul>
+<p>You can visually preview the effects of these settings on the training
+data by clicking the “<strong>View Training Image Inputs…</strong>” button. You’ll then
+see windows with the confidence maps and part affinity fields that will
+be used to train the models.</p>
+<p>After setting the parameters click “<strong>Run Training and Inference</strong>”. During the
+training process, you’ll see a window where you can monitor the loss.
+Blue points are training loss for each batch, lines are training and
+validation loss for the epochs (these won’t appear until the second
+epoch has finished.) There’s a button to stop training the model when
+you think is appropriate, or the training will automatically stop if the
+model doesn’t improve for a certain number of epochs (15 by default)</p>
+<p>First we train a model for confidence maps, part affinity fields, and
+centroids, and then we run inference. The GUI doesn’t yet give you a way
+to monitor the progress during inference, although it will alert you if an error occurs during inference.</p>
+<p>When inference finishes, you’ll be told how many instances were
+predicted. Suggested frames with predicted instances will be marked in
+red on the seekbar.</p>
+</div>
+<div class="section" id="reviewing-and-fixing-predictions">
+<h2>Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permalink to this headline">¶</a></h2>
+<p>After you’ve successfully trained models and predicted some instances,
+you’ll get a message that inference has finished. Every suggested
+frame with predicted instances will have a distinctive mark in the
+seekbar. Suggested frames which you labeled are marked in blue while
+those with predicted instances are marked in red. Predicted instances
+will <em>not</em> be used for future model training unless you correct the
+predictions in the GUI.</p>
+<p><img alt="imagefix" src="docs/_static/fixing-predictions.gif" /></p>
+<p>Predicted instances in the frame are displayed in grey with yellow
+nodes. To edit a prediction, you’ll need to replace it with an editable
+instance. <strong>Double-click</strong> the predicted instance and it will be converted into a regular instance.</p>
+<p>You can now edit the instance as before. Once you’ve added and/or
+corrected more instances, you can repeat the process:
+train a new model, predict on more frames, correct those predictions,
+and so on. You’ll want to regularly generate new frame suggestions,
+since active learning will return predictions for just these frames.</p>
+<div class="section" id="stage-3-tracking-instances-across-frames">
+<h3>Stage 3: Tracking instances across frames<a class="headerlink" href="#stage-3-tracking-instances-across-frames" title="Permalink to this headline">¶</a></h3>
+<p>When you’re satisfied with the predictions you’re getting, you can use your models to predict on more frames by selecting
+“<strong>Run Inference…</strong>” from the “Predict” menu. This will use the most
+recently trained set of models.</p>
+<p><img alt="image8" src="docs/_static/inference-dialog.jpg" /></p>
+</div>
+</div>
+<div class="section" id="track-proofreading">
+<span id="id1"></span><h2>Track proofreading<a class="headerlink" href="#track-proofreading" title="Permalink to this headline">¶</a></h2>
+<p>Once you have predicted tracks, you’ll need to proofread these to ensure
+that the identities of instances across frames are correct. By default,
+predicted instances all appear in grey and yellow. Select “Color
+Predicted Instances” to show the tracks in color. (Note that colors in
+the frame match colors in the seekbar and colors in the “Instances”
+panel.) Click an instance to see it’s track name. Double-click the track
+name in the “Instances” panel to change the name.</p>
+<p>There are two main types of mistakes made by the tracking code: mistaken
+identities and lost identities.</p>
+<p><strong>Mistaken Identities:</strong> The code may misidentify which instance goes in
+which track, in which case you’ll want to “swap” the identities.</p>
+<p>You can swap the identities assigned to a pair of instances by selecting
+“Transpose Instance Tracks” in the “Labels” menu. If there are just two
+instances in the frame, it already knows what it do. If there are more,
+you’ll have to click the two instances you want to swap.</p>
+<p><img alt="image9" src="docs/_static/fixing-track.gif" /></p>
+<p>You can assign an instance to a different (or new) track from the “Set
+Instance Track” submenu in the “Labels” menu.</p>
+<p>You can select instances by typing a number between 1 and 9, by clicking
+the instance in the frame, or by clicking the instance in the
+“Instances” panel (on the right side of your main window). When an
+instance is selected, you’ll see its track name. These track names can
+be edited by double-clicking the track name in the “Instances” panel.</p>
+<p>When you assign an instance to a track, this change will also be applied
+to all <em>subsequent</em> frames. For instance, if you move an instance from
+track 3 to track 2, then any instance in track 3 in subsequent frames
+will also be moved to track 2. This lets you effectively “merge” tracks.</p>
+<p><strong>Lost Identities:</strong> The code may fail to identity an instance in one
+frame with any instances from previous frames. In this case, you’ll want
+to find the first frame in which the new track occurs and change the
+instance track to the track from previous frames. The “Next Track Spawn
+Frame” command in the “Labels” menu will take you to the next frame in
+which a new track is spawned.</p>
+<p>For more tools and tips, see the <a class="reference internal" href="howtos.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> how-to.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial, Part 2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prediction-assisted-labeling">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#track-proofreading">Track proofreading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="howtos.html">How-Tos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="tutorial.html" title="previous chapter">Tutorial</a></li>
+      <li>Next: <a href="howtos.html" title="next chapter">How-Tos</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/tutorial-part2.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

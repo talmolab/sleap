@@ -21,9 +21,7 @@ channels first or last.
 
 |image1|
 
-.. _new-skeleton:
-
-Creating a Skeleton
+Creating the Skeleton
 ~~~~~~~~~~~~~~~~~~~~~
 
 Create a new **skeleton** using the “Skeleton” panel on the right side

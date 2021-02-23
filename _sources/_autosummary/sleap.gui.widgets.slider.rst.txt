@@ -1,0 +1,5 @@
+﻿sleap.gui.widgets.slider
+========================
+
+.. automodule:: sleap.gui.widgets.slider
+   :members:

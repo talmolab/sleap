@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sleap.nn.data.utils &#8212; SLEAP  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sleap.nn.data.utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Miscellaneous utility functions for data processing.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+
+<div class="viewcode-block" id="ensure_list"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.utils.html#sleap.nn.data.utils.ensure_list">[docs]</a><span class="k">def</span> <span class="nf">ensure_list</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Convert the input into a list if it is not already.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="expand_to_rank"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.utils.html#sleap.nn.data.utils.expand_to_rank">[docs]</a><span class="k">def</span> <span class="nf">expand_to_rank</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">target_rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prepend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Expand a tensor to a target rank by adding singleton dimensions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: Any `tf.Tensor` with rank &lt;= `target_rank`. If the rank is higher than</span>
+<span class="sd">            `target_rank`, the tensor will be returned with the same shape.</span>
+<span class="sd">        target_rank: Rank to expand the input to.</span>
+<span class="sd">        prepend: If True, singleton dimensions are added before the first axis of the</span>
+<span class="sd">            data. If False, singleton dimensions are added after the last axis.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The expanded tensor of the same dtype as the input, but with rank `target_rank`.</span>
+
+<span class="sd">        The output has the same exact data as the input tensor and will be identical if</span>
+<span class="sd">        they are both flattened.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_singleton_dims</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">target_rank</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">singleton_dims</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">n_singleton_dims</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">prepend</span><span class="p">:</span>
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">singleton_dims</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">singleton_dims</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">new_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="make_grid_vectors"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.utils.html#sleap.nn.data.utils.make_grid_vectors">[docs]</a><span class="k">def</span> <span class="nf">make_grid_vectors</span><span class="p">(</span>
+    <span class="n">image_height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">image_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Make sampling grid vectors from image dimensions.</span>
+
+<span class="sd">    This is a useful function for creating the x- and y-vectors that define a sampling</span>
+<span class="sd">    grid over an image space. These vectors can be used to generate a full meshgrid or</span>
+<span class="sd">    for equivalent broadcasting operations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_height: Height of the image grid that will be sampled, specified as a</span>
+<span class="sd">            scalar integer.</span>
+<span class="sd">        image_width: width of the image grid that will be sampled, specified as a</span>
+<span class="sd">            scalar integer.</span>
+<span class="sd">        output_stride: Sampling step size, specified as a scalar integer. This can be</span>
+<span class="sd">            used to specify a sampling grid that has a smaller shape than the image</span>
+<span class="sd">            grid but with values span the same range. This can be thought of as the</span>
+<span class="sd">            reciprocal of the output scale, i.e., it will induce subsampling when set to</span>
+<span class="sd">            values greater than 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of grid vectors (xv, yv). These are tensors of dtype tf.float32 with</span>
+<span class="sd">        shapes (grid_width,) and (grid_height,) respectively.</span>
+
+<span class="sd">        The grid dimensions are calculated as:</span>
+<span class="sd">            grid_width = image_width // output_stride</span>
+<span class="sd">            grid_height = image_height // output_stride</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">image_width</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">output_stride</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">yv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">image_height</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">output_stride</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xv</span><span class="p">,</span> <span class="n">yv</span></div>
+
+
+<div class="viewcode-block" id="gaussian_pdf"><a class="viewcode-back" href="../../../../_autosummary/sleap.nn.data.utils.html#sleap.nn.data.utils.gaussian_pdf">[docs]</a><span class="k">def</span> <span class="nf">gaussian_pdf</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Compute the PDF of an unnormalized 0-centered Gaussian distribution.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: Any tensor of dtype tf.float32 with values to compute the PDF for.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor of the same shape as `x`, but with values of a PDF of an unnormalized</span>
+<span class="sd">        Gaussian distribution. Values of 0 have an unnormalized PDF value of 1.0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">sigma</span><span class="p">)))</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SLEAP</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/reference.html">Feature Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019–2020, Murthy Lab @ Princeton.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
