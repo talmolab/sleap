@@ -5,8 +5,6 @@ unless they really have no other place.
 
 import os
 import re
-import subprocess
-import sys
 import shutil
 
 from collections import defaultdict
@@ -22,7 +20,7 @@ import yaml
 
 from typing import Any, Dict, Hashable, Iterable, List, Optional
 
-from sleap.io import pathutils
+import sleap.version as sleap_version
 
 
 def json_loads(json_str: str) -> Dict:
@@ -255,7 +253,7 @@ def get_config_file(
     """
     Returns the full path to the specified config file.
 
-    The config file will be at ~/.sleap/<shortname>
+    The config file will be at ~/.sleap/<version>/<shortname>
 
     If that file doesn't yet exist, we'll look for a <shortname> file inside
     the package config directory (sleap/config) and copy the file into the
@@ -275,12 +273,12 @@ def get_config_file(
     """
 
     if not get_defaults:
-        desired_path = os.path.expanduser(f"~/.sleap/{shortname}")
+        desired_path = os.path.expanduser(f"~/.sleap/{sleap_version.__version__}/{shortname}")
 
-        # Make sure there's a ~/.sleap/ directory to store user version of the
+        # Make sure there's a ~/.sleap/<version>/ directory to store user version of the
         # config file.
         try:
-            os.makedirs(os.path.expanduser("~/.sleap"))
+            os.makedirs(os.path.expanduser(f"~/.sleap/{sleap_version.__version__}"))
         except FileExistsError:
             pass
 
