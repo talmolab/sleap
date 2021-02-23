@@ -1,5 +1,0 @@
-sleap.nn.kalman_filter
-======================
-
-.. automodule:: sleap.nn.kalman_filter
-   :members:

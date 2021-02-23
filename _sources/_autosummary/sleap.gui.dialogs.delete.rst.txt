@@ -1,5 +1,0 @@
-﻿sleap.gui.dialogs.delete
-========================
-
-.. automodule:: sleap.gui.dialogs.delete
-   :members:

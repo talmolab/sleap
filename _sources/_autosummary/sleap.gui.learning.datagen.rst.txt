@@ -1,5 +1,0 @@
-﻿sleap.gui.learning.datagen
-==========================
-
-.. automodule:: sleap.gui.learning.datagen
-   :members:

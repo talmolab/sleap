@@ -1,5 +1,0 @@
-﻿sleap.gui.learning.dialog
-=========================
-
-.. automodule:: sleap.gui.learning.dialog
-   :members:

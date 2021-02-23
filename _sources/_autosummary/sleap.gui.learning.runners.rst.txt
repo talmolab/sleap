@@ -1,5 +1,0 @@
-﻿sleap.gui.learning.runners
-==========================
-
-.. automodule:: sleap.gui.learning.runners
-   :members:

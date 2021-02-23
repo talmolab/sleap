@@ -1,5 +1,0 @@
-﻿sleap.gui.app
-=============
-
-.. automodule:: sleap.gui.app
-   :members:

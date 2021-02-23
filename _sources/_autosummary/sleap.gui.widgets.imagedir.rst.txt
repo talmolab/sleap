@@ -1,5 +1,0 @@
-﻿sleap.gui.widgets.imagedir
-==========================
-
-.. automodule:: sleap.gui.widgets.imagedir
-   :members:
