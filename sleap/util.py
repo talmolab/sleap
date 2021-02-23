@@ -273,7 +273,9 @@ def get_config_file(
     """
 
     if not get_defaults:
-        desired_path = os.path.expanduser(f"~/.sleap/{sleap_version.__version__}/{shortname}")
+        desired_path = os.path.expanduser(
+            f"~/.sleap/{sleap_version.__version__}/{shortname}"
+        )
 
         # Make sure there's a ~/.sleap/<version>/ directory to store user version of the
         # config file.
