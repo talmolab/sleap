@@ -56,7 +56,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: docs/build/html
-          destination_dir: main
+          keep_files: true
 
       - name: Deploy (test)
         uses: peaceiris/actions-gh-pages@v3
