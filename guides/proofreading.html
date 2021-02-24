@@ -1,39 +1,262 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Feature Reference" href="reference.html" /><link rel="prev" title="Add more training data to a project" href="merging.html" />
 
-<!DOCTYPE html>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2021.02.21.beta25"/>
+        <title>Tracking and proofreading - SLEAP (develop)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
+    <link rel="stylesheet" href="../_static/pygments.css">
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tracking and proofreading &#8212; SLEAP  documentation</title>
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Feature Reference" href="reference.html" />
-    <link rel="prev" title="Add more training data to a project" href="merging.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+<style>
+  :root {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
   
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+    }
+  }
 
-  </head><body>
+  /* For allowing end-user-specific overrides */
+  .override-light {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
   
+  }
+  .override-dark {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+</style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
 
-          <div class="body" role="main">
-            
-  <div class="section" id="tracking-and-proofreading">
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
+    </div>
+    <div class="header-right">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">SLEAP (develop)</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder=Search name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">Initial Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">Training and Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html">Prediction-assisted labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">Tracking instances across frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Detailed Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="choosing-models.html">Choosing a set of models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="colab.html">Run training and/or inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="merging.html">Add more training data to a project</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Tracking and proofreading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html">Feature Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remote.html">Remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remote.html#remote-inference">Remote inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="skeleton-design.html">Skeleton design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training.html">Training with GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training-package.html">Export a training package</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#inference">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_with_custom_hyperparameters.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_with_custom_hyperparameters.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Example analysis data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#loading-the-data">Loading the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#more-advanced-visualizations">More advanced visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#clustering">Clustering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.instance.html">sleap.instance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.message.html">sleap.message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.skeleton.html">sleap.skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.util.html">sleap.util</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Sourcecode</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="tracking-and-proofreading">
 <span id="proofreading"></span><h1>Tracking and proofreading<a class="headerlink" href="#tracking-and-proofreading" title="Permalink to this headline">¶</a></h1>
 <p><em>Case: You’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</em></p>
 <p>The basics of <a class="reference internal" href="../tutorials/proofreading.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> are covered in the <a class="reference internal" href="../tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>. You should go read that if you haven’t already. Here we’ll go into more details.</p>
@@ -69,9 +292,9 @@
 <div class="section" id="color-palettes">
 <h2>Color palettes<a class="headerlink" href="#color-palettes" title="Permalink to this headline">¶</a></h2>
 <p>When you’re proofreading track identities, the first step should always be to enable “<strong>Color Predicted Instances</strong>” in the View menu. Choosing the right color palette can also make a difference. If there are a small number of instances you’re tracking, the “five+” palette will make it easier to see instances which were assigned to later tracks, both in on the video frame:</p>
-<p><img alt="orange-leg" src="../_images/orange-leg.jpg" /></p>
+<p><img alt="orange-leg" src="../_images/orange-leg.jpg"/></p>
 <p>and on the seekbar:</p>
-<p><img alt="orange-track" src="../_images/orange-track.jpg" /></p>
+<p><img alt="orange-track" src="../_images/orange-track.jpg"/></p>
 <p>If there are a large number of instances you’re tracking, then a palette with a large number of distinct colors can make it easier to see each distinct instance. The “alphabet” palette has 26 visually distinctive colors.</p>
 <p>Sometimes the background in the video will make it hard to see certain colors in a palette. It’s possible to edit palettes, as explained in the <a class="reference internal" href="reference.html#view"><span class="std std-ref">View</span></a> menu section of the <a class="reference internal" href="reference.html#reference"><span class="std std-ref">Feature Reference</span></a>.</p>
 </div>
@@ -90,16 +313,16 @@ frame with any instances from previous frames.</p>
 <li><p>The color of the track trail may help you determine which track identity should have been used.</p></li>
 <li><p>Hold down the <strong>Control</strong> key (or <strong>Command</strong> key on a Mac) with an instance already selected and you’ll see a color-coded list of numbered tracks, like so:</p></li>
 </ol>
-<p><img alt="track-fixing-list" src="../_images/track-fixing-list.jpg" /></p>
+<p><img alt="track-fixing-list" src="../_images/track-fixing-list.jpg"/></p>
 <p>You can then type the number key listed next to the track (while still holding down the control or command key) to assign the selected instance to the corresponding track. In the image above, you’d want to type <strong>command-1</strong> to assign the orange instance to the red “F” track.</p>
 <p><strong>Mistaken Identities:</strong> The code may misidentify which instance goes in
 which track.</p>
 <p>Mistake identities are harder to correct since there’s no certain way to find them—if we knew where they were, then we wouldn’t have gotten them wrong in the first place. But there are some strategies to make it easier to locate them in your predictions.</p>
 <p>One strategy is to set the trail length to <strong>50</strong> and jump through the predictions 50 frames at a time using the <strong>down arrow</strong> key. It’s usually possible to see identity swaps by looking at the shape of the track trails, as here:</p>
-<p><img alt="swap-trails" src="../_images/swap-trails.jpg" /></p>
+<p><img alt="swap-trails" src="../_images/swap-trails.jpg"/></p>
 <p>The downside of this method is that when you find the 50-frames which contain a swap, you’ll then have to go through the frames individually to find exactly where the swap occurs. (You may want to turn off trails while doing this, since they can make it harder to see where the instances are in the current frame, and they also make it slower to move between frames.)</p>
 <p>Another strategy is to generate <strong>velocity</strong>-based frame suggestions:</p>
-<p><img alt="velocity-suggestions" src="../_images/velocity-suggestions.jpg" /></p>
+<p><img alt="velocity-suggestions" src="../_images/velocity-suggestions.jpg"/></p>
 <p>In the “<strong>Labeling Suggestions</strong>” panel, choose the “velocity” method. You should select a node with a relatively stable position relative to the position of the body (i.e., not an appendage), and start with the default threshold.</p>
 <p>If there are far too many frame suggestions, then make the threshold higher. If there aren’t very many, you might try lowering the threshold (or this may indicate that this method won’t work well for this file).</p>
 <p>Once you’re happy with the number of suggested frames, you can step between these (use the keyboard shortcut for the “<strong>Next Suggestion</strong>” command in the “Go” menu) and quickly review whether this is in fact a swap by looking at the track trails or reviewing adjacent frames. If you’ve found a swap, either use the keyboard shortcut for the “<strong>Transpose Instance Tracks</strong>” command in the “Labels” menu, or select one of the swapped instances and use <strong>Control</strong> (or command) plus a number key, just like you do for fixing lost identities (as explained above).</p>
@@ -107,88 +330,91 @@ which track.</p>
 <div class="section" id="orientation">
 <span id="id2"></span><h2>Orientation<a class="headerlink" href="#orientation" title="Permalink to this headline">¶</a></h2>
 <p>In some cases it may be difficult to see the orientation of the predicted instances. You can make it easier to see the orientation by changing the style of the edges drawn between nodes from thin lines (as shown above) to <strong>wedges</strong>, as shown here:</p>
-<p><img alt="wedges" src="../_images/wedges.jpg" /></p>
+<p><img alt="wedges" src="../_images/wedges.jpg"/></p>
 <p>The wedges point from each <strong>source</strong> node to its <strong>destination</strong> node(s) in your skeleton. You can set the edge style using the “<strong>Edge Style</strong>” submenu in the “View” menu.</p>
 </div>
 </div>
 
-
-          </div>
-          
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="reference.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Feature Reference</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="merging.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Add more training data to a project</div>
+                
+              </div>
+            </a>
         </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">SLEAP</a></h1>
 
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="index.html#getting-better-results">Getting better results</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#running-remotely">Running remotely</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html#all-guides">All Guides</a></li>
+        <div class="related-information">
+              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University
+            |
+            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+              and
+              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+              <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            |
+            <a class="muted-link" href="../_sources/guides/proofreading.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Tracking and proofreading</a><ul>
+<li><a class="reference internal" href="#tracking-methods">Tracking methods</a></li>
+<li><a class="reference internal" href="#more-training-data">More training data?</a></li>
+<li><a class="reference internal" href="#the-track-cleaning-script">The “track cleaning” script</a></li>
+<li><a class="reference internal" href="#color-palettes">Color palettes</a></li>
+<li><a class="reference internal" href="#id1">Proofreading</a></li>
+<li><a class="reference internal" href="#orientation">Orientation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">Feature Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
 </ul>
 
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="index.html">Guides</a><ul>
-      <li>Previous: <a href="merging.html" title="previous chapter">Add more training data to a project</a></li>
-      <li>Next: <a href="reference.html" title="next chapter">Feature Reference</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
+          </div>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019–2020, Murthy Lab @ Princeton.
       
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
-      |
-      <a href="../_sources/guides/proofreading.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
-
-    
-
-    
-  </body>
+    </aside>
+  </main>
+</div>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></body>
 </html>
