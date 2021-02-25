@@ -1496,7 +1496,7 @@ class SetNodeSymmetry(EditCommand):
         node = params["node"]
         symmetry = params["symmetry"]
         skeleton = params["skeleton"]
-        if symmetry:
+        if symmetry and node != symmetry:
             skeleton.add_symmetry(node, symmetry)
         else:
             # Value was cleared by user, so delete symmetry
