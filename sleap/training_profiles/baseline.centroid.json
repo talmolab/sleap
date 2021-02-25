@@ -1,4 +1,6 @@
 {
+    "name": "UNet baseline centroid",
+    "description": "This model predicts instance anchors (e.g., centroids) from full images at half scale.",
     "data": {
         "labels": {
             "training_labels": null,
@@ -42,7 +44,7 @@
             "single_instance": null,
             "centroid": {
                 "anchor_part": null,
-                "sigma": 5.0,
+                "sigma": 3.5,
                 "output_stride": 2
             },
             "centered_instance": null,

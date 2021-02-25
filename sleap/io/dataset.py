@@ -245,7 +245,7 @@ class LabelsDataCache:
         self._track_occupancy[video][new_track].insert_list(within_old)
 
     def add_track(self, video: Video, track: Track):
-        """Add track a track to the labels."""
+        """Add a track to the labels."""
         self._track_occupancy[video][track] = RangeList()
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
@@ -921,6 +921,47 @@ class Labels(MutableSequence):
         """Return list of all predicted instances."""
         return [inst for inst in self.all_instances if type(inst) == PredictedInstance]
 
+    @property
+    def has_user_instances(self) -> bool:
+        """Return whether the labels contain user instances."""
+        for lf in self.labeled_frames:
+            if lf.has_user_instances:
+                return True
+        return False
+
+    @property
+    def has_predicted_instances(self) -> bool:
+        """Return whether the labels contain predicted instances."""
+        for lf in self.labeled_frames:
+            if lf.has_predicted_instances:
+                return True
+        return False
+
+    @property
+    def max_user_instances(self) -> int:
+        """Return the maximum number of user instances in any frame."""
+        n = 0
+        for lf in self.labeled_frames:
+            n = max(n, len(lf.user_instances))
+        return n
+
+    @property
+    def min_user_instances(self) -> int:
+        """Return the minimum number of user instances in any frame."""
+        n = None
+        for lf in self.labeled_frames:
+            if n is None:
+                n = len(lf.user_instances)
+            else:
+                n = min(n, len(lf.user_instances))
+        n = 0 if n is None else n
+        return n
+
+    @property
+    def is_multi_instance(self) -> bool:
+        """Returns `True` if there are multiple user instances in any frame."""
+        return self.max_user_instances > 1
+
     def describe(self):
         """Print basic statistics about the labels dataset."""
         print(f"Skeleton: {self.skeleton}")
@@ -1019,6 +1060,14 @@ class Labels(MutableSequence):
         """Add track to labels, updating occupancy."""
         self.tracks.append(track)
         self._cache.add_track(video, track)
+
+    def remove_track(self, track: Track):
+        """Remove a track from the labels, updating instances."""
+        self._cache.remove_track(track)
+        for inst in self.instances():
+            if inst.track == track:
+                inst.track = None
+        self.tracks.remove(track)
 
     def track_set_instance(
         self, frame: LabeledFrame, instance: Instance, new_track: Track

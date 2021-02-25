@@ -692,8 +692,8 @@ class LearningDialog(QtWidgets.QDialog):
         self.accept()
 
         if gui:
-            msgBox = QtWidgets.QMessageBox(text=f"Created training job package:")
-            msgBox.setDetailedText(output_path)
+            msgBox = QtWidgets.QMessageBox(text="Created training job package.")
+            msgBox.setDetailedText("Path:\n" + output_path)
             msgBox.setWindowTitle("Training Job Package")
             okButton = msgBox.addButton(QtWidgets.QMessageBox.Ok)
             openFolderButton = msgBox.addButton(
@@ -927,7 +927,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
         widget = cls(require_trained=True, head=cfg_info.head_name)
         widget.acceptSelectedConfigInfo(cfg_info)
-        widget.setWindowTitle(cfg_info.path_dir)
+        widget.setWindowTitle(cfg_info.folder_path)
         return widget
 
     @staticmethod

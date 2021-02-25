@@ -192,7 +192,7 @@ class TrackListOverlay(BaseOverlay):
     def add_to_scene(self, video: Video, frame_idx: int):
         """Adds track list as overlay on video."""
 
-        html = ""
+        html = "Tracks:"
         num_to_show = min(9, len(self.labels.tracks))
 
         for i, track in enumerate(self.labels.tracks[:num_to_show]):
