@@ -50,6 +50,7 @@ class ProfileSelectorWidget(QWidget):
             "centered_instance": "Top-down: Centered-instance",
             "multi_instance": "Multi-animal bottom-up",
         }
+
         def make_head_group(head_filter, label):
             box = QGroupBox(label)
             box.setCheckable(True)
@@ -62,7 +63,10 @@ class ProfileSelectorWidget(QWidget):
         self.head_groups = {}
         self.head_boxes = {}
         for head_filter, label in heads.items():
-            self.head_groups[head_filter], self.head_boxes[head_filter] = make_head_group(head_filter, label)
+            (
+                self.head_groups[head_filter],
+                self.head_boxes[head_filter],
+            ) = make_head_group(head_filter, label)
 
     def set_visible(self, head_types):
         for head_filter, head_box in self.head_boxes.items():
