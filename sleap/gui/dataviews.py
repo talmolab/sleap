@@ -16,6 +16,7 @@ as is. For example::
 """
 
 from PySide2 import QtCore, QtWidgets, QtGui
+from PySide2.QtCore import Qt
 
 import numpy as np
 import os
@@ -63,17 +64,23 @@ class GenericTableModel(QtCore.QAbstractTableModel):
     """
 
     properties = None
+    sort_as_string = None
     show_row_numbers: bool = True
+    items_changed = QtCore.Signal(list)
 
     def __init__(
         self,
         items: Optional[list] = None,
         properties: Optional[List[str]] = None,
         context: Optional[CommandContext] = None,
+        sort_as_string: Optional[List[str]] = None,
+        state: GuiState = None,
     ):
         super(GenericTableModel, self).__init__()
         self.properties = properties or self.properties or []
+        self.sort_as_string = sort_as_string or self.sort_as_string or []
         self.context = context
+        self.state = state or GuiState()
 
         self.items = items
 
@@ -89,7 +96,10 @@ class GenericTableModel(QtCore.QAbstractTableModel):
     @items.setter
     def items(self, obj):
         if not obj:
+            self.beginResetModel()
             self._data = []
+            self.endResetModel()
+            self.items_changed.emit(self.items)
             return
 
         self.obj = obj
@@ -105,6 +115,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         else:
             self._data = item_list
         self.endResetModel()
+        self.items_changed.emit(self.items)
 
     @property
     def original_items(self):
@@ -152,6 +163,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             if self.can_set(item, key):
                 self.set_item(item, key, value)
                 self.dataChanged.emit(index, index)
+                self.layoutChanged.emit()
                 return True
 
         return False
@@ -184,21 +196,14 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
         return None
 
-    def sort(
-        self,
-        column_idx: int,
-        order: QtCore.Qt.SortOrder = QtCore.Qt.SortOrder.AscendingOrder,
-    ):
-        """
-        Sorts table by given column and order.
+    def get_sort_function(self, column_idx: int):
+        """Return a function that returns a key for each item in a given column.
 
-        Correctly sorts numeric string (i.e., "123.45") numerically rather
-        than alphabetically. Has logic for correctly sorting video frames by
-        video then frame index.
+        By default, correctly sorts numeric string (i.e., "123.45") numerically rather
+        than alphabetically. Has logic for correctly sorting video frames by video then
+        frame index.
         """
         prop = self.properties[column_idx]
-        reverse = order == QtCore.Qt.SortOrder.DescendingOrder
-
         sort_function = itemgetter(prop)
         if prop in ("video", "frame"):
             if "video" in self.properties and "frame" in self.properties:
@@ -206,6 +211,8 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
         def string_safe_sort(x):
             sort_val = sort_function(x)
+            if self.sort_as_string is not None and prop in self.sort_as_string:
+                return sort_val
             try:
                 return float(sort_val)
             except ValueError:
@@ -213,8 +220,20 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             except TypeError:
                 return sort_val
 
+        return string_safe_sort
+
+    def sort(
+        self,
+        column_idx: int,
+        order: QtCore.Qt.SortOrder = QtCore.Qt.SortOrder.AscendingOrder,
+    ):
+        """Sorts table by given column and order."""
+        sort_fn = self.get_sort_function(column_idx)
+        if sort_fn is None:
+            return
+        reverse = order == QtCore.Qt.SortOrder.DescendingOrder
         self.beginResetModel()
-        self._data.sort(key=string_safe_sort, reverse=reverse)
+        self._data.sort(key=sort_fn, reverse=reverse)
         self.endResetModel()
 
     def get_from_idx(self, index: QtCore.QModelIndex):
@@ -233,14 +252,167 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         """Virtual method, used to set value for item in table cell."""
         pass
 
+    def is_enabled(self, item, key):
+        """Overload in subclasses to conditionally enable/disable items."""
+        return True
+
     def flags(self, index: QtCore.QModelIndex):
         """Overrides Qt method, returns whether item is selectable etc."""
-        flags = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-
         item, key = self.get_from_idx(index)
+
+        flags = QtCore.Qt.NoItemFlags
+        if self.is_enabled(item, key):
+            flags = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
         if self.can_set(item, key):
             flags |= QtCore.Qt.ItemIsEditable
+
         return flags
+
+
+class GenericCheckableTableModel(GenericTableModel):
+    """Generic table model with a checkable column.
+
+    This maintains the state of which rows are checked through the state attribute.
+
+    The state variables can be queried by checking the
+    `GenericCheckableTableModel.checked_state_key` or
+    `GenericCheckableTableModel.checked_items_key` keys in
+    `GenericCheckableTableModel.state`.
+
+    Override this class to customize which column, row name (which sets the state key
+    name), or check column sorting behavior.
+
+    Importantly, to maintain state the items are hashed using
+    `GenericCheckableTableModel.hash_item`, which uses id hashing by default.
+
+    For high level access, use `GenericCheckableTableModel.is_checked` or
+    `GenericCheckableTableModel.checked_items`.
+    """
+
+    checked = QtCore.Signal(list)
+    check_column: int = 0
+    sort_by_check_state: bool = False
+    row_name: str = ""
+
+    @property
+    def checked_state_key(self):
+        """Return name of the key that holds checked state."""
+        return f"_checked_{self.row_name}"
+
+    @property
+    def checked_items_key(self):
+        """Return name of the key that holds the checked items."""
+        return f"checked_{self.row_name}"
+
+    def hash_item(self, item):
+        """Convert item into a hashable object. Hashes by id by default.
+
+        Override this method to define different hashing behavior.
+        """
+        if isinstance(item, dict) and "_original_item" in item:
+            return id(item["_original_item"])
+        return id(item)
+
+    def is_checked(self, item):
+        if self.state[self.checked_state_key] is None:
+            self.state[self.checked_state_key] = set()
+            return False
+        else:
+            # Hash by ID.
+            return self.hash_item(item) in self.state[self.checked_state_key]
+
+    @property
+    def checked_items(self):
+        """Return all checked items."""
+        return [item for item in self.original_items if self.is_checked(item)]
+
+    @property
+    def unchecked_items(self):
+        """Return all unchecked items."""
+        return [item for item in self.original_items if not self.is_checked(item)]
+
+    def set_checked(self, item, val: bool):
+        """Set the checked state of an item and emit signal with all checked items."""
+        if self.state[self.checked_state_key] is None:
+            self.state[self.checked_state_key] = set()
+
+        items = item if isinstance(item, list) else [item]
+
+        for item in items:
+            if val:
+                self.state[self.checked_state_key].add(self.hash_item(item))
+            else:
+                self.state[self.checked_state_key].remove(self.hash_item(item))
+        self.checked.emit(self.checked_items)
+        self.state[self.checked_items_key] = self.checked_items
+        self.layoutChanged.emit()
+
+    def check_all(self):
+        """Check all items."""
+        self.set_checked(self.items, True)
+
+    def check_none(self):
+        """Uncheck all items."""
+        self.set_checked(self.items, False)
+
+    @GenericTableModel.items.setter
+    def items(self, obj):
+        """Set items and remove checked items that are no longer in the list."""
+        GenericTableModel.items.fset(self, obj)
+        if self.state[self.checked_state_key] is None:
+            self.state[self.checked_state_key] = set()
+        new_items_hashed = {self.hash_item(item) for item in self.original_items}
+        old_state = self.state[self.checked_state_key]
+        new_state = old_state.intersection(new_items_hashed)
+        if old_state != new_state:
+            self.state[self.checked_state_key] = new_state
+            self.checked.emit(self.checked_items)
+            self.state[self.checked_items_key] = self.checked_items
+
+    def data(self, index: QtCore.QModelIndex, role=Qt.DisplayRole):
+        """"Return data or check state."""
+        if role == Qt.CheckStateRole and index.column() == self.check_column:
+            checked = self.is_checked(self.get_from_idx(index)[0])
+            return Qt.Checked if checked else Qt.Unchecked
+        else:
+            return super().data(index, role)
+
+    def setData(self, index: QtCore.QModelIndex, value: str, role=Qt.EditRole):
+        """Set data or check state."""
+        if not index.isValid():
+            return False
+        if role == Qt.CheckStateRole:
+            self.set_checked(self.get_from_idx(index)[0], value)
+            self.dataChanged.emit(index, index)
+            self.layoutChanged.emit()
+            return True
+        else:
+            return super().setData(index, value, role)
+
+    def remove_checked(self):
+        """Remove checked items."""
+        unchecked_items = self.unchecked_items
+        if len(unchecked_items) == len(self.items):
+            return
+        self.items = unchecked_items
+
+    def flags(self, index: QtCore.QModelIndex):
+        """Return flags for an item, setting the check column as checkable."""
+        if index.column() == self.check_column:
+            flag = Qt.ItemIsUserCheckable
+            item, key = self.get_from_idx(index)
+            if self.is_enabled(item, key):
+                flag |= Qt.ItemIsEnabled | Qt.ItemIsSelectable
+            return flag
+        else:
+            return super().flags(index)
+
+    def get_sort_function(self, column_idx: int):
+        if self.sort_by_check_state and column_idx == self.check_column:
+            return self.is_checked
+        else:
+            return super().get_sort_function(column_idx)
 
 
 class GenericTableView(QtWidgets.QTableView):
@@ -248,7 +420,7 @@ class GenericTableView(QtWidgets.QTableView):
     Qt table view for use with `GenericTableModel` (and subclasses).
 
     Uses the :py:class:`GuiState` object to keep track of which row/item is
-    selected. If the `row_name` attribute is "foo", then a "foo_selected"
+    selected. If the `row_name` attribute is "foo", then a "selected_foo"
     state will be item corresponding to the currently selected row in table
     (and the table will select the row if this state is updated by something
     else). When `is_activatable` is True, then a "foo" state will also be
@@ -266,6 +438,8 @@ class GenericTableView(QtWidgets.QTableView):
     name_prefix: str = "selected_"
     is_activatable: bool = False
     is_sortable: bool = False
+    resize_mode: Optional[str] = None
+    single_selection_mode: bool = True
 
     def __init__(
         self,
@@ -275,10 +449,14 @@ class GenericTableView(QtWidgets.QTableView):
         name_prefix: Optional[str] = None,
         is_sortable: bool = False,
         is_activatable: bool = False,
+        resize: Optional[str] = None,
+        single_selection_mode: Optional[bool] = None,
     ):
         super(GenericTableView, self).__init__()
 
-        self.state = state or GuiState()
+        self.state = state or model.state or GuiState()
+        if self.state is not None:
+            model.state = self.state
         self.row_name = row_name or self.row_name
         self.name_prefix = name_prefix if name_prefix is not None else self.name_prefix
         self.is_sortable = is_sortable or self.is_sortable
@@ -287,17 +465,36 @@ class GenericTableView(QtWidgets.QTableView):
         self.setModel(model)
 
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.single_selection_mode = single_selection_mode or self.single_selection_mode
+        if self.single_selection_mode:
+            self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        else:
+            self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            # TODO: Implement multi-row selection. This needs to be adjusted in several
+            # methods below.
+            # self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
         self.setSortingEnabled(self.is_sortable)
 
         self.doubleClicked.connect(self.activateSelected)
         if self.row_name:
             self.state.connect(self.name_prefix + self.row_name, self.selectRowItem)
 
+        self.resize_mode = self.resize_mode or resize
+        if self.resize_mode == "contents":
+            self.horizontalHeader().setSectionResizeMode(
+                QtWidgets.QHeaderView.ResizeToContents
+            )
+        elif self.resize_mode == "stretch":
+            self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        else:
+            self.horizontalHeader().setSectionResizeMode(
+                QtWidgets.QHeaderView.Interactive
+            )
+
     def selectionChanged(self, new, old):
         """Custom event handler."""
         super(GenericTableView, self).selectionChanged(new, old)
-
         if self.row_name:
             item = self.getSelectedRowItem()
             self.state[self.name_prefix + self.row_name] = item
@@ -330,7 +527,8 @@ class GenericTableView(QtWidgets.QTableView):
 
     def selectRow(self, idx: int):
         """Select row corresponding to index."""
-        self.selectRowItem(self.model().original_items[idx])
+        if len(self.model().original_items) > idx:
+            self.selectRowItem(self.model().original_items[idx])
 
     def getSelectedRowItem(self) -> Any:
         """Return item corresponding to currently selected row.
@@ -371,7 +569,10 @@ class SkeletonNodesTableModel(GenericTableModel):
         if key == "name" and value:
             self.context.setNodeName(skeleton=self.obj, node=item, name=value)
         elif key == "symmetry":
-            self.context.setNodeSymmetry(skeleton=self.obj, node=item, symmetry=value)
+            if value in self.obj.node_names or value == "":
+                self.context.setNodeSymmetry(
+                    skeleton=self.obj, node=item, symmetry=value
+                )
 
     def get_item_color(self, item: Any, key: str):
         if self.skeleton:
@@ -454,7 +655,7 @@ class LabeledFrameTableModel(GenericTableModel):
 
 
 class SuggestionsTableModel(GenericTableModel):
-    properties = ("video", "frame", "group", "labeled", "mean score")
+    properties = ("labeled", "score", "group", "frame", "video")
 
     def item_to_data(self, obj, item):
         labels = self.context.labels
