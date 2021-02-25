@@ -754,7 +754,7 @@ class GraphicsView(QGraphicsView):
         self.setTransformationAnchor(anchor_mode)
 
         # Set icon as default background.
-        self.setImage(QImage(sleap.util.get_package_file("sleap/gui/icon.png")))
+        self.setImage(QImage(sleap.util.get_package_file("sleap/gui/background.png")))
 
     def hasImage(self) -> bool:
         """Returns whether or not the scene contains an image pixmap."""

@@ -923,39 +923,19 @@ class Labels(MutableSequence):
 
     @property
     def has_user_instances(self) -> bool:
-        """Return whether the labels contain user instances."""
-        for lf in self.labeled_frames:
-            if lf.has_user_instances:
-                return True
-        return False
+        return any(lf.has_user_instances for lf in self.labeled_frames)
 
     @property
     def has_predicted_instances(self) -> bool:
-        """Return whether the labels contain predicted instances."""
-        for lf in self.labeled_frames:
-            if lf.has_predicted_instances:
-                return True
-        return False
+        return any(lf.has_predicted_instances for lf in self.labeled_frames)
 
     @property
     def max_user_instances(self) -> int:
-        """Return the maximum number of user instances in any frame."""
-        n = 0
-        for lf in self.labeled_frames:
-            n = max(n, len(lf.user_instances))
-        return n
+        return max([len(lf.user_instances) for lf in self.labeled_frames])
 
     @property
     def min_user_instances(self) -> int:
-        """Return the minimum number of user instances in any frame."""
-        n = None
-        for lf in self.labeled_frames:
-            if n is None:
-                n = len(lf.user_instances)
-            else:
-                n = min(n, len(lf.user_instances))
-        n = 0 if n is None else n
-        return n
+        return min([len(lf.user_instances) for lf in self.labeled_frames])
 
     @property
     def is_multi_instance(self) -> bool:
