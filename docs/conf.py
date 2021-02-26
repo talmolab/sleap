@@ -35,8 +35,7 @@ version = "1.1.0"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-# release = "v1.1.0"
-release = "develop"
+release = "v1.1.0"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
