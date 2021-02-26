@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.io.format.coco" href="sleap.io.format.coco.html" /><link rel="prev" title="sleap.io.visuals" href="sleap.io.visuals.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2021.02.21.beta25"/>
-        <title>sleap.io.format.adaptor - SLEAP (develop)</title>
+        <title>sleap.io.format.adaptor - SLEAP (v1.1.0)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -88,7 +88,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.0)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
@@ -106,7 +106,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (develop)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.0)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -261,7 +261,7 @@
 <p>File format adaptor base class.</p>
 <dl class="py class">
 <dt id="sleap.io.format.adaptor.Adaptor">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.io.format.adaptor.</span></code><code class="sig-name descname"><span class="pre">Adaptor</span></code><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L21-L92"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.io.format.adaptor.</span></code><code class="sig-name descname"><span class="pre">Adaptor</span></code><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L21-L92"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor" title="Permalink to this definition">¶</a></dt>
 <dd><p>File format adaptor base class.</p>
 <p>An adaptor handles reading and/or writing a specific file format. To add
 support for a new file format, you’ll create a new class which inherits from
@@ -273,12 +273,12 @@ the Adaptor base class and implements the relevant functions.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.adaptor.Adaptor.can_read_file">
-<code class="sig-name descname"><span class="pre">can_read_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L55-L57"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">can_read_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L55-L57"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can read this file.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.adaptor.Adaptor.can_write_filename">
-<code class="sig-name descname"><span class="pre">can_write_filename</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L59-L61"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">can_write_filename</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L59-L61"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can write format of this filename.</p>
 </dd></dl>
 <dl class="py method">
@@ -288,17 +288,17 @@ the Adaptor base class and implements the relevant functions.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.adaptor.Adaptor.does_match_ext">
-<code class="sig-name descname"><span class="pre">does_match_ext</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L81-L87"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_match_ext" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">does_match_ext</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L81-L87"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_match_ext" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can write format of this filename.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.adaptor.Adaptor.does_read">
-<code class="sig-name descname"><span class="pre">does_read</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L63-L65"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">does_read</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L63-L65"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor supports reading.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.adaptor.Adaptor.does_write">
-<code class="sig-name descname"><span class="pre">does_write</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L67-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">does_write</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L67-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor supports writing.</p>
 </dd></dl>
 <dl class="py method">
@@ -320,18 +320,18 @@ determine which to use for reading/writing.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.adaptor.Adaptor.read">
-<code class="sig-name descname"><span class="pre">read</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">object</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L71-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">read</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">object</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L71-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads the file and returns the appropriate deserialized object.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.adaptor.Adaptor.write">
-<code class="sig-name descname"><span class="pre">write</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_object</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L75-L77"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">write</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_object</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L75-L77"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes the object to a file.</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
 <dt id="sleap.io.format.adaptor.SleapObjectType">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.io.format.adaptor.</span></code><code class="sig-name descname"><span class="pre">SleapObjectType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/io/format/adaptor.py#L13-L17"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.SleapObjectType" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.io.format.adaptor.</span></code><code class="sig-name descname"><span class="pre">SleapObjectType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/io/format/adaptor.py#L13-L17"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.SleapObjectType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Types of files that an adaptor could read/write.</p>
 </dd></dl>
 </div>
