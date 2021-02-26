@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.data.pipelines" href="sleap.nn.data.pipelines.html" /><link rel="prev" title="sleap.nn.data.normalization" href="sleap.nn.data.normalization.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.1, furo 2021.02.21.beta25"/>
-        <title>sleap.nn.data.offset_regression - SLEAP (develop)</title>
+        <title>sleap.nn.data.offset_regression - SLEAP (v1.1.0)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -88,7 +88,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (develop)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.0)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
@@ -106,7 +106,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (develop)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.0)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -261,7 +261,7 @@
 <p>Utilities for creating offset regression maps.</p>
 <dl class="py function">
 <dt id="sleap.nn.data.offset_regression.make_offsets">
-<code class="sig-prename descclassname"><span class="pre">sleap.nn.data.offset_regression.</span></code><code class="sig-name descname"><span class="pre">make_offsets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/offset_regression.py#L6-L56"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.offset_regression.make_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.data.offset_regression.</span></code><code class="sig-name descname"><span class="pre">make_offsets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/nn/data/offset_regression.py#L6-L56"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.offset_regression.make_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make point offset maps on a grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -293,7 +293,7 @@ corresponds to the x- and y-offsets at each grid point for each input point.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.nn.data.offset_regression.mask_offsets">
-<code class="sig-prename descclassname"><span class="pre">sleap.nn.data.offset_regression.</span></code><code class="sig-name descname"><span class="pre">mask_offsets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/develop/sleap/nn/data/offset_regression.py#L59-L85"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.offset_regression.mask_offsets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.data.offset_regression.</span></code><code class="sig-name descname"><span class="pre">mask_offsets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> → <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.0/sleap/nn/data/offset_regression.py#L59-L85"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.offset_regression.mask_offsets" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mask offset maps using a confidence map threshold.</p>
 <p>This is useful for restricting offset maps to local neighborhoods around the peaks.</p>
 <dl class="field-list simple">

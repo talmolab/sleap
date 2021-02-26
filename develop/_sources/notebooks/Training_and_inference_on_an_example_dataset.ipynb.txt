@@ -126,14 +126,14 @@
         "outputId": "a6340ef1-eaac-42ef-f8d4-bcc499feb57b"
       },
       "source": [
-        "!pip install sleap==1.1.0a10"
+        "!pip install sleap==1.1.0"
       ],
       "execution_count": 5,
       "outputs": [
         {
           "output_type": "stream",
           "text": [
-            "Collecting sleap==1.1.0a10\n",
+            "Collecting sleap==1.1.0\n",
             "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/b9/52/e80875c50a649da56377c7884d5b937260b2310f8c2543dca9bf6c3c06d4/sleap-1.1.0a10-py3-none-any.whl (39.5MB)\n",
             "\u001b[K     |████████████████████████████████| 39.5MB 89kB/s \n",
             "\u001b[?25hCollecting cattrs==1.0.0rc\n",
