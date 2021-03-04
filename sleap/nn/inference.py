@@ -1788,13 +1788,6 @@ class TopDownPredictor(Predictor):
     integral_refinement: bool = True
     integral_patch_size: int = 5
 
-    @property
-    def data_config(self):
-        if self.centroid_config is None:
-            return self.confmap_config.data
-        else:
-            return self.centroid_config.data
-
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained models and configuration."""
         use_gt_centroid = self.centroid_config is None
@@ -1837,6 +1830,14 @@ class TopDownPredictor(Predictor):
 
         self.inference_model = TopDownInferenceModel(
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
+        )
+
+    @property
+    def data_config(self):
+        return (
+            self.centroid_config.data
+            if self.centroid_config
+            else self.confmap_config.data
         )
 
     @classmethod
@@ -2394,10 +2395,6 @@ class BottomUpPredictor(Predictor):
     paf_line_points: int = 10
     min_line_scores: float = 0.25
 
-    @property
-    def data_config(self):
-        return self.bottomup_config.data
-
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained model and configuration."""
         self.inference_model = BottomUpInferenceModel(
@@ -2417,6 +2414,10 @@ class BottomUpPredictor(Predictor):
                 integral_patch_size=self.integral_patch_size,
             )
         )
+
+    @property
+    def data_config(self):
+        return self.bottomup_config.data
 
     @classmethod
     def from_trained_models(

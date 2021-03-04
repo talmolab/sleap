@@ -414,8 +414,10 @@ class SizeMatcher:
                     target_width=self.max_image_width,
                 )
                 example[self.image_key] = tf.cast(image, example[self.image_key].dtype)
-                example[self.image_key] = tf.ensure_shape(example[self.image_key],
-                                                          [self.max_image_height, self.max_image_width, channels])
+                example[self.image_key] = tf.ensure_shape(
+                    example[self.image_key],
+                    [self.max_image_height, self.max_image_width, channels],
+                )
                 # Scale the instance points accordingly
                 if self.points_key:
                     example[self.points_key] = (
