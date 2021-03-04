@@ -353,12 +353,12 @@ class SingleInstanceConfmapsPipeline:
             A `Pipeline` instance configured to produce input examples.
         """
         pipeline = Pipeline(providers=data_provider)
-        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -390,6 +390,12 @@ class SingleInstanceConfmapsPipeline:
         if self.optimization_config.online_shuffling:
             pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
 
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
+
         if self.optimization_config.augmentation_config.random_flip:
             pipeline += RandomFlipper.from_skeleton(
                 self.data_config.labels.skeletons[0],
@@ -404,11 +410,6 @@ class SingleInstanceConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        if self.data_config.preprocessing.resize_and_pad_to_target:
-            pipeline += SizeMatcher.from_config(
-                config=self.data_config.preprocessing,
-                provider=data_provider,
-            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += SingleInstanceConfidenceMapGenerator(
             sigma=self.single_instance_confmap_head.sigma,
@@ -487,12 +488,12 @@ class CentroidConfmapsPipeline:
             A `Pipeline` instance configured to produce input examples.
         """
         pipeline = Pipeline(providers=data_provider)
-        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -529,6 +530,11 @@ class CentroidConfmapsPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         if self.optimization_config.augmentation_config.random_flip:
             pipeline += RandomFlipper.from_skeleton(
                 self.data_config.labels.skeletons[0],
@@ -543,11 +549,6 @@ class CentroidConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        if self.data_config.preprocessing.resize_and_pad_to_target:
-            pipeline += SizeMatcher.from_config(
-                config=self.data_config.preprocessing,
-                provider=data_provider,
-            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
@@ -603,6 +604,11 @@ class CentroidConfmapsPipeline:
         """
         pipeline = self.make_base_pipeline(data_provider=data_provider)
         pipeline += Prefetcher()
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Repeater()
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -654,12 +660,12 @@ class TopdownConfmapsPipeline:
             A `Pipeline` instance configured to produce input examples.
         """
         pipeline = Pipeline(providers=data_provider)
-        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
@@ -692,6 +698,11 @@ class TopdownConfmapsPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         if self.optimization_config.augmentation_config.random_flip:
             pipeline += RandomFlipper.from_skeleton(
                 self.data_config.labels.skeletons[0],
@@ -701,11 +712,6 @@ class TopdownConfmapsPipeline:
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        if self.data_config.preprocessing.resize_and_pad_to_target:
-            pipeline += SizeMatcher.from_config(
-                config=self.data_config.preprocessing,
-                provider=data_provider,
-            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
@@ -798,12 +804,12 @@ class BottomUpPipeline:
             A `Pipeline` instance configured to produce input examples.
         """
         pipeline = Pipeline(providers=data_provider)
-        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         if self.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -836,7 +842,11 @@ class BottomUpPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         aug_config = self.optimization_config.augmentation_config
         if aug_config.random_flip:
             pipeline += RandomFlipper.from_skeleton(
@@ -850,11 +860,6 @@ class BottomUpPipeline:
                 crop_width=aug_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
-        if self.data_config.preprocessing.resize_and_pad_to_target:
-            pipeline += SizeMatcher.from_config(
-                config=self.data_config.preprocessing,
-                provider=data_provider,
-            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += MultiConfidenceMapGenerator(
             sigma=self.confmaps_head.sigma,

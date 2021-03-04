@@ -46,6 +46,7 @@ import numpy as np
 
 import sleap
 from sleap.nn.config import TrainingJobConfig
+from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker
 from sleap.nn.paf_grouping import PAFScorer
@@ -192,6 +193,11 @@ class Predictor(ABC):
     def from_trained_models(cls, *args, **kwargs):
         pass
 
+    @property
+    @abstractmethod
+    def data_config(self):
+        pass
+
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
 
@@ -209,6 +215,12 @@ class Predictor(ABC):
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
+
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
             batch_size=self.batch_size, drop_remainder=False, unrag=False
@@ -385,6 +397,10 @@ class VisualPredictor(Predictor):
     config: TrainingJobConfig
     model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+
+    @property
+    def data_config(self):
+        return self.config.data
 
     @classmethod
     def from_trained_models(cls, model_path: Text) -> "VisualPredictor":
@@ -1098,6 +1114,10 @@ class SingleInstancePredictor(Predictor):
             )
         )
 
+    @property
+    def data_config(self):
+        return self.confmap_config.data
+
     @classmethod
     def from_trained_models(
         cls,
@@ -1768,6 +1788,13 @@ class TopDownPredictor(Predictor):
     integral_refinement: bool = True
     integral_patch_size: int = 5
 
+    @property
+    def data_config(self):
+        if self.centroid_config is None:
+            return self.confmap_config.data
+        else:
+            return self.centroid_config.data
+
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained models and configuration."""
         use_gt_centroid = self.centroid_config is None
@@ -2366,6 +2393,10 @@ class BottomUpPredictor(Predictor):
     max_edge_length_ratio: float = 0.5
     paf_line_points: int = 10
     min_line_scores: float = 0.25
+
+    @property
+    def data_config(self):
+        return self.bottomup_config.data
 
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained model and configuration."""
