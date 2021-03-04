@@ -266,7 +266,7 @@ if __name__ == "__main__":
     from PySide2.QtWidgets import QApplication
 
     labels = sleap.load_file(
-        r"D:\sleap-data\datasets\wt_gold.13pt\sample\labels.v000.slp"
+        r"C:\Users\ariem\sleap_data\labels.v000.slp"
     )
 
     app = QApplication([])
