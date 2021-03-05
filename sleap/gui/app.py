@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
         """Sets window title (if value is not None)."""
         if value is not None:
             super(MainWindow, self).setWindowTitle(
-                f"{value} - SLEAP v{sleap.version.__version__}"
+                f"{value} - SLEAP Label v{sleap.version.__version__}"
             )
 
     def event(self, e: QEvent) -> bool:
@@ -534,6 +534,33 @@ class MainWindow(QMainWindow):
             "Render Video Clip with Instances...",
             self.commands.exportLabeledClip,
         )
+
+        viewMenu.addSeparator()
+
+        seekbar_header_options = (
+            "None",
+            "Point Displacement (sum)",
+            "Point Displacement (max)",
+            "Primary Point Displacement (sum)",
+            "Primary Point Displacement (max)",
+            "Instance Score (sum)",
+            "Instance Score (min)",
+            "Point Score (sum)",
+            "Point Score (min)",
+            "Number of predicted points",
+            "Min Centroid Proximity",
+        )
+
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Seekbar Header",
+            options=seekbar_header_options,
+            key="seekbar_header",
+        )
+
+        self.state["seekbar_header"] = "None"
+        self.state.connect("seekbar_header", self._set_seekbar_header)
+
         viewMenu.addSeparator()
 
         ### Label Menu ###
@@ -631,6 +658,8 @@ class MainWindow(QMainWindow):
             self.commands.deleteFrameLimitPredictions,
         )
 
+        # labelMenu.addSeparator()
+
         ### Tracks Menu ###
 
         tracksMenu = self.menuBar().addMenu("Tracks")
@@ -655,32 +684,6 @@ class MainWindow(QMainWindow):
             "Delete Instance and Track",
             self.commands.deleteSelectedInstanceTrack,
         )
-
-        tracksMenu.addSeparator()
-
-        seekbar_header_options = (
-            "None",
-            "Point Displacement (sum)",
-            "Point Displacement (max)",
-            "Primary Point Displacement (sum)",
-            "Primary Point Displacement (max)",
-            "Instance Score (sum)",
-            "Instance Score (min)",
-            "Point Score (sum)",
-            "Point Score (min)",
-            "Number of predicted points",
-            "Min Centroid Proximity",
-        )
-
-        add_submenu_choices(
-            menu=tracksMenu,
-            title="Seekbar Header",
-            options=seekbar_header_options,
-            key="seekbar_header",
-        )
-
-        self.state["seekbar_header"] = "None"
-        self.state.connect("seekbar_header", self._set_seekbar_header)
 
         ### Predict Menu ###
 
@@ -862,6 +865,7 @@ class MainWindow(QMainWindow):
                 items=self.state["skeleton"], context=self.commands
             ),
         )
+
         vb.addWidget(self.skeletonNodesTable)
         hb = QHBoxLayout()
         _add_button(hb, "New Node", self.commands.newNode)
@@ -910,6 +914,7 @@ class MainWindow(QMainWindow):
 
         _add_button(hb, "Add Edge", new_edge)
         _add_button(hb, "Delete Edge", self.commands.deleteEdge)
+
         hbw = QWidget()
         hbw.setLayout(hb)
         vb.addWidget(hbw)
@@ -987,7 +992,7 @@ class MainWindow(QMainWindow):
 
         _add_button(
             hb,
-            "Previous",
+            "Prev",
             self.process_events_then(self.commands.prevSuggestedFrame),
             "goto previous suggestion",
         )
@@ -1668,8 +1673,7 @@ def main():
         os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
     app = QApplication([])
-    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
-    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
+    app.setApplicationName(f"SLEAP Label v{sleap.version.__version__}")
 
     window = MainWindow(labels_path=args.labels_path, reset=args.reset)
     window.showMaximized()

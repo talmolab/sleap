@@ -78,9 +78,6 @@ class ImportVideos:
     def create_video(import_item: Dict[str, Any]) -> Video:
         return Video.from_filename(**import_item["params"])
 
-    def ask_and_return_videos(self) -> List[Video]:
-        return ImportVideos.create_videos(ImportVideos().ask())
-
 
 class ImportParamDialog(QDialog):
     """Dialog for selecting parameters with preview when importing video.

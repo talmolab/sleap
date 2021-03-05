@@ -950,6 +950,8 @@ class ExportLabeledClip(AppCommand):
 
         if params["open_when_done"]:
             # Open the file using default video playing app
+            from sleap.util import open_file
+
             open_file(params["filename"])
 
     @staticmethod
@@ -1496,13 +1498,13 @@ class SetNodeSymmetry(EditCommand):
         node = params["node"]
         symmetry = params["symmetry"]
         skeleton = params["skeleton"]
-        if symmetry and node != symmetry:
+
+        if symmetry:
             skeleton.add_symmetry(node, symmetry)
         else:
             # Value was cleared by user, so delete symmetry
             symmetric_to = skeleton.get_symmetry(node)
-            if symmetric_to is not None:
-                skeleton.delete_symmetry(node, symmetric_to)
+            skeleton.delete_symmetry(node, symmetric_to)
 
 
 class NewEdge(EditCommand):
@@ -1962,6 +1964,7 @@ class AddSuggestion(EditCommand):
         context.labels.add_suggestion(
             context.state["video"], context.state["frame_idx"]
         )
+        context.app.suggestionsTable.selectRow(len(context.labels) - 1)
 
 
 class RemoveSuggestion(EditCommand):
