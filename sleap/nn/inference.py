@@ -2348,6 +2348,9 @@ class BottomUpPredictor(Predictor):
             in relative image units. Candidate connections above this length will be
             penalized during matching.
         paf_line_points: Number of points to sample along the line integral.
+        min_line_scores: Minimum line score (between -1 and 1) required to form a match
+            between candidate point pairs. Useful for rejecting spurious detections when
+            there are no better ones.
     """
 
     bottomup_config: TrainingJobConfig
@@ -2361,6 +2364,7 @@ class BottomUpPredictor(Predictor):
     integral_patch_size: int = 5
     max_edge_length_ratio: float = 0.5
     paf_line_points: int = 10
+    min_line_scores: float = 0.25
 
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained model and configuration."""
@@ -2372,6 +2376,7 @@ class BottomUpPredictor(Predictor):
                     max_edge_length_ratio=self.max_edge_length_ratio,
                     n_points=self.paf_line_points,
                     min_instance_peaks=0,
+                    min_line_scores=self.min_line_scores,
                 ),
                 input_scale=self.bottomup_config.data.preprocessing.input_scaling,
                 pad_to_stride=self.bottomup_model.maximum_stride,
@@ -2389,6 +2394,9 @@ class BottomUpPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
+        max_edge_length_ratio: float = 0.5,
+        paf_line_points: int = 10,
+        min_line_scores: float = 0.25,
     ) -> "BottomUpPredictor":
         """Create predictor from a saved model.
 
@@ -2407,6 +2415,13 @@ class BottomUpPredictor(Predictor):
                 offset regression head.
             integral_patch_size: Size of patches to crop around each rough peak for
                 integral refinement as an integer scalar.
+            max_edge_length_ratio: The maximum expected length of a connected pair of
+                points in relative image units. Candidate connections above this length
+                will be penalized during matching.
+            paf_line_points: Number of points to sample along the line integral.
+            min_line_scores: Minimum line score (between -1 and 1) required to form a
+                match between candidate point pairs. Useful for rejecting spurious
+                detections when there are no better ones.
 
         Returns:
             An instance of `BottomUpPredictor` with the loaded model.
@@ -2425,6 +2440,9 @@ class BottomUpPredictor(Predictor):
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
             batch_size=batch_size,
+            max_edge_length_ratio=max_edge_length_ratio,
+            paf_line_points=paf_line_points,
+            min_line_scores=min_line_scores,
         )
         obj._initialize_inference_model()
         return obj

@@ -173,7 +173,7 @@ def test_group_instances_sample():
     match_edge_inds_sample = tf.constant([0, 1, 0], tf.int32)
     match_src_peak_inds_sample = tf.constant([0, 0, 1], tf.int32)
     match_dst_peak_inds_sample = tf.constant([0, 0, 1], tf.int32)
-    match_line_scores_sample = tf.range(3, dtype=tf.float32)
+    match_line_scores_sample = tf.ones([3], dtype=tf.float32)
     n_nodes = 3
     n_edges = 2
     edge_types = [EdgeType(0, 1), EdgeType(1, 2)]
@@ -209,7 +209,7 @@ def test_group_instances_sample():
         ],
     )
     assert_array_equal(predicted_peak_scores, [[0.0, 1.0, 2.0], [3.0, 4.0, np.nan]])
-    assert_array_equal(predicted_instance_scores, [1.0, 2.0])
+    assert_array_equal(predicted_instance_scores, [2.0, 1.0])
 
 
 def test_group_instances_batch():
@@ -234,7 +234,7 @@ def test_group_instances_batch():
         tf.constant([0, 0, 1], tf.int32), row_ids_edges
     )
     match_line_scores = tf.RaggedTensor.from_value_rowids(
-        tf.range(3, dtype=tf.float32), row_ids_edges
+        tf.ones([3], dtype=tf.float32), row_ids_edges
     )
     n_nodes = 3
     n_edges = 2
@@ -277,4 +277,4 @@ def test_group_instances_batch():
     assert_array_equal(
         predicted_peak_scores.flat_values, [[0.0, 1.0, 2.0], [3.0, 4.0, np.nan]]
     )
-    assert_array_equal(predicted_instance_scores.flat_values, [1.0, 2.0])
+    assert_array_equal(predicted_instance_scores.flat_values, [2.0, 1.0])
