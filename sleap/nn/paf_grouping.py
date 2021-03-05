@@ -508,7 +508,8 @@ def match_candidates_sample(
         n_edges: A scalar `int` denoting the number of edges in the skeleton.
 
     Returns:
-        The connection peaks for each edge matched based on score as 4-tuple of:
+        The connection peaks for each edge matched based on score as tuple of
+        `(match_edge_inds, match_src_peak_inds, match_dst_peak_inds, match_line_scores)`
 
         `match_edge_inds`: Indices of the skeleton edge that each connection corresponds
         to as a `tf.Tensor` of shape `(n_connections,)` and dtype `tf.int32`.
@@ -562,7 +563,8 @@ def match_candidates_sample(
         # Reshape line scores into cost matrix (n_src, n_dst)
         scores_matrix = tf.reshape(line_scores_k, [n_src, n_dst])
 
-        # Replace NaNs with inf since linear_sum_assignment doesn't accept NaNs and flip sign
+        # Replace NaNs with inf since linear_sum_assignment doesn't accept NaNs and flip
+        # sign.
         cost_matrix = tf.where(
             condition=tf.math.is_nan(scores_matrix),
             x=tf.constant([np.inf]),
@@ -627,7 +629,8 @@ def match_candidates_batch(
         n_edges: A scalar `int` denoting the number of edges in the skeleton.
 
     Returns:
-        The connection peaks for each edge matched based on score as 4-tuple of:
+        The connection peaks for each edge matched based on score as tuple of
+        `(match_edge_inds, match_src_peak_inds, match_dst_peak_inds, match_line_scores)`
 
         `match_edge_inds`: Sample-grouped indices of the skeleton edge for each
         connection as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))` and
@@ -926,6 +929,7 @@ def group_instances_sample(
     n_edges: int,
     edge_types: List[EdgeType],
     min_instance_peaks: int,
+    min_line_scores: float = 0.25
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Group matched connections into full instances for a single sample.
 
@@ -962,6 +966,8 @@ def group_instances_sample(
             range `(0., 1.]` is provided, this is interpreted as a fraction of the total
             number of nodes in the skeleton. If an `int` is provided, this is the
             absolute minimum number of peaks.
+        min_line_scores: Minimum line score (between -1 and 1) required to form a match
+            between candidate point pairs.
 
     Returns:
         A tuple of arrays with the grouped instances:
@@ -989,6 +995,14 @@ def group_instances_sample(
         match_src_peak_inds_sample = match_src_peak_inds_sample.numpy()
         match_dst_peak_inds_sample = match_dst_peak_inds_sample.numpy()
         match_line_scores_sample = match_line_scores_sample.numpy()
+
+
+    # Filter out low scoring matches.
+    is_valid_match = match_line_scores_sample >= min_line_scores
+    match_edge_inds_sample = match_edge_inds_sample[is_valid_match]
+    match_src_peak_inds_sample = match_src_peak_inds_sample[is_valid_match]
+    match_dst_peak_inds_sample = match_dst_peak_inds_sample[is_valid_match]
+    match_line_scores_sample = match_line_scores_sample[is_valid_match]
 
     # Group peaks by channel.
     peaks = []
@@ -1047,6 +1061,7 @@ def group_instances_batch(
     n_edges: int,
     edge_types: List[EdgeType],
     min_instance_peaks: int,
+    min_line_scores: float = 0.25
 ) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
     """Group matched connections into full instances for a batch.
 
@@ -1084,6 +1099,8 @@ def group_instances_batch(
             range `(0., 1.]` is provided, this is interpreted as a fraction of the total
             number of nodes in the skeleton. If an `int` is provided, this is the
             absolute minimum number of peaks.
+        min_line_scores: Minimum line score (between -1 and 1) required to form a match
+            between candidate point pairs.
 
     Returns:
         A tuple of arrays with the grouped instances for the whole batch grouped by
@@ -1129,6 +1146,7 @@ def group_instances_batch(
             n_edges,
             edge_types,
             min_instance_peaks,
+            min_line_scores=min_line_scores,
         )
 
     n_samples = peaks.nrows()
@@ -1261,9 +1279,10 @@ class PAFScorer:
     part_names: List[Text]
     edges: List[Tuple[Text, Text]]
     pafs_stride: int
-    max_edge_length_ratio: float = 0.5
+    max_edge_length_ratio: float = 0.25
     n_points: int = 10
     min_instance_peaks: Union[int, float] = 0
+    min_line_scores: float = 0.25
 
     edge_inds: List[Tuple[int, int]] = attr.ib(init=False)
     edge_types: List[EdgeType] = attr.ib(init=False)
@@ -1386,7 +1405,8 @@ class PAFScorer:
                 `tf.float32`. Can be generated using `PAFScorer.score_paf_lines()`.
 
         Returns:
-            The connection peaks for each edge matched based on score as 4-tuple of:
+            The connection peaks for each edge matched based on score as tuple of
+            `(match_edge_inds, match_src_peak_inds, match_dst_peak_inds, match_line_scores)`
 
             `match_edge_inds`: Sample-grouped indices of the skeleton edge for each
             connection as a `tf.RaggedTensor` of shape `(n_samples, (n_connections))`
@@ -1491,6 +1511,7 @@ class PAFScorer:
             self.n_edges,
             self.edge_types,
             self.min_instance_peaks,
+            min_line_scores=self.min_line_scores
         )
 
     def predict(
