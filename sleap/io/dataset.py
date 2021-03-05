@@ -1043,7 +1043,6 @@ class Labels(MutableSequence):
 
     def remove_track(self, track: Track):
         """Remove a track from the labels, updating instances."""
-        self._cache.remove_track(track)
         for inst in self.instances():
             if inst.track == track:
                 inst.track = None
