@@ -578,7 +578,7 @@ class LearningDialog(QtWidgets.QDialog):
         self._handle_learning_finished.emit(new_counts)
 
         # count < 0 means there was an error and we didn't get any results.
-        if new_counts >= 0:
+        if new_counts is not None and new_counts >= 0:
             total_count = items_for_inference.total_frame_count
             no_result_count = total_count - new_counts
 
