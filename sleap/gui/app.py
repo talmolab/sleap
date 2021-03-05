@@ -656,7 +656,6 @@ class MainWindow(QMainWindow):
             self.commands.deleteSelectedInstanceTrack,
         )
 
-        
         tracksMenu.addSeparator()
 
         seekbar_header_options = (
