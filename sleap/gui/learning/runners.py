@@ -651,7 +651,7 @@ def run_gui_inference(
             msg = "Predicting..."
 
             if n_processed is not None and n_total is not None:
-                msg = f"Predicted: <b>{n_processed:,}/{n_total:,}</b>"
+                msg = f"<b>Predicted:</b> {n_processed:,}/{n_total:,}"
 
             # Show time elapsed?
             if rate is not None and eta is not None:
@@ -663,8 +663,8 @@ def run_gui_inference(
                     eta_str = f"{int(eta_mins)} mins, {int(eta_secs):02} secs"
                 else:
                     eta_str = f"{int(eta_secs):02} secs"
-                msg += f"<br>ETA: <b>{eta_str}</b>"
-                msg += f"<br>FPS: <b>{rate:.1f}</b>"
+                msg += f"<br><b>ETA:</b> {eta_str}"
+                msg += f"<br><b>FPS:</b> {rate:.1f}"
 
             msg = msg.replace(" ", "&nbsp;")
 

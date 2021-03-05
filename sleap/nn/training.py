@@ -936,8 +936,15 @@ class Trainer(ABC):
         """Delete visualization images subdirectory."""
         viz_path = os.path.join(self.run_path, "viz")
         if os.path.exists(viz_path):
-            logger.info(f"Deleting visualization directory: {viz_path}")
-            shutil.rmtree(viz_path)
+            try:
+                logger.info(f"Deleting visualization directory: {viz_path}")
+                shutil.rmtree(viz_path)
+            except PermissionError:
+                logger.info(
+                    "Failed to delete visualization directory. If you are training "
+                    "through the GUI, this is likely because the visualizer was "
+                    "checking for new images. Delete the directory manually if needed."
+                )
 
     def package(self):
         """Package model folder into a zip file for portability."""
