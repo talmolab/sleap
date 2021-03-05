@@ -929,7 +929,7 @@ def group_instances_sample(
     n_edges: int,
     edge_types: List[EdgeType],
     min_instance_peaks: int,
-    min_line_scores: float = 0.25
+    min_line_scores: float = 0.25,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Group matched connections into full instances for a single sample.
 
@@ -996,7 +996,6 @@ def group_instances_sample(
         match_dst_peak_inds_sample = match_dst_peak_inds_sample.numpy()
         match_line_scores_sample = match_line_scores_sample.numpy()
 
-
     # Filter out low scoring matches.
     is_valid_match = match_line_scores_sample >= min_line_scores
     match_edge_inds_sample = match_edge_inds_sample[is_valid_match]
@@ -1061,7 +1060,7 @@ def group_instances_batch(
     n_edges: int,
     edge_types: List[EdgeType],
     min_instance_peaks: int,
-    min_line_scores: float = 0.25
+    min_line_scores: float = 0.25,
 ) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
     """Group matched connections into full instances for a batch.
 
@@ -1245,6 +1244,9 @@ class PAFScorer:
         min_instance_peaks: Minimum number of peaks the instance should have to be
             considered a real instance. Instances with fewer peaks than this will be
             discarded (useful for filtering spurious detections).
+        min_line_scores: Minimum line score (between -1 and 1) required to form a match
+            between candidate point pairs. Useful for rejecting spurious detections when
+            there are no better ones.
         edge_inds: The edges of the skeleton defined as a list of (source, destination)
             tuples of node indices. This is created automatically on initialization.
         edge_types: A list of `EdgeType` instances representing the edges of the
@@ -1309,6 +1311,7 @@ class PAFScorer:
         max_edge_length_ratio: float = 0.5,
         n_points: int = 10,
         min_instance_peaks: Union[int, float] = 0,
+        min_line_scores: float = 0.25,
     ) -> "PAFScorer":
         """Initialize the PAF scorer from a `MultiInstanceConfig` head config.
 
@@ -1322,6 +1325,9 @@ class PAFScorer:
             min_instance_peaks: Minimum number of peaks the instance should have to be
                 considered a real instance. Instances with fewer peaks than this will be
                 discarded (useful for filtering spurious detections).
+            min_line_scores: Minimum line score (between -1 and 1) required to form a
+                match between candidate point pairs. Useful for rejecting spurious
+                detections when there are no better ones.
 
         Returns:
             The initialized instance of `PAFScorer`.
@@ -1333,6 +1339,7 @@ class PAFScorer:
             max_edge_length_ratio=max_edge_length_ratio,
             n_points=n_points,
             min_instance_peaks=min_instance_peaks,
+            min_line_scores=min_line_scores,
         )
 
     def score_paf_lines(
@@ -1511,7 +1518,7 @@ class PAFScorer:
             self.n_edges,
             self.edge_types,
             self.min_instance_peaks,
-            min_line_scores=self.min_line_scores
+            min_line_scores=self.min_line_scores,
         )
 
     def predict(
