@@ -279,7 +279,7 @@ class SizeMatcher:
     def from_config(
         cls,
         config: PreprocessingConfig,
-        provider: Optional = None,
+        provider: Optional["Provider"] = None,
         update_config: bool = True,
         image_key: Text = "image",
         scale_key: Text = "scale",
@@ -291,8 +291,9 @@ class SizeMatcher:
 
         Args:
             config: An `PreprocessingConfig` instance with the desired parameters. If
-                `config.resize_and_pad_to_target` is True and 'target_height' / 'target_width' are not set, provider
-                needs to be set that implements 'max_height_and_width'.
+                `config.resize_and_pad_to_target` is `True` and 'target_height' /
+                'target_width' are not set, provider needs to be set that implements
+                'max_height_and_width'.
             provider: Data provider.
             update_config: If True, the input model configuration will be updated with
                 values inferred from other fields.
@@ -305,28 +306,20 @@ class SizeMatcher:
             full_image_key: String name of the key containing the full images.
             points_key: String name of the key containing points to adjust for the
                 resizing operation.
+
         Returns:
             An instance of this class.
-
-        Raises:
-            ValueError: If `provider` is not set or does not implement `max_height_and_width`.
         """
+        max_height, max_width = None, None
         if config.resize_and_pad_to_target:
             if config.target_height is not None and config.target_width is not None:
                 max_height = config.target_height
                 max_width = config.target_width
-            else:
-                try:
-                    max_height, max_width = provider.max_height_and_width
-                except:
-                    raise ValueError(
-                        "target_height / target_width could not be determined"
-                    )
+            elif provider is not None:
+                max_height, max_width = provider.max_height_and_width
                 if update_config:
                     config.target_height = max_height
                     config.target_width = max_width
-        else:
-            max_height, max_width = None, None
 
         return cls(
             image_key=image_key,
@@ -355,7 +348,7 @@ class SizeMatcher:
         return output_keys
 
     def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
-        """Transform a dataset with potentially different size images into one with equal sized images.
+        """Transform a dataset with variable size images into one with fixed sizes.
 
         Args:
             ds_input: A dataset with the image specified in the `image_key` attribute,
@@ -363,14 +356,19 @@ class SizeMatcher:
                 tracking scaling transformations.
 
         Returns:
-            A `tf.data.Dataset` with elements containing the same images and points of equal size.
+            A `tf.data.Dataset` with elements containing the same images and points of
+            equal size.
 
             If the `keep_full_image` attribute is True, a key specified by
-            `full_image_key` will be added with the to the example containing the image
-            before any processing.
+            `full_image_key` will be added to the example containing the image before
+            any processing.
         """
+        # Null case: no-op if the sizes are not specified.
+        if self.max_image_height is None or self.max_image_width is None:
+            return ds_input
 
-        # mapping function: match to max height width by resizing and padding bottom/right accordingly
+        # Mapping function: match to max height width by resizing and padding
+        # bottom/right accordingly.
         def resize_and_pad(example):
             image = example[self.image_key]
             if self.keep_full_image:
@@ -384,28 +382,33 @@ class SizeMatcher:
                 current_shape[-3] != self.max_image_height
                 or current_shape[-2] != self.max_image_width
             ):
-                # Calculate target height and width for resizing the image (no padding yet)
+                # Calculate target height and width for resizing the image (no padding
+                # yet)
                 hratio = self.max_image_height / tf.cast(current_shape[-3], tf.float32)
                 wratio = self.max_image_width / tf.cast(current_shape[-2], tf.float32)
                 if hratio > wratio:
-                    # The bottleneck is width, scale to fit width first then pad to height
+                    # The bottleneck is width, scale to fit width first then pad to
+                    # height
                     target_height = tf.cast(
                         tf.cast(current_shape[-3], tf.float32) * wratio, tf.int32
                     )
                     target_width = self.max_image_width
                     example[self.scale_key] = example[self.scale_key] * wratio
                 else:
-                    # The bottleneck is height, scale to fit height first then pad to width
+                    # The bottleneck is height, scale to fit height first then pad to
+                    # width
                     target_height = self.max_image_height
                     target_width = tf.cast(
                         tf.cast(current_shape[-2], tf.float32) * hratio, tf.int32
                     )
                     example[self.scale_key] = example[self.scale_key] * hratio
-                # Resize the image to fill one of the dimensions by preserving aspect ratio
+                # Resize the image to fill one of the dimensions by preserving aspect
+                # ratio
                 image = tf.image.resize_with_pad(
                     image, target_height=target_height, target_width=target_width
                 )
-                # Pad the image on bottom/right with zeroes to match specified dimensions
+                # Pad the image on bottom/right with zeroes to match specified
+                # dimensions
                 image = tf.image.pad_to_bounding_box(
                     image,
                     offset_height=0,
