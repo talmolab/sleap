@@ -1465,6 +1465,7 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, event):
         """Custom event handler for mouse move."""
+        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
@@ -1473,11 +1474,9 @@ class QtNode(QGraphicsEllipseItem):
                 user_change=False
             )  # don't count change until mouse release
 
-        # Update selection box.
-        self.parentObject().updateBox()
-
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
+        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)

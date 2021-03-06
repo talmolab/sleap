@@ -56,13 +56,13 @@ class VideoFrameSuggestions(object):
 
         # map from method param value to corresponding class method
         method_functions = dict(
-            sampling=cls.basic_sample_suggestion_method,
+            sample=cls.basic_sample_suggestion_method,
             image_features=cls.image_feature_based_method,
             prediction_score=cls.prediction_score,
             velocity=cls.velocity,
         )
 
-        method = str.replace(params["method"], " ", "_").lower()
+        method = str.replace(params["method"], " ", "_")
         if method_functions.get(method, None) is not None:
             return method_functions[method](labels=labels, **params)
         else:
@@ -73,27 +73,23 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def basic_sample_suggestion_method(
-        cls, labels, n_samples: int = 20, sampling_method: str = "random", **kwargs
+        cls, labels, per_video: int = 20, sampling_method: str = "random", **kwargs
     ):
         """Method to generate suggestions by taking strides through video."""
         suggestions = []
 
-        per_video = n_samples // len(labels.videos)
-
         for video in labels.videos:
             if sampling_method == "stride":
-                vid_suggestions = np.unique(
-                    np.linspace(0, len(video) - 1, per_video, dtype="int64")
-                )
+                vid_suggestions = list(
+                    range(0, video.frames, video.frames // per_video)
+                )[:per_video]
             else:
                 # random sampling
-                vid_suggestions = np.random.choice(
-                    len(video), min(per_video, len(video)), replace=False
-                )
+                vid_suggestions = random.sample(range(video.frames), per_video)
 
             group = labels.videos.index(video)
             suggestions.extend(
-                cls.idx_list_to_frame_list(vid_suggestions.tolist(), video, group)
+                cls.idx_list_to_frame_list(vid_suggestions, video, group)
             )
 
         return suggestions
