@@ -217,9 +217,13 @@ class Predictor(ABC):
             pipeline.providers = [data_provider]
 
         if self.data_config.preprocessing.resize_and_pad_to_target:
+            points_key = None
+            if data_provider is not None and "instances" in data_provider.output_keys:
+                points_key = "instances"
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
+                points_key=points_key
             )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
