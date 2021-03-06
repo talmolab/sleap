@@ -253,13 +253,9 @@ class Predictor(ABC):
             arrays.
         """
         # Initialize data pipeline and inference model if needed.
-        if self.pipeline is None:
-            self.make_pipeline()
+        self.make_pipeline(data_provider)
         if self.inference_model is None:
             self._initialize_inference_model()
-
-        # Update the data provider source.
-        self.pipeline.providers = [data_provider]
 
         def process_batch(ex):
             # Run inference on current batch.
