@@ -66,7 +66,7 @@ from sleap.nn.callbacks import (
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, CSVLogger
 
 # Inference
-from sleap.nn.inference import FindInstancePeaks
+from sleap.nn.inference import FindInstancePeaks, SingleInstanceInferenceLayer
 
 # Visualization
 import matplotlib
@@ -1030,11 +1030,19 @@ class SingleInstanceModelTrainer(Trainer):
         training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
         validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
 
+        inference_layer = SingleInstanceInferenceLayer(
+            keras_model=self.keras_model,
+            input_scale=self.config.data.preprocessing.input_scaling,
+            peak_threshold=0.2,
+            return_confmaps=True,
+        )
+
         def visualize_example(example):
             img = example["image"].numpy()
-            cms = example["predicted_confidence_maps"].numpy()
+            preds = inference_layer(tf.expand_dims(img, axis=0))
+            cms = preds["confmaps"].numpy()[0]
             pts_gt = example["instances"].numpy()[0]
-            pts_pr = example["predicted_points"].numpy()
+            pts_pr = preds["peaks"].numpy()[0]
 
             scale = 1.0
             if img.shape[0] < 512:
