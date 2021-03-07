@@ -30,6 +30,7 @@ import tempfile
 import platform
 import shutil
 import atexit
+import subprocess
 import rich.progress
 from collections import deque
 import json
@@ -2767,6 +2768,11 @@ def _make_cli_parser() -> argparse.ArgumentParser:
             "inference speeds, but require more memory."
         ),
     )
+    parser.add_argument(
+        "--open-in-gui",
+        action="store_true",
+        help="Open the resulting predictions in the GUI when finished.",
+    )
 
     # Deprecated legacy args. These will still be parsed for backward compatibility but
     # are hidden from the CLI help.
@@ -2836,8 +2842,11 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     else:
         data_path = args.data_path
 
-    if data_path is None:
-        raise ValueError("You must specify a path to a video or a labels dataset.")
+    if data_path is None or data_path == "":
+        raise ValueError(
+            "You must specify a path to a video or a labels dataset. "
+            "Run 'sleap-track -h' to see full command documentation."
+        )
 
     if data_path.endswith(".slp"):
         labels = sleap.Labels.load_file(data_path)
@@ -3002,6 +3011,9 @@ def main():
     # Save results.
     labels_pr.save(output_path)
     print("Saved output:", output_path)
+
+    if args.open_in_gui:
+        subprocess.call(["sleap-label", output_path])
 
 
 if __name__ == "__main__":

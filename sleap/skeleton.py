@@ -541,6 +541,18 @@ class Skeleton:
 
         return None
 
+    def find_neighbors(self, node: NodeRef) -> List[Node]:
+        """Find nodes that are predecessors or successors from a node.
+
+        Args:
+            node: Name or `Node` instance.
+
+        Returns:
+            A list of `Node` objects that are neighbors to the node.
+        """
+        node = self.find_node(node)
+        return list(self.graph.predecessors(node)) + list(self.graph.successors(node))
+
     def add_edge(self, source: str, destination: str):
         """Add an edge between two nodes.
 

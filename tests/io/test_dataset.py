@@ -520,8 +520,12 @@ def test_merge_with_package(min_labels_robot, tmpdir):
 
     # Add prediction.
     inst = labels_pkg.user_instances[0]
+    pts = inst.numpy()
     inst_pr = sleap.PredictedInstance.from_pointsarray(
-        inst.numpy(), skeleton=labels_pkg.skeleton
+        pts,
+        skeleton=labels_pkg.skeleton,
+        point_confidences=np.zeros(len(pts)),
+        instance_score=1.0,
     )
     labels_pkg.append(
         sleap.LabeledFrame(

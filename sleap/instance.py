@@ -90,6 +90,10 @@ class Point(np.record):
         """
         return math.isnan(self.x) or math.isnan(self.y)
 
+    def numpy() -> np.ndarray:
+        """Return the point as a numpy array."""
+        return np.array([self.x, self.y])
+
 
 # This turns PredictedPoint into an attrs class. Defines comparators for
 # us and generaly makes it behave better. Crazy that this works!
@@ -785,6 +789,19 @@ class Instance:
 
             return parray
 
+    def fill_missing(self):
+        """Add points for skeleton nodes that are missing in the instance.
+
+        This is useful when modifying the skeleton so the nodes appears in the GUI.
+        """
+        self._fix_array()
+        y1, x1, y2, x2 = self.bounding_box
+        w, h = y2 - y1, x2 - x1
+        for node in self.skeleton.nodes:
+            if node not in self.nodes or self[node].isnan():
+                x, y = np.random.rand(2) * np.array([w, h]) + np.array([x1, y1])
+                self[node] = Point(x=x, y=y, visible=False)
+
     @property
     def points_array(self) -> np.ndarray:
         """Return array of x and y coordinates for visible points.
@@ -1053,6 +1070,66 @@ class PredictedInstance(Instance):
             skeleton=skeleton,
             score=instance_score,
             track=track,
+        )
+
+    @classmethod
+    def from_pointsarray(
+        cls,
+        points: np.ndarray,
+        point_confidences: np.ndarray,
+        instance_score: float,
+        skeleton: Skeleton,
+        track: Optional[Track] = None,
+    ) -> "PredictedInstance":
+        """Create a predicted instance from data arrays.
+
+        Args:
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in `(x, y)` coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            point_confidences: A numpy array of shape `(n_nodes,)` and dtype `float32`
+                that contains the confidence/score of the points.
+            instance_score: Scalar float representing the overall instance score, e.g.,
+                the PAF grouping score.
+            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
+                predicted instance.
+            track: Optional `sleap.Track` to associate with the instance.
+
+        Returns:
+            A new `PredictedInstance`.
+        """
+        return cls.from_arrays(
+            points, point_confidences, instance_score, skeleton, track=track
+        )
+
+    @classmethod
+    def from_numpy(
+        cls,
+        points: np.ndarray,
+        point_confidences: np.ndarray,
+        instance_score: float,
+        skeleton: Skeleton,
+        track: Optional[Track] = None,
+    ) -> "PredictedInstance":
+        """Create a predicted instance from data arrays.
+
+        Args:
+            points: A numpy array of shape `(n_nodes, 2)` and dtype `float32` that
+                contains the points in `(x, y)` coordinates of each node. Missing nodes
+                should be represented as `NaN`.
+            point_confidences: A numpy array of shape `(n_nodes,)` and dtype `float32`
+                that contains the confidence/score of the points.
+            instance_score: Scalar float representing the overall instance score, e.g.,
+                the PAF grouping score.
+            skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
+                predicted instance.
+            track: Optional `sleap.Track` to associate with the instance.
+
+        Returns:
+            A new `PredictedInstance`.
+        """
+        return cls.from_arrays(
+            points, point_confidences, instance_score, skeleton, track=track
         )
 
 

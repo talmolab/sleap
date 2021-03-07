@@ -456,18 +456,6 @@ class SingleInstanceConfmapsPipeline:
         pipeline = self.make_base_pipeline(data_provider=data_provider)
         pipeline += Prefetcher()
         pipeline += Repeater()
-        pipeline += KerasModelPredictor(
-            keras_model=keras_model,
-            model_input_keys="image",
-            model_output_keys="predicted_confidence_maps",
-        )
-        pipeline += GlobalPeakFinder(
-            confmaps_key="predicted_confidence_maps",
-            peaks_key="predicted_points",
-            peak_vals_key="predicted_confidences",
-            confmaps_stride=self.single_instance_confmap_head.output_stride,
-            peak_threshold=0.2,
-        )
         return pipeline
 
 
