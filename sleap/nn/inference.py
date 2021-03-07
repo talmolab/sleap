@@ -2846,7 +2846,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         raise ValueError(
             "You must specify a path to a video or a labels dataset. "
             "Run 'sleap-track -h' to see full command documentation."
-            )
+        )
 
     if data_path.endswith(".slp"):
         labels = sleap.Labels.load_file(data_path)
