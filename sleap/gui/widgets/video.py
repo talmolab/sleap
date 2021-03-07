@@ -1700,6 +1700,10 @@ class QtInstance(QGraphicsObject):
         # Show predicted instances behind non-predicted ones
         self.setZValue(1 if self.predicted else 2)
 
+        if not self.predicted:
+            # Initialize missing nodes with random points marked as non-visible.
+            self.instance.fill_missing()
+
         # Add box to go around instance for selection
         self.box = QGraphicsRectItem(parent=self)
         box_pen_width = color_manager.get_item_pen_width(self.instance)
