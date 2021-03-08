@@ -376,7 +376,7 @@ class SizeMatcher:
 
             current_shape = tf.shape(image)
             channels = image.shape[-1]
-            effective_scaling_ratio = 1.
+            effective_scaling_ratio = 1.0
 
             # Only apply this transform if image shape differs from target
             if (
@@ -431,7 +431,9 @@ class SizeMatcher:
             example[self.scale_key] = example[self.scale_key] * effective_scaling_ratio
             # Scale the instance points accordingly
             if self.points_key and self.points_key in example:
-                example[self.points_key] = (example[self.points_key] * effective_scaling_ratio)
+                example[self.points_key] = (
+                    example[self.points_key] * effective_scaling_ratio
+                )
 
             return example
 

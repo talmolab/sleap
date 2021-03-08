@@ -223,7 +223,7 @@ class Predictor(ABC):
             pipeline += SizeMatcher.from_config(
                 config=self.data_config.preprocessing,
                 provider=data_provider,
-                points_key=points_key
+                points_key=points_key,
             )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
