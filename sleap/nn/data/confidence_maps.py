@@ -138,7 +138,7 @@ def make_multi_confmaps_with_offsets(
             replaced with zeros.
         flatten_offsets: If `True`, the last two channels of the offset maps will be
             flattened to produce rank-3 tensors. If `False`, the generated offset maps
-            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
+            will be rank-4 with shape `(height, width, n_nodes, 2)`.
 
     Returns:
         A tuple of `(confmaps, offsets)`.
@@ -208,7 +208,7 @@ class MultiConfidenceMapGenerator:
             replaced with zeros.
         flatten_offsets: If `True`, the last two channels of the offset maps will be
             flattened to produce rank-3 tensors. If `False`, the generated offset maps
-            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
+            will be rank-4 with shape `(height, width, n_nodes, 2)`.
     """
 
     sigma: float = 1.0
@@ -330,7 +330,7 @@ class InstanceConfidenceMapGenerator:
             replaced with zeros.
         flatten_offsets: If `True`, the last two channels of the offset maps will be
             flattened to produce rank-3 tensors. If `False`, the generated offset maps
-            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
+            will be rank-4 with shape `(height, width, n_nodes, 2)`.
     """
 
     sigma: float = 1.0
@@ -470,7 +470,7 @@ class SingleInstanceConfidenceMapGenerator:
             replaced with zeros.
         flatten_offsets: If `True`, the last two channels of the offset maps will be
             flattened to produce rank-3 tensors. If `False`, the generated offset maps
-            will be rank-4 with shaape `(height, width, n_nodes, 2)`.
+            will be rank-4 with shape `(height, width, n_nodes, 2)`.
     """
 
     sigma: float = 1.0

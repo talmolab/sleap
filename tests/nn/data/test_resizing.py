@@ -164,9 +164,7 @@ def test_size_matcher():
     assert next(ds_iter)["image"].shape == (512, 512, 1)
 
     def check_padding(image, from_y, to_y, from_x, to_x):
-        for y in range(from_y, to_y):
-            for x in range(from_x, to_x):
-                assert image[y][x] == 0
+        assert (image.numpy()[from_y:to_y, from_x:to_x] == 0).all()
 
     # Check SizeMatcher when target dims is not strictly larger than actual image dims
     size_matcher = SizeMatcher(max_image_height=560, max_image_width=560)

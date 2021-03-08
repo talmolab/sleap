@@ -340,6 +340,13 @@ class VideoReader:
         return [self.video]
 
     @property
+    def max_height_and_width(self) -> Tuple[int, int]:
+        """Return `(height, width)` that is the maximum of all videos."""
+        return max(video.shape[1] for video in self.videos), max(
+            video.shape[2] for video in self.videos
+        )
+
+    @property
     def output_keys(self) -> List[Text]:
         """Return the output keys that the dataset will produce."""
         return ["image", "raw_image_size", "video_ind", "frame_ind", "scale"]

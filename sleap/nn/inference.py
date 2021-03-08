@@ -46,6 +46,7 @@ import numpy as np
 
 import sleap
 from sleap.nn.config import TrainingJobConfig
+from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker
 from sleap.nn.paf_grouping import PAFScorer
@@ -192,6 +193,11 @@ class Predictor(ABC):
     def from_trained_models(cls, *args, **kwargs):
         pass
 
+    @property
+    @abstractmethod
+    def data_config(self):
+        pass
+
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
 
@@ -209,6 +215,16 @@ class Predictor(ABC):
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
+
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            points_key = None
+            if data_provider is not None and "instances" in data_provider.output_keys:
+                points_key = "instances"
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+                points_key=points_key,
+            )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
             batch_size=self.batch_size, drop_remainder=False, unrag=False
@@ -241,13 +257,9 @@ class Predictor(ABC):
             arrays.
         """
         # Initialize data pipeline and inference model if needed.
-        if self.pipeline is None:
-            self.make_pipeline()
+        self.make_pipeline(data_provider)
         if self.inference_model is None:
             self._initialize_inference_model()
-
-        # Update the data provider source.
-        self.pipeline.providers = [data_provider]
 
         def process_batch(ex):
             # Run inference on current batch.
@@ -386,6 +398,10 @@ class VisualPredictor(Predictor):
     model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
+    @property
+    def data_config(self):
+        return self.config.data
+
     @classmethod
     def from_trained_models(cls, model_path: Text) -> "VisualPredictor":
         cfg = TrainingJobConfig.load_json(model_path)
@@ -433,7 +449,11 @@ class VisualPredictor(Predictor):
 
     def make_pipeline(self):
         pipeline = Pipeline()
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                points_key=None,
+            )
         pipeline += Normalizer.from_config(self.config.data.preprocessing)
         pipeline += Resizer.from_config(
             self.config.data.preprocessing, keep_full_image=False, points_key=None
@@ -1097,6 +1117,10 @@ class SingleInstancePredictor(Predictor):
                 integral_patch_size=self.integral_patch_size,
             )
         )
+
+    @property
+    def data_config(self):
+        return self.confmap_config.data
 
     @classmethod
     def from_trained_models(
@@ -1812,6 +1836,14 @@ class TopDownPredictor(Predictor):
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
         )
 
+    @property
+    def data_config(self):
+        return (
+            self.centroid_config.data
+            if self.centroid_config
+            else self.confmap_config.data
+        )
+
     @classmethod
     def from_trained_models(
         cls,
@@ -1908,7 +1940,12 @@ class TopDownPredictor(Predictor):
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+                points_key=None,
+            )
         if self.centroid_model is None:
             anchor_part = self.confmap_config.data.instance_cropping.center_on_part
             pipeline += sleap.nn.data.pipelines.InstanceCentroidFinder(
@@ -2386,6 +2423,10 @@ class BottomUpPredictor(Predictor):
                 integral_patch_size=self.integral_patch_size,
             )
         )
+
+    @property
+    def data_config(self):
+        return self.bottomup_config.data
 
     @classmethod
     def from_trained_models(
