@@ -126,7 +126,7 @@
         "outputId": "a6340ef1-eaac-42ef-f8d4-bcc499feb57b"
       },
       "source": [
-        "!pip install sleap==1.1.0"
+        "!pip install sleap==1.1.1"
       ],
       "execution_count": 5,
       "outputs": [
