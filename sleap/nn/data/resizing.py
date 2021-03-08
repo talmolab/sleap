@@ -376,6 +376,7 @@ class SizeMatcher:
 
             current_shape = tf.shape(image)
             channels = image.shape[-1]
+            effective_scaling_ratio = 1.
 
             # Only apply this transform if image shape differs from target
             if (
@@ -389,14 +390,15 @@ class SizeMatcher:
                 if hratio > wratio:
                     # The bottleneck is width, scale to fit width first then pad to
                     # height
+                    effective_scaling_ratio = wratio
                     target_height = tf.cast(
                         tf.cast(current_shape[-3], tf.float32) * wratio, tf.int32
                     )
                     target_width = self.max_image_width
-                    example[self.scale_key] = example[self.scale_key] * wratio
                 else:
                     # The bottleneck is height, scale to fit height first then pad to
                     # width
+                    effective_scaling_ratio = hratio
                     target_height = self.max_image_height
                     target_width = tf.cast(
                         tf.cast(current_shape[-2], tf.float32) * hratio, tf.int32
@@ -421,11 +423,12 @@ class SizeMatcher:
                     example[self.image_key],
                     [self.max_image_height, self.max_image_width, channels],
                 )
-                # Scale the instance points accordingly
-                if self.points_key:
-                    example[self.points_key] = (
-                        example[self.points_key] * example[self.scale_key]
-                    )
+
+            # Update the scale factor
+            example[self.scale_key] = example[self.scale_key] * effective_scaling_ratio
+            # Scale the instance points accordingly
+            if self.points_key and self.points_key in example:
+                example[self.points_key] = (example[self.points_key] * effective_scaling_ratio)
 
             return example
 
