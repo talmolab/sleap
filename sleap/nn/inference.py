@@ -30,6 +30,7 @@ import tempfile
 import platform
 import shutil
 import atexit
+import subprocess
 import rich.progress
 from collections import deque
 import json
@@ -45,6 +46,7 @@ import numpy as np
 
 import sleap
 from sleap.nn.config import TrainingJobConfig
+from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker
 from sleap.nn.paf_grouping import PAFScorer
@@ -191,6 +193,11 @@ class Predictor(ABC):
     def from_trained_models(cls, *args, **kwargs):
         pass
 
+    @property
+    @abstractmethod
+    def data_config(self):
+        pass
+
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
 
@@ -208,6 +215,16 @@ class Predictor(ABC):
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
+
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            points_key = None
+            if data_provider is not None and "instances" in data_provider.output_keys:
+                points_key = "instances"
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+                points_key=points_key,
+            )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
             batch_size=self.batch_size, drop_remainder=False, unrag=False
@@ -240,13 +257,9 @@ class Predictor(ABC):
             arrays.
         """
         # Initialize data pipeline and inference model if needed.
-        if self.pipeline is None:
-            self.make_pipeline()
+        self.make_pipeline(data_provider)
         if self.inference_model is None:
             self._initialize_inference_model()
-
-        # Update the data provider source.
-        self.pipeline.providers = [data_provider]
 
         def process_batch(ex):
             # Run inference on current batch.
@@ -385,6 +398,10 @@ class VisualPredictor(Predictor):
     model: Model
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
+    @property
+    def data_config(self):
+        return self.config.data
+
     @classmethod
     def from_trained_models(cls, model_path: Text) -> "VisualPredictor":
         cfg = TrainingJobConfig.load_json(model_path)
@@ -432,7 +449,11 @@ class VisualPredictor(Predictor):
 
     def make_pipeline(self):
         pipeline = Pipeline()
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                points_key=None,
+            )
         pipeline += Normalizer.from_config(self.config.data.preprocessing)
         pipeline += Resizer.from_config(
             self.config.data.preprocessing, keep_full_image=False, points_key=None
@@ -1096,6 +1117,10 @@ class SingleInstancePredictor(Predictor):
                 integral_patch_size=self.integral_patch_size,
             )
         )
+
+    @property
+    def data_config(self):
+        return self.confmap_config.data
 
     @classmethod
     def from_trained_models(
@@ -1811,6 +1836,14 @@ class TopDownPredictor(Predictor):
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
         )
 
+    @property
+    def data_config(self):
+        return (
+            self.centroid_config.data
+            if self.centroid_config
+            else self.confmap_config.data
+        )
+
     @classmethod
     def from_trained_models(
         cls,
@@ -1907,7 +1940,12 @@ class TopDownPredictor(Predictor):
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+                points_key=None,
+            )
         if self.centroid_model is None:
             anchor_part = self.confmap_config.data.instance_cropping.center_on_part
             pipeline += sleap.nn.data.pipelines.InstanceCentroidFinder(
@@ -2348,6 +2386,9 @@ class BottomUpPredictor(Predictor):
             in relative image units. Candidate connections above this length will be
             penalized during matching.
         paf_line_points: Number of points to sample along the line integral.
+        min_line_scores: Minimum line score (between -1 and 1) required to form a match
+            between candidate point pairs. Useful for rejecting spurious detections when
+            there are no better ones.
     """
 
     bottomup_config: TrainingJobConfig
@@ -2361,6 +2402,7 @@ class BottomUpPredictor(Predictor):
     integral_patch_size: int = 5
     max_edge_length_ratio: float = 0.5
     paf_line_points: int = 10
+    min_line_scores: float = 0.25
 
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained model and configuration."""
@@ -2372,6 +2414,7 @@ class BottomUpPredictor(Predictor):
                     max_edge_length_ratio=self.max_edge_length_ratio,
                     n_points=self.paf_line_points,
                     min_instance_peaks=0,
+                    min_line_scores=self.min_line_scores,
                 ),
                 input_scale=self.bottomup_config.data.preprocessing.input_scaling,
                 pad_to_stride=self.bottomup_model.maximum_stride,
@@ -2381,6 +2424,10 @@ class BottomUpPredictor(Predictor):
             )
         )
 
+    @property
+    def data_config(self):
+        return self.bottomup_config.data
+
     @classmethod
     def from_trained_models(
         cls,
@@ -2389,6 +2436,9 @@ class BottomUpPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
+        max_edge_length_ratio: float = 0.5,
+        paf_line_points: int = 10,
+        min_line_scores: float = 0.25,
     ) -> "BottomUpPredictor":
         """Create predictor from a saved model.
 
@@ -2407,6 +2457,13 @@ class BottomUpPredictor(Predictor):
                 offset regression head.
             integral_patch_size: Size of patches to crop around each rough peak for
                 integral refinement as an integer scalar.
+            max_edge_length_ratio: The maximum expected length of a connected pair of
+                points in relative image units. Candidate connections above this length
+                will be penalized during matching.
+            paf_line_points: Number of points to sample along the line integral.
+            min_line_scores: Minimum line score (between -1 and 1) required to form a
+                match between candidate point pairs. Useful for rejecting spurious
+                detections when there are no better ones.
 
         Returns:
             An instance of `BottomUpPredictor` with the loaded model.
@@ -2425,6 +2482,9 @@ class BottomUpPredictor(Predictor):
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
             batch_size=batch_size,
+            max_edge_length_ratio=max_edge_length_ratio,
+            paf_line_points=paf_line_points,
+            min_line_scores=min_line_scores,
         )
         obj._initialize_inference_model()
         return obj
@@ -2749,6 +2809,11 @@ def _make_cli_parser() -> argparse.ArgumentParser:
             "inference speeds, but require more memory."
         ),
     )
+    parser.add_argument(
+        "--open-in-gui",
+        action="store_true",
+        help="Open the resulting predictions in the GUI when finished.",
+    )
 
     # Deprecated legacy args. These will still be parsed for backward compatibility but
     # are hidden from the CLI help.
@@ -2818,8 +2883,11 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     else:
         data_path = args.data_path
 
-    if data_path is None:
-        raise ValueError("You must specify a path to a video or a labels dataset.")
+    if data_path is None or data_path == "":
+        raise ValueError(
+            "You must specify a path to a video or a labels dataset. "
+            "Run 'sleap-track -h' to see full command documentation."
+        )
 
     if data_path.endswith(".slp"):
         labels = sleap.Labels.load_file(data_path)
@@ -2984,6 +3052,9 @@ def main():
     # Save results.
     labels_pr.save(output_path)
     print("Saved output:", output_path)
+
+    if args.open_in_gui:
+        subprocess.call(["sleap-label", output_path])
 
 
 if __name__ == "__main__":

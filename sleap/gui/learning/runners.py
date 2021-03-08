@@ -649,23 +649,22 @@ def run_gui_inference(
                 progress.setValue(n_processed)
 
             msg = "Predicting..."
-            # if current_item is not None and total_items is not None:
-            #     msg += f" [{current_item + 1}/{total_items}]"
 
             if n_processed is not None and n_total is not None:
-
-                prc = (n_processed / n_total) * 100
-                msg = f"Predicted: {n_processed+1}/{n_total} (<b>{prc:.1f}%</b>)"
+                msg = f"<b>Predicted:</b> {n_processed:,}/{n_total:,}"
 
             # Show time elapsed?
             if rate is not None and eta is not None:
                 eta_mins, eta_secs = divmod(eta, 60)
                 if eta_mins > 60:
-                    eta_hours, eta_mins = divmod(eta, 60)
-                    eta_str = f"{int(eta_hours)}:{int(eta_mins):02}:{int(eta_secs):02}"
+                    eta_hours, eta_mins = divmod(eta_mins, 60)
+                    eta_str = f"{int(eta_hours)} hours, {int(eta_mins):02} mins"
+                elif eta_mins > 0:
+                    eta_str = f"{int(eta_mins)} mins, {int(eta_secs):02} secs"
                 else:
-                    eta_str = f"{int(eta_mins)}:{int(eta_secs):02}"
-                msg += f"<br>ETA: <b>{eta_str}</b>       FPS: <b>{rate:.1f}</b>"
+                    eta_str = f"{int(eta_secs):02} secs"
+                msg += f"<br><b>ETA:</b> {eta_str}"
+                msg += f"<br><b>FPS:</b> {rate:.1f}"
 
             msg = msg.replace(" ", "&nbsp;")
 

@@ -930,6 +930,22 @@ class SaveProject(SaveProjectAs):
         return SaveProjectAs.ask(context, params)
 
 
+def open_file(filename: str):
+    """Opens file in native system file browser or registered application.
+
+    Args:
+        filename: Path to file or folder.
+
+    Notes:
+        Source: https://stackoverflow.com/a/16204023
+    """
+    if sys.platform == "win32":
+        os.startfile(filename)
+    else:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
+
+
 class ExportLabeledClip(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -950,8 +966,6 @@ class ExportLabeledClip(AppCommand):
 
         if params["open_when_done"]:
             # Open the file using default video playing app
-            from sleap.util import open_file
-
             open_file(params["filename"])
 
     @staticmethod
@@ -1498,13 +1512,13 @@ class SetNodeSymmetry(EditCommand):
         node = params["node"]
         symmetry = params["symmetry"]
         skeleton = params["skeleton"]
-
-        if symmetry:
+        if symmetry and node != symmetry:
             skeleton.add_symmetry(node, symmetry)
         else:
             # Value was cleared by user, so delete symmetry
             symmetric_to = skeleton.get_symmetry(node)
-            skeleton.delete_symmetry(node, symmetric_to)
+            if symmetric_to is not None:
+                skeleton.delete_symmetry(node, symmetric_to)
 
 
 class NewEdge(EditCommand):
@@ -1964,7 +1978,6 @@ class AddSuggestion(EditCommand):
         context.labels.add_suggestion(
             context.state["video"], context.state["frame_idx"]
         )
-        context.app.suggestionsTable.selectRow(len(context.labels) - 1)
 
 
 class RemoveSuggestion(EditCommand):
@@ -2441,19 +2454,3 @@ def copy_to_clipboard(text: str):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
-
-
-def open_file(filename: str):
-    """Opens file in native system file browser or registered application.
-
-    Args:
-        filename: Path to file or folder.
-
-    Notes:
-        Source: https://stackoverflow.com/a/16204023
-    """
-    if sys.platform == "win32":
-        os.startfile(filename)
-    else:
-        opener = "open" if sys.platform == "darwin" else "xdg-open"
-        subprocess.call([opener, filename])
