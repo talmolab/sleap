@@ -764,6 +764,11 @@ class TopdownConfmapsPipeline:
             generate predictions useful for visualization during training.
         """
         pipeline = Pipeline(data_provider)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,

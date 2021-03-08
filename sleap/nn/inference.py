@@ -449,7 +449,11 @@ class VisualPredictor(Predictor):
 
     def make_pipeline(self):
         pipeline = Pipeline()
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                points_key=None,
+            )
         pipeline += Normalizer.from_config(self.config.data.preprocessing)
         pipeline += Resizer.from_config(
             self.config.data.preprocessing, keep_full_image=False, points_key=None
@@ -1936,7 +1940,12 @@ class TopDownPredictor(Predictor):
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+                points_key=None,
+            )
         if self.centroid_model is None:
             anchor_part = self.confmap_config.data.instance_cropping.center_on_part
             pipeline += sleap.nn.data.pipelines.InstanceCentroidFinder(
