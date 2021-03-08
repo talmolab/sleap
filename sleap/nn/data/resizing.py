@@ -419,10 +419,13 @@ class SizeMatcher:
                     target_width=self.max_image_width,
                 )
                 example[self.image_key] = tf.cast(image, example[self.image_key].dtype)
-                example[self.image_key] = tf.ensure_shape(
-                    example[self.image_key],
-                    [self.max_image_height, self.max_image_width, channels],
-                )
+
+            # Ensure shape
+            # NOTE: This has to be done in the main branch, otherwise output dataset shape won't be determined correctly
+            example[self.image_key] = tf.ensure_shape(
+                example[self.image_key],
+                [self.max_image_height, self.max_image_width, channels],
+            )
 
             # Update the scale factor
             example[self.scale_key] = example[self.scale_key] * effective_scaling_ratio
