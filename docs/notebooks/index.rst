@@ -16,7 +16,7 @@ This notebook can be a good place to start since you'll be able to see how train
 
     Training_and_inference_on_an_example_dataset
 
-`Using your own data on Google Drive <./Training_and_inference_using_Google_Drive.html>`_
+`Training and inference on your own data using Google Drive <./Training_and_inference_using_Google_Drive.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once you're ready to run training and inference on your own SLEAP dataset, this notebook walks you through the process of using `Google Drive <https://www.google.com/drive>`_ to copy data to and from Colab (as well as running training and inference on your dataset).
