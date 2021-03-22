@@ -1,11 +1,12 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example analysis data" href="Analysis_examples.html" /><link rel="prev" title="Installation" href="Training_and_inference_using_Google_Drive.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example analysis data" href="Analysis_examples.html" /><link rel="prev" title="Installation" href="Training_and_inference_using_Google_Drive.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.2, furo 2021.02.28.beta28"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
         <title>Installation - SLEAP (v1.1.1)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=be5985a4059b5c2cd56ed0804790452beca62674">
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
@@ -256,9 +257,9 @@
         <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <p><a href="https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_with_custom_hyperparameters.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+        <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_with_custom_hyperparameters.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
 <p>This notebook shows you how to use SLEAP on Colab to train a model with <strong>custom hyperpameters</strong>. Hyperparameters define things like the model architecture, the learning rate, and data augmentation methods. See our page about <a class="reference external" href="https://sleap.ai/guides/choosing-models.html">choosing a set of models</a> for more information.</p>
-<p>This notebook assumes that you’re already confortable using Google Drive to move your data to and from Colab. If you haven’t done this already, take a look at our <a class="reference external" href="https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb">other notebook</a> which walks you through that process in more detail.</p>
+<p>This notebook assumes that you’re already confortable using Google Drive to move your data to and from Colab. If you haven’t done this already, take a look at our <a class="reference external" href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb">other notebook</a> which walks you through that process in more detail.</p>
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>Before we install SLEAP we need to set Colab to use TensorFlow 2.</p>
@@ -416,7 +417,7 @@ Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.
 </div>
 </div>
 </div>
-<p>I’ll assume you already know how to train using a training package on Colab. If you haven’t done this already, you should take a look at our <a class="reference external" href="https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb">other notebook</a> which walks you through that process in more detail.</p>
+<p>I’ll assume you already know how to train using a training package on Colab. If you haven’t done this already, you should take a look at our <a class="reference external" href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb">other notebook</a> which walks you through that process in more detail.</p>
 <p>For this notebook you’ll use a custom <strong>training profile</strong>. Training profiles are JSON files which define the hyperparameters used for training. Go follow our guide to <a class="reference external" href="https://sleap.ai/guides/custom-training.html">creating custom training profiles</a>.</p>
 <p>For this demo, I’ll assume you have a <code class="docutils literal notranslate"><span class="pre">sleap-custom-training</span></code> directory in the root of your Google drive. You should copy your training package and your custom training profile(s) into that directory.</p>
 </div>
@@ -424,7 +425,7 @@ Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.
 <div class="section" id="training">
 <h1>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h1>
 <p>Once you have the training package and custom training profile(s) ready, you can use the command-line interface to run training.</p>
-<p>If you haven’t done this already, you should take a look at our <a class="reference external" href="https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb">other notebook</a> which walks you through the basic training process in more detail.</p>
+<p>If you haven’t done this already, you should take a look at our <a class="reference external" href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb">other notebook</a> which walks you through the basic training process in more detail.</p>
 <p>When training with a custom profile, the key difference when running training with a custom training profile is that the second parameter to <code class="docutils literal notranslate"><span class="pre">sleap-train</span></code> should be the filename of your custom training profile (you can specify it with a local path if it’s in the same directory as your training package since we have a <code class="docutils literal notranslate"><span class="pre">cd</span></code> to use this as the working directory).</p>
 <p>If you used the “<strong>Save configuration files…</strong>” button in the Training dialog to export custom profile(s), the filename(s) will be:</p>
 <ul class="simple">
