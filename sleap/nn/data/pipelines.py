@@ -604,11 +604,6 @@ class CentroidConfmapsPipeline:
         """
         pipeline = self.make_base_pipeline(data_provider=data_provider)
         pipeline += Prefetcher()
-        if self.data_config.preprocessing.resize_and_pad_to_target:
-            pipeline += SizeMatcher.from_config(
-                config=self.data_config.preprocessing,
-                provider=data_provider,
-            )
         pipeline += Repeater()
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
