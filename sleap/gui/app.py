@@ -751,6 +751,20 @@ class MainWindow(QMainWindow):
             "proofreading or reproducibility."
         )
 
+        predictionMenu.addSeparator()
+        add_menu_item(
+            predictionMenu,
+            "training on colab with sample dataset",
+            "Train with Google Colab on sample data",
+            lambda: self.commands.openWebsite("https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_on_an_example_dataset.ipynb"),
+        )
+        add_menu_item(
+            predictionMenu,
+            "training on colab with exported data",
+            "Train with Google Colab on exported data",
+            lambda: self.commands.openWebsite("https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"),
+        )
+
         ############
 
         helpMenu = self.menuBar().addMenu("Help")
