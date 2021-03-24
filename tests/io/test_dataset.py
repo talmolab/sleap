@@ -1131,7 +1131,7 @@ def test_has_frame():
 @pytest.fixture
 def removal_test_labels():
     skeleton = Skeleton()
-    video = Video(backend=MediaVideo)
+    video = Video(backend=MediaVideo(filename=""))
     lf_user_only = LabeledFrame(
         video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
     )
@@ -1145,6 +1145,14 @@ def removal_test_labels():
     )
     labels = Labels([lf_user_only, lf_pred_only, lf_both])
     return labels
+
+
+def test_copy(removal_test_labels):
+    new_labels = removal_test_labels.copy()
+    new_labels[0].instances = []
+    new_labels.remove_frame(new_labels[-1])
+    assert len(removal_test_labels[0].instances) == 1
+    assert len(removal_test_labels) == 3
 
 
 def test_remove_user_instances(removal_test_labels):

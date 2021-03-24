@@ -728,6 +728,15 @@ class Labels(MutableSequence):
         )
         return new_labels
 
+    def copy(self) -> "Labels":
+        """Return a full deep copy of the labels.
+
+        Notes:
+            All objects will be re-created by serializing and then deserializing the
+            labels. This may be slow and will create new instances of all data
+            structures.
+        """
+        return type(self).from_json(self.to_json())
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
         # TODO: Maybe we should remove this method altogether?
