@@ -103,11 +103,12 @@ class DataReaders:
     def from_config(
         cls,
         labels_config: LabelsConfig,
-        training: Union[Text, sleap.Labels],
-        validation: Union[Text, sleap.Labels, float],
+        training: Optional[Union[Text, sleap.Labels]] = None,
+        validation: Optional[Union[Text, sleap.Labels, float]] = None,
         test: Optional[Union[Text, sleap.Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
         update_config: bool = False,
+        with_track_only: bool = False,
     ) -> "DataReaders":
         """Create data readers from a (possibly incomplete) configuration."""
         # Use config values if not provided in the arguments.
@@ -146,6 +147,7 @@ class DataReaders:
             video_search_paths=video_search_paths,
             labels_config=labels_config,
             update_config=update_config,
+            with_track_only=with_track_only,
         )
 
     @classmethod
@@ -157,6 +159,7 @@ class DataReaders:
         video_search_paths: Optional[List[Text]] = None,
         labels_config: Optional[LabelsConfig] = None,
         update_config: bool = False,
+        with_track_only: bool = False,
     ) -> "DataReaders":
         """Create data readers from sleap.Labels datasets as data providers."""
         if isinstance(training, str):
@@ -209,7 +212,12 @@ class DataReaders:
                 training_inds,
                 validation,
                 validation_inds,
-            ) = split_labels_train_val(training.with_user_labels_only(), validation)
+            ) = split_labels_train_val(
+                training.with_user_labels_only(
+                    with_track_only=with_track_only, copy=True
+                ),
+                validation,
+            )
             logger.info(
                 f"  Splits: Training = {len(training_inds)} /"
                 f" Validation = {len(validation_inds)}"
@@ -225,11 +233,17 @@ class DataReaders:
 
         test_reader = None
         if test is not None:
-            test_reader = LabelsReader.from_user_instances(test)
+            test_reader = LabelsReader.from_user_instances(
+                test, with_track_only=with_track_only
+            )
 
         return cls(
-            training_labels_reader=LabelsReader.from_user_instances(training),
-            validation_labels_reader=LabelsReader.from_user_instances(validation),
+            training_labels_reader=LabelsReader.from_user_instances(
+                training, with_track_only=with_track_only
+            ),
+            validation_labels_reader=LabelsReader.from_user_instances(
+                validation, with_track_only=with_track_only
+            ),
             test_labels_reader=test_reader,
         )
 
@@ -627,6 +641,29 @@ class Trainer(ABC):
         # Store SLEAP version on the training process.
         config.sleap_version = sleap.__version__
 
+        # Determine output type to create type-specific model trainer.
+        head_config = config.model.heads.which_oneof()
+        is_id_model = False
+        if isinstance(head_config, SingleInstanceConfmapsHeadConfig):
+            trainer_cls = SingleInstanceModelTrainer
+        elif isinstance(head_config, CentroidsHeadConfig):
+            trainer_cls = CentroidConfmapsModelTrainer
+        elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
+            trainer_cls = TopdownConfmapsModelTrainer
+        elif isinstance(head_config, MultiInstanceConfig):
+            trainer_cls = BottomUpModelTrainer
+        elif isinstance(head_config, MultiClassBottomUpConfig):
+            trainer_cls = BottomUpMultiClassModelTrainer
+            is_id_model = True
+        elif isinstance(head_config, MultiClassTopDownConfig):
+            trainer_cls = TopDownMultiClassModelTrainer
+            is_id_model = True
+        else:
+            raise ValueError(
+                "Model head not specified or configured. Check the config.model.heads"
+                " setting."
+            )
+
         # Create data readers and store loaded skeleton.
         data_readers = DataReaders.from_config(
             config.data.labels,
@@ -635,6 +672,7 @@ class Trainer(ABC):
             test=test_labels,
             video_search_paths=video_search_paths,
             update_config=True,
+            with_track_only=is_id_model,
         )
         config.data.labels.skeletons = data_readers.training_labels.skeletons
 
@@ -645,27 +683,6 @@ class Trainer(ABC):
             tracks=data_readers.training_labels_reader.tracks,
             update_config=True,
         )
-
-        # Determine output type to create type-specific model trainer.
-        head_config = config.model.heads.which_oneof()
-        if isinstance(head_config, CentroidsHeadConfig):
-            trainer_cls = CentroidConfmapsModelTrainer
-        elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
-            trainer_cls = TopdownConfmapsModelTrainer
-        elif isinstance(head_config, MultiInstanceConfig):
-            trainer_cls = BottomUpModelTrainer
-        elif isinstance(head_config, MultiClassBottomUpConfig):
-            trainer_cls = BottomUpMultiClassModelTrainer
-        elif isinstance(head_config, MultiClassTopDownConfig):
-            trainer_cls = TopDownMultiClassModelTrainer
-            pass
-        elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
-            trainer_cls = SingleInstanceModelTrainer
-        else:
-            raise ValueError(
-                "Model head not specified or configured. Check the config.model.heads"
-                " setting."
-            )
 
         return trainer_cls(
             config=config,

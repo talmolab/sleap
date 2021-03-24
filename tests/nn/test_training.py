@@ -1,5 +1,7 @@
 import pytest
 import sleap
+from sleap.nn.training import DataReaders
+
 
 sleap.use_cpu_only()
 
@@ -31,6 +33,59 @@ def cfg():
     cfg.optimization.epochs = 1
     cfg.outputs.save_outputs = False
     return cfg
+
+
+def test_data_readers(min_tracks_2node_labels):
+    labels = min_tracks_2node_labels.extract(range(3), copy=True)
+    labels_cfg = sleap.nn.config.LabelsConfig()
+    labels_cfg.validation_fraction = 0.1
+
+    # All frames with 2 instances and tracks, no filtering
+    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=False)
+    assert len(data_readers.training_labels_reader) == 2
+    assert len(data_readers.validation_labels_reader) == 1
+    assert data_readers.test_labels_reader is None
+
+    # Frames with mixed track and no track, no filtering
+    labels = min_tracks_2node_labels.extract(range(3), copy=True)
+    labels[0][0].track = None
+    labels[1][0].track = None
+    labels[2][0].track = None
+    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=False)
+    assert len(data_readers.training_labels_reader) == 2
+    assert len(data_readers.validation_labels_reader) == 1
+    examples = list(data_readers.training_labels_reader.make_dataset())
+    assert all([ex["instances"].shape[0] == 2 for ex in examples])
+    assert all([(ex["track_inds"] == -1).numpy().any() for ex in examples])
+    examples = list(data_readers.validation_labels_reader.make_dataset())
+    assert all([ex["instances"].shape[0] == 2 for ex in examples])
+    assert all([(ex["track_inds"] == -1).numpy().any() for ex in examples])
+
+    # Frames with mixed track and no track, with filtering
+    labels = min_tracks_2node_labels.extract(range(3), copy=True)
+    labels[0][0].track = None
+    labels[1][0].track = None
+    labels[2][0].track = None
+    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=True)
+    assert len(data_readers.training_labels_reader) == 2
+    assert len(data_readers.validation_labels_reader) == 1
+    examples = list(data_readers.training_labels_reader.make_dataset())
+    assert all([ex["instances"].shape[0] == 1 for ex in examples])
+    assert all([(ex["track_inds"] >= 0).numpy().all() for ex in examples])
+    examples = list(data_readers.validation_labels_reader.make_dataset())
+    assert all([ex["instances"].shape[0] == 1 for ex in examples])
+    assert all([(ex["track_inds"] >= 0).numpy().all() for ex in examples])
+
+    # Frames with track and frames with no track, with filtering
+    labels = min_tracks_2node_labels.extract(range(3), copy=True)
+    labels[0][0].track = None
+    labels[0][1].track = None
+    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=True)
+    assert len(data_readers.training_labels_reader) == 1
+    assert len(data_readers.validation_labels_reader) == 1
+    examples = list(data_readers.training_labels_reader.make_dataset())
+    assert all([ex["instances"].shape[0] == 2 for ex in examples])
+    assert all([(ex["track_inds"] >= 0).numpy().all() for ex in examples])
 
 
 def test_train_single_instance(min_labels_robot, cfg):
