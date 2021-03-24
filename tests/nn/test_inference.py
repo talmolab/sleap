@@ -589,7 +589,6 @@ def test_bottomup_multiclass_predictor(
     labels_pr[0][1].track.name == "male"
 
 
-
 def test_topdown_multiclass_predictor(
     min_tracks_2node_labels, min_topdown_multiclass_model_path
 ):

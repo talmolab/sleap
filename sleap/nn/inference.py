@@ -2985,7 +2985,7 @@ class BottomUpMultiClassPredictor(Predictor):
     @property
     def data_config(self) -> DataConfig:
         return self.config.data
-    
+
     def _make_labeled_frames_from_generator(
         self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
     ) -> List[sleap.LabeledFrame]:
