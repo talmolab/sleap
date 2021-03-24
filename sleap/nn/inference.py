@@ -45,7 +45,7 @@ import tensorflow as tf
 import numpy as np
 
 import sleap
-from sleap.nn.config import TrainingJobConfig
+from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker
@@ -195,7 +195,7 @@ class Predictor(ABC):
 
     @property
     @abstractmethod
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         pass
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
@@ -273,6 +273,11 @@ class Predictor(ABC):
                 ex["video_ind"] = ex["video_ind"].numpy().flatten()
             if isinstance(ex["frame_ind"], tf.Tensor):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+
+            # Adjust for potential SizeMatcher scaling.
+            ex["instance_peaks"] /= np.expand_dims(
+                np.expand_dims(ex["scale"], axis=1), axis=1
+            )
 
             return ex
 
@@ -399,7 +404,7 @@ class VisualPredictor(Predictor):
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return self.config.data
 
     @classmethod
@@ -984,8 +989,9 @@ class SingleInstanceInferenceLayer(InferenceLayer):
         Returns:
             A dictionary of outputs grouped by sample with keys:
 
-            `"peaks"`: The predicted peaks of shape `(samples, nodes, 2)`.
-            `"peak_vals": The peak confidence values of shape `(samples, nodes)`.
+            `"instance_peaks"`: The predicted peaks of shape `(samples, 1, nodes, 2)`.
+            `"instance_peak_vals": The peak confidence values of shape
+            `(samples, 1, nodes)`.
 
             If the `return_confmaps` attribute is set to `True`, the output will also
             contain a key named `"confmaps"` containing a `tf.Tensor` of shape
@@ -1027,7 +1033,10 @@ class SingleInstanceInferenceLayer(InferenceLayer):
             # See: https://github.com/tensorflow/tensorflow/issues/6720
             peaks = (peaks / self.input_scale) + 0.5
 
-        out = {"peaks": peaks, "peak_vals": peak_vals}
+        out = {
+            "instance_peaks": tf.expand_dims(peaks, axis=1),
+            "instance_peak_vals": tf.expand_dims(peak_vals, axis=1),
+        }
         if self.return_confmaps:
             out["confmaps"] = cms
         return out
@@ -1061,9 +1070,9 @@ class SingleInstanceInferenceModel(InferenceModel):
         Returns:
             The predicted instances as a dictionary of tensors with keys:
 
-            `"peaks": (batch_size, n_nodes, 2)`: Instance skeleton points.
-            `"peak_vals": (batch_size, n_instances, n_nodes)`: Confidence values for the
-                instance skeleton points.
+            `"instance_peaks": (batch_size, 1, n_nodes, 2)`: Instance skeleton points.
+            `"instance_peak_vals": (batch_size, 1, n_nodes)`: Confidence
+                values for the instance skeleton points.
         """
         return self.single_instance_layer(example)
 
@@ -1119,7 +1128,7 @@ class SingleInstancePredictor(Predictor):
         )
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return self.confmap_config.data
 
     @classmethod
@@ -1180,8 +1189,8 @@ class SingleInstancePredictor(Predictor):
         Args:
             generator: A generator that returns dictionaries with inference results.
                 This should return dictionaries with keys `"video_ind"`, `"frame_ind"`,
-                `"peaks"`, and `"peak_vals"`. This can be created using the
-                `_predict_generator()` method.
+                `"instance_peaks"`, and `"instance_peak_vals"`. This can be created
+                using the `_predict_generator()` method.
             data_provider: The `sleap.pipelines.Provider` that the predictions are being
                 created from. This is used to retrieve the `sleap.Video` instance
                 associated with each inference result.
@@ -1198,14 +1207,17 @@ class SingleInstancePredictor(Predictor):
 
             # Loop over frames.
             for video_ind, frame_ind, points, confidences in zip(
-                ex["video_ind"], ex["frame_ind"], ex["peaks"], ex["peak_vals"]
+                ex["video_ind"],
+                ex["frame_ind"],
+                ex["instance_peaks"],
+                ex["instance_peak_vals"],
             ):
                 # Loop over instances.
                 predicted_instances = [
                     sleap.instance.PredictedInstance.from_arrays(
-                        points=points,
-                        point_confidences=confidences,
-                        instance_score=np.nansum(confidences),
+                        points=points[0],
+                        point_confidences=confidences[0],
+                        instance_score=np.nansum(confidences[0]),
                         skeleton=skeleton,
                     )
                 ]
@@ -1666,8 +1678,10 @@ class FindInstancePeaks(InferenceLayer):
         outputs = {"instance_peaks": peaks, "instance_peak_vals": peak_vals}
         if "centroids" in inputs:
             outputs["centroids"] = inputs["centroids"]
-        if "centroids" in inputs:
+        if "centroid_vals" in inputs:
             outputs["centroid_vals"] = inputs["centroid_vals"]
+        if "centroid_confmaps" in inputs:
+            outputs["centroid_confmaps"] = inputs["centroid_confmaps"]
         if self.return_confmaps:
             cms = tf.RaggedTensor.from_value_rowids(
                 cms, crop_sample_inds, nrows=samples
@@ -1837,7 +1851,7 @@ class TopDownPredictor(Predictor):
         )
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return (
             self.centroid_config.data
             if self.centroid_config
@@ -2425,7 +2439,7 @@ class BottomUpPredictor(Predictor):
         )
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return self.bottomup_config.data
 
     @classmethod
@@ -2945,13 +2959,13 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
     if batch_size is None:
         batch_size = args.batch_size
 
-    predictor = Predictor.from_model_paths(
+    predictor = load_model(
         args.models,
         peak_threshold=peak_threshold,
-        integral_refinement=True,
         batch_size=batch_size,
+        refinement="integral",
+        progress_reporting=args.verbosity,
     )
-    predictor.verbosity = args.verbosity
     return predictor
 
 

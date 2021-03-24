@@ -710,7 +710,7 @@ class LearningDialog(QtWidgets.QDialog):
                 # TODO: Update this to more workflow-tailored notebook.
                 sleap.gui.commands.copy_to_clipboard(output_path)
                 sleap.gui.commands.open_website(
-                    "https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb"
+                    "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
                 )
 
         tmp_dir.cleanup()

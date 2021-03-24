@@ -5,7 +5,7 @@ Add more training data to a project
 
 *Case: You have predictions that aren't in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.*
 
-All of your training data must be in a single SLEAP project file (or training package), so if you have data in multiple files, you'll need to merge them before you can train on the entire set of data.
+All of your training data must be in a single SLEAP project file (or labels package), so if you have data in multiple files, you'll need to merge them before you can train on the entire set of data.
 
 When you run inference from the GUI, the predictions will be added to the same project as your training data (they'll also be saved in a separate file). When you run inference from the command-line, they'll only be in a separate file.
 
@@ -25,6 +25,6 @@ You'll then see a window with information about the merge:
 
 If there are no merge conflicts, then you can click "**Finish Merge**. If the two files contain conflicts—frames from the same video which both have editable instances or both have predicted instances—then you'll need to decide how to resolve the conflicts. You can choose to use the "base" version (i.e., the original project file **into which** you are merging), the "new" version (i.e., from the predictions file with the data which you're adding to the original project), or neither. Whichever you choose, you'll also get all of the frames which can be merged without conflicts.
 
-After merging you should save (or save a copy of the project with the "**Save As...**" command). Once you have a single project file which contains both your old and new training data, you can train new models (or :ref:`training_package` for training on another machine).
+After merging you should save (or save a copy of the project with the "**Save As...**" command). Once you have a single project file which contains both your old and new training data, you can train new models.
 
 .. |clean-merge| image:: ../_static/clean-merge.jpg
