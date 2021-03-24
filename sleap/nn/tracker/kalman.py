@@ -350,7 +350,7 @@ class BareKalmanTracker:
     def get_too_close_checking_function(
         self, instances: List[InstanceType], dist_thresh: float
     ) -> Callable:
-        """"
+        """ "
         Returns a function which determines if two instances are too close.
 
         Args:
@@ -583,7 +583,9 @@ def matches_from_match_tuples(
 
 
 def remove_second_bests_from_cost_matrix(
-    cost_matrix: np.ndarray, thresh: float, invalid_val: float = np.nan,
+    cost_matrix: np.ndarray,
+    thresh: float,
+    invalid_val: float = np.nan,
 ) -> np.ndarray:
     """
     Removes unclear matches from cost matrix.

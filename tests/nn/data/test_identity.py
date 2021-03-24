@@ -5,6 +5,7 @@ import sleap
 from sleap.nn.data.identity import (
     make_class_vectors,
     make_class_maps,
+    ClassVectorGenerator,
     ClassMapGenerator,
 )
 
@@ -27,6 +28,29 @@ def test_make_class_maps():
     )
 
 
+def test_class_vector_generator(min_tracks_2node_labels):
+    labels = min_tracks_2node_labels
+
+    gen = ClassVectorGenerator()
+
+    p = labels.to_pipeline()
+    ds = p.make_dataset()
+    ds = gen.transform_dataset(ds)
+    ex = next(iter(ds))
+
+    np.testing.assert_array_equal(ex["class_vectors"], [[0, 1], [1, 0]])
+    assert ex["class_vectors"].dtype == tf.float32
+
+    p = labels.to_pipeline()
+    p += gen
+    p += sleap.pipelines.InstanceCentroidFinder()
+    p += sleap.pipelines.InstanceCropper(32, 32)
+    ex = p.peek()
+
+    np.testing.assert_array_equal(ex["class_vectors"], [0, 1])
+    assert ex["class_vectors"].dtype == tf.float32
+
+
 def test_class_map_generator(min_tracks_2node_labels):
     labels = min_tracks_2node_labels
 
@@ -47,7 +71,9 @@ def test_class_map_generator(min_tracks_2node_labels):
         // 4
     )
     np.testing.assert_allclose(
-        tf.gather_nd(ex["class_maps"], subs), [[0, 1], [0, 1], [1, 0], [1, 0]], atol=1e-2
+        tf.gather_nd(ex["class_maps"], subs),
+        [[0, 1], [0, 1], [1, 0], [1, 0]],
+        atol=1e-2,
     )
 
     gen = ClassMapGenerator(

@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
-from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
+from sleap.nn.system import use_cpu_only
+
+use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.architectures import upsampling
 from sleap.nn.config import UpsamplingConfig
@@ -182,16 +184,18 @@ class UpsamplingTests(tf.test.TestCase):
         )
 
     def test_upsampling_stack_upsampling_concat(self):
-        upsampling_stack = upsampling.UpsamplingStack.from_config(UpsamplingConfig(
+        upsampling_stack = upsampling.UpsamplingStack.from_config(
+            UpsamplingConfig(
                 method="transposed_conv",
                 skip_connections="concatenate",
                 block_stride=2,
                 filters=64,
-                filters_rate=1.,
+                filters_rate=1.0,
                 refine_convs=1,
                 batch_norm=True,
                 transposed_conv_kernel_size=4,
-            ), output_stride=4
+            ),
+            output_stride=4,
         )
         x, intermediate_feats = upsampling_stack.make_stack(
             tf.keras.Input((8, 8, 32)), current_stride=16

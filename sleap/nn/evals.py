@@ -32,14 +32,15 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
-    MultiClassConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
     SingleInstanceConfmapsHeadConfig,
 )
 from sleap.nn.model import Model
 from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.inference import (
-    TopdownPredictor,
-    BottomupPredictor,
+    TopDownPredictor,
+    BottomUpPredictor,
     BottomUpMultiClassPredictor,
     SingleInstancePredictor,
 )
@@ -673,30 +674,38 @@ def evaluate_model(
     # Setup predictor for evaluation.
     head_config = cfg.model.heads.which_oneof()
     if isinstance(head_config, CentroidsHeadConfig):
-        predictor = TopdownPredictor(
+        predictor = TopDownPredictor(
             centroid_config=cfg,
             centroid_model=model,
             confmap_config=None,
             confmap_model=None,
         )
     elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
-        predictor = TopdownPredictor(
+        predictor = TopDownPredictor(
             centroid_config=None,
             centroid_model=None,
             confmap_config=cfg,
             confmap_model=model,
         )
     elif isinstance(head_config, MultiInstanceConfig):
-        predictor = sleap.nn.inference.BottomupPredictor(
+        predictor = sleap.nn.inference.BottomUpPredictor(
             bottomup_config=cfg, bottomup_model=model
-        )
-    elif isinstance(head_config, MultiClassConfig):
-        predictor = sleap.nn.inference.BottomUpMultiClassPredictor(
-            config=cfg, model=model
         )
     elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
         predictor = sleap.nn.inference.SingleInstancePredictor(
             confmap_config=cfg, confmap_model=model
+        )
+    elif isinstance(head_config, MultiClassBottomUpConfig):
+        predictor = sleap.nn.inference.BottomUpMultiClassPredictor(
+            config=cfg,
+            model=model,
+        )
+    elif isinstance(head_config, MultiClassTopDownConfig):
+        predictor = sleap.nn.inference.TopDownMultiClassPredictor(
+            centroid_config=None,
+            centroid_model=None,
+            confmap_config=cfg,
+            confmap_model=model,
         )
     else:
         raise ValueError("Unrecognized model type:", head_config)
@@ -720,7 +729,9 @@ def evaluate_model(
         logger.info("Saved predictions: %s", labels_pr_path)
 
         if metrics is not None:
-            metrics_path = os.path.join(cfg.outputs.run_path, f"metrics.{split_name}.npz")
+            metrics_path = os.path.join(
+                cfg.outputs.run_path, f"metrics.{split_name}.npz"
+            )
             np.savez_compressed(metrics_path, **{"metrics": metrics})
             logger.info("Saved metrics: %s", metrics_path)
 

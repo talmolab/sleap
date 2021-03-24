@@ -96,16 +96,29 @@ def describe_tensors(
     Returns:
         String description if `return_description` is `True`, otherwise `None`.
     """
+    if isinstance(example, (tuple, list)):
+        return describe_tensors(
+            {f"x[{i}]": v for i, v in enumerate(example)},
+            return_description=return_description,
+        )
+
     desc = []
     key_length = max(len(k) for k in example.keys())
     for key, val in example.items():
-        dtype = str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
-        desc.append(
-            f"{key.rjust(key_length)}: type={type(val).__name__}, "
-            f"shape={val.shape}, "
-            f"dtype={dtype}, "
-            f"device={val.device if hasattr(val, 'device') else 'N/A'}"
-        )
+        key_desc = f"{key.rjust(key_length)}: "
+        if isinstance(val, (tuple, list, dict)):
+            key_desc += describe_tensors(val, return_description=True)
+        else:
+            dtype = (
+                str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
+            )
+            key_desc += (
+                f"type={type(val).__name__}, "
+                f"shape={val.shape}, "
+                f"dtype={dtype}, "
+                f"device={val.device if hasattr(val, 'device') else 'N/A'}"
+            )
+        desc.append(key_desc)
     desc = "\n".join(desc)
 
     if return_description:

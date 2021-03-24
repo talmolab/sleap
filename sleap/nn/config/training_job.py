@@ -27,13 +27,14 @@ parameters are aggregated and documented for end users (as opposed to developers
 import os
 import attr
 import cattr
+import sleap
 from sleap.nn.config.data import DataConfig
 from sleap.nn.config.model import ModelConfig
 from sleap.nn.config.optimization import OptimizationConfig
 from sleap.nn.config.outputs import OutputsConfig
 import json
 from jsmin import jsmin
-from typing import Text, Dict, Any
+from typing import Text, Dict, Any, Optional
 
 
 @attr.s(auto_attribs=True)
@@ -45,13 +46,20 @@ class TrainingJobConfig:
         model: Configuration options related to the model architecture.
         optimization: Configuration options related to the training.
         outputs: Configuration options related to outputs during training.
+        name: Optional name for this configuration profile.
+        description: Optional description of the configuration.
+        sleap_version: Version of SLEAP that generated this configuration.
+        filename: Path to this config file if it was loaded from disk.
     """
 
     data: DataConfig = attr.ib(factory=DataConfig)
     model: ModelConfig = attr.ib(factory=ModelConfig)
     optimization: OptimizationConfig = attr.ib(factory=OptimizationConfig)
     outputs: OutputsConfig = attr.ib(factory=OutputsConfig)
-    # TODO: store fixed config format version + SLEAP version?
+    name: Optional[Text] = ""
+    description: Optional[Text] = ""
+    sleap_version: Optional[Text] = sleap.__version__
+    filename: Optional[Text] = ""
 
     @classmethod
     def from_json_dicts(cls, json_data_dicts: Dict[Text, Any]) -> "TrainingJobConfig":
@@ -82,16 +90,27 @@ class TrainingJobConfig:
         return cls.from_json_dicts(json_data_dicts)
 
     @classmethod
-    def load_json(cls, filename: Text) -> "TrainingJobConfig":
+    def load_json(
+        cls, filename: Text, load_training_config: bool = True
+    ) -> "TrainingJobConfig":
         """Load a training job configuration from a file.
 
         Arguments:
             filename: Path to a training job configuration JSON file or a directory
                 containing `"training_job.json"`.
+            load_training_config: If `True` (the default), prefer `training_job.json`
+                over `initial_config.json` if it is present in the same folder.
 
         Returns:
           A TrainingJobConfig instance parsed from the file.
         """
+        if load_training_config and filename.endswith("initial_config.json"):
+            training_config_path = os.path.join(
+                os.path.dirname(filename), "training_config.json"
+            )
+            if os.path.exists(training_config_path):
+                filename = training_config_path
+
         # Use stored configuration if a directory was provided.
         if os.path.isdir(filename):
             filename = os.path.join(filename, "training_config.json")
@@ -100,7 +119,9 @@ class TrainingJobConfig:
         with open(filename, "r") as f:
             json_data = f.read()
 
-        return cls.from_json(json_data)
+        obj = cls.from_json(json_data)
+        obj.filename = filename
+        return obj
 
     def to_json(self) -> str:
         """Serialize the configuration into JSON-encoded string format.
@@ -117,5 +138,22 @@ class TrainingJobConfig:
         Arguments:
             filename: Path to save the training job file to.
         """
+        self.filename = filename
         with open(filename, "w") as f:
             f.write(self.to_json())
+
+
+def load_config(filename: Text, load_training_config: bool = True) -> TrainingJobConfig:
+    """Load a training job configuration for a model run.
+
+    Args:
+        filename: Path to a JSON file or directory containing `training_job.json`.
+        load_training_config: If `True` (the default), prefer `training_job.json` over
+            `initial_config.json` if it is present in the same folder.
+
+    Returns:
+        The parsed `TrainingJobConfig`.
+    """
+    return TrainingJobConfig.load_json(
+        filename, load_training_config=load_training_config
+    )

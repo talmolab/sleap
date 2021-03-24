@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
-from sleap.nn.system import use_cpu_only; use_cpu_only()  # hide GPUs for test
+from sleap.nn.system import use_cpu_only
+
+use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.architectures import upsampling
 from sleap.nn.architectures import resnet
@@ -51,7 +53,9 @@ class ResnetTests(tf.test.TestCase):
         with self.subTest("feature output stride"):
             self.assertEqual(model.get_layer("conv5_block1_1_conv").strides, (1, 1))
         with self.subTest("feature output dilation rate"):
-            self.assertEqual(model.get_layer("conv5_block1_1_conv").dilation_rate, (2, 2))
+            self.assertEqual(
+                model.get_layer("conv5_block1_1_conv").dilation_rate, (2, 2)
+            )
 
     def test_resnet50_upsampling(self):
         resnet50 = resnet.ResNet50(
@@ -167,13 +171,15 @@ class ResnetTests(tf.test.TestCase):
             self.assertEqual(model.count_params(), 58364672)
 
     def test_resnet50_from_config(self):
-        resnet50 = resnet.ResNet50.from_config(ResNetConfig(
-            version="ResNet50",
-            weights="random",
-            upsampling=None,
-            max_stride=32,
-            output_stride=32,
-            ))
+        resnet50 = resnet.ResNet50.from_config(
+            ResNetConfig(
+                version="ResNet50",
+                weights="random",
+                upsampling=None,
+                max_stride=32,
+                output_stride=32,
+            )
+        )
         x_in = tf.keras.layers.Input((160, 160, 1))
         x, x_mid = resnet50.make_backbone(x_in)
         model = tf.keras.Model(x_in, x)

@@ -57,7 +57,7 @@ def make_resnet_model(
     """Instantiate the ResNet, ResNetV2 (TODO), and ResNeXt (TODO) architecture.
 
     Optionally loads weights pre-trained on ImageNet.
-    
+
     Args:
         backbone_fn: a function that returns output tensor for the
             stacked residual blocks.

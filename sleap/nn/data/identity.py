@@ -62,12 +62,53 @@ def make_class_maps(
 
     # Normalize instance mask.
     mask = confmaps / tf.reduce_sum(confmaps, axis=2, keepdims=True)
-    mask = tf.where(confmaps > threshold, mask, 0.)  # (h, w, n_instances)
+    mask = tf.where(confmaps > threshold, mask, 0.0)  # (h, w, n_instances)
     mask = tf.expand_dims(mask, axis=3)  # (h, w, n_instances, 1)
 
     # Apply mask to vectors to create class maps.
     class_maps = tf.reduce_max(mask * class_vectors, axis=2)
     return class_maps
+
+
+@attr.s(auto_attribs=True)
+class ClassVectorGenerator:
+    """Transformer to generate class probability vectors from track indices."""
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return the keys that incoming elements are expected to have."""
+        return ["track_inds", "n_tracks"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return the keys that outgoing elements will have."""
+        return self.input_keys + ["class_vectors"]
+
+    def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
+        """Create a dataset that contains the generated class identity vectors.
+
+        Args:
+            input_ds: A dataset with elements that contain the keys`"track_inds"` and
+                `"n_tracks"`.
+
+        Returns:
+            A `tf.data.Dataset` with the same keys as the input, as well as a `"class"`
+            key containing the generated class vectors.
+        """
+
+        def generate_class_vectors(example):
+            """Local processing function for dataset mapping."""
+            example["class_vectors"] = tf.cast(
+                make_class_vectors(example["track_inds"], example["n_tracks"]),
+                tf.float32,
+            )
+            return example
+
+        # Map transformation.
+        output_ds = input_ds.map(
+            generate_class_vectors, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+        return output_ds
 
 
 @attr.s(auto_attribs=True)

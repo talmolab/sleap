@@ -67,9 +67,17 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
 
     @classmethod
     def read(
-        cls, file: FileHandle, full_video: Optional[Video] = None, *args, **kwargs,
+        cls,
+        file: FileHandle,
+        full_video: Optional[Video] = None,
+        *args,
+        **kwargs,
     ) -> Labels:
-        return Labels(labeled_frames=cls.read_frames(file=file, full_video=full_video, *args, **kwargs))
+        return Labels(
+            labeled_frames=cls.read_frames(
+                file=file, full_video=full_video, *args, **kwargs
+            )
+        )
 
     @classmethod
     def make_video_for_image_list(cls, image_dir, filenames) -> Video:
@@ -232,7 +240,12 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
         return False
 
     @classmethod
-    def read(cls, file: FileHandle, *args, **kwargs,) -> Labels:
+    def read(
+        cls,
+        file: FileHandle,
+        *args,
+        **kwargs,
+    ) -> Labels:
         filename = file.filename
 
         # Load data from the YAML file

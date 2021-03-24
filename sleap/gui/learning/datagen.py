@@ -145,7 +145,7 @@ def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig) -> np.nda
             sigma=cfg.model.heads.multi_instance.pafs.sigma,
             output_stride=cfg.model.heads.multi_instance.pafs.output_stride,
             skeletons=reader.labels.skeletons,
-            flatten_channels=True
+            flatten_channels=True,
         )
 
     ds = pipeline.make_dataset()

@@ -1,6 +1,11 @@
 import numpy as np
 from sleap import Instance, Skeleton
-from sleap.gui.widgets.video import QtVideoPlayer, GraphicsView, QtInstance, QtVideoPlayer
+from sleap.gui.widgets.video import (
+    QtVideoPlayer,
+    GraphicsView,
+    QtInstance,
+    QtVideoPlayer,
+)
 
 import PySide2.QtCore as QtCore
 

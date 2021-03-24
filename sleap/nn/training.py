@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from time import time
 import logging
+import shutil
 
 import tensorflow as tf
 import numpy as np
@@ -27,7 +28,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
-    MultiClassConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
 )
 
 # Model
@@ -43,9 +45,10 @@ from sleap.nn.data.pipelines import (
     TopdownConfmapsPipeline,
     BottomUpPipeline,
     BottomUpMultiClassPipeline,
+    TopDownMultiClassPipeline,
     KeyMapper,
 )
-from sleap.nn.data.training import split_labels
+from sleap.nn.data.training import split_labels_train_val
 
 # Optimization
 from sleap.nn.config import OptimizationConfig
@@ -118,6 +121,11 @@ class DataReaders:
         if test is None:
             test = labels_config.test_labels
 
+        if video_search_paths is None:
+            video_search_paths = []
+        if labels_config.search_path_hints is not None:
+            video_search_paths.extend(labels_config.search_path_hints)
+
         # Update the config fields with arguments (if not a full sleap.Labels instance).
         if update_config:
             if isinstance(training, Text):
@@ -128,14 +136,16 @@ class DataReaders:
                 labels_config.validation_fraction = validation
             if isinstance(test, Text):
                 labels_config.test_labels = test
+            labels_config.search_path_hints = video_search_paths
 
         # Build class.
-        # TODO: use labels_config.search_path_hints for loading
         return cls.from_labels(
             training=training,
             validation=validation,
             test=test,
             video_search_paths=video_search_paths,
+            labels_config=labels_config,
+            update_config=update_config,
         )
 
     @classmethod
@@ -145,22 +155,72 @@ class DataReaders:
         validation: Union[Text, sleap.Labels, float],
         test: Optional[Union[Text, sleap.Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
+        labels_config: Optional[LabelsConfig] = None,
+        update_config: bool = False,
     ) -> "DataReaders":
         """Create data readers from sleap.Labels datasets as data providers."""
-
         if isinstance(training, str):
-            print("video search paths: ", video_search_paths)
+            logger.info(f"Loading training labels from: {training}")
             training = sleap.Labels.load_file(training, video_search=video_search_paths)
-            print(training.videos)
+
+        if labels_config is not None and labels_config.split_by_inds:
+            # First try to split by indices if specified in config.
+            if (
+                labels_config.validation_inds is not None
+                and len(labels_config.validation_inds) > 0
+            ):
+                logger.info(
+                    "Creating validation split from explicit indices "
+                    f"(n = {len(labels_config.validation_inds)})."
+                )
+                validation = training[labels_config.validation_inds]
+
+            if labels_config.test_inds is not None and len(labels_config.test_inds) > 0:
+                logger.info(
+                    "Creating test split from explicit indices "
+                    f"(n = {len(labels_config.test_inds)})."
+                )
+                test = training[labels_config.test_inds]
+
+            if (
+                labels_config.training_inds is not None
+                and len(labels_config.training_inds) > 0
+            ):
+                logger.info(
+                    "Creating training split from explicit indices "
+                    f"(n = {len(labels_config.training_inds)})."
+                )
+                training = training[labels_config.training_inds]
 
         if isinstance(validation, str):
+            # If validation is still a path, load it.
+            logger.info(f"Loading validation labels from: {validation}")
             validation = sleap.Labels.load_file(
                 validation, video_search=video_search_paths
             )
         elif isinstance(validation, float):
-            training, validation = split_labels(training, [-1, validation])
+            logger.info(
+                "Creating training and validation splits from "
+                f"validation fraction: {validation}"
+            )
+            # If validation is still a float, create the split from training.
+            (
+                training,
+                training_inds,
+                validation,
+                validation_inds,
+            ) = split_labels_train_val(training.with_user_labels_only(), validation)
+            logger.info(
+                f"  Splits: Training = {len(training_inds)} /"
+                f" Validation = {len(validation_inds)}"
+            )
+            if update_config and labels_config is not None:
+                labels_config.training_inds = training_inds
+                labels_config.validation_inds = validation_inds
 
         if isinstance(test, str):
+            # If test is still a path, load it.
+            logger.info(f"Loading test labels from: {test}")
             test = sleap.Labels.load_file(test, video_search=video_search_paths)
 
         test_reader = None
@@ -209,7 +269,9 @@ def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer
     return optimizer
 
 
-def setup_losses(config: OptimizationConfig) -> Callable[[tf.Tensor], tf.Tensor]:
+def setup_losses(
+    config: OptimizationConfig,
+) -> Callable[[tf.Tensor, tf.Tensor], tf.Tensor]:
     """Set up model loss function from config."""
     losses = [tf.keras.losses.MeanSquaredError()]
 
@@ -440,14 +502,13 @@ def setup_visualization(
                 )
             callbacks.append(
                 MatplotlibSaver(
-                    save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
+                    save_folder=os.path.join(run_path, "viz"),
+                    plot_fn=viz_fn,
+                    prefix=name,
                 )
             )
 
-        if (
-            config.tensorboard.write_logs
-            and config.tensorboard.visualizations
-        ):
+        if config.tensorboard.write_logs and config.tensorboard.visualizations:
             try:
                 matplotlib.use("Qt5Agg")
             except ImportError:
@@ -549,7 +610,7 @@ class Trainer(ABC):
         video_search_paths: Optional[List[Text]] = None,
     ) -> "Trainer":
         """Initialize the trainer from a training job configuration.
-        
+
         Args:
             config: A `TrainingJobConfig` instance.
             training_labels: Training labels to use instead of the ones in the config,
@@ -562,6 +623,9 @@ class Trainer(ABC):
         """
         # Copy input config before we make any changes.
         initial_config = copy.deepcopy(config)
+
+        # Store SLEAP version on the training process.
+        config.sleap_version = sleap.__version__
 
         # Create data readers and store loaded skeleton.
         data_readers = DataReaders.from_config(
@@ -590,8 +654,11 @@ class Trainer(ABC):
             trainer_cls = TopdownConfmapsModelTrainer
         elif isinstance(head_config, MultiInstanceConfig):
             trainer_cls = BottomUpModelTrainer
-        elif isinstance(head_config, MultiClassConfig):
+        elif isinstance(head_config, MultiClassBottomUpConfig):
             trainer_cls = BottomUpMultiClassModelTrainer
+        elif isinstance(head_config, MultiClassTopDownConfig):
+            trainer_cls = TopDownMultiClassModelTrainer
+            pass
         elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
             trainer_cls = SingleInstanceModelTrainer
         else:
@@ -656,7 +723,10 @@ class Trainer(ABC):
         logger.info(f"  Parameters: {self.model.keras_model.count_params():3,d}")
         logger.info("  Heads: ")
         for i, head in enumerate(self.model.heads):
-            logger.info(f"  heads[{i}] = {head}")
+            logger.info(f"    [{i}] = {head}")
+        logger.info("  Outputs: ")
+        for i, output in enumerate(self.model.keras_model.outputs):
+            logger.info(f"    [{i}] = {output}")
 
     @property
     def keras_model(self) -> tf.keras.Model:
@@ -688,14 +758,18 @@ class Trainer(ABC):
             )
             + key_mapper
         )
-        logger.info(f"Training set: n = {len(self.data_readers.training_labels)}")
+        logger.info(
+            f"Training set: n = {len(self.data_readers.training_labels_reader)}"
+        )
         self.validation_pipeline = (
             self.pipeline_builder.make_training_pipeline(
                 self.data_readers.validation_labels_reader
             )
             + key_mapper
         )
-        logger.info(f"Validation set: n = {len(self.data_readers.validation_labels)}")
+        logger.info(
+            f"Validation set: n = {len(self.data_readers.validation_labels_reader)}"
+        )
 
     def _setup_optimization(self):
         """Set up optimizer, loss functions and compile the model."""
@@ -704,7 +778,10 @@ class Trainer(ABC):
 
         # TODO: Implement general part loss reporting.
         part_names = None
-        if isinstance(self.pipeline_builder, TopdownConfmapsPipeline) and self.pipeline_builder.offsets_head is None:
+        if (
+            isinstance(self.pipeline_builder, TopdownConfmapsPipeline)
+            and self.pipeline_builder.offsets_head is None
+        ):
             part_names = [
                 sanitize_scope_name(name) for name in self.model.heads[0].part_names
             ]
@@ -729,9 +806,14 @@ class Trainer(ABC):
     def _setup_outputs(self):
         """Set up output-related functionality."""
         if self.config.outputs.save_outputs:
-            # Build path to run folder.
+            # Build path to run folder. Timestamp will be added automatically.
+            # Example: 210204_041707.centroid.n=300
+            model_type = self.config.model.heads.which_oneof_attrib_name()
+            n = len(self.data_readers.training_labels_reader) + len(
+                self.data_readers.validation_labels_reader
+            )
             self.run_path = setup_new_run_folder(
-                self.config.outputs, base_run_name=type(self.model.backbone).__name__
+                self.config.outputs, base_run_name=f"{model_type}.n={n}"
             )
 
         # Setup output callbacks.
@@ -829,30 +911,60 @@ class Trainer(ABC):
         )
         logger.info(f"Finished training loop. [{(time() - t0) / 60:.1f} min]")
 
-        # Save predictions and evaluations.
+        # Run post-training actions.
         if self.config.outputs.save_outputs:
+            if (
+                self.config.outputs.save_visualizations
+                and self.config.outputs.delete_viz_images
+            ):
+                self.cleanup()
+
+            self.evaluate()
+
+            if self.config.outputs.zip_outputs:
+                self.package()
+
+    def evaluate(self):
+        """Compute evaluation metrics on data splits and save them."""
+        logger.info("Saving evaluation metrics to model folder...")
+        sleap.nn.evals.evaluate_model(
+            cfg=self.config,
+            labels_reader=self.data_readers.training_labels_reader,
+            model=self.model,
+            save=True,
+            split_name="train",
+        )
+        sleap.nn.evals.evaluate_model(
+            cfg=self.config,
+            labels_reader=self.data_readers.validation_labels_reader,
+            model=self.model,
+            save=True,
+            split_name="val",
+        )
+        if self.data_readers.test_labels_reader is not None:
             sleap.nn.evals.evaluate_model(
                 cfg=self.config,
-                labels_reader=self.data_readers.training_labels_reader,
+                labels_reader=self.data_readers.test_labels_reader,
                 model=self.model,
                 save=True,
-                split_name="train",
+                split_name="test",
             )
-            sleap.nn.evals.evaluate_model(
-                cfg=self.config,
-                labels_reader=self.data_readers.validation_labels_reader,
-                model=self.model,
-                save=True,
-                split_name="val",
-            )
-            if self.data_readers.test_labels_reader is not None:
-                sleap.nn.evals.evaluate_model(
-                    cfg=self.config,
-                    labels_reader=self.data_readers.test_labels_reader,
-                    model=self.model,
-                    save=True,
-                    split_name="test",
-                )
+
+    def cleanup(self):
+        """Delete visualization images subdirectory."""
+        viz_path = os.path.join(self.run_path, "viz")
+        if os.path.exists(viz_path):
+            logger.info(f"Deleting visualization directory: {viz_path}")
+            shutil.rmtree(viz_path)
+
+    def package(self):
+        """Package model folder into a zip file for portability."""
+        if self.config.outputs.delete_viz_images:
+            self.cleanup()
+        logger.info(f"Packaging results to: {self.run_path}.zip")
+        shutil.make_archive(
+            base_name=self.run_path, root_dir=self.run_path, format="zip"
+        )
 
 
 @attr.s(auto_attribs=True)
@@ -899,7 +1011,7 @@ class SingleInstanceModelTrainer(Trainer):
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             single_instance_confmap_head=self.model.heads[0],
-            offsets_head=self.model.heads[1] if self.has_offsets else None
+            offsets_head=self.model.heads[1] if self.has_offsets else None,
         )
 
     @property
@@ -1003,7 +1115,7 @@ class CentroidConfmapsModelTrainer(Trainer):
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             centroid_confmap_head=self.model.heads[0],
-            offsets_head=self.model.heads[1] if self.has_offsets else None
+            offsets_head=self.model.heads[1] if self.has_offsets else None,
         )
 
     @property
@@ -1119,7 +1231,7 @@ class TopdownConfmapsModelTrainer(Trainer):
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             instance_confmap_head=self.model.heads[0],
-            offsets_head=self.model.heads[1] if self.has_offsets else None
+            offsets_head=self.model.heads[1] if self.has_offsets else None,
         )
 
     @property
@@ -1235,7 +1347,7 @@ class BottomUpModelTrainer(Trainer):
             optimization_config=self.config.optimization,
             confmaps_head=self.model.heads[0],
             pafs_head=self.model.heads[1],
-            offsets_head=self.model.heads[2] if self.has_offsets else None
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
         )
 
     @property
@@ -1344,7 +1456,7 @@ class BottomUpMultiClassModelTrainer(Trainer):
     @property
     def has_offsets(self) -> bool:
         """Whether model is configured to output refinement offsets."""
-        return self.config.model.heads.multi_class.confmaps.offset_refinement
+        return self.config.model.heads.multi_class_bottomup.confmaps.offset_refinement
 
     def _update_config(self):
         """Update the configuration with inferred values."""
@@ -1376,7 +1488,7 @@ class BottomUpMultiClassModelTrainer(Trainer):
             optimization_config=self.config.optimization,
             confmaps_head=self.model.heads[0],
             class_maps_head=self.model.heads[1],
-            offsets_head=self.model.heads[2] if self.has_offsets else None
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
         )
 
     @property
@@ -1466,8 +1578,147 @@ class BottomUpMultiClassModelTrainer(Trainer):
             setup_visualization(
                 self.config.outputs,
                 run_path=self.run_path,
-                viz_fn=lambda: visualize_class_maps_example(next(validation_viz_ds_iter)),
+                viz_fn=lambda: visualize_class_maps_example(
+                    next(validation_viz_ds_iter)
+                ),
                 name=f"validation_class_maps",
+            )
+        )
+
+
+@attr.s(auto_attribs=True)
+class TopDownMultiClassModelTrainer(Trainer):
+    """Trainer for models that output multi-instance confidence maps and class maps."""
+
+    pipeline_builder: TopDownMultiClassPipeline = attr.ib(init=False)
+
+    @property
+    def has_offsets(self) -> bool:
+        """Whether model is configured to output refinement offsets."""
+        return self.config.model.heads.multi_class_topdown.confmaps.offset_refinement
+
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
+
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(self.data_readers.training_labels)
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
+
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(self.data_readers.validation_labels)
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
+
+    def _setup_pipeline_builder(self):
+        """Initialize pipeline builder."""
+        self.pipeline_builder = TopDownMultiClassPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            instance_confmap_head=self.model.heads[0],
+            class_vectors_head=self.model.heads[1],
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["instance_image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        output_keys = ["instance_confidence_maps", "class_vectors"]
+        if self.has_offsets:
+            output_keys.append("offsets")
+        return output_keys
+
+    def _setup_optimization(self):
+        """Set up optimizer, loss functions and compile the model."""
+        optimizer = setup_optimizer(self.config.optimization)
+        # loss_fn = setup_losses(self.config.optimization)
+
+        # part_names = None
+        # metrics = setup_metrics(self.config.optimization, part_names=None)
+        metrics = {"ClassVectorsHead": "accuracy"}
+
+        self.optimization_callbacks = setup_optimization_callbacks(
+            self.config.optimization
+        )
+
+        self.keras_model.compile(
+            optimizer=optimizer,
+            loss={
+                output_name: head.loss_function
+                for output_name, head in zip(
+                    self.keras_model.output_names, self.model.heads
+                )
+            },
+            metrics=metrics,
+            loss_weights={
+                output_name: head.loss_weight
+                for output_name, head in zip(
+                    self.keras_model.output_names, self.model.heads
+                )
+            },
+        )
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader, self.keras_model
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader, self.keras_model
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        def visualize_confmaps_example(example):
+            img = example["image"].numpy()
+            cms = example["predicted_confidence_maps"].numpy()
+            pts_gt = example["instances"].numpy()
+            pts_pr = example["predicted_peaks"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plt.xlim(plt.xlim())
+            plt.ylim(plt.ylim())
+            plot_peaks(pts_gt, pts_pr, paired=False)
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_confmaps_example(next(training_viz_ds_iter)),
+                name=f"train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_confmaps_example(next(validation_viz_ds_iter)),
+                name=f"validation",
             )
         )
 
@@ -1480,35 +1731,63 @@ def main():
     parser.add_argument(
         "training_job_path", help="Path to training job profile JSON file."
     )
-    parser.add_argument("labels_path", help="Path to labels file to use for training.")
+    parser.add_argument(
+        "labels_path",
+        nargs="?",
+        default="",
+        help=(
+            "Path to labels file to use for training. If specified, overrides the path "
+            "specified in the training job config."
+        ),
+    )
     parser.add_argument(
         "--video-paths",
         type=str,
         default="",
-        help="List of paths for finding videos in case paths inside labels file need fixing.",
+        help=(
+            "List of paths for finding videos in case paths inside labels file are "
+            "not accessible."
+        ),
     )
     parser.add_argument(
         "--val_labels",
         "--val",
-        help="Path to labels file to use for validation (overrides training job path if set).",
+        help=(
+            "Path to labels file to use for validation. If specified, overrides the "
+            "path specified in the training job config."
+        ),
     )
     parser.add_argument(
         "--test_labels",
         "--test",
-        help="Path to labels file to use for test (overrides training job path if set).",
+        help=(
+            "Path to labels file to use for test. If specified, overrides the path "
+            "specified in the training job config."
+        ),
     )
     parser.add_argument(
         "--tensorboard",
         action="store_true",
-        help="Enables TensorBoard logging to the run path.",
+        help=(
+            "Enable TensorBoard logging to the run path if not already specified in "
+            "the training job config."
+        ),
     )
     parser.add_argument(
         "--save_viz",
         action="store_true",
-        help="Enables saving of prediction visualizations to the run folder.",
+        help=(
+            "Enable saving of prediction visualizations to the run folder if not "
+            "already specified in the training job config."
+        ),
     )
     parser.add_argument(
-        "--zmq", action="store_true", help="Enables ZMQ logging (for GUI)."
+        "--zmq",
+        action="store_true",
+        help=(
+            "Enable ZMQ logging (for GUI) if not already specified in the training "
+            "job config."
+        ),
     )
     parser.add_argument(
         "--run_name",
@@ -1535,16 +1814,21 @@ def main():
 
     # Override config settings for CLI-based training.
     job_config.outputs.save_outputs = True
-    job_config.outputs.tensorboard.write_logs = args.tensorboard
-    job_config.outputs.zmq.publish_updates = args.zmq
-    job_config.outputs.zmq.subscribe_to_controller = args.zmq
+    job_config.outputs.tensorboard.write_logs |= args.tensorboard
+    job_config.outputs.zmq.publish_updates |= args.zmq
+    job_config.outputs.zmq.subscribe_to_controller |= args.zmq
     if args.run_name != "":
         job_config.outputs.run_name = args.run_name
     if args.prefix != "":
         job_config.outputs.run_name_prefix = args.prefix
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
-    job_config.outputs.save_visualizations = args.save_viz
+    job_config.outputs.save_visualizations |= args.save_viz
+    if args.labels_path == "":
+        args.labels_path = None
+
+    logger.info("Versions:")
+    sleap.versions()
 
     logger.info(f"Training labels file: {args.labels_path}")
     logger.info(f"Training profile: {job_filename}")

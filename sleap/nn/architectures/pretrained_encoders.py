@@ -131,6 +131,8 @@ class UnetPretrainedEncoder:
         pretrained: If `True` (the default), load pretrained weights for the encoder. If
             `False`, the same model architecture will be used for the encoder but the
             weights will be randomly initialized.
+        decoder_batchnorm: If `False` (the default), do not use batch normalization in
+            the decoder layers.
     """
 
     encoder: str = attr.ib(
@@ -138,6 +140,7 @@ class UnetPretrainedEncoder:
     )
     decoder_filters: Tuple[int] = (256, 256, 128, 128)
     pretrained: bool = True
+    decoder_batchnorm: bool = True
 
     @classmethod
     def from_config(cls, config: PretrainedEncoderConfig) -> "UnetPretrainedEncoder":
@@ -160,6 +163,7 @@ class UnetPretrainedEncoder:
             encoder=config.encoder,
             pretrained=config.pretrained,
             decoder_filters=tuple(decoder_filters),
+            decoder_batchnorm=config.decoder_batchnorm,
         )
 
     @property
@@ -219,7 +223,7 @@ class UnetPretrainedEncoder:
             encoder_weights="imagenet" if self.pretrained else None,
             decoder_block_type="upsampling",
             decoder_filters=self.decoder_filters,
-            decoder_use_batchnorm=True,
+            decoder_use_batchnorm=self.decoder_batchnorm,
             layers=tf.keras.layers,
             models=tf.keras.models,
             backend=tf.keras.backend,

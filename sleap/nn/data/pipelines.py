@@ -20,9 +20,10 @@ from sleap.nn.data.augmentation import (
     AugmentationConfig,
     ImgaugAugmenter,
     RandomCropper,
+    RandomFlipper,
 )
 from sleap.nn.data.normalization import Normalizer
-from sleap.nn.data.resizing import Resizer, PointsRescaler
+from sleap.nn.data.resizing import Resizer, PointsRescaler, SizeMatcher
 from sleap.nn.data.instance_centroids import InstanceCentroidFinder
 from sleap.nn.data.instance_cropping import InstanceCropper, PredictedInstanceCropper
 from sleap.nn.data.confidence_maps import (
@@ -31,7 +32,7 @@ from sleap.nn.data.confidence_maps import (
     SingleInstanceConfidenceMapGenerator,
 )
 from sleap.nn.data.edge_maps import PartAffinityFieldsGenerator
-from sleap.nn.data.identity import ClassMapGenerator
+from sleap.nn.data.identity import ClassVectorGenerator, ClassMapGenerator
 from sleap.nn.data.dataset_ops import (
     Shuffler,
     Batcher,
@@ -59,6 +60,7 @@ from sleap.nn.heads import (
     CentroidConfmapsHead,
     CenteredInstanceConfmapsHead,
     ClassMapsHead,
+    ClassVectorsHead,
     SingleInstanceConfmapsHead,
     OffsetRefinementHead,
 )
@@ -70,12 +72,14 @@ TRANSFORMERS = (
     RandomCropper,
     Normalizer,
     Resizer,
+    SizeMatcher,
     InstanceCentroidFinder,
     InstanceCropper,
     MultiConfidenceMapGenerator,
     InstanceConfidenceMapGenerator,
     PartAffinityFieldsGenerator,
     SingleInstanceConfidenceMapGenerator,
+    ClassVectorGenerator,
     ClassMapGenerator,
     Shuffler,
     Batcher,
@@ -96,6 +100,7 @@ TRANSFORMERS = (
     KeyDeviceMover,
     PointsRescaler,
     LambdaMap,
+    RandomFlipper,
 )
 Provider = TypeVar("Provider", *PROVIDERS)
 Transformer = TypeVar("Transformer", *TRANSFORMERS)
@@ -126,7 +131,7 @@ class Pipeline:
         """Create a pipeline from a sequence of providers and transformers.
 
         Args:
-            sequence: List or tuple of providers and transformer instances.
+            blocks: List or tuple of providers and transformer instances.
 
         Returns:
             An instantiated pipeline with all blocks chained.
@@ -341,7 +346,6 @@ class SingleInstanceConfmapsPipeline:
     optimization_config: OptimizationConfig
     single_instance_confmap_head: SingleInstanceConfmapsHead
     offsets_head: Optional[OffsetRefinementHead] = None
-    
 
     def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
         """Create base pipeline with input data only.
@@ -355,6 +359,11 @@ class SingleInstanceConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -386,6 +395,11 @@ class SingleInstanceConfmapsPipeline:
         if self.optimization_config.online_shuffling:
             pipeline += Shuffler(self.optimization_config.shuffle_buffer_size)
 
+        if self.optimization_config.augmentation_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.labels.skeletons[0],
+                horizontal=self.optimization_config.augmentation_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
@@ -395,13 +409,19 @@ class SingleInstanceConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += SingleInstanceConfidenceMapGenerator(
             sigma=self.single_instance_confmap_head.sigma,
             output_stride=self.single_instance_confmap_head.output_stride,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -485,6 +505,11 @@ class CentroidConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -521,7 +546,11 @@ class CentroidConfmapsPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
-
+        if self.optimization_config.augmentation_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.labels.skeletons[0],
+                horizontal=self.optimization_config.augmentation_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
@@ -531,8 +560,12 @@ class CentroidConfmapsPipeline:
                 crop_width=self.optimization_config.augmentation_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -542,7 +575,9 @@ class CentroidConfmapsPipeline:
             output_stride=self.centroid_confmap_head.output_stride,
             centroids=True,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -637,6 +672,11 @@ class TopdownConfmapsPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
@@ -669,13 +709,21 @@ class TopdownConfmapsPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
-
+        if self.optimization_config.augmentation_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.labels.skeletons[0],
+                horizontal=self.optimization_config.augmentation_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -686,7 +734,9 @@ class TopdownConfmapsPipeline:
             output_stride=self.instance_confmap_head.output_stride,
             all_instances=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
 
         if len(data_provider) >= self.optimization_config.batch_size:
@@ -766,6 +816,11 @@ class BottomUpPipeline:
         """
         pipeline = Pipeline(providers=data_provider)
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
             pipeline += RandomCropper(
@@ -800,6 +855,11 @@ class BottomUpPipeline:
             )
 
         aug_config = self.optimization_config.augmentation_config
+        if aug_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.labels.skeletons[0],
+                horizontal=aug_config.flip_horizontal,
+            )
         pipeline += ImgaugAugmenter.from_config(aug_config)
         if aug_config.random_crop:
             pipeline += RandomCropper(
@@ -807,14 +867,20 @@ class BottomUpPipeline:
                 crop_width=aug_config.random_crop_width,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Resizer.from_config(self.data_config.preprocessing)
-
         pipeline += MultiConfidenceMapGenerator(
             sigma=self.confmaps_head.sigma,
             output_stride=self.confmaps_head.output_stride,
             centroids=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
         pipeline += PartAffinityFieldsGenerator(
             sigma=self.pafs_head.sigma,
@@ -870,7 +936,7 @@ class BottomUpPipeline:
             model_output_keys=[
                 "predicted_confidence_maps",
                 "predicted_part_affinity_fields",
-            ]
+            ],
         )
         pipeline += LocalPeakFinder(
             confmaps_stride=self.confmaps_head.output_stride,
@@ -963,7 +1029,9 @@ class BottomUpMultiClassPipeline:
             output_stride=self.confmaps_head.output_stride,
             centroids=False,
             with_offsets=self.offsets_head is not None,
-            offsets_threshold=self.offsets_head.sigma_threshold if self.offsets_head is not None else 1.0
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
         )
         pipeline += ClassMapGenerator(
             sigma=self.class_maps_head.sigma,
@@ -1018,7 +1086,7 @@ class BottomUpMultiClassPipeline:
             model_output_keys=[
                 "predicted_confidence_maps",
                 "predicted_class_maps",
-            ]
+            ],
         )
         pipeline += LocalPeakFinder(
             confmaps_stride=self.confmaps_head.output_stride,
@@ -1029,4 +1097,140 @@ class BottomUpMultiClassPipeline:
             peak_sample_inds_key="predicted_peak_sample_inds",
             peak_channel_inds_key="predicted_peak_channel_inds",
         )
+        return pipeline
+
+
+@attr.s(auto_attribs=True)
+class TopDownMultiClassPipeline:
+    """Pipeline builder for confidence maps and class maps models.
+
+    Attributes:
+        data_config: Data-related configuration.
+        optimization_config: Optimization-related configuration.
+        confmaps_head: Instantiated head describing the output confidence maps tensor.
+        class_vectors_head: Instantiated head describing the output class vectors
+            tensor.
+        offsets_head: Optional head describing the offset refinement maps.
+    """
+
+    data_config: DataConfig
+    optimization_config: OptimizationConfig
+    instance_confmap_head: CenteredInstanceConfmapsHead
+    class_vectors_head: ClassVectorsHead
+    offsets_head: Optional[OffsetRefinementHead] = None
+
+    def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create base pipeline with input data only.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+
+        Returns:
+            A `Pipeline` instance configured to produce input examples.
+        """
+        pipeline = Pipeline(providers=data_provider)
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        pipeline += InstanceCropper.from_config(self.data_config.instance_cropping)
+        return pipeline
+
+    def make_training_pipeline(self, data_provider: Provider) -> Pipeline:
+        """Create full training pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+
+        Returns:
+            A `Pipeline` instance configured to produce all data keys required for
+            training.
+
+        Notes:
+            This does not remap keys to model outputs. Use `KeyMapper` to pull out keys
+            with the appropriate format for the instantiated `tf.keras.Model`.
+        """
+        pipeline = Pipeline(providers=data_provider)
+
+        if self.optimization_config.preload_data:
+            pipeline += Preloader()
+
+        if self.optimization_config.online_shuffling:
+            pipeline += Shuffler(
+                shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
+            )
+
+        pipeline += ImgaugAugmenter.from_config(
+            self.optimization_config.augmentation_config
+        )
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
+
+        pipeline += ClassVectorGenerator()
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        pipeline += InstanceCropper.from_config(self.data_config.instance_cropping)
+        pipeline += InstanceConfidenceMapGenerator(
+            sigma=self.instance_confmap_head.sigma,
+            output_stride=self.instance_confmap_head.output_stride,
+            all_instances=False,
+            with_offsets=self.offsets_head is not None,
+            offsets_threshold=self.offsets_head.sigma_threshold
+            if self.offsets_head is not None
+            else 1.0,
+        )
+
+        if len(data_provider) >= self.optimization_config.batch_size:
+            # Batching before repeating is preferred since it preserves epoch boundaries
+            # such that no sample is repeated within the epoch. But this breaks if there
+            # are fewer samples than the batch size.
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
+            )
+            pipeline += Repeater()
+
+        else:
+            pipeline += Repeater()
+            pipeline += Batcher(
+                batch_size=self.optimization_config.batch_size,
+                drop_remainder=True,
+                unrag=True,
+            )
+
+        if self.optimization_config.prefetch:
+            pipeline += Prefetcher()
+
+        return pipeline
+
+    def make_viz_pipeline(
+        self, data_provider: Provider, keras_model: tf.keras.Model
+    ) -> Pipeline:
+        """Create visualization pipeline.
+
+        Args:
+            data_provider: A `Provider` that generates data examples, typically a
+                `LabelsReader` instance.
+            keras_model: A `tf.keras.Model` that can be used for inference.
+
+        Returns:
+            A `Pipeline` instance configured to fetch data and run inference to generate
+            predictions useful for visualization during training.
+        """
+        pipeline = Pipeline(data_provider)
+        pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += InstanceCentroidFinder.from_config(
+            self.data_config.instance_cropping,
+            skeletons=self.data_config.labels.skeletons,
+        )
+        pipeline += InstanceCropper.from_config(self.data_config.instance_cropping)
+        pipeline += Repeater()
+        pipeline += Prefetcher()
         return pipeline

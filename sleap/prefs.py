@@ -12,18 +12,18 @@ class Preferences(object):
 
     _prefs = None
     _defaults = {
-        "medium step size": 4,
+        "medium step size": 10,
         "large step size": 100,
         "color predicted": False,
+        "propagate track labels": True,
         "palette": "standard",
         "bold lines": False,
         "trail length": 0,
         "trail width": 4.0,
         "trail node count": 1,
-        "hide videos dock": False,
-        "hide skeleton dock": False,
-        "hide instances dock": False,
-        "hide labeling suggestions dock": False,
+        "marker size": 4,
+        "edge style": "Line",
+        "window state": b"",
     }
     _filename = "preferences.yaml"
 
@@ -47,6 +47,11 @@ class Preferences(object):
     def save(self):
         """Save preferences to file."""
         util.save_config_yaml(self._filename, self._prefs)
+
+    def reset_to_default(self):
+        """Reset preferences to default."""
+        util.save_config_yaml(self._filename, self._defaults)
+        self.load()
 
     def _validate_key(self, key):
         if key not in self._defaults:

@@ -23,8 +23,8 @@ from sleap.nn.inference import (
     FindInstancePeaksGroundTruth,
     FindInstancePeaks,
     TopDownInferenceModel,
-    TopdownPredictor,
-    BottomupPredictor,
+    TopDownPredictor,
+    BottomUpPredictor,
     BottomUpMultiClassPredictor,
     load_model,
 )
@@ -493,7 +493,7 @@ def test_single_instance_predictor(
 
 
 def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
-    predictor = TopdownPredictor.from_trained_models(
+    predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path
     )
     labels_pr = predictor.predict(min_labels)
@@ -513,7 +513,7 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
 def test_topdown_predictor_centered_instance(
     min_labels, min_centered_instance_model_path
 ):
-    predictor = TopdownPredictor.from_trained_models(
+    predictor = TopDownPredictor.from_trained_models(
         confmap_model_path=min_centered_instance_model_path
     )
     labels_pr = predictor.predict(min_labels)
@@ -530,8 +530,8 @@ def test_topdown_predictor_centered_instance(
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
 
-def test_topdown_predictor_bottomup(min_labels, min_bottomup_model_path):
-    predictor = BottomupPredictor.from_trained_models(
+def test_bottomup_predictor(min_labels, min_bottomup_model_path):
+    predictor = BottomUpPredictor.from_trained_models(
         model_path=min_bottomup_model_path
     )
     labels_pr = predictor.predict(min_labels)
@@ -548,7 +548,7 @@ def test_topdown_predictor_bottomup(min_labels, min_bottomup_model_path):
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.75)
 
 
-def test_topdown_predictor_bottomup_multiclass(
+def test_bottomup_multiclass_predictor(
     min_tracks_2node_labels, min_bottomup_multiclass_model_path
 ):
     labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
@@ -573,8 +573,9 @@ def test_topdown_predictor_bottomup_multiclass(
         labels_gt[0][inds1[1]].numpy(), labels_pr[0][inds2[1]].numpy(), rtol=0.02
     )
 
-    labels_pr = predictor.predict(sleap.nn.data.pipelines.VideoReader(
-        labels_gt.video, example_indices=[0]))
+    labels_pr = predictor.predict(
+        sleap.nn.data.pipelines.VideoReader(labels_gt.video, example_indices=[0])
+    )
     labels_pr[0][0].track.name == "female"
     labels_pr[0][1].track.name == "male"
 
@@ -590,10 +591,10 @@ def test_load_model(
     assert isinstance(predictor, SingleInstancePredictor)
 
     predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
-    assert isinstance(predictor, TopdownPredictor)
+    assert isinstance(predictor, TopDownPredictor)
 
     predictor = load_model(min_bottomup_model_path)
-    assert isinstance(predictor, BottomupPredictor)
+    assert isinstance(predictor, BottomUpPredictor)
 
     predictor = load_model(min_bottomup_multiclass_model_path)
     assert isinstance(predictor, BottomUpMultiClassPredictor)

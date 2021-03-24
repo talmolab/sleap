@@ -22,12 +22,14 @@ from sleap.nn.architectures import (
     IntermediateFeature,
 )
 from sleap.nn.heads import (
+    Head,
     CentroidConfmapsHead,
     SingleInstanceConfmapsHead,
     CenteredInstanceConfmapsHead,
     MultiInstanceConfmapsHead,
     PartAffinityFieldsHead,
     ClassMapsHead,
+    ClassVectorsHead,
     OffsetRefinementHead,
 )
 from sleap.nn.config import (
@@ -40,8 +42,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
-    ClassMapsHeadConfig,
-    MultiClassConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
     BackboneConfig,
     HeadsConfig,
     ModelConfig,
@@ -69,17 +71,6 @@ BACKBONE_CONFIG_TO_CLS = {
     ResNetConfig: ResNetv1,
     PretrainedEncoderConfig: UnetPretrainedEncoder,
 }
-
-HEADS = [
-    CentroidConfmapsHead,
-    SingleInstanceConfmapsHead,
-    CenteredInstanceConfmapsHead,
-    MultiInstanceConfmapsHead,
-    PartAffinityFieldsHead,
-    ClassMapsHead,
-    OffsetRefinementHead,
-]
-Head = TypeVar("Head", *HEADS)
 
 
 @attr.s(auto_attribs=True)
@@ -118,7 +109,11 @@ class Model:
         """
         # Figure out which backbone class to use.
         backbone_config = config.backbone.which_oneof()
-        backbone_cls = BACKBONE_CONFIG_TO_CLS[type(backbone_config)]
+        backbone_cls = BACKBONE_CONFIG_TO_CLS.get(type(backbone_config), None)
+        if backbone_cls is None:
+            raise ValueError(
+                "Backbone architecture (config.model.backbone) was not specified."
+            )
 
         # Figure out which head class to use.
         head_config = config.heads.which_oneof()
@@ -148,9 +143,7 @@ class Model:
             heads = [CentroidConfmapsHead.from_config(head_config)]
             output_stride = heads[0].output_stride
             if head_config.offset_refinement:
-                heads.append(
-                    OffsetRefinementHead.from_config(head_config)
-                )
+                heads.append(OffsetRefinementHead.from_config(head_config))
 
         elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
             part_names = head_config.part_names
@@ -212,7 +205,7 @@ class Model:
                     )
                 )
 
-        elif isinstance(head_config, MultiClassConfig):
+        elif isinstance(head_config, MultiClassBottomUpConfig):
             part_names = head_config.confmaps.part_names
             if part_names is None:
                 if skeleton is None:
@@ -250,6 +243,50 @@ class Model:
                     )
                 )
 
+        elif isinstance(head_config, MultiClassTopDownConfig):
+            part_names = head_config.confmaps.part_names
+            if part_names is None:
+                if skeleton is None:
+                    raise ValueError(
+                        "Skeleton must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                part_names = skeleton.node_names
+                if update_config:
+                    head_config.confmaps.part_names = part_names
+
+            classes = head_config.class_vectors.classes
+            if classes is None:
+                if tracks is None:
+                    raise ValueError(
+                        "Classes must be provided when the head configuration is "
+                        "incomplete."
+                    )
+                classes = [t.name for t in tracks]
+            if update_config:
+                head_config.class_vectors.classes = classes
+
+            heads = [
+                CenteredInstanceConfmapsHead.from_config(
+                    head_config.confmaps, part_names=part_names
+                ),
+                ClassVectorsHead.from_config(
+                    head_config.class_vectors, classes=classes
+                ),
+            ]
+            output_stride = min(heads[0].output_stride, heads[1].output_stride)
+            output_stride = heads[0].output_stride
+            if head_config.confmaps.offset_refinement:
+                heads.append(
+                    OffsetRefinementHead.from_config(
+                        head_config.confmaps, part_names=part_names
+                    )
+                )
+        else:
+            raise ValueError(
+                "Head configuration (config.model.heads) was not specified."
+            )
+
         backbone_config.output_stride = output_stride
 
         return cls(backbone=backbone_cls.from_config(backbone_config), heads=heads)
@@ -284,25 +321,12 @@ class Model:
         # Build output layers for each head.
         x_outs = []
         for output in self.heads:
-            if isinstance(output, ClassMapsHead):
-                activation = "sigmoid"
-            else:
-                activation = "linear"
             x_head = []
             if output.output_stride == self.backbone.output_stride:
                 # The main output has the same stride as the head, so build output layer
                 # from that tensor.
                 for i, x in enumerate(x_main):
-                    x_head.append(
-                        tf.keras.layers.Conv2D(
-                            filters=output.channels,
-                            kernel_size=1,
-                            strides=1,
-                            padding="same",
-                            activation=activation,
-                            name=f"{type(output).__name__}_{i}",
-                        )(x)
-                    )
+                    x_head.append(output.make_head(x))
 
             else:
                 # Look for an intermediate activation that has the correct stride.
@@ -311,16 +335,7 @@ class Model:
                     assert all([feat.stride == feats[0].stride for feat in feats])
                     if feats[0].stride == output.output_stride:
                         for i, feat in enumerate(feats):
-                            x_head.append(
-                                tf.keras.layers.Conv2D(
-                                    filters=output.channels,
-                                    kernel_size=1,
-                                    strides=1,
-                                    padding="same",
-                                    activation=activation,
-                                    name=f"{type(output).__name__}_{i}",
-                                )(feat.tensor)
-                            )
+                            x_head.append(output.make_head(feat.tensor))
                         break
 
             if len(x_head) == 0:

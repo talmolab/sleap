@@ -34,12 +34,20 @@ def test_instance_node_get_set_item(skeleton):
     thorax_point = instance["thorax"]
     assert math.isnan(thorax_point.x) and math.isnan(thorax_point.y)
 
+    instance[0] = [-20, -50]
+    assert instance["head"].x == -20
+    assert instance["head"].y == -50
+
+    instance[0] = np.array([-21, -51])
+    assert instance["head"].x == -21
+    assert instance["head"].y == -51
+
 
 def test_instance_node_multi_get_set_item(skeleton):
     """
     Test basic get item and set item functionality of instances.
     """
-    node_names = ["left-wing", "head", "right-wing"]
+    node_names = ["head", "left-wing", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance1 = Instance(skeleton=skeleton, points=points)
@@ -51,6 +59,23 @@ def test_instance_node_multi_get_set_item(skeleton):
 
     assert np.allclose(x_values, [1, 2, 3])
     assert np.allclose(y_values, [4, 5, 6])
+
+    np.testing.assert_array_equal(
+        instance1[np.array([0, 2, 4])], [[1, 4], [np.nan, np.nan], [3, 6]]
+    )
+
+    instance1[np.array([0, 1])] = [[1, 2], [3, 4]]
+    np.testing.assert_array_equal(instance1[np.array([0, 1])], [[1, 2], [3, 4]])
+
+    instance1[[0, 1]] = [[4, 3], [2, 1]]
+    np.testing.assert_array_equal(instance1[np.array([0, 1])], [[4, 3], [2, 1]])
+
+    instance1[["left-wing", "right-wing"]] = [[-4, -3], [-2, -1]]
+    np.testing.assert_array_equal(instance1[np.array([3, 4])], [[-4, -3], [-2, -1]])
+    assert instance1["left-wing"].x == -4
+    assert instance1["left-wing"].y == -3
+    assert instance1["right-wing"].x == -2
+    assert instance1["right-wing"].y == -1
 
 
 def test_non_exist_node(skeleton):
@@ -258,9 +283,14 @@ def test_instance_from_pointsarray(skeleton):
 
 
 def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
-    user_inst = Instance(skeleton=skeleton, points={skeleton.nodes[0]: Point(1, 2)},)
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={skeleton.nodes[0]: Point(1, 2)},
+    )
     user_frame = LabeledFrame(
-        video=centered_pair_vid, frame_idx=0, instances=[user_inst],
+        video=centered_pair_vid,
+        frame_idx=0,
+        instances=[user_inst],
     )
 
     pred_inst = PredictedInstance(
@@ -269,7 +299,9 @@ def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
         score=1.0,
     )
     pred_frame = LabeledFrame(
-        video=centered_pair_vid, frame_idx=0, instances=[pred_inst],
+        video=centered_pair_vid,
+        frame_idx=0,
+        instances=[pred_inst],
     )
 
     LabeledFrame.complex_frame_merge(user_frame, pred_frame)
@@ -282,9 +314,18 @@ def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
 
 
 def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
-    user_inst = Instance(skeleton=skeleton, points={skeleton.nodes[0]: Point(1, 2)},)
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={skeleton.nodes[0]: Point(1, 2)},
+    )
     user_labels = Labels(
-        [LabeledFrame(video=centered_pair_vid, frame_idx=0, instances=[user_inst],)]
+        [
+            LabeledFrame(
+                video=centered_pair_vid,
+                frame_idx=0,
+                instances=[user_inst],
+            )
+        ]
     )
 
     pred_inst = PredictedInstance(
@@ -293,7 +334,13 @@ def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
         score=1.0,
     )
     pred_labels = Labels(
-        [LabeledFrame(video=centered_pair_vid, frame_idx=0, instances=[pred_inst],)]
+        [
+            LabeledFrame(
+                video=centered_pair_vid,
+                frame_idx=0,
+                instances=[pred_inst],
+            )
+        ]
     )
 
     # Merge predictions into current labels dataset
