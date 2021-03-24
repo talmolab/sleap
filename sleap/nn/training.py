@@ -1042,7 +1042,7 @@ class SingleInstanceModelTrainer(Trainer):
             preds = inference_layer(tf.expand_dims(img, axis=0))
             cms = preds["confmaps"].numpy()[0]
             pts_gt = example["instances"].numpy()[0]
-            pts_pr = preds["peaks"].numpy()[0]
+            pts_pr = preds["instance_peaks"].numpy()[0][0]
 
             scale = 1.0
             if img.shape[0] < 512:
