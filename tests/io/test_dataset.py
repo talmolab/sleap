@@ -1227,3 +1227,73 @@ def test_remove_predictions_with_new_labels(removal_test_labels):
     assert labels[1].frame_idx == 2
     assert labels[1].has_user_instances
     assert labels[1].has_predicted_instances
+
+
+def test_remove_empty_frames(removal_test_labels):
+    assert len(removal_test_labels) == 3
+    removal_test_labels.remove_empty_frames()
+    assert len(removal_test_labels) == 3
+
+    removal_test_labels.labeled_frames.append(
+        LabeledFrame(video=removal_test_labels.video, frame_idx=3)
+    )
+    assert len(removal_test_labels) == 4
+    removal_test_labels.remove_empty_frames()
+    assert len(removal_test_labels) == 3
+
+
+def test_remove_untracked_instances(removal_test_labels):
+    track = Track()
+    labels = removal_test_labels
+    for inst in labels.instances():
+        inst.track = track
+    labels.remove_untracked_instances(remove_empty_frames=False)
+    assert len(labels) == 3
+    assert len(labels.all_instances) == 4
+
+    labels[0].instances[0].track = None
+    labels.remove_untracked_instances(remove_empty_frames=False)
+    assert len(labels) == 3
+    assert len(labels.all_instances) == 3
+
+    labels[-1].instances[0].track = None  # last frame has 2 instances
+    labels.remove_untracked_instances(remove_empty_frames=True)
+    assert len(labels) == 2
+    assert len(labels.all_instances) == 2
+
+    labels[0].instances[0].track = None
+    labels.remove_untracked_instances(remove_empty_frames=True)
+    assert len(labels) == 1
+    assert len(labels.all_instances) == 1
+
+
+def test_with_user_labels_only(removal_test_labels):
+    labels = removal_test_labels
+    new_labels = labels.with_user_labels_only(
+        user_instances_only=False, with_track_only=False, copy=True
+    )
+    assert len(new_labels) == 2
+    assert all([lf.has_user_instances for lf in new_labels])
+    assert new_labels[-1].has_predicted_instances
+
+    new_labels = labels.with_user_labels_only(
+        user_instances_only=True, with_track_only=False, copy=True
+    )
+    assert len(new_labels) == 2
+    assert all([lf.has_user_instances for lf in new_labels])
+    assert all([not lf.has_predicted_instances for lf in new_labels])
+
+    assert removal_test_labels[-1].has_predicted_instances  # check that we copied
+
+    labels = removal_test_labels.copy()
+    track = Track()
+    for inst in labels.instances():
+        inst.track = track
+
+    new_labels = labels.with_user_labels_only(
+        user_instances_only=True, with_track_only=True
+    )
+    assert len(new_labels) == 2
+    assert all([lf.has_user_instances for lf in new_labels])
+    assert all([not lf.has_predicted_instances for lf in new_labels])
+    assert all([lf.has_tracked_instances for lf in new_labels])

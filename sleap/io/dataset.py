@@ -699,12 +699,16 @@ class Labels(MutableSequence):
         except KeyError:
             return None
 
-    def extract(self, inds) -> "Labels":
+    def extract(self, inds, copy: bool = False) -> "Labels":
         """Extract labeled frames from indices and return a new `Labels` object.
 
         Args:
             inds: Any valid indexing keys, e.g., a range, slice, list of label indices,
                 numpy array, `Video`, etc. See `__getitem__` for full list.
+            copy: If `True`, create a new copy of all of the extracted labeled frames
+                and associated labels. If `False` (the default), a shallow copy with
+                references to the original labeled frames and other objects will be
+                returned.
 
         Returns:
             A new `Labels` object with the specified labeled frames.
@@ -726,6 +730,8 @@ class Labels(MutableSequence):
             suggestions=self.suggestions,
             provenance=self.provenance,
         )
+        if copy:
+            new_labels = new_labels.copy()
         return new_labels
 
     def copy(self) -> "Labels":
@@ -737,6 +743,7 @@ class Labels(MutableSequence):
             structures.
         """
         return type(self).from_json(self.to_json())
+
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
         # TODO: Maybe we should remove this method altogether?
@@ -898,9 +905,35 @@ class Labels(MutableSequence):
         """Return a list of indices of frames with user labeled instances."""
         return [i for i, lf in enumerate(self.labeled_frames) if lf.has_user_instances]
 
-    def with_user_labels_only(self) -> "Labels":
-        """Return a new `Labels` object with only user labels."""
-        return self.extract(self.user_labeled_frame_inds)
+    def with_user_labels_only(
+        self,
+        user_instances_only: bool = True,
+        with_track_only: bool = False,
+        copy: bool = False,
+    ) -> "Labels":
+        """Return a new `Labels` containing only user labels.
+
+        This is useful as a preprocessing step to train on only user-labeled data.
+
+        Args:
+            user_instances_only: If `True` (the default), predicted instances will be
+                removed from frames that also have user instances.
+            with_track_only: If `True`, remove instances without a track.
+            copy: If `True`, create a new copy of all of the extracted labeled frames
+                and associated labels. If `False` (the default), a shallow copy with
+                references to the original labeled frames and other objects will be
+                returned.
+
+        Returns:
+            A new `Labels` with only the specified subset of frames and instances.
+        """
+        new_labels = self.extract(self.user_labeled_frame_inds, copy=copy)
+        if user_instances_only:
+            new_labels.remove_predictions()
+        if with_track_only:
+            new_labels.remove_untracked_instances()
+        new_labels.remove_empty_frames()
+        return new_labels
 
     def get_labeled_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
         return self._cache.get_frame_count(video, filter)
@@ -1539,6 +1572,18 @@ class Labels(MutableSequence):
 
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
+
+    def remove_untracked_instances(self, remove_empty_frames: bool = True):
+        """Remove instances that do not have a track assignment.
+
+        Args:
+            remove_empty_frames: If `True` (the default), removes frames that do not
+                contain any instances after removing untracked ones.
+        """
+        for lf in self.labeled_frames:
+            lf.instances = lf.tracked_instances
+        if remove_empty_frames:
+            self.remove_empty_frames()
 
     @classmethod
     def complex_merge_between(
