@@ -2945,13 +2945,13 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
     if batch_size is None:
         batch_size = args.batch_size
 
-    predictor = Predictor.from_model_paths(
+    predictor = load_model(
         args.models,
         peak_threshold=peak_threshold,
-        integral_refinement=True,
         batch_size=batch_size,
+        refinement="integral",
+        progress_reporting=args.verbosity,
     )
-    predictor.verbosity = args.verbosity
     return predictor
 
 
