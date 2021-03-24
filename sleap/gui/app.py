@@ -756,13 +756,17 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "training on colab with default profile",
             "Train in Google Colab with default profile..",
-            lambda: self.commands.openWebsite("https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"),
+            lambda: self.commands.openWebsite(
+                "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+            ),
         )
         add_menu_item(
             predictionMenu,
             "training on colab with custom profile",
             "Train in Google Colab with custom profile..",
-            lambda: self.commands.openWebsite("https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_with_custom_hyperparameters.ipynb"),
+            lambda: self.commands.openWebsite(
+                "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_with_custom_hyperparameters.ipynb"
+            ),
         )
 
         ############

@@ -386,7 +386,9 @@ def write_pipeline_files(
             new_cfg_filenames.append(cfg_info.config.outputs.run_path)
 
             # Add a line to the script for training this model
-            train_script += f"sleap-train {new_cfg_filename} {os.path.basename(labels_filename)}\n"
+            train_script += (
+                f"sleap-train {new_cfg_filename} {os.path.basename(labels_filename)}\n"
+            )
 
     # Write the script to train the models which need to be trained
     with open(os.path.join(output_dir, "train-script.sh"), "w") as f:
