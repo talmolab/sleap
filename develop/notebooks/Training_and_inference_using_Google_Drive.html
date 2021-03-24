@@ -2,10 +2,10 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Installation" href="Training_with_custom_hyperparameters.html" /><link rel="prev" title="Installation" href="Training_and_inference_on_an_example_dataset.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example analysis data" href="Analysis_examples.html" /><link rel="prev" title="Install SLEAP" href="Training_and_inference_on_an_example_dataset.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
-        <title>Installation - SLEAP (v1.1.1)</title>
+        <title>Install SLEAP - SLEAP (v1.1.1)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -139,17 +139,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#remote-inference">Remote inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/skeleton-design.html">Skeleton design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/training.html">Training with GUI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/training-package.html">Export a training package</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Install SLEAP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#download-sample-training-data-into-colab">Download sample training data into Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#train-models">Train models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#inference">Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_with_custom_hyperparameters.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_with_custom_hyperparameters.html#training">Training</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Install SLEAP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#impoprt-training-data-into-colab-with-google-drive">Impoprt training data into Colab with Google Drive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#train-a-model">Train a model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-inference-to-predict-instances">Run inference to predict instances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html">Example analysis data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#loading-the-data">Loading the data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
@@ -184,13 +184,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.text.html">sleap.io.format.text</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
@@ -205,12 +198,23 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -227,17 +231,13 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample Datasets</a></li>
@@ -258,164 +258,37 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
-<p>This notebook shows you how to run training and inference on your own SLEAP dataset using the command-line interface.</p>
-<p>You’ll use <a class="reference external" href="https://www.google.com/drive">Google Drive</a> for moving your data to and from Colab. We’ll guide you through the process.</p>
-<div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>Before we install SLEAP we need to set Colab to use TensorFlow 2.</p>
+<p>In this notebook we’ll install SLEAP, import training data into Colab using <a class="reference external" href="https://www.google.com/drive">Google Drive</a>, and run training and inference.</p>
+<div class="section" id="install-sleap">
+<h1>Install SLEAP<a class="headerlink" href="#install-sleap" title="Permalink to this headline">¶</a></h1>
+<p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/murthylab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">tensorflow_version</span> <span class="mf">2.</span><span class="n">x</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.1.1
 </pre></div>
 </div>
 </div>
 </div>
-<p>Let’s confirm that we have a GPU available. This next line should return something like “/device:GPU:0”. If you instead see an empty string as the result, go to “Notebook settings” in the “Edit” menu and select “GPU” as the hardware accelerator.</p>
+</div>
+<div class="section" id="impoprt-training-data-into-colab-with-google-drive">
+<h1>Impoprt training data into Colab with Google Drive<a class="headerlink" href="#impoprt-training-data-into-colab-with-google-drive" title="Permalink to this headline">¶</a></h1>
+<p>We’ll first prepare and export the training data from SLEAP, then upload it to Google Drive, and then mount Google Drive  into this Colab notebook.</p>
+<div class="section" id="create-and-export-the-training-job-package">
+<h2>Create and export the training job package<a class="headerlink" href="#create-and-export-the-training-job-package" title="Permalink to this headline">¶</a></h2>
+<p>A self-contained <strong>training job package</strong> contains a .slp file with labeled data and images which will be used for training, as well as .json training configuration file(s).</p>
+<p>A training job package can be exported in the SLEAP GUI fron the “Run Training..” dialog under the “Predict” menu.</p>
+</div>
+<div class="section" id="upload-training-job-package-to-google-drive">
+<h2>Upload training job package to Google Drive<a class="headerlink" href="#upload-training-job-package-to-google-drive" title="Permalink to this headline">¶</a></h2>
+<p>To be consistent with the examples in this notebook, name the SLEAP project <code class="docutils literal notranslate"><span class="pre">colab</span></code> and create a directory called <code class="docutils literal notranslate"><span class="pre">sleap</span></code> in the root of your Google Drive. Then upload the exported training job package <code class="docutils literal notranslate"><span class="pre">colab.slp.training_job.zip</span></code> into <code class="docutils literal notranslate"><span class="pre">sleap</span></code> directory.</p>
+<p>If you place your training pckage somewhere else, or name it differently, adjust the paths/filenames/parameters below accordingly.</p>
+</div>
+<div class="section" id="mount-your-google-drive">
+<h2>Mount your Google Drive<a class="headerlink" href="#mount-your-google-drive" title="Permalink to this headline">¶</a></h2>
+<p>Mounting your Google Drive will allow you to accessed the uploaded training job package in this notebook. When prompted to log into your Google account, give Colab access and the copy the authorization code into a field below (+ hit ‘return’).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="n">tf</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">gpu_device_name</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>'/device:GPU:0'
-</pre></div>
-</div>
-</div>
-</div>
-<p>Now let’s use <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install SLEAP from PyPI.</p>
-<p>Note: This installation method should also work on other Linux machines, such as an HPC cluster, or on any system where you aren’t planning to use a GPU. To use a GPU on a Windows machine you’ll need to install using <code class="docutils literal notranslate"><span class="pre">conda</span></code>.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install sleap==1.1.1
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Collecting sleap==1.1.0
-?25l  Downloading https://files.pythonhosted.org/packages/b9/52/e80875c50a649da56377c7884d5b937260b2310f8c2543dca9bf6c3c06d4/sleap-1.1.0a10-py3-none-any.whl (39.5MB)
-     |████████████████████████████████| 39.5MB 83kB/s 
-?25hCollecting numpy&lt;1.19.0,&gt;=1.18.1
-?25l  Downloading https://files.pythonhosted.org/packages/b3/a9/b1bc4c935ed063766bce7d3e8c7b20bd52e515ff1c732b02caacf7918e5a/numpy-1.18.5-cp36-cp36m-manylinux1_x86_64.whl (20.1MB)
-     |████████████████████████████████| 20.1MB 121kB/s 
-?25hRequirement already satisfied: pyzmq in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (22.0.2)
-Requirement already satisfied: networkx in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (2.5)
-Requirement already satisfied: pyyaml in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (3.13)
-Collecting opencv-python-headless==4.2.0.34
-?25l  Downloading https://files.pythonhosted.org/packages/43/2c/909a04b07360516953beaf6f66480bb6b84b817c6b300c1235bfb2901ad8/opencv_python_headless-4.2.0.34-cp36-cp36m-manylinux1_x86_64.whl (21.6MB)
-     |████████████████████████████████| 21.6MB 105kB/s 
-?25hCollecting imgstore==0.2.9
-?25l  Downloading https://files.pythonhosted.org/packages/39/bb/a1099d1564c1f85752251a9549037ce36021f2b318c896be2f2b067d7e9a/imgstore-0.2.9-py2.py3-none-any.whl (904kB)
-     |████████████████████████████████| 911kB 53.6MB/s 
-?25hCollecting imgaug==0.3.0
-?25l  Downloading https://files.pythonhosted.org/packages/11/df/5a3bba95b4600d5ca7aff072082ef0d9837056dd28cc4e738e7ce88dd8f8/imgaug-0.3.0-py2.py3-none-any.whl (819kB)
-     |████████████████████████████████| 829kB 51.8MB/s 
-?25hCollecting attrs==19.3
-  Downloading https://files.pythonhosted.org/packages/a2/db/4313ab3be961f7a763066401fb77f7748373b6094076ae2bda2806988af6/attrs-19.3.0-py2.py3-none-any.whl
-Collecting pykalman==0.9.5
-?25l  Downloading https://files.pythonhosted.org/packages/2f/62/a4adc4516bd5974aa5583090199dd4b78d1e87018d14e9279f72ccbf0b9b/pykalman-0.9.5.tar.gz (228kB)
-     |████████████████████████████████| 235kB 62.6MB/s 
-?25hCollecting jsonpickle==1.2
-  Downloading https://files.pythonhosted.org/packages/07/07/c157520a3ebd166c8c24c6ae0ecae7c3968eb4653ff0e5af369bb82f004d/jsonpickle-1.2-py2.py3-none-any.whl
-Collecting tensorflow==2.3.1
-?25l  Downloading https://files.pythonhosted.org/packages/ad/ad/769c195c72ac72040635c66cd9ba7b0f4b4fc1ac67e59b99fa6988446c22/tensorflow-2.3.1-cp36-cp36m-manylinux2010_x86_64.whl (320.4MB)
-     |████████████████████████████████| 320.4MB 49kB/s 
-?25hCollecting qimage2ndarray==1.8
-?25l  Downloading https://files.pythonhosted.org/packages/6c/16/fdd8930ef4f5795afc3cf89f056645ff012da828a4ddcc6a3d6d41edfb53/qimage2ndarray-1.8.tar.gz (183kB)
-     |████████████████████████████████| 184kB 59.4MB/s 
-?25hRequirement already satisfied: h5py==2.10.0 in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (2.10.0)
-Requirement already satisfied: scipy&lt;=1.4.1 in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (1.4.1)
-Requirement already satisfied: scikit-image in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.16.2)
-Collecting scikit-video
-?25l  Downloading https://files.pythonhosted.org/packages/b1/a6/c69cad508139a342810ae46e946ebb3256aa6e42f690d901bb68f50582e3/scikit_video-1.1.11-py2.py3-none-any.whl (2.3MB)
-     |████████████████████████████████| 2.3MB 51.2MB/s 
-?25hRequirement already satisfied: scikit-learn in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.22.2.post1)
-Collecting segmentation-models==1.0.1
-  Downloading https://files.pythonhosted.org/packages/da/b9/4a183518c21689a56b834eaaa45cad242d9ec09a4360b5b10139f23c63f4/segmentation_models-1.0.1-py3-none-any.whl
-Collecting cattrs==1.0.0rc
-?25l  Downloading https://files.pythonhosted.org/packages/01/f6/30e2b78920dae271ba94cb74a808021d88840b156c424c029f6255b72d3e/cattrs-1.0.0rc0-py2.py3-none-any.whl (59kB)
-     |████████████████████████████████| 61kB 8.3MB/s 
-?25hCollecting jsmin
-  Downloading https://files.pythonhosted.org/packages/17/73/615d1267a82ed26cd7c124108c3c61169d8e40c36d393883eaee3a561852/jsmin-2.2.2.tar.gz
-Requirement already satisfied: seaborn in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (0.11.1)
-Collecting PySide2==5.14.1
-?25l  Downloading https://files.pythonhosted.org/packages/d3/ea/4699f9a83069751b98b038733b3123f5774da939ebba29a601964280a756/PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5MB)
-     |████████████████████████████████| 165.5MB 94kB/s 
-?25hRequirement already satisfied: pandas in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (1.1.5)
-Collecting rich==9.10.0
-?25l  Downloading https://files.pythonhosted.org/packages/41/60/765dc36f3623c22fd08f152bfae65cc9f0d815c05503ea50f7c189486d10/rich-9.10.0-py3-none-any.whl (188kB)
-     |████████████████████████████████| 194kB 60.3MB/s 
-?25hRequirement already satisfied: psutil in /usr/local/lib/python3.6/dist-packages (from sleap==1.1.0a10) (5.4.8)
-Collecting python-rapidjson
-?25l  Downloading https://files.pythonhosted.org/packages/a0/8f/50488049033aba6943659d7906a45947ea5b510b74e7d44ab9d7457e1710/python_rapidjson-1.0-cp36-cp36m-manylinux2010_x86_64.whl (1.4MB)
-     |████████████████████████████████| 1.4MB 45.8MB/s 
-?25hRequirement already satisfied: decorator&gt;=4.3.0 in /usr/local/lib/python3.6/dist-packages (from networkx-&gt;sleap==1.1.0a10) (4.4.2)
-Collecting tensorflow-estimator&lt;2.4.0,&gt;=2.3.0
-?25l  Downloading https://files.pythonhosted.org/packages/e9/ed/5853ec0ae380cba4588eab1524e18ece1583b65f7ae0e97321f5ff9dfd60/tensorflow_estimator-2.3.0-py2.py3-none-any.whl (459kB)
-     |████████████████████████████████| 460kB 48.4MB/s 
-?25hRequirement already satisfied: astunparse==1.6.3 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1-&gt;sleap==1.1.0a10) (1.6.3)
-Requirement already satisfied: absl-py&gt;=0.7.0 in /usr/local/lib/python3.6/dist-packages (from tensorflow==2.3.1-&gt;sleap==1.1.0a10) (0.10.0)
-Requirement already satisfied: PyWavelets&gt;=0.4.0 in /usr/local/lib/python3.6/dist-packages (from scikit-image-&gt;sleap==1.1.0a10) (1.1.1)
-Requirement already satisfied: joblib&gt;=0.11 in /usr/local/lib/python3.6/dist-packages (from scikit-learn-&gt;sleap==1.1.0a10) (1.0.0)
-Collecting efficientnet==1.0.0
-  Downloading https://files.pythonhosted.org/packages/97/82/f3ae07316f0461417dc54affab6e86ab188a5a22f33176d35271628b96e0/efficientnet-1.0.0-py3-none-any.whl
-Collecting keras-applications&lt;=1.0.8,&gt;=1.0.7
-?25l  Downloading https://files.pythonhosted.org/packages/71/e3/19762fdfc62877ae9102edf6342d71b28fbfd9dea3d2f96a882ce099b03f/Keras_Applications-1.0.8-py3-none-any.whl (50kB)
-     |████████████████████████████████| 51kB 8.8MB/s 
-?25hCollecting image-classifiers==1.0.0
-  Downloading https://files.pythonhosted.org/packages/81/98/6f84720e299a4942ab80df5f76ab97b7828b24d1de5e9b2cbbe6073228b7/image_classifiers-1.0.0-py3-none-any.whl
-Collecting shiboken2==5.14.1
-?25l  Downloading https://files.pythonhosted.org/packages/b5/9b/afca43974697e7b50ec22d3ad0c878a3d07eb89bfe75d341707ff2421772/shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847kB)
-     |████████████████████████████████| 849kB 49.7MB/s 
-?25hCollecting colorama&lt;0.5.0,&gt;=0.4.0
-  Downloading https://files.pythonhosted.org/packages/44/98/5b86278fbbf250d239ae0ecb724f8572af1c91f4a11edf4d36a206189440/colorama-0.4.4-py2.py3-none-any.whl
-Requirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0-&gt;sleap==1.1.0a10) (2.6.1)
-Requirement already satisfied: typing-extensions&lt;4.0.0,&gt;=3.7.4 in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0-&gt;sleap==1.1.0a10) (3.7.4.3)
-Requirement already satisfied: dataclasses&lt;0.9,&gt;=0.7; python_version &gt;= "3.6" and python_version &lt; "3.7" in /usr/local/lib/python3.6/dist-packages (from rich==9.10.0-&gt;sleap==1.1.0a10) (0.8)
-Collecting commonmark&lt;0.10.0,&gt;=0.9.0
-?25l  Downloading https://files.pythonhosted.org/packages/b1/92/dfd892312d822f36c55366118b95d914e5f16de11044a27cf10a7d71bbbf/commonmark-0.9.1-py2.py3-none-any.whl (51kB)
-     |████████████████████████████████| 51kB 7.6MB/s 
-?25hRequirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,&gt;=2.0.1 in /usr/local/lib/python3.6/dist-packages (from matplotlib-&gt;imgaug==0.3.0-&gt;sleap==1.1.0a10) (2.4.7)
-Building wheels for collected packages: pykalman, qimage2ndarray, jsmin
-  Building wheel for pykalman (setup.py) ... ?25l?25hdone
-  Created wheel for pykalman: filename=pykalman-0.9.5-cp36-none-any.whl size=48464 sha256=a9f29ac5e417c8447035238754a9b2ab0d54e3d7792b92eb2f998c9da2f919d9
-  Stored in directory: /root/.cache/pip/wheels/d9/e8/6a/553d9832679cb74a8434fa597c3abdb07313e40054a0adf9ac
-  Building wheel for qimage2ndarray (setup.py) ... ?25l?25hdone
-  Created wheel for qimage2ndarray: filename=qimage2ndarray-1.8-cp36-none-any.whl size=11696 sha256=1699000301d530fa0739661ea993278e79c48812f313089881eea7f42bd55210
-  Stored in directory: /root/.cache/pip/wheels/52/ef/1d/c77ef6d3d3fe72aa88f822a05e29b17e79914af69ddeff4c02
-  Building wheel for jsmin (setup.py) ... ?25l?25hdone
-  Created wheel for jsmin: filename=jsmin-2.2.2-cp36-none-any.whl size=13921 sha256=2e73dbea2cb2472654d5f25faa8b0dbe84c9f4bd24e14cf94243f9b3aa20839d
-  Stored in directory: /root/.cache/pip/wheels/64/f4/de/9667d84f759289edf5442220997c6d4334637a6bb2a7b90f73
-Successfully built pykalman qimage2ndarray jsmin
-Installing collected packages: numpy, opencv-python-headless, imgstore, imgaug, attrs, pykalman, jsonpickle, tensorflow-estimator, tensorflow, qimage2ndarray, scikit-video, keras-applications, efficientnet, image-classifiers, segmentation-models, cattrs, jsmin, shiboken2, PySide2, colorama, commonmark, rich, python-rapidjson, sleap
-  Found existing installation: numpy 1.19.5
-    Uninstalling numpy-1.19.5:
-      Successfully uninstalled numpy-1.19.5
-  Found existing installation: imgaug 0.2.9
-    Uninstalling imgaug-0.2.9:
-      Successfully uninstalled imgaug-0.2.9
-  Found existing installation: attrs 20.3.0
-    Uninstalling attrs-20.3.0:
-      Successfully uninstalled attrs-20.3.0
-  Found existing installation: tensorflow-estimator 2.4.0
-    Uninstalling tensorflow-estimator-2.4.0:
-      Successfully uninstalled tensorflow-estimator-2.4.0
-  Found existing installation: tensorflow 2.4.1
-    Uninstalling tensorflow-2.4.1:
-      Successfully uninstalled tensorflow-2.4.1
-Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.3.0 imgstore-0.2.9 jsmin-2.2.2 jsonpickle-1.2 keras-applications-1.0.8 numpy-1.18.5 opencv-python-headless-4.2.0.34 pykalman-0.9.5 python-rapidjson-1.0 qimage2ndarray-1.8 rich-9.10.0 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.1.0a10 tensorflow-2.3.1 tensorflow-estimator-2.3.0
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="getting-your-training-data-into-colab">
-<h2>Getting your training data into Colab<a class="headerlink" href="#getting-your-training-data-into-colab" title="Permalink to this headline">¶</a></h2>
-<p>You’ll need to get your training data into Colab. The easiest way to do this is to export a self-contained <strong>training package</strong> from SLEAP and copy that on to <a class="reference external" href="https://www.google.com/drive">Google Drive</a>.</p>
-<p>Let’s first mount your Google Drive so that it can be accessed from Colab. You’ll be prompted to log into your Google account, give Colab access, and the copy an authorization code into a field below.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">drive</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">drive</span>
 <span class="n">drive</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s1">'/content/drive/'</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -426,75 +299,83 @@ Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.
 </div>
 </div>
 </div>
-<p>Now let’s create a training package and copy it into your Google Drive.</p>
-<p>A training package contains both labeled data as well as the labeled images which will be used for training. One advantage to training packages is that it doesn’t depend on paths to other files (i.e., videos) to be messed up when you copy your project to another volume.</p>
-<p>See <a class="reference external" href="https://sleap.ai/guides/training-package.html">this guide</a> for exporting a training package from SLEAP.</p>
-<p>The following cell sets your current working directory to the directory with your training package. This will ensure that the output from training (i.e., the models) and from interence (i.e., predictions) will all be saved in this directory.</p>
-<p><strong>Important</strong>: For this demo, I’ll assume you have a <code class="docutils literal notranslate"><span class="pre">sleap</span></code> directory in the root of your Google drive and you place the exported training package in that directory with the filename <code class="docutils literal notranslate"><span class="pre">colab.pkg.slp</span></code>. If you placed your training pckage somewhere else, you’ll need to adjust the path below.</p>
+<p>Let’s set your current working directory to the directory with your training job package and unpack it there. Later on the output from training (i.e., the models) and from interence (i.e., predictions) will all be saved in this directory as well.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">"/content/drive/My Drive/sleap"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="section" id="training">
-<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
-<p>Now you’re ready to train a model! We’ll use the command-line interface for training, and train a model for confidence maps using the default <strong>training profile</strong>. The training profile determines the model architecture, the learning rate for training, and other training hyperparameters.</p>
-<p>When you start running this cell, you’ll see the training parameters listed and then you’ll see the training and validation loss for each training epoch.</p>
-<p>If you’re happy with the validation loss you see for an epoch during training, you’re welcome to stop training by clicking the stop button next to the notebook cell running training. The version of the model with the lowest validation loss is saved during training, and that’s what will be used for inference. If you don’t stop training, it will run for 200 epochs, or until validation loss fails to improve for some number of epochs (controlled by the <code class="docutils literal notranslate"><span class="pre">early_stopping</span></code> parameter in the training profile).</p>
-<p><strong>Important</strong>: If your training package isn’t named <code class="docutils literal notranslate"><span class="pre">colab.pkg.slp</span></code>, you’ll need to adjust the name below.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-train baseline_medium_rf.bottomup.json colab.pkg.slp --run_name "colab_demo.bottomup"
-</pre></div>
-</div>
-</div>
-</div>
-<p>Once training finishes, you’ll have a trained model for confidence maps on your Google Drive. There will be a <code class="docutils literal notranslate"><span class="pre">models/</span></code> directory inside your <code class="docutils literal notranslate"><span class="pre">sleap/</span></code> directory (or wherever you had the training package), and inside this there will be a <code class="docutils literal notranslate"><span class="pre">colab_demo.bottomup</span></code> directory (the name of this directory was set by the <code class="docutils literal notranslate"><span class="pre">--run_name</span></code> parameter).</p>
-<p>This <code class="docutils literal notranslate"><span class="pre">colab_demo.bottomup</span></code> directory contains all the files SLEAP needs to use this model. You can copy it to a local drive if you want to use it for running inference from the SLEAP GUI, copy it to a network drive if you want to run inference from an HPC cluster, or leave it on your Google Drive if you want to run inference on Colab… as we’ll do below.</p>
-</div>
-<div class="section" id="training-other-models">
-<h2>Training other models<a class="headerlink" href="#training-other-models" title="Permalink to this headline">¶</a></h2>
-<p>The <strong>bottomup</strong> model you trained above can be used for “bottom up” inference. You can also train a <strong>centroid</strong> model and a <strong>centered instance</strong> model for “top down” inference. See <a class="reference external" href="https://sleap.ai/#getting-started-with-sleap">here</a> for more information about these two different approaches.</p>
-<p>Here’s how to train centroid and centered instance models using the default training settings:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-train baseline_medium_rf.topdown.json --run_name "colab_demo.topdown_confmaps"
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-train baseline.centroid.json colab.pkg.slp --run_name "colab_demo.centroid"
+<span class="o">!</span>unzip colab.slp.training_job.zip
+<span class="o">!</span>ls
 </pre></div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="section" id="inference">
-<h1>Inference<a class="headerlink" href="#inference" title="Permalink to this headline">¶</a></h1>
-<p>At this point you should have SLEAP installed, your Google Drive mounted, and trained models saved on your Google Drive. If you’ve been working through the notebook, you should have a <code class="docutils literal notranslate"><span class="pre">models</span></code> subdirectory inside your current working directory. Let’s take a look:</p>
+<div class="section" id="train-a-model">
+<h1>Train a model<a class="headerlink" href="#train-a-model" title="Permalink to this headline">¶</a></h1>
+<p>Let’s train a model with the training profile (.json file) and the project data (.slp file) you have exported from SLEAP.</p>
+<div class="section" id="note-on-training-profiles">
+<h2>Note on training profiles<a class="headerlink" href="#note-on-training-profiles" title="Permalink to this headline">¶</a></h2>
+<p>Depending on the pipeline you chose in the training dialog, the config filename(s) will be:</p>
+<ul class="simple">
+<li><p>for a <strong>bottom-up</strong> pipeline approach: <code class="docutils literal notranslate"><span class="pre">multi_instance.json</span></code> (this is the pipeline we assume here),</p></li>
+<li><p>for a <strong>top-down</strong> pipeline, you’ll have a different profile for each of the models: <code class="docutils literal notranslate"><span class="pre">centroid.json</span></code> and <code class="docutils literal notranslate"><span class="pre">centered_instance.json</span></code>,</p></li>
+<li><p>for a <strong>single animal</strong> pipeline: <code class="docutils literal notranslate"><span class="pre">single_instance.json</span></code>.</p></li>
+</ul>
+</div>
+<div class="section" id="note-on-training-process">
+<h2>Note on training process<a class="headerlink" href="#note-on-training-process" title="Permalink to this headline">¶</a></h2>
+<p>When you start training, you’ll first see the training parameters and then the training and validation loss for each training epoch.</p>
+<p>As soon as you’re satisfied with the validation loss you see for an epoch during training, you’re welcome to stop training by clicking the stop button. The version of the model with the lowest validation loss is saved during training, and that’s what will be used for inference.</p>
+<p>If you don’t stop training, it will run for 200 epochs or until validation loss fails to improve for some number of epochs (controlled by the early_stopping fields in the training profile).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!ls models
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train multi_instance.json colab.pkg.slp
 </pre></div>
 </div>
 </div>
 </div>
-<p>We’ll also need a video for which we want predictions. Copy the video onto your Google drive.</p>
-<p>For this demo we’ll just get predictions for the first 200 frames (or you can adjust the <code class="docutils literal notranslate"><span class="pre">--frames</span></code> parameter below or remove it to run on the whole video).</p>
-<p><strong>Important</strong>: If your video is not named <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>, change this in the following cell to match the name of your video. If you trained top-down models and not a bottom-up model, see the end of the notebook for how to run inference with the pair of top-down models.</p>
+<p>If instead of bottom-up you’ve chosen the top-down pipeline (with two training configs), you would need to invoke two separate training jobs in sequence:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">!sleap-train</span> <span class="pre">centroid.json</span> <span class="pre">colab.pkg.slp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">!sleap-train</span> <span class="pre">centered_instance.json</span> <span class="pre">colab.pkg.slp</span></code></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="run-inference-to-predict-instances">
+<h1>Run inference to predict instances<a class="headerlink" href="#run-inference-to-predict-instances" title="Permalink to this headline">¶</a></h1>
+<p>Once training finishes, you’ll see a new directory (or two new directories for top-down training pipeline) containing all the model files SLEAP needs to use for inference.</p>
+<p>Here we’ll use the created model files to run inference in two modes:</p>
+<ul class="simple">
+<li><p>predicting instances in suggested frames from the exported .slp file</p></li>
+<li><p>predicting and tracking instances in uploaded video</p></li>
+</ul>
+<p>You can also download the trained models for running inference from the SLEAP GUI on your computer (or anywhere else).</p>
+<div class="section" id="predicting-instances-in-suggested-frames">
+<h2>Predicting instances in suggested frames<a class="headerlink" href="#predicting-instances-in-suggested-frames" title="Permalink to this headline">¶</a></h2>
+<p>Here we assume you’ve trained a bottom-up model and that the model files were written in directory named <code class="docutils literal notranslate"><span class="pre">colab_demo.bottomup</span></code>; later in this notebook we’ll also show how to run inference with the pair of top-down models instead.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.mp4 \
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!sleap-track \
+    -m colab_demo.bottomup \
+    --only-suggested-frames \
+    colab.pkg.slp
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="predicting-and-tracking-instances-in-uploaded-video">
+<h2>Predicting and tracking instances in uploaded video<a class="headerlink" href="#predicting-and-tracking-instances-in-uploaded-video" title="Permalink to this headline">¶</a></h2>
+<p>Let’s first upload the video we want to run inference on and name it <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>. (If your video is not named <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>, adjust the names below accordingly.)</p>
+<p>For this demo we’ll just get predictions for the first 200 frames (or you can adjust the –frames parameter below or remove it to run on the whole video).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.mp4 \
     --frames 0-200 \
     --tracking.tracker simple \
-    -m models/colab_demo.bottomup
+    -m colab_demo.bottomup
 </pre></div>
 </div>
 </div>
@@ -503,34 +384,23 @@ Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.
 <p>Let’s inspect the predictions file:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-inspect colab_demo.mp4.predictions.slp
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect colab_demo.mp4.predictions.slp
 </pre></div>
 </div>
 </div>
 </div>
 <p>You can copy this file from your Google Drive to a local drive and open it in the SLEAP GUI app (or open it directly if you have your Google Drive mounted on your local machine). If the video is in the same directory as the predictions file, SLEAP will automatically find it; otherwise, you’ll be prompted to locate the video (since the path to the video on your local machine will be different than the path to the video on Colab).</p>
-<div class="section" id="inference-parameters">
-<h2>Inference parameters<a class="headerlink" href="#inference-parameters" title="Permalink to this headline">¶</a></h2>
-<p>One important option when running inference is whether (and how) you want to track instance identities. If you omit <code class="docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">flow</span></code> then the identities will not be tracked. Tracking methods/options are explained <a class="reference external" href="https://sleap.ai/guides/proofreading.html#tracking-methods">here</a>.</p>
-<p>You can see all of the command-line arguments by calling <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> with the <code class="docutils literal notranslate"><span class="pre">--help</span></code> argument, like so:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-track --help
-</pre></div>
-</div>
-</div>
-</div>
 </div>
 <div class="section" id="inference-with-top-down-models">
 <h2>Inference with top-down models<a class="headerlink" href="#inference-with-top-down-models" title="Permalink to this headline">¶</a></h2>
 <p>If you trained the pair of models needed for top-down inference, you can call <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> with <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">path/to/model</span></code> for each model, like so:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.video.mp4 \
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!sleap-track colab_demo.mp4 \
     --frames 0-200 \
     --tracking.tracker simple \
-    -m models/colab_demo.topdown_confmaps \
-    -m models/colab_demo.centroid
+    -m colab_demo.centered_instance \
+    -m colab_demo.centroid
 </pre></div>
 </div>
 </div>
@@ -542,12 +412,12 @@ Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="Training_with_custom_hyperparameters.html">
+          <a class="next-page" href="Analysis_examples.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Installation</div>
+                <div class="title">Example analysis data</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -558,7 +428,7 @@ Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Installation</div>
+                <div class="title">Install SLEAP</div>
                 
               </div>
             </a>
@@ -592,14 +462,21 @@ Successfully installed PySide2-5.14.1 attrs-19.3.0 cattrs-1.0.0rc0 colorama-0.4.
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#getting-your-training-data-into-colab">Getting your training data into Colab</a></li>
-<li><a class="reference internal" href="#training">Training</a></li>
-<li><a class="reference internal" href="#training-other-models">Training other models</a></li>
+<li><a class="reference internal" href="#">Install SLEAP</a></li>
+<li><a class="reference internal" href="#impoprt-training-data-into-colab-with-google-drive">Impoprt training data into Colab with Google Drive</a><ul>
+<li><a class="reference internal" href="#create-and-export-the-training-job-package">Create and export the training job package</a></li>
+<li><a class="reference internal" href="#upload-training-job-package-to-google-drive">Upload training job package to Google Drive</a></li>
+<li><a class="reference internal" href="#mount-your-google-drive">Mount your Google Drive</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#inference">Inference</a><ul>
-<li><a class="reference internal" href="#inference-parameters">Inference parameters</a></li>
+<li><a class="reference internal" href="#train-a-model">Train a model</a><ul>
+<li><a class="reference internal" href="#note-on-training-profiles">Note on training profiles</a></li>
+<li><a class="reference internal" href="#note-on-training-process">Note on training process</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#run-inference-to-predict-instances">Run inference to predict instances</a><ul>
+<li><a class="reference internal" href="#predicting-instances-in-suggested-frames">Predicting instances in suggested frames</a></li>
+<li><a class="reference internal" href="#predicting-and-tracking-instances-in-uploaded-video">Predicting and tracking instances in uploaded video</a></li>
 <li><a class="reference internal" href="#inference-with-top-down-models">Inference with top-down models</a></li>
 </ul>
 </li>
