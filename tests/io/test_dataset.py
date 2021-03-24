@@ -1291,7 +1291,7 @@ def test_with_user_labels_only(removal_test_labels):
         inst.track = track
 
     new_labels = labels.with_user_labels_only(
-        user_instances_only=True, with_track_only=True
+        user_instances_only=True, with_track_only=True, copy=True
     )
     assert len(new_labels) == 2
     assert all([lf.has_user_instances for lf in new_labels])

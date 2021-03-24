@@ -389,7 +389,9 @@ def test_lf_instance_filters(skeleton, centered_pair_vid):
             "right-wing": Point(3, 6),
         },
     )
-    user_inst_tracked = Instance(skeleton=skeleton, points=user_inst.points, track=track)
+    user_inst_tracked = Instance(
+        skeleton=skeleton, points=user_inst.points, track=track
+    )
     pred_inst = PredictedInstance(
         skeleton=skeleton,
         points={

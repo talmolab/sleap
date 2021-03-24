@@ -41,7 +41,9 @@ def test_data_readers(min_tracks_2node_labels):
     labels_cfg.validation_fraction = 0.1
 
     # All frames with 2 instances and tracks, no filtering
-    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=False)
+    data_readers = DataReaders.from_config(
+        labels_config=labels_cfg, training=labels, with_track_only=False
+    )
     assert len(data_readers.training_labels_reader) == 2
     assert len(data_readers.validation_labels_reader) == 1
     assert data_readers.test_labels_reader is None
@@ -51,7 +53,9 @@ def test_data_readers(min_tracks_2node_labels):
     labels[0][0].track = None
     labels[1][0].track = None
     labels[2][0].track = None
-    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=False)
+    data_readers = DataReaders.from_config(
+        labels_config=labels_cfg, training=labels, with_track_only=False
+    )
     assert len(data_readers.training_labels_reader) == 2
     assert len(data_readers.validation_labels_reader) == 1
     examples = list(data_readers.training_labels_reader.make_dataset())
@@ -66,7 +70,9 @@ def test_data_readers(min_tracks_2node_labels):
     labels[0][0].track = None
     labels[1][0].track = None
     labels[2][0].track = None
-    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=True)
+    data_readers = DataReaders.from_config(
+        labels_config=labels_cfg, training=labels, with_track_only=True
+    )
     assert len(data_readers.training_labels_reader) == 2
     assert len(data_readers.validation_labels_reader) == 1
     examples = list(data_readers.training_labels_reader.make_dataset())
@@ -80,7 +86,9 @@ def test_data_readers(min_tracks_2node_labels):
     labels = min_tracks_2node_labels.extract(range(3), copy=True)
     labels[0][0].track = None
     labels[0][1].track = None
-    data_readers = DataReaders.from_config(labels_config=labels_cfg, training=labels, with_track_only=True)
+    data_readers = DataReaders.from_config(
+        labels_config=labels_cfg, training=labels, with_track_only=True
+    )
     assert len(data_readers.training_labels_reader) == 1
     assert len(data_readers.validation_labels_reader) == 1
     examples = list(data_readers.training_labels_reader.make_dataset())

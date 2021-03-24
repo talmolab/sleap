@@ -1652,7 +1652,9 @@ class TopDownMultiClassModelTrainer(Trainer):
             )
 
         if self.config.optimization.val_batches_per_epoch is None:
-            n_validation_examples = len(self.data_readers.validation_labels.user_instances)
+            n_validation_examples = len(
+                self.data_readers.validation_labels.user_instances
+            )
             n_validation_batches = (
                 n_validation_examples // self.config.optimization.batch_size
             )

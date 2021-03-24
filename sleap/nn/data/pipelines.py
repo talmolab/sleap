@@ -1221,9 +1221,7 @@ class TopDownMultiClassPipeline:
 
         return pipeline
 
-    def make_viz_pipeline(
-        self, data_provider: Provider
-    ) -> Pipeline:
+    def make_viz_pipeline(self, data_provider: Provider) -> Pipeline:
         """Create visualization pipeline.
 
         Args:
