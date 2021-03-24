@@ -718,9 +718,9 @@ class MainWindow(QMainWindow):
 
         predictionMenu.addSeparator()
 
-        training_package_menu = predictionMenu.addMenu("Export Training Package...")
+        labels_package_menu = predictionMenu.addMenu("Export Labels Package...")
         add_menu_item(
-            training_package_menu,
+            labels_package_menu,
             "export user labels package",
             "Labeled frames",
             self.commands.exportUserLabelsPackage,
@@ -729,8 +729,8 @@ class MainWindow(QMainWindow):
             "Use this for archiving a dataset with labeled frames only."
         )
         add_menu_item(
-            training_package_menu,
-            "export training package",
+            labels_package_menu,
+            "export labels package",
             "Labeled + suggested frames (recommended)",
             self.commands.exportTrainingPackage,
         ).setToolTip(
@@ -740,7 +740,7 @@ class MainWindow(QMainWindow):
             "unlabeled frames."
         )
         add_menu_item(
-            training_package_menu,
+            labels_package_menu,
             "export full package",
             "Labeled + predicted + suggested frames",
             self.commands.exportFullPackage,
@@ -749,6 +749,16 @@ class MainWindow(QMainWindow):
             "data into a single SLP file.\n\n"
             "Use this when you need to store images for predicted frames, such as for "
             "proofreading or reproducibility."
+        )
+
+        predictionMenu.addSeparator()
+        add_menu_item(
+            predictionMenu,
+            "training on colab",
+            "Train in Google Colab..",
+            lambda: self.commands.openWebsite(
+                "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+            ),
         )
 
         ############

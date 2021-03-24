@@ -35,11 +35,11 @@ Wherever you selected to save your files, you'll now have a custom training prof
 
 (There will also be a `train-script.sh` file with the command-line command you could use to train your dataset using these training profiles, and possibly an `inference-script.sh` file if you selected frames for inference after training.)
 
-If you're running training on a remote machine (including Colab), copy your training profile(s) along with your training package so they're available on the remote machine. Then call:
+If you're running training on a remote machine (including Colab), export your training job package into the remote machine. Then call:
 
 ::
 
     sleap-train path/to/custom/profile.json path/to/dataset.pkg.slp
 
-for each model you want to train (where `path/to/custom/profile.json` should be replaced with the path to your custom training profile and `path/to/dataset.pkg.slp` replaced with the path to your training package). See our guide to :ref:`remote_train` for more details.
+for each model you want to train (where `path/to/custom/profile.json` should be replaced with the path to your custom training profile and `path/to/dataset.pkg.slp` replaced with the path to your training job package). See our guide to :ref:`remote_train` for more details.
 

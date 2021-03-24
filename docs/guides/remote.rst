@@ -17,11 +17,11 @@ See the :ref:`installation` instructions.
 
 **Training labels and images**:
 
-Usually the easiest and best way to make the training labels and images available is to export a training package and copy that to the remote machine. See the instructions above to :ref:`training_package`.
+Usually the easiest and best way to make the training labels and images available is to export a training job package ("Predict" -> "Run Training.." -> "Export Training Job Package..") and copy that to the remote machine.
 
-Although it's easiest if you bundle the labels and images into training package, there are alternatives. If the files are already on a shared network drive, it may be possible to use the original labels project and videos for training. But this can be tricky, because often the full paths to the files will be different when accessed from different machines (i.e., different paths on Windows and Linux machines or different paths from how the network drive is mounted). To use the original labels and video files, you'll either need to ensure that the file paths to videos used in the project are the same on the remote machine as on the local machine where you last saved the project, **or** if all the video files have distinct filenames, you can place the videos inside the same directory which contains the labels project file.
+Although it's easiest if you bundle the labels and images into training job package, there are alternatives. If the files are already on a shared network drive, it may be possible to use the original labels project and videos for training. But this can be tricky, because often the full paths to the files will be different when accessed from different machines (i.e., different paths on Windows and Linux machines or different paths from how the network drive is mounted). To use the original labels and video files, you'll either need to ensure that the file paths to videos used in the project are the same on the remote machine as on the local machine where you last saved the project, **or** if all the video files have distinct filenames, you can place the videos inside the same directory which contains the labels project file.
 
-But in most cases it's best to create a training package and just use that for remote training.
+But in most cases it's best to create a training job package and just use that for remote training.
 
 **Training profile**:
 
@@ -33,13 +33,13 @@ When you run training, specify the full path to the :code:`json` file.
 
 **Command-line training**:
 
-Once you have your training package (or labels project file) and training profile, you can run training like so:
+Once you have your training job package (or labels package and training profile), you can run training like so:
 
 ::
 
-  sleap-train path/to/your/training_profile.json another/path/to/training_package.h5
+  sleap-train path/to/your/training_profile.json another/path/to/labels.pkg.slp
 
-The model will be saved in the :code:`models/` directory within the same directory as the **training package** (in this case, :code:`another/path/to/models/run_name/`). You can specify the :code:`run_name` to use when saving the model with the :code:`-o` argument, otherwise the run name will be the date and time of the run (or whatever is specified as the run path inside the config file).
+The model will be saved in the :code:`models/` directory within the same directory as the **training job package** (in this case, :code:`another/path/to/models/run_name/`). You can specify the :code:`run_name` to use when saving the model with the :code:`-o` argument, otherwise the run name will be the date and time of the run (or whatever is specified as the run path inside the config file).
 
 .. _pretrained_weights_remote:
 
