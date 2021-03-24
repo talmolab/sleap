@@ -274,6 +274,11 @@ class Predictor(ABC):
             if isinstance(ex["frame_ind"], tf.Tensor):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
+            # Adjust for potential SizeMatcher scaling.
+            ex["instance_peaks"] /= np.expand_dims(
+                np.expand_dims(ex["scale"], axis=1), axis=1
+            )
+
             return ex
 
         # Loop over data batches with optional progress reporting.
