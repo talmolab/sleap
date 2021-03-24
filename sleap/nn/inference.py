@@ -45,7 +45,7 @@ import tensorflow as tf
 import numpy as np
 
 import sleap
-from sleap.nn.config import TrainingJobConfig
+from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker
@@ -195,7 +195,7 @@ class Predictor(ABC):
 
     @property
     @abstractmethod
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         pass
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
@@ -404,7 +404,7 @@ class VisualPredictor(Predictor):
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return self.config.data
 
     @classmethod
@@ -1124,7 +1124,7 @@ class SingleInstancePredictor(Predictor):
         )
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return self.confmap_config.data
 
     @classmethod
@@ -1842,7 +1842,7 @@ class TopDownPredictor(Predictor):
         )
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return (
             self.centroid_config.data
             if self.centroid_config
@@ -2430,7 +2430,7 @@ class BottomUpPredictor(Predictor):
         )
 
     @property
-    def data_config(self):
+    def data_config(self) -> DataConfig:
         return self.bottomup_config.data
 
     @classmethod
