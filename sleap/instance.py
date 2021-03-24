@@ -1377,14 +1377,33 @@ class LabeledFrame:
         return [inst for inst in self._instances if type(inst) == PredictedInstance]
 
     @property
+    def tracked_instances(self) -> List[Instance]:
+        """Return list of instances that have a track assigned."""
+        return [inst for inst in self._instances if inst.track is not None]
+
+    @property
     def has_user_instances(self) -> bool:
         """Return whether the frame contains any user instances."""
-        return len(self.user_instances) > 0
+        for inst in self._instances:
+            if type(inst) == Instance:
+                return True
+        return False
 
     @property
     def has_predicted_instances(self) -> bool:
         """Return whether the frame contains any predicted instances."""
-        return len(self.predicted_instances) > 0
+        for inst in self._instances:
+            if type(inst) == PredictedInstance:
+                return True
+        return False
+
+    @property
+    def has_tracked_instances(self) -> bool:
+        """Return whether the frame contains any predicted instances."""
+        for inst in self._instances:
+            if inst.track is not None:
+                return True
+        return False
 
     @property
     def unused_predictions(self) -> List[Instance]:

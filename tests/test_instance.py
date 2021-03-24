@@ -12,8 +12,9 @@ from sleap.instance import (
     Point,
     PredictedPoint,
     LabeledFrame,
+    Track,
 )
-from sleap import Labels
+from sleap import Labels, Video
 
 
 def test_instance_node_get_set_item(skeleton):
@@ -376,3 +377,39 @@ def test_instance_rotation(skeleton):
 
     assert int(instance["head"].x) == 45
     assert int(instance["head"].y) == 31
+
+
+def test_lf_instance_filters(skeleton, centered_pair_vid):
+    track = Track()
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={
+            "head": Point(1, 4),
+            "left-wing": Point(2, 5),
+            "right-wing": Point(3, 6),
+        },
+    )
+    user_inst_tracked = Instance(skeleton=skeleton, points=user_inst.points, track=track)
+    pred_inst = PredictedInstance(
+        skeleton=skeleton,
+        points={
+            skeleton.nodes[0]: PredictedPoint(1, 2, score=0.3),
+            skeleton.nodes[1]: PredictedPoint(4, 5, score=0.6, visible=False),
+        },
+        score=1.0,
+    )
+    pred_inst_tracked = PredictedInstance(
+        skeleton=skeleton, points=pred_inst.points, score=1.0, track=track
+    )
+
+    lf = LabeledFrame(
+        video=centered_pair_vid,
+        frame_idx=0,
+        instances=[user_inst, user_inst_tracked, pred_inst, pred_inst_tracked],
+    )
+    assert lf.has_user_instances
+    assert lf.has_predicted_instances
+    assert lf.has_tracked_instances
+    assert lf.user_instances == [user_inst, user_inst_tracked]
+    assert lf.predicted_instances == [pred_inst, pred_inst_tracked]
+    assert lf.tracked_instances == [user_inst_tracked, pred_inst_tracked]
