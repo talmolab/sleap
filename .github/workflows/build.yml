@@ -4,7 +4,7 @@ name: Build
 on:
   # push:
   #   branches:  # Use this to trigger a build if the release build failed
-  #     - master
+  #     - main
   #     - develop
 
   release:
@@ -96,7 +96,7 @@ jobs:
         run: |
           echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
       - name: Upload conda package (Windows/main)
-        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/master'
+        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/main'
         if: matrix.os == 'windows-2019' && !github.event.release.prerelease
         shell: powershell
         run: |
@@ -108,7 +108,7 @@ jobs:
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
       - name: Upload conda package (Ubuntu/main)
-        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/master'
+        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/main'
         if: matrix.os == 'ubuntu-18.04' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |

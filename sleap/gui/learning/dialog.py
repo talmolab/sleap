@@ -578,7 +578,7 @@ class LearningDialog(QtWidgets.QDialog):
         self._handle_learning_finished.emit(new_counts)
 
         # count < 0 means there was an error and we didn't get any results.
-        if new_counts >= 0:
+        if new_counts is not None and new_counts >= 0:
             total_count = items_for_inference.total_frame_count
             no_result_count = total_count - new_counts
 
@@ -710,7 +710,7 @@ class LearningDialog(QtWidgets.QDialog):
                 # TODO: Update this to more workflow-tailored notebook.
                 sleap.gui.commands.copy_to_clipboard(output_path)
                 sleap.gui.commands.open_website(
-                    "https://colab.research.google.com/github/murthylab/sleap-notebooks/blob/master/Training_and_inference_using_Google_Drive.ipynb"
+                    "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
                 )
 
         tmp_dir.cleanup()

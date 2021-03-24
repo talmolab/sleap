@@ -34,10 +34,8 @@ class LabelsReader:
     @classmethod
     def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
         """Create a `LabelsReader` using the user instances in a `Labels` set.
-
         Args:
             labels: A `sleap.Labels` instance containing user instances.
-
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
         """
@@ -48,13 +46,10 @@ class LabelsReader:
     @classmethod
     def from_user_labeled_frames(cls, labels: sleap.Labels) -> "LabelsReader":
         """Create a `LabelsReader` using the user labeled frames in a `Labels` set.
-
         Args:
             labels: A `sleap.Labels` instance containing user labeled frames.
-
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
-
             Note that this constructor will load ALL instances in frames that have user
             instances. To load only user labeled indices, use
             `LabelsReader.from_user_instances`.
@@ -64,10 +59,8 @@ class LabelsReader:
     @classmethod
     def from_unlabeled_suggestions(cls, labels: sleap.Labels) -> "LabelsReader":
         """Create a `LabelsReader` using the unlabeled suggestions in a `Labels` set.
-
         Args:
             labels: A `sleap.Labels` instance containing unlabeled suggestions.
-
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
         """
@@ -145,7 +138,6 @@ class LabelsReader:
         self, ds_index: Optional[tf.data.Dataset] = None
     ) -> tf.data.Dataset:
         """Return a `tf.data.Dataset` whose elements are data from labeled frames.
-
         Returns:
             A dataset whose elements are dictionaries with the loaded data associated
             with a single `LabeledFrame`. Items will be converted to tensors. These are:
@@ -346,6 +338,13 @@ class VideoReader:
     def videos(self) -> List[sleap.Video]:
         """Return the list of videos that `video_ind` in examples match up with."""
         return [self.video]
+
+    @property
+    def max_height_and_width(self) -> Tuple[int, int]:
+        """Return `(height, width)` that is the maximum of all videos."""
+        return max(video.shape[1] for video in self.videos), max(
+            video.shape[2] for video in self.videos
+        )
 
     @property
     def output_keys(self) -> List[Text]:

@@ -1,3 +1,4 @@
+
 .. _api:
 
 Developer API
@@ -7,5 +8,5 @@ Developer API
    :caption: API
 
 .. autosummary::
-   :toctree: _autosummary
+   :toctree: api
 

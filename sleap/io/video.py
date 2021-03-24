@@ -1180,6 +1180,7 @@ class Video:
             backend_class = NumpyVideo
         elif filename.lower().endswith(("mp4", "avi", "mov")):
             backend_class = MediaVideo
+            kwargs["dataset"] = ""  # prevent serialization from breaking
         elif os.path.isdir(filename) or "metadata.yaml" in filename:
             backend_class = ImgStoreVideo
         else:
@@ -1523,7 +1524,7 @@ class Video:
 def load_video(
     filename: str,
     grayscale: Optional[bool] = None,
-    dataset: Optional[str] = None,
+    dataset=Optional[None],
     channels_first: bool = False,
 ) -> Video:
     """Open a video from disk.

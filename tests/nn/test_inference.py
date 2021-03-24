@@ -547,6 +547,14 @@ def test_bottomup_predictor(min_labels, min_bottomup_model_path):
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.75)
 
+    # Test inference with score threshold too high
+    predictor = BottomUpPredictor.from_trained_models(
+        model_path=min_bottomup_model_path,
+        min_line_scores=1.1,
+    )
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr[0]) == 0
+
 
 def test_bottomup_multiclass_predictor(
     min_tracks_2node_labels, min_bottomup_multiclass_model_path
