@@ -451,12 +451,19 @@ def test_single_instance_inference():
     assert layer.output_stride == 1
 
     out = layer(cms)
-    assert_array_equal(out["peaks"], points)
-    assert_allclose(out["peak_vals"], 1.0, atol=0.1)
+
+    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
+    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
+    assert tuple(out["instance_peak_vals"].shape) == (2, 1, 3)
+    out["instance_peak_vals"] = tf.squeeze(out["instance_peak_vals"], axis=1)
+    assert_array_equal(out["instance_peaks"], points)
+    assert_allclose(out["instance_peak_vals"], 1.0, atol=0.1)
     assert "confmaps" not in out
 
     out = layer({"image": cms})
-    assert_array_equal(out["peaks"], points)
+    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
+    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
+    assert_array_equal(out["instance_peaks"], points)
 
     layer = SingleInstanceInferenceLayer(
         keras_model=keras_model, refinement="local", return_confmaps=True
@@ -467,8 +474,10 @@ def test_single_instance_inference():
 
     model = SingleInstanceInferenceModel(layer)
     preds = model.predict(cms)
-    assert_array_equal(preds["peaks"], points)
-    assert "peak_vals" in preds
+    assert preds["instance_peaks"].shape == (2, 1, 3, 2)
+    preds["instance_peaks"] = preds["instance_peaks"].squeeze(axis=1)
+    assert_array_equal(preds["instance_peaks"], points)
+    assert "instance_peak_vals" in preds
     assert "confmaps" in preds
 
 
