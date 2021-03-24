@@ -909,7 +909,7 @@ class Labels(MutableSequence):
         self,
         user_instances_only: bool = True,
         with_track_only: bool = False,
-        copy: bool = False,
+        copy: bool = True,
     ) -> "Labels":
         """Return a new `Labels` containing only user labels.
 
@@ -919,10 +919,11 @@ class Labels(MutableSequence):
             user_instances_only: If `True` (the default), predicted instances will be
                 removed from frames that also have user instances.
             with_track_only: If `True`, remove instances without a track.
-            copy: If `True`, create a new copy of all of the extracted labeled frames
-                and associated labels. If `False` (the default), a shallow copy with
+            copy: If `True` (the default), create a new copy of all of the extracted
+                labeled frames and associated labels. If `False`, a shallow copy with
                 references to the original labeled frames and other objects will be
-                returned.
+                returned. Warning: If returning a shallow copy, predicted and untracked
+                instances will be removed from the original labels as well!
 
         Returns:
             A new `Labels` with only the specified subset of frames and instances.
