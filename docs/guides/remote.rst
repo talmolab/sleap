@@ -37,7 +37,7 @@ Once you have your training job package (or labels package and training profile)
 
 ::
 
-  sleap-train path/to/your/training_profile.json another/path/to/labels_package.h5
+  sleap-train path/to/your/training_profile.json another/path/to/labels.pkg.slp
 
 The model will be saved in the :code:`models/` directory within the same directory as the **training job package** (in this case, :code:`another/path/to/models/run_name/`). You can specify the :code:`run_name` to use when saving the model with the :code:`-o` argument, otherwise the run name will be the date and time of the run (or whatever is specified as the run path inside the config file).
 
