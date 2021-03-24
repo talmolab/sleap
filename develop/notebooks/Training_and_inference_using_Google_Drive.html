@@ -354,17 +354,20 @@
 <p>You can also download the trained models for running inference from the SLEAP GUI on your computer (or anywhere else).</p>
 <div class="section" id="predicting-instances-in-suggested-frames">
 <h2>Predicting instances in suggested frames<a class="headerlink" href="#predicting-instances-in-suggested-frames" title="Permalink to this headline">¶</a></h2>
+<p>This mode of predicting instances is useful for accelerating the manual labeling work; it allows you to get early predictions on suggested frames and merge them back into the project for faster labeling.</p>
 <p>Here we assume you’ve trained a bottom-up model and that the model files were written in directory named <code class="docutils literal notranslate"><span class="pre">colab_demo.bottomup</span></code>; later in this notebook we’ll also show how to run inference with the pair of top-down models instead.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!sleap-track \
     -m colab_demo.bottomup \
     --only-suggested-frames \
+    -o colab.predicted_suggestions.slp \
     colab.pkg.slp
 </pre></div>
 </div>
 </div>
 </div>
+<p>Now, you can download the generated <code class="docutils literal notranslate"><span class="pre">colab.predicted_suggestions.slp</span></code> file and merge it into your labeling project (<strong>File -&gt; Merge into Project…</strong> from the GUI) to get new predictions for your suggested frames.</p>
 </div>
 <div class="section" id="predicting-and-tracking-instances-in-uploaded-video">
 <h2>Predicting and tracking instances in uploaded video<a class="headerlink" href="#predicting-and-tracking-instances-in-uploaded-video" title="Permalink to this headline">¶</a></h2>

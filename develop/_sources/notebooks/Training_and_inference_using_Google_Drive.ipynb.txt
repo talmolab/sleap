@@ -211,6 +211,7 @@
     "You can also download the trained models for running inference from the SLEAP GUI on your computer (or anywhere else).\n",
     "\n",
     "### Predicting instances in suggested frames\n",
+    "This mode of predicting instances is useful for accelerating the manual labeling work; it allows you to get early predictions on suggested frames and merge them back into the project for faster labeling.\n",
     "\n",
     "Here we assume you've trained a bottom-up model and that the model files were written in directory named `colab_demo.bottomup`; later in this notebook we'll also show how to run inference with the pair of top-down models instead."
    ]
@@ -224,7 +225,17 @@
     "!sleap-track \\\n",
     "    -m colab_demo.bottomup \\\n",
     "    --only-suggested-frames \\\n",
+    "    -o colab.predicted_suggestions.slp \\\n",
     "    colab.pkg.slp"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "nIsKUX661xFK"
+   },
+   "source": [
+    "Now, you can download the generated `colab.predicted_suggestions.slp` file and merge it into your labeling project (**File -> Merge into Project...** from the GUI) to get new predictions for your suggested frames."
    ]
   },
   {
