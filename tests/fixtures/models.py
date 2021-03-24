@@ -25,3 +25,8 @@ def min_single_instance_robot_model_path():
 @pytest.fixture
 def min_bottomup_multiclass_model_path():
     return "tests/data/models/min_tracks_2node.UNet.bottomup_multiclass"
+
+
+@pytest.fixture
+def min_topdown_multiclass_model_path():
+    return "tests/data/models/min_tracks_2node.UNet.topdown_multiclass"

@@ -45,7 +45,7 @@ import tensorflow as tf
 import numpy as np
 
 import sleap
-from sleap.nn.config import TrainingJobConfig
+from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker
@@ -2982,6 +2982,10 @@ class BottomUpMultiClassPredictor(Predictor):
         obj._initialize_inference_model()
         return obj
 
+    @property
+    def data_config(self) -> DataConfig:
+        return self.config.data
+    
     def _make_labeled_frames_from_generator(
         self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
     ) -> List[sleap.LabeledFrame]:
@@ -3544,6 +3548,14 @@ class TopDownMultiClassPredictor(Predictor):
         )
         obj._initialize_inference_model()
         return obj
+
+    @property
+    def data_config(self) -> DataConfig:
+        return (
+            self.centroid_config.data
+            if self.centroid_config
+            else self.confmap_config.data
+        )
 
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
