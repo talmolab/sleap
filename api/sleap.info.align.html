@@ -1,11 +1,12 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.info.feature_suggestions" href="sleap.info.feature_suggestions.html" /><link rel="prev" title="sleap.io.format.text" href="sleap.io.format.text.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.info.feature_suggestions" href="sleap.info.feature_suggestions.html" /><link rel="prev" title="sleap.nn.data.utils" href="sleap.nn.data.utils.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.2, furo 2021.02.28.beta28"/>
-        <title>sleap.info.align - SLEAP (v1.1.1)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=be5985a4059b5c2cd56ed0804790452beca62674">
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
+        <title>sleap.info.align - SLEAP (v1.1.2)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
@@ -88,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.1)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.2)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
@@ -106,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.1)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.2)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -138,17 +139,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#remote-inference">Remote inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/skeleton-design.html">Skeleton design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/training.html">Training with GUI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/training-package.html">Export a training package</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Install SLEAP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#download-sample-training-data-into-colab">Download sample training data into Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#train-models">Train models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#inference">Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_with_custom_hyperparameters.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_with_custom_hyperparameters.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Install SLEAP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#impoprt-training-data-into-colab-with-google-drive">Impoprt training data into Colab with Google Drive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#train-a-model">Train a model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#run-inference-to-predict-instances">Run inference to predict instances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Example analysis data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#loading-the-data">Loading the data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
@@ -183,13 +184,6 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
@@ -204,12 +198,23 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -226,17 +231,13 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample Datasets</a></li>
@@ -282,42 +283,42 @@ useful so we can use “mean” instance to add “default” points to an insta
 which doesn’t yet have all points).</p>
 <dl class="py function">
 <dt id="sleap.info.align.align_instance_points">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">align_instance_points</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_points_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_points_array</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L177-L209"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.align_instance_points" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">align_instance_points</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_points_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_points_array</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L177-L209"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.align_instance_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transforms source for best fit on to target.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.align.align_instances">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">align_instances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_a</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_b</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotate_on_node_a</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L91-L128"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.align_instances" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">align_instances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_a</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_b</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotate_on_node_a</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L91-L128"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.align_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rotates every instance so that line from node_a to node_b aligns.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.align.align_instances_on_most_stable">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">align_instances_on_most_stable</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_stable_dist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">4.0</span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L131-L141"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.align_instances_on_most_stable" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">align_instances_on_most_stable</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_stable_dist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">4.0</span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L131-L141"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.align_instances_on_most_stable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets most stable pair of nodes and aligned instances along these nodes.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.align.get_instances_points">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_instances_points</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L212-L214"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_instances_points" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_instances_points</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L212-L214"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_instances_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns single (instance, node, 2) matrix with points for all instances.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.align.get_mean_and_std_for_points">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_mean_and_std_for_points</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L144-L153"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_mean_and_std_for_points" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_mean_and_std_for_points</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L144-L153"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_mean_and_std_for_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns mean and standard deviation for every node given aligned points.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.align.get_most_stable_node_pair">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_most_stable_node_pair</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L83-L88"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_most_stable_node_pair" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_most_stable_node_pair</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L83-L88"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_most_stable_node_pair" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns pair of nodes which are at stable distance (over min threshold).</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.align.get_stable_node_pairs">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_stable_node_pairs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L36-L80"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_stable_node_pairs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_stable_node_pairs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_points_arrays</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L36-L80"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_stable_node_pairs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns sorted list of node pairs with mean and standard dev distance.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.align.get_template_points_array">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_template_points_array</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.1/sleap/info/align.py#L217-L225"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_template_points_array" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.align.</span></code><code class="sig-name descname"><span class="pre">get_template_points_array</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">numpy.ndarray</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.2/sleap/info/align.py#L217-L225"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.align.get_template_points_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns mean of aligned points for instances.</p>
 </dd></dl>
 </div>
@@ -335,14 +336,14 @@ which doesn’t yet have all points).</p>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="sleap.io.format.text.html">
+          <a class="prev-page" href="sleap.nn.data.utils.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">sleap.io.format.text</div>
+                <div class="title">sleap.nn.data.utils</div>
                 
               </div>
             </a>

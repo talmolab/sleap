@@ -18,8 +18,6 @@ Getting better results
 Running remotely
 -----------------
 
-:ref:`training_package` when you've created a project with training data on one computer and you want to **move your training data** for training models on a different computer.
-
 :ref:`colab` when you have a project with labeled training data and you'd like to run training or inference in a **Colab** notebook.
 
 :ref:`remote_train` when you have a project with training data and you want to train on a different machine using a **command-line interface**.
