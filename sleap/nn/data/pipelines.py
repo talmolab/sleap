@@ -1222,14 +1222,13 @@ class TopDownMultiClassPipeline:
         return pipeline
 
     def make_viz_pipeline(
-        self, data_provider: Provider, keras_model: tf.keras.Model
+        self, data_provider: Provider
     ) -> Pipeline:
         """Create visualization pipeline.
 
         Args:
             data_provider: A `Provider` that generates data examples, typically a
                 `LabelsReader` instance.
-            keras_model: A `tf.keras.Model` that can be used for inference.
 
         Returns:
             A `Pipeline` instance configured to fetch data and run inference to generate
