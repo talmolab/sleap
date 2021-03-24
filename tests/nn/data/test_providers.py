@@ -93,6 +93,34 @@ def test_labels_reader_subset(min_labels):
     assert examples[1]["example_ind"] == 1
 
 
+def test_labels_reader_with_tracks_only(min_tracks_2node_labels):
+    labels = min_tracks_2node_labels.extract(range(5), copy=True)
+    reader = providers.LabelsReader.from_user_instances(labels, with_track_only=True)
+    examples = list(reader.make_dataset())
+    assert len(examples) == 5
+    assert all([ex["instances"].shape[0] == 2 for ex in examples])
+    assert all([(ex["track_inds"] >= 0).numpy().all() for ex in examples])
+
+    labels = min_tracks_2node_labels.extract(range(5), copy=True)
+    for inst in labels[0]:
+        inst.track = None
+    reader = providers.LabelsReader.from_user_instances(labels, with_track_only=True)
+    examples = list(reader.make_dataset())
+    assert len(examples) == 5
+    assert all([ex["instances"].shape[0] == 2 for ex in examples[1:]])
+    assert all([(ex["track_inds"] >= 0).numpy().all() for ex in examples[1:]])
+    assert examples[0]["instances"].shape[0] == 0
+    assert (examples[0]["track_inds"] == -1).numpy().all()
+
+    labels = min_tracks_2node_labels.extract(range(5), copy=True)
+    for inst in labels.instances():
+        inst.track = None
+    reader = providers.LabelsReader.from_user_instances(labels, with_track_only=True)
+    examples = list(reader.make_dataset())
+    assert len(examples) == 5
+    assert all([ex["instances"].shape[0] == 0 for ex in examples])
+
+
 def test_video_reader_mp4():
     video_reader = providers.VideoReader.from_filepath(TEST_SMALL_ROBOT_MP4_FILE)
     ds = video_reader.make_dataset()

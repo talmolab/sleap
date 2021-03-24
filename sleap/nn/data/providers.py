@@ -25,42 +25,62 @@ class LabelsReader:
             or filtered.
         user_instances_only: If `True`, load only user labeled instances. If `False`,
             all instances will be loaded.
+        with_track_only: If `True`, load only instances that have a track assigned.
+            Useful when training supervised ID models.
     """
 
     labels: sleap.Labels
     example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
     user_instances_only: bool = False
+    with_track_only: bool = False
 
     @classmethod
-    def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
+    def from_user_instances(
+        cls, labels: sleap.Labels, with_track_only: bool = False
+    ) -> "LabelsReader":
         """Create a `LabelsReader` using the user instances in a `Labels` set.
+
         Args:
             labels: A `sleap.Labels` instance containing user instances.
+            with_track_only: If `True`, load only instances that have a track assigned.
+                Useful when training supervised ID models.
+
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
         """
-        obj = cls.from_user_labeled_frames(labels)
-        obj.user_instances_only = True
-        return obj
+        return cls(
+            labels=labels,
+            example_indices=labels.user_labeled_frame_inds,
+            user_instances_only=True,
+            with_track_only=with_track_only,
+        )
 
     @classmethod
     def from_user_labeled_frames(cls, labels: sleap.Labels) -> "LabelsReader":
         """Create a `LabelsReader` using the user labeled frames in a `Labels` set.
+
         Args:
             labels: A `sleap.Labels` instance containing user labeled frames.
+
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
             Note that this constructor will load ALL instances in frames that have user
             instances. To load only user labeled indices, use
             `LabelsReader.from_user_instances`.
         """
-        return cls(labels=labels, example_indices=labels.user_labeled_frame_inds)
+        return cls(
+            labels=labels,
+            example_indices=labels.user_labeled_frame_inds,
+            user_instances_only=False,
+        )
 
     @classmethod
     def from_unlabeled_suggestions(cls, labels: sleap.Labels) -> "LabelsReader":
         """Create a `LabelsReader` using the unlabeled suggestions in a `Labels` set.
+
         Args:
             labels: A `sleap.Labels` instance containing unlabeled suggestions.
+
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
         """
@@ -188,6 +208,8 @@ class LabelsReader:
             else:
                 insts = lf.instances
             insts = [inst for inst in insts if len(inst) > 0]
+            if self.with_track_only:
+                insts = [inst for inst in insts if inst.track is not None]
             n_instances = len(insts)
             n_nodes = len(insts[0].skeleton) if n_instances > 0 else 0
 
