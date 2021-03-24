@@ -973,6 +973,11 @@ class BottomUpMultiClassPipeline:
             A `Pipeline` instance configured to produce input examples.
         """
         pipeline = Pipeline(providers=data_provider)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         if self.optimization_config.augmentation_config.random_crop:
@@ -1006,7 +1011,11 @@ class BottomUpMultiClassPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         aug_config = self.optimization_config.augmentation_config
         pipeline += ImgaugAugmenter.from_config(aug_config)
         if aug_config.random_crop:
@@ -1123,6 +1132,11 @@ class TopDownMultiClassPipeline:
             A `Pipeline` instance configured to produce input examples.
         """
         pipeline = Pipeline(providers=data_provider)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
@@ -1156,7 +1170,11 @@ class TopDownMultiClassPipeline:
             pipeline += Shuffler(
                 shuffle=True, buffer_size=self.optimization_config.shuffle_buffer_size
             )
-
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += ImgaugAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
@@ -1218,6 +1236,11 @@ class TopDownMultiClassPipeline:
             predictions useful for visualization during training.
         """
         pipeline = Pipeline(data_provider)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
