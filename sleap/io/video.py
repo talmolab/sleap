@@ -1524,7 +1524,7 @@ class Video:
 def load_video(
     filename: str,
     grayscale: Optional[bool] = None,
-    dataset=Optional[None],
+    dataset: Optional[str] = None,
     channels_first: bool = False,
 ) -> Video:
     """Open a video from disk.
