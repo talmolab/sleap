@@ -1634,8 +1634,16 @@ class TopDownMultiClassModelTrainer(Trainer):
         if self.config.data.preprocessing.pad_to_stride is None:
             self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
 
+        if self.config.data.instance_cropping.crop_size is None:
+            self.config.data.instance_cropping.crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
+                self.data_readers.training_labels,
+                padding=self.config.data.instance_cropping.crop_size_detection_padding,
+                maximum_stride=self.model.maximum_stride,
+                input_scaling=self.config.data.preprocessing.input_scaling,
+            )
+
         if self.config.optimization.batches_per_epoch is None:
-            n_training_examples = len(self.data_readers.training_labels)
+            n_training_examples = len(self.data_readers.training_labels.user_instances)
             n_training_batches = (
                 n_training_examples // self.config.optimization.batch_size
             )
@@ -1644,7 +1652,7 @@ class TopDownMultiClassModelTrainer(Trainer):
             )
 
         if self.config.optimization.val_batches_per_epoch is None:
-            n_validation_examples = len(self.data_readers.validation_labels)
+            n_validation_examples = len(self.data_readers.validation_labels.user_instances)
             n_validation_batches = (
                 n_validation_examples // self.config.optimization.batch_size
             )

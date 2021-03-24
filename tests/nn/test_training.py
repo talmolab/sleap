@@ -237,3 +237,24 @@ def test_train_bottomup_multiclass(min_tracks_2node_labels, cfg):
     assert trainer.keras_model.output_names[1] == "ClassMapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 256, 256, 2)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 256, 256, 2)
+
+
+def test_train_topdown_multiclass(min_tracks_2node_labels, cfg):
+    labels = min_tracks_2node_labels
+    cfg.data.instance_cropping.center_on_part = "thorax"
+    cfg.model.heads.multi_class_topdown = sleap.nn.config.MultiClassTopDownConfig(
+        confmaps=sleap.nn.config.CenteredInstanceConfmapsHeadConfig(
+            output_stride=1, offset_refinement=False, anchor_part="thorax"
+        ),
+        class_vectors=sleap.nn.config.ClassVectorsHeadConfig(output_stride=8),
+    )
+    trainer = sleap.nn.training.TopDownMultiClassModelTrainer.from_config(
+        cfg, training_labels=labels
+    )
+    trainer.setup()
+    trainer.train()
+
+    assert trainer.keras_model.output_names[0] == "CenteredInstanceConfmapsHead"
+    assert trainer.keras_model.output_names[1] == "ClassVectorsHead"
+    assert tuple(trainer.keras_model.outputs[0].shape) == (None, 64, 64, 2)
+    assert tuple(trainer.keras_model.outputs[1].shape) == (None, 2)
