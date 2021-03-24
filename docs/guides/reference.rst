@@ -153,8 +153,6 @@ Predict
 
 "**Delete All Predictions beyond Frame Limit...**" deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You'll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.
 
-"**Export Training Job Package...**" allows you to export a training job package. It includes the necessary scripts and configuration files as well as a single `.slp` (HDF5) file which contains both labeled data as well as the images which will be used for training. This makes it easy to transport your training data, especially if you need to run training on another machine (e.g., an HPC cluster). The .slp file from training job packages can be opened just like regular SLEAP dataset files, although you'll only be able to view the frames which have labeled data (since only these are included in the file).
-
 "**Export Video with Visual Annotations...**" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.
 
 Help

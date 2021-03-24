@@ -25,6 +25,6 @@ You'll then see a window with information about the merge:
 
 If there are no merge conflicts, then you can click "**Finish Merge**. If the two files contain conflicts—frames from the same video which both have editable instances or both have predicted instances—then you'll need to decide how to resolve the conflicts. You can choose to use the "base" version (i.e., the original project file **into which** you are merging), the "new" version (i.e., from the predictions file with the data which you're adding to the original project), or neither. Whichever you choose, you'll also get all of the frames which can be merged without conflicts.
 
-After merging you should save (or save a copy of the project with the "**Save As...**" command). Once you have a single project file which contains both your old and new training data, you can train new models (or :ref:`training_job_package` for training on another machine).
+After merging you should save (or save a copy of the project with the "**Save As...**" command). Once you have a single project file which contains both your old and new training data, you can train new models.
 
 .. |clean-merge| image:: ../_static/clean-merge.jpg

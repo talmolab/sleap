@@ -17,7 +17,7 @@ See the :ref:`installation` instructions.
 
 **Training labels and images**:
 
-Usually the easiest and best way to make the training labels and images available is to export a training job package and copy that to the remote machine. See the instructions above to :ref:`training_job_package`.
+Usually the easiest and best way to make the training labels and images available is to export a training job package ("Predict" -> "Run Training.." -> "Export Training Job Package..") and copy that to the remote machine.
 
 Although it's easiest if you bundle the labels and images into training job package, there are alternatives. If the files are already on a shared network drive, it may be possible to use the original labels project and videos for training. But this can be tricky, because often the full paths to the files will be different when accessed from different machines (i.e., different paths on Windows and Linux machines or different paths from how the network drive is mounted). To use the original labels and video files, you'll either need to ensure that the file paths to videos used in the project are the same on the remote machine as on the local machine where you last saved the project, **or** if all the video files have distinct filenames, you can place the videos inside the same directory which contains the labels project file.
 
