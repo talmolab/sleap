@@ -1,12 +1,20 @@
 .. _guides:
 
-Detailed Guides
-===============
+Guides
+=======
+
+General
+-------
+
+:ref:`gui` is a comprehensive list of the functionality in the SLEAP GUI for labeling, proofreading and inspection.
+
+:ref:`cli` describes the command line interfaces provided by SLEAP.
+
 
 Getting better results
 ----------------------
 
-:ref:`skeleton_design` answers some questions about designing the skeleton for your animals.
+:ref:`skeletons` answers some questions about designing the skeleton for your animals.
 
 :ref:`choosing_models` provides information about the types of models you should.
 
@@ -28,11 +36,19 @@ Running remotely
 
 :ref:`pretrained_weights_remote` explains how to download pretrained weights if you're training a network with pretrained weights on a machine without internet access.
 
-All Guides
-----------
+
 
 .. toctree::
+    :hidden:
     :maxdepth: 2
-    :glob:
-
-    *
+    
+    gui
+    cli
+    skeletons
+    choosing-models
+    merging
+    proofreading
+    colab
+    custom-training
+    remote
+    

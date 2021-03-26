@@ -32,25 +32,25 @@ different projects, mitigating issues of managing complex dependencies. To creat
 
 ::
 
-    (base) C:\>  conda create -n sleap_env -c defaults -c sleap sleap=1.1.2 python=3.6 -y
+    (base) C:\>  conda create -n sleap -c defaults -c sleap sleap=1.1.3 python=3.6 -y
 
 Once the environment is finished installing, it can be activated using the following command:
 
 ::
 
-    (base) C:\> conda activate sleap_env
-    (sleap_env) C:\>
+    (base) C:\> conda activate sleap
+    (sleap) C:\>
 
 Any Python installation commands (:code:`conda install` or :code:`pip install`) issued after activating an
 environment will only affect the active environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.
 
-**SLEAP** is now installed in the :code:`sleap_env` conda environment. With the environment active,
+**SLEAP** is now installed in the :code:`sleap` conda environment. With the environment active,
 you can run the labeling GUI by entering the following command:
 
 ::
 
-(sleap_env) C:\> sleap-label
+(sleap) C:\> sleap-label
 
 .. _Anaconda: https://www.anaconda.com/distribution/
 .. _Anaconda Environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
@@ -64,8 +64,8 @@ We recommend installing SLEAP into an environment with Python 3.6. If you are us
 
 ::
 
-    conda create -n sleap_env python=3.6 -y
-    conda activate sleap_env
+    conda create -n sleap python=3.6 -y
+    conda activate sleap
 
 If you are on Linux and have a GPU supported by TensorFlow, you should follow official directions for installing `TensorFlow with GPU support <https://www.tensorflow.org/install/gpu>`_.
 
@@ -76,7 +76,7 @@ You can then install SLEAP by running:
 
 ::
 
-    pip install sleap==1.1.2
+    pip install sleap==1.1.3
 
 **SLEAP** is now installed, you can run the labeling GUI:
 
