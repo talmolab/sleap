@@ -2,10 +2,10 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example analysis data" href="Analysis_examples.html" /><link rel="prev" title="Install SLEAP" href="Training_and_inference_on_an_example_dataset.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Analysis examples" href="Analysis_examples.html" /><link rel="prev" title="Training and inference on an example dataset" href="Training_and_inference_on_an_example_dataset.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
-        <title>Install SLEAP - SLEAP (v1.1.2)</title>
+        <title>Training and inference on your own data using Google Drive - SLEAP (v1.1.3)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.2)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.3)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.2)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.3)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -115,7 +115,8 @@
   <input type="hidden" name="area" value="default">
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
@@ -127,35 +128,22 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Detailed Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/gui.html">GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/cli.html">Command line interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/skeletons.html">Skeleton design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/choosing-models.html">Choosing a set of models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and/or inference on Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Add more training data to a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Importing predictions for labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/proofreading.html">Tracking and proofreading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Remote training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#remote-inference">Remote inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/skeleton-design.html">Skeleton design</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/training.html">Training with GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Install SLEAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#download-sample-training-data-into-colab">Download sample training data into Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#train-models">Train models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Install SLEAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#impoprt-training-data-into-colab-with-google-drive">Impoprt training data into Colab with Google Drive</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#train-a-model">Train a model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-inference-to-predict-instances">Run inference to predict instances</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html">Example analysis data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#loading-the-data">Loading the data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#more-advanced-visualizations">More advanced visualizations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html#clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Training and inference on your own data using Google Drive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Analysis_examples.html">Analysis examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -240,8 +228,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample Datasets</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Sourcecode</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
 </ul>
 
@@ -258,33 +246,35 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<div class="section" id="training-and-inference-on-your-own-data-using-google-drive">
+<h1>Training and inference on your own data using Google Drive<a class="headerlink" href="#training-and-inference-on-your-own-data-using-google-drive" title="Permalink to this headline">¶</a></h1>
 <p>In this notebook we’ll install SLEAP, import training data into Colab using <a class="reference external" href="https://www.google.com/drive">Google Drive</a>, and run training and inference.</p>
 <div class="section" id="install-sleap">
-<h1>Install SLEAP<a class="headerlink" href="#install-sleap" title="Permalink to this headline">¶</a></h1>
+<h2>Install SLEAP<a class="headerlink" href="#install-sleap" title="Permalink to this headline">¶</a></h2>
 <p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/murthylab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.1.2
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.1.3
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-<div class="section" id="impoprt-training-data-into-colab-with-google-drive">
-<h1>Impoprt training data into Colab with Google Drive<a class="headerlink" href="#impoprt-training-data-into-colab-with-google-drive" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="import-training-data-into-colab-with-google-drive">
+<h2>Import training data into Colab with Google Drive<a class="headerlink" href="#import-training-data-into-colab-with-google-drive" title="Permalink to this headline">¶</a></h2>
 <p>We’ll first prepare and export the training data from SLEAP, then upload it to Google Drive, and then mount Google Drive  into this Colab notebook.</p>
 <div class="section" id="create-and-export-the-training-job-package">
-<h2>Create and export the training job package<a class="headerlink" href="#create-and-export-the-training-job-package" title="Permalink to this headline">¶</a></h2>
+<h3>Create and export the training job package<a class="headerlink" href="#create-and-export-the-training-job-package" title="Permalink to this headline">¶</a></h3>
 <p>A self-contained <strong>training job package</strong> contains a .slp file with labeled data and images which will be used for training, as well as .json training configuration file(s).</p>
 <p>A training job package can be exported in the SLEAP GUI fron the “Run Training..” dialog under the “Predict” menu.</p>
 </div>
 <div class="section" id="upload-training-job-package-to-google-drive">
-<h2>Upload training job package to Google Drive<a class="headerlink" href="#upload-training-job-package-to-google-drive" title="Permalink to this headline">¶</a></h2>
+<h3>Upload training job package to Google Drive<a class="headerlink" href="#upload-training-job-package-to-google-drive" title="Permalink to this headline">¶</a></h3>
 <p>To be consistent with the examples in this notebook, name the SLEAP project <code class="docutils literal notranslate"><span class="pre">colab</span></code> and create a directory called <code class="docutils literal notranslate"><span class="pre">sleap</span></code> in the root of your Google Drive. Then upload the exported training job package <code class="docutils literal notranslate"><span class="pre">colab.slp.training_job.zip</span></code> into <code class="docutils literal notranslate"><span class="pre">sleap</span></code> directory.</p>
 <p>If you place your training pckage somewhere else, or name it differently, adjust the paths/filenames/parameters below accordingly.</p>
 </div>
 <div class="section" id="mount-your-google-drive">
-<h2>Mount your Google Drive<a class="headerlink" href="#mount-your-google-drive" title="Permalink to this headline">¶</a></h2>
+<h3>Mount your Google Drive<a class="headerlink" href="#mount-your-google-drive" title="Permalink to this headline">¶</a></h3>
 <p>Mounting your Google Drive will allow you to accessed the uploaded training job package in this notebook. When prompted to log into your Google account, give Colab access and the copy the authorization code into a field below (+ hit ‘return’).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -313,10 +303,10 @@
 </div>
 </div>
 <div class="section" id="train-a-model">
-<h1>Train a model<a class="headerlink" href="#train-a-model" title="Permalink to this headline">¶</a></h1>
+<h2>Train a model<a class="headerlink" href="#train-a-model" title="Permalink to this headline">¶</a></h2>
 <p>Let’s train a model with the training profile (.json file) and the project data (.slp file) you have exported from SLEAP.</p>
 <div class="section" id="note-on-training-profiles">
-<h2>Note on training profiles<a class="headerlink" href="#note-on-training-profiles" title="Permalink to this headline">¶</a></h2>
+<h3>Note on training profiles<a class="headerlink" href="#note-on-training-profiles" title="Permalink to this headline">¶</a></h3>
 <p>Depending on the pipeline you chose in the training dialog, the config filename(s) will be:</p>
 <ul class="simple">
 <li><p>for a <strong>bottom-up</strong> pipeline approach: <code class="docutils literal notranslate"><span class="pre">multi_instance.json</span></code> (this is the pipeline we assume here),</p></li>
@@ -325,7 +315,7 @@
 </ul>
 </div>
 <div class="section" id="note-on-training-process">
-<h2>Note on training process<a class="headerlink" href="#note-on-training-process" title="Permalink to this headline">¶</a></h2>
+<h3>Note on training process<a class="headerlink" href="#note-on-training-process" title="Permalink to this headline">¶</a></h3>
 <p>When you start training, you’ll first see the training parameters and then the training and validation loss for each training epoch.</p>
 <p>As soon as you’re satisfied with the validation loss you see for an epoch during training, you’re welcome to stop training by clicking the stop button. The version of the model with the lowest validation loss is saved during training, and that’s what will be used for inference.</p>
 <p>If you don’t stop training, it will run for 200 epochs or until validation loss fails to improve for some number of epochs (controlled by the early_stopping fields in the training profile).</p>
@@ -344,7 +334,7 @@
 </div>
 </div>
 <div class="section" id="run-inference-to-predict-instances">
-<h1>Run inference to predict instances<a class="headerlink" href="#run-inference-to-predict-instances" title="Permalink to this headline">¶</a></h1>
+<h2>Run inference to predict instances<a class="headerlink" href="#run-inference-to-predict-instances" title="Permalink to this headline">¶</a></h2>
 <p>Once training finishes, you’ll see a new directory (or two new directories for top-down training pipeline) containing all the model files SLEAP needs to use for inference.</p>
 <p>Here we’ll use the created model files to run inference in two modes:</p>
 <ul class="simple">
@@ -353,7 +343,7 @@
 </ul>
 <p>You can also download the trained models for running inference from the SLEAP GUI on your computer (or anywhere else).</p>
 <div class="section" id="predicting-instances-in-suggested-frames">
-<h2>Predicting instances in suggested frames<a class="headerlink" href="#predicting-instances-in-suggested-frames" title="Permalink to this headline">¶</a></h2>
+<h3>Predicting instances in suggested frames<a class="headerlink" href="#predicting-instances-in-suggested-frames" title="Permalink to this headline">¶</a></h3>
 <p>This mode of predicting instances is useful for accelerating the manual labeling work; it allows you to get early predictions on suggested frames and merge them back into the project for faster labeling.</p>
 <p>Here we assume you’ve trained a bottom-up model and that the model files were written in directory named <code class="docutils literal notranslate"><span class="pre">colab_demo.bottomup</span></code>; later in this notebook we’ll also show how to run inference with the pair of top-down models instead.</p>
 <div class="cell docutils container">
@@ -370,7 +360,7 @@
 <p>Now, you can download the generated <code class="docutils literal notranslate"><span class="pre">colab.predicted_suggestions.slp</span></code> file and merge it into your labeling project (<strong>File -&gt; Merge into Project…</strong> from the GUI) to get new predictions for your suggested frames.</p>
 </div>
 <div class="section" id="predicting-and-tracking-instances-in-uploaded-video">
-<h2>Predicting and tracking instances in uploaded video<a class="headerlink" href="#predicting-and-tracking-instances-in-uploaded-video" title="Permalink to this headline">¶</a></h2>
+<h3>Predicting and tracking instances in uploaded video<a class="headerlink" href="#predicting-and-tracking-instances-in-uploaded-video" title="Permalink to this headline">¶</a></h3>
 <p>Let’s first upload the video we want to run inference on and name it <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>. (If your video is not named <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>, adjust the names below accordingly.)</p>
 <p>For this demo we’ll just get predictions for the first 200 frames (or you can adjust the –frames parameter below or remove it to run on the whole video).</p>
 <div class="cell docutils container">
@@ -395,7 +385,7 @@
 <p>You can copy this file from your Google Drive to a local drive and open it in the SLEAP GUI app (or open it directly if you have your Google Drive mounted on your local machine). If the video is in the same directory as the predictions file, SLEAP will automatically find it; otherwise, you’ll be prompted to locate the video (since the path to the video on your local machine will be different than the path to the video on Colab).</p>
 </div>
 <div class="section" id="inference-with-top-down-models">
-<h2>Inference with top-down models<a class="headerlink" href="#inference-with-top-down-models" title="Permalink to this headline">¶</a></h2>
+<h3>Inference with top-down models<a class="headerlink" href="#inference-with-top-down-models" title="Permalink to this headline">¶</a></h3>
 <p>If you trained the pair of models needed for top-down inference, you can call <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> with <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">path/to/model</span></code> for each model, like so:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -405,6 +395,7 @@
     -m colab_demo.centered_instance \
     -m colab_demo.centroid
 </pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -420,7 +411,7 @@
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Example analysis data</div>
+                <div class="title">Analysis examples</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -431,7 +422,7 @@
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Install SLEAP</div>
+                <div class="title">Training and inference on an example dataset</div>
                 
               </div>
             </a>
@@ -465,8 +456,9 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Install SLEAP</a></li>
-<li><a class="reference internal" href="#impoprt-training-data-into-colab-with-google-drive">Impoprt training data into Colab with Google Drive</a><ul>
+<li><a class="reference internal" href="#">Training and inference on your own data using Google Drive</a><ul>
+<li><a class="reference internal" href="#install-sleap">Install SLEAP</a></li>
+<li><a class="reference internal" href="#import-training-data-into-colab-with-google-drive">Import training data into Colab with Google Drive</a><ul>
 <li><a class="reference internal" href="#create-and-export-the-training-job-package">Create and export the training job package</a></li>
 <li><a class="reference internal" href="#upload-training-job-package-to-google-drive">Upload training job package to Google Drive</a></li>
 <li><a class="reference internal" href="#mount-your-google-drive">Mount your Google Drive</a></li>
@@ -481,6 +473,8 @@
 <li><a class="reference internal" href="#predicting-instances-in-suggested-frames">Predicting instances in suggested frames</a></li>
 <li><a class="reference internal" href="#predicting-and-tracking-instances-in-uploaded-video">Predicting and tracking instances in uploaded video</a></li>
 <li><a class="reference internal" href="#inference-with-top-down-models">Inference with top-down models</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

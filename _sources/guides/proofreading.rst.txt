@@ -1,7 +1,7 @@
 .. _proofreading:
 
 Tracking and proofreading
---------------------------
+==========================
 
 *Case: You're happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.*
 
@@ -10,7 +10,7 @@ The basics of :ref:`track_proofreading` are covered in the :ref:`Tutorial`. You 
 .. _tracking-method-details:
 
 Tracking methods
-~~~~~~~~~~~~~~~~
+-----------------
 
 The process of predicting instances frame-by-frame and the process of putting these together into **tracks** (i.e., identities across frames) are distinct, although it's common to run them together during the inference pipeline. Obviously you can only track identities after you've predicted instances, but once you have predictions, it's easy to then run tracking by itself to try out different methods and parameters.
 
@@ -34,12 +34,12 @@ Once you have the desired number of instances in every frame, SLEAP connects ide
 
 
 More training data?
-~~~~~~~~~~~~~~~~~~~
+--------------------
 
 Often your models will fail to predict *all* of the instances on *all* of the frames. Even if you're happy enough with the result since you can interpolate missing data, it's possible that the missing instances will cause problems when we try to determine track identities across frames, so if your tracking results are poor, you may wish to :ref:`merging`.
 
 The "track cleaning" script
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 There's an experimental command-line utility which tries to match up lost identities. You need to give it a predictions file which already has track assignments, and specify how many instances there should be. It looks for frames where there's exactly one lost identity and exactly one newly spawned identity, and it joins these into a single track. Suppose you have a predictions file at :code:`path/to/predictions.h5` and you want to end up with three distinct tracks. You can run
 
@@ -52,7 +52,7 @@ This will result in a new file at :code:`path/to/predictions.cleaned.h5`. This f
 The main worry is that this script will connect identities which should be distinct, so that in place of **lost** identities you'll now have more **mistaken** identities, which can be harder to locate when proofreading. Tools and techniques for finding **mistaken** identities during proofreading are explained below.
 
 Color palettes
-~~~~~~~~~~~~~~
+---------------
 
 When you're proofreading track identities, the first step should always be to enable "**Color Predicted Instances**" in the View menu. Choosing the right color palette can also make a difference. If there are a small number of instances you're tracking, the "five+" palette will make it easier to see instances which were assigned to later tracks, both in on the video frame:
 
@@ -67,10 +67,10 @@ and on the seekbar:
 
 If there are a large number of instances you're tracking, then a palette with a large number of distinct colors can make it easier to see each distinct instance. The "alphabet" palette has 26 visually distinctive colors.
 
-Sometimes the background in the video will make it hard to see certain colors in a palette. It's possible to edit palettes, as explained in the :ref:`view` menu section of the :ref:`reference`.
+Sometimes the background in the video will make it hard to see certain colors in a palette. It's possible to edit palettes, as explained in the :ref:`view` menu section of the :ref:`gui`.
 
 Proofreading
-~~~~~~~~~~~~~
+--------------
 
 As discussed in the :ref:`track_proofreading` section of the :ref:`Tutorial`, there are two main types of mistakes made by the tracking code: lost identities and mistaken
 identities.
@@ -121,7 +121,7 @@ Once you're happy with the number of suggested frames, you can step between thes
 .. _orientation:
 
 Orientation
-~~~~~~~~~~~
+------------
 
 In some cases it may be difficult to see the orientation of the predicted instances. You can make it easier to see the orientation by changing the style of the edges drawn between nodes from thin lines (as shown above) to **wedges**, as shown here:
 

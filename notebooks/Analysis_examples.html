@@ -2,10 +2,10 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Developer API" href="../api.html" /><link rel="prev" title="Install SLEAP" href="Training_and_inference_using_Google_Drive.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Developer API" href="../api.html" /><link rel="prev" title="Training and inference on your own data using Google Drive" href="Training_and_inference_using_Google_Drive.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
-        <title>Example analysis data - SLEAP (v1.1.2)</title>
+        <title>Analysis examples - SLEAP (v1.1.3)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.2)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.3)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.2)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.3)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -115,7 +115,8 @@
   <input type="hidden" name="area" value="default">
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
@@ -127,35 +128,22 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Detailed Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../guides/gui.html">GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/cli.html">Command line interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/skeletons.html">Skeleton design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/choosing-models.html">Choosing a set of models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and/or inference on Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Add more training data to a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Importing predictions for labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/proofreading.html">Tracking and proofreading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/reference.html">Feature Reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Remote training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html#remote-inference">Remote inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/skeleton-design.html">Skeleton design</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/training.html">Training with GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Install SLEAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#download-sample-training-data-into-colab">Download sample training data into Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#train-models">Train models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html">Install SLEAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html#impoprt-training-data-into-colab-with-google-drive">Impoprt training data into Colab with Google Drive</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html#train-a-model">Train a model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html#run-inference-to-predict-instances">Run inference to predict instances</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Example analysis data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#loading-the-data">Loading the data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#fill-missing-values">Fill missing values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#more-advanced-visualizations">More advanced visualizations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Analysis examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -240,8 +228,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample Datasets</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Sourcecode</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
 </ul>
 
@@ -258,11 +246,13 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Analysis_examples.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<div class="section" id="analysis-examples">
+<h1>Analysis examples<a class="headerlink" href="#analysis-examples" title="Permalink to this headline">¶</a></h1>
 <p>In this notebook we’ll show examples of how you might use the predictions exported from SLEAP. We’ll work with an <a class="reference external" href="https://sleap.ai/tutorials/analysis.html">Analysis HDF5</a> file (rather than the <code class="docutils literal notranslate"><span class="pre">.slp</span></code> predictions file). This HDF5 file can be exported from SLEAP.</p>
 <p>We advise building your post-SLEAP analysis pipeline around these HDF5 files rather than trying to work directly with the <code class="docutils literal notranslate"><span class="pre">.slp</span></code> files used by SLEAP.</p>
 <p><strong>Note</strong>: You can work with these HDF5 directly in Python (as we’ll do here) or MATLAB without having SLEAP itself installed.</p>
 <div class="section" id="example-analysis-data">
-<h1>Example analysis data<a class="headerlink" href="#example-analysis-data" title="Permalink to this headline">¶</a></h1>
+<h2>Example analysis data<a class="headerlink" href="#example-analysis-data" title="Permalink to this headline">¶</a></h2>
 <p>Let’s start by download a sample HDF5. These predictions were created with models trained on our <a class="reference external" href="https://github.com/murthylab/sleap-datasets">sample Drosophila melanogaster courtship dataset</a>. Using these models we can inference on a video clip with 3000 frames. The video clip, resulting predictions, and exported HDF5 are all available <a class="reference external" href="https://github.com/murthylab/sleap/tree/main/docs/notebooks/analysis_example">here</a>.</p>
 <p>We’ll just download the <code class="docutils literal notranslate"><span class="pre">predictions.analysis.h5</span></code> file:</p>
 <div class="cell docutils container">
@@ -301,7 +291,7 @@ predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.05s
 </div>
 </div>
 <div class="section" id="loading-the-data">
-<h1>Loading the data<a class="headerlink" href="#loading-the-data" title="Permalink to this headline">¶</a></h1>
+<h2>Loading the data<a class="headerlink" href="#loading-the-data" title="Permalink to this headline">¶</a></h2>
 <p>We use the <a class="reference external" href="https://www.h5py.org">h5py</a> package to load data from the HDF5. This is already installed in Colab. If your running analysis code on your local machine and have SLEAP installed, then <code class="docutils literal notranslate"><span class="pre">h5py</span></code> and other packages we use are already installed in your SLEAP conda environment. Otherwise, you may need to use <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install <code class="docutils literal notranslate"><span class="pre">h5py</span></code> as well as <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>, <code class="docutils literal notranslate"><span class="pre">seaborn</span></code>, and any other packages you want use in your analysis code.</p>
 <p>Let’s load the file and take a peek.</p>
 <div class="cell docutils container">
@@ -391,7 +381,7 @@ instance count: 2
 <p>Now that we’ve loaded the data, let’s see some different things we can do with it…</p>
 </div>
 <div class="section" id="fill-missing-values">
-<h1>Fill missing values<a class="headerlink" href="#fill-missing-values" title="Permalink to this headline">¶</a></h1>
+<h2>Fill missing values<a class="headerlink" href="#fill-missing-values" title="Permalink to this headline">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
@@ -441,7 +431,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="visualize-thorax-movement-across-video">
-<h1>Visualize thorax movement across video<a class="headerlink" href="#visualize-thorax-movement-across-video" title="Permalink to this headline">¶</a></h1>
+<h2>Visualize thorax movement across video<a class="headerlink" href="#visualize-thorax-movement-across-video" title="Permalink to this headline">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">HEAD_INDEX</span> <span class="o">=</span> <span class="mi">0</span>
@@ -503,13 +493,13 @@ instance count: 2
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, 'Thorax tracks')
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_18_1.png" src="../_images/Analysis_examples_18_1.png"/>
-<img alt="../_images/Analysis_examples_18_2.png" src="../_images/Analysis_examples_18_2.png"/>
+<img alt="../_images/Analysis_examples_19_1.png" src="../_images/Analysis_examples_19_1.png"/>
+<img alt="../_images/Analysis_examples_19_2.png" src="../_images/Analysis_examples_19_2.png"/>
 </div>
 </div>
 </div>
 <div class="section" id="more-advanced-visualizations">
-<h1>More advanced visualizations<a class="headerlink" href="#more-advanced-visualizations" title="Permalink to this headline">¶</a></h1>
+<h2>More advanced visualizations<a class="headerlink" href="#more-advanced-visualizations" title="Permalink to this headline">¶</a></h2>
 <p>For some additional analysis, we’ll first smooth and differentiate the data with a Savitzky-Golay filter to extract velocities of each joint.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -547,7 +537,7 @@ instance count: 2
 </div>
 </div>
 <div class="section" id="visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">
-<h2>Visualizing thorax x-y dynamics and velocity for fly 0<a class="headerlink" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0" title="Permalink to this headline">¶</a></h2>
+<h3>Visualizing thorax x-y dynamics and velocity for fly 0<a class="headerlink" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0" title="Permalink to this headline">¶</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
@@ -569,12 +559,12 @@ instance count: 2
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, 'Velocity')
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_24_1.png" src="../_images/Analysis_examples_24_1.png"/>
+<img alt="../_images/Analysis_examples_25_1.png" src="../_images/Analysis_examples_25_1.png"/>
 </div>
 </div>
 </div>
 <div class="section" id="visualize-thorax-colored-by-magnitude-of-fly-speed">
-<h2>Visualize thorax colored by magnitude of fly speed<a class="headerlink" href="#visualize-thorax-colored-by-magnitude-of-fly-speed" title="Permalink to this headline">¶</a></h2>
+<h3>Visualize thorax colored by magnitude of fly speed<a class="headerlink" href="#visualize-thorax-colored-by-magnitude-of-fly-speed" title="Permalink to this headline">¶</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
@@ -604,12 +594,12 @@ instance count: 2
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, 'Thorax tracks colored by magnitude of fly speed')
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_26_1.png" src="../_images/Analysis_examples_26_1.png"/>
+<img alt="../_images/Analysis_examples_27_1.png" src="../_images/Analysis_examples_27_1.png"/>
 </div>
 </div>
 </div>
 <div class="section" id="find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">
-<h2>Find covariance in thorax velocities between fly-0 and fly-1<a class="headerlink" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1" title="Permalink to this headline">¶</a></h2>
+<h3>Find covariance in thorax velocities between fly-0 and fly-1<a class="headerlink" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1" title="Permalink to this headline">¶</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -651,13 +641,13 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_29_0.png" src="../_images/Analysis_examples_29_0.png"/>
+<img alt="../_images/Analysis_examples_30_0.png" src="../_images/Analysis_examples_30_0.png"/>
 </div>
 </div>
 </div>
 </div>
 <div class="section" id="clustering">
-<h1>Clustering<a class="headerlink" href="#clustering" title="Permalink to this headline">¶</a></h1>
+<h2>Clustering<a class="headerlink" href="#clustering" title="Permalink to this headline">¶</a></h2>
 <p>For an example of clustering the data, we’ll</p>
 <ol class="simple">
 <li><p>extract joint velocities for each joint,</p></li>
@@ -699,7 +689,7 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_33_0.png" src="../_images/Analysis_examples_33_0.png"/>
+<img alt="../_images/Analysis_examples_34_0.png" src="../_images/Analysis_examples_34_0.png"/>
 </div>
 </div>
 <div class="cell docutils container">
@@ -711,7 +701,7 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_34_0.png" src="../_images/Analysis_examples_34_0.png"/>
+<img alt="../_images/Analysis_examples_35_0.png" src="../_images/Analysis_examples_35_0.png"/>
 </div>
 </div>
 <div class="cell docutils container">
@@ -754,7 +744,8 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_37_0.png" src="../_images/Analysis_examples_37_0.png"/>
+<img alt="../_images/Analysis_examples_38_0.png" src="../_images/Analysis_examples_38_0.png"/>
+</div>
 </div>
 </div>
 </div>
@@ -779,7 +770,7 @@ instance count: 2
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Install SLEAP</div>
+                <div class="title">Training and inference on your own data using Google Drive</div>
                 
               </div>
             </a>
@@ -813,7 +804,8 @@ instance count: 2
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Example analysis data</a></li>
+<li><a class="reference internal" href="#">Analysis examples</a><ul>
+<li><a class="reference internal" href="#example-analysis-data">Example analysis data</a></li>
 <li><a class="reference internal" href="#loading-the-data">Loading the data</a></li>
 <li><a class="reference internal" href="#fill-missing-values">Fill missing values</a></li>
 <li><a class="reference internal" href="#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
@@ -824,6 +816,8 @@ instance count: 2
 </ul>
 </li>
 <li><a class="reference internal" href="#clustering">Clustering</a></li>
+</ul>
+</li>
 </ul>
 
           </div>
