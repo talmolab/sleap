@@ -2,10 +2,10 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Remote training" href="remote.html" /><link rel="prev" title="Tracking and proofreading" href="proofreading.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Command line interfaces" href="cli.html" /><link rel="prev" title="Guides" href="index.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
-        <title>Feature Reference - SLEAP (v1.1.2)</title>
+        <title>GUI - SLEAP (v1.1.3)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.2)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.3)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.2)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.3)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -115,7 +115,8 @@
   <input type="hidden" name="area" value="default">
 </form><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../overview.html">High-level Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
@@ -127,35 +128,22 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Detailed Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command line interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="skeletons.html">Skeleton design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choosing-models.html">Choosing a set of models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="colab.html">Run training and/or inference on Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="merging.html">Add more training data to a project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="merging.html">Importing predictions for labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking and proofreading</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Feature Reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="remote.html">Remote training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="remote.html#downloading-pretrained-weights-for-remote-training">Downloading pretrained weights for remote training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="remote.html#remote-inference">Remote inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="skeleton-design.html">Skeleton design</a></li>
-<li class="toctree-l2"><a class="reference internal" href="training.html">Training with GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="colab.html">Run training and inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remote.html">Running SLEAP remotely</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Install SLEAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#download-sample-training-data-into-colab">Download sample training data into Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#train-models">Train models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html#inference">Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Install SLEAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#impoprt-training-data-into-colab-with-google-drive">Impoprt training data into Colab with Google Drive</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#train-a-model">Train a model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html#run-inference-to-predict-instances">Run inference to predict instances</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Example analysis data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#loading-the-data">Loading the data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#fill-missing-values">Fill missing values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#more-advanced-visualizations">More advanced visualizations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html#clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Analysis examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -240,8 +228,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample Datasets</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Sourcecode</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
 </ul>
 
@@ -257,43 +245,15 @@
         <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="feature-reference">
-<span id="reference"></span><h1>Feature Reference<a class="headerlink" href="#feature-reference" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="command-line-interfaces">
-<h2>Command Line Interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="gui">
-<h3>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h3>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> runs the GUI application. This is an entry-point for <code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.gui.app</span></code>.</p>
-</div>
-<div class="section" id="training">
-<h3>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h3>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook. This is an entry-point for <a class="reference internal" href="../api/sleap.nn.training.html#module-sleap.nn.training" title="sleap.nn.training"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.nn.training</span></code></a>.</p>
-</div>
-<div class="section" id="inference-and-tracking">
-<h3>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Permalink to this headline">¶</a></h3>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.  This is an entry-point for <a class="reference internal" href="../api/sleap.nn.inference.html#module-sleap.nn.inference" title="sleap.nn.inference"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.nn.inference</span></code></a>.</p>
-<p>You can also use <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. Instead of specifying models, you specify a predictions dataset file (with the <code class="code docutils literal notranslate"><span class="pre">--labels</span></code> argument) and the tracking parameters.</p>
-<p>If you specify how many identities there should be in a frame (i.e., the number of animals) with the <code class="code docutils literal notranslate"><span class="pre">--tracking.clean_instance_count</span></code> argument, then we will use a heuristic method to connect “breaks” in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">none</span></code>).</p>
-</div>
-<div class="section" id="dataset-files">
-<h3>Dataset Files<a class="headerlink" href="#dataset-files" title="Permalink to this headline">¶</a></h3>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-convert</span></code> allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See <a class="reference internal" href="../api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for more information.</p>
-<p><code class="code docutils literal notranslate"><span class="pre">sleap-inspect</span></code> gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you’re inspecting a predictions dataset (i.e., the output from running <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).</p>
-</div>
-<div class="section" id="debugging">
-<h3>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h3>
-<p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/murthylab/sleap/main/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For more details about any command, run with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument (e.g., <code class="code docutils literal notranslate"><span class="pre">sleap-track</span> <span class="pre">--help</span></code>).</p>
-</div>
-</div>
-</div>
+        <div class="section" id="gui">
+<span id="id1"></span><h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h1>
+<p>The SLEAP labeling interface is accessible via the <code class="code docutils literal notranslate"><span class="pre">sleap_label</span></code> command (see <a class="reference internal" href="cli.html#cli"><span class="std std-ref">Command line interfaces</span></a>).</p>
 <div class="section" id="menus">
 <h2>Menus<a class="headerlink" href="#menus" title="Permalink to this headline">¶</a></h2>
 <p>Note that many of the menu command have keyboard shortcuts which can be configured from “<strong>Keyboard Reference</strong>” in the “<strong>Help</strong>” menu.</p>
+</div>
 <div class="section" id="file">
-<h3>File<a class="headerlink" href="#file" title="Permalink to this headline">¶</a></h3>
+<h2>File<a class="headerlink" href="#file" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>New…</strong>”, “<strong>Open…</strong>”, “Save, and “<strong>Save As…</strong>” have their usual behavior.</p>
 <p>“<strong>Import…</strong>” allows you to import the data external formats into a new SLEAP dataset. This includes <a class="reference external" href="http://cocodataset.org/#format-data">COCO</a> keypoint detection (<code class="code docutils literal notranslate"><span class="pre">.json</span></code> files), <a class="reference external" href="http://deeplabcut.org">DeepLabCut</a> (<code class="code docutils literal notranslate"><span class="pre">.csv</span></code>), <a class="reference external" href="http://deepposekit.org">DeepPoseKit</a> (<code class="code docutils literal notranslate"><span class="pre">.h5</span></code>), and <a class="reference external" href="https://github.com/talmo/leap">LEAP</a> (<code class="code docutils literal notranslate"><span class="pre">.mat</span></code>).</p>
 <p>“<strong>Merge Data From…</strong>” allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you’ve trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you’d like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.</p>
@@ -301,7 +261,7 @@
 <p>“<strong>Replace Videos…</strong>” allows you to <em>swap</em> the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn’t affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).</p>
 </div>
 <div class="section" id="go">
-<h3>Go<a class="headerlink" href="#go" title="Permalink to this headline">¶</a></h3>
+<h2>Go<a class="headerlink" href="#go" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Next Labeled Frame</strong>” will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.</p>
 <p>“<strong>Next User Labeled Frame</strong>” will take you to the next frame which has labels added by the user, skipping any frames which are unlabeled or have only predictions.</p>
 <p>“<strong>Next Suggestion</strong>” will take you to the next frame in the list of suggested frames. If you are currently on a suggested frame, it will take you to the next frame in the list, which may not be a later frame in the video (or even a frame in the same video). If you are not currently on a suggested frame, it will take you to the nearest subsequent suggested frame.</p>
@@ -311,7 +271,7 @@
 <p>“<strong>Select to Frame…</strong>” allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use <strong>Go to</strong> to go to X then <strong>Select to</strong> to select from X to Y.</p>
 </div>
 <div class="section" id="view">
-<span id="id1"></span><h3>View<a class="headerlink" href="#view" title="Permalink to this headline">¶</a></h3>
+<span id="id2"></span><h2>View<a class="headerlink" href="#view" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Color Predicted Instances</strong>” allows you to toggle whether <em>predicted</em> instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.</p>
 <p>“<strong>Color Palette</strong>” allows you to choose the palette which will be used for coloring instances. Most of the palettes cycle colors, so that if there are five colors in the palette, the sixth item to color will be the same as the first. A few things to know:</p>
 <ul class="simple">
@@ -329,7 +289,7 @@
 <p>“<strong>Videos</strong>”, “<strong>Skeleton</strong>”, “<strong>Instances</strong>”, and “<strong>Labeling Suggestions</strong>” allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).</p>
 </div>
 <div class="section" id="labels">
-<h3>Labels<a class="headerlink" href="#labels" title="Permalink to this headline">¶</a></h3>
+<h2>Labels<a class="headerlink" href="#labels" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Add Instance</strong>” will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also “convert” the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won’t be shown unless you delete the editable instance you just created).</p>
 <p>“<strong>Instance Placement Method</strong>” allows you to pick how we determine where to place the instance and its nodes on the video frame. “Best” (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the “average” method which creates an “average” instance from the instances you’ve already labeled.</p>
 <p>“<strong>Delete Instance</strong>” will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the “Instances” window).</p>
@@ -341,7 +301,7 @@
 <p>“<strong>Clear Selection</strong>” allows you to deselect the selected instance.</p>
 </div>
 <div class="section" id="predict">
-<h3>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h3>
+<h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Run Training…</strong>” allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.</p>
 <p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">models</span></code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
 <p>“<strong>Evaluate Metrics for Trained Models…</strong>” provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).</p>
@@ -355,14 +315,14 @@
 <p>“<strong>Export Video with Visual Annotations…</strong>” allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.</p>
 </div>
 <div class="section" id="help">
-<h3>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
+<h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Keyboard Shortcuts</strong>” allows you to view and change keyboard shortcuts for common menu and GUI actions.</p>
-</div>
 </div>
 <div class="section" id="application-gui">
 <h2>Application GUI<a class="headerlink" href="#application-gui" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="mouse">
-<h3>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">¶</a></h3>
+<h2>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">¶</a></h2>
 <p><strong>Right-click</strong> (or control + click) on node: Toggle visibility</p>
 <p><strong>Right-click</strong> (or control + click) elsewhere on image: Add instance (with pop-up menu)</p>
 <p><strong>Alt + drag</strong>: Zoom into region</p>
@@ -376,7 +336,7 @@
 <p><strong>Click</strong> elsewhere on image: Clear selection</p>
 </div>
 <div class="section" id="navigation-keys">
-<h3>Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permalink to this headline">¶</a></h3>
+<h2>Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permalink to this headline">¶</a></h2>
 <p><strong>Right arrow</strong> key: Move one frame forward</p>
 <p><strong>Left arrow</strong> key: Move one frame back</p>
 <p><strong>Down arrow</strong> key: Move a <em>medium</em> step forward (4 frames by default)</p>
@@ -392,19 +352,19 @@
 </div>
 </div>
 <div class="section" id="selection-keys">
-<h3>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">¶</a></h3>
+<h2>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">¶</a></h2>
 <p><em>Number</em> (e.g., <strong>2</strong>) key: Select the instance corresponding to that number</p>
 <p><strong>Escape</strong> key: Deselect all instances</p>
 </div>
 <div class="section" id="seekbar">
-<h3>Seekbar<a class="headerlink" href="#seekbar" title="Permalink to this headline">¶</a></h3>
+<h2>Seekbar<a class="headerlink" href="#seekbar" title="Permalink to this headline">¶</a></h2>
 <p><strong>Shift + drag</strong>: Select a range of frames</p>
 <p><strong>Shift + click</strong>: Clear frame selection</p>
 <p><strong>Alt + drag</strong>: Zoom into a range of frames</p>
 <p><strong>Alt + click</strong>: Zoom out so that all frames are visible in seekbar</p>
 </div>
 <div class="section" id="labeling-suggestions">
-<span id="suggestion-methods"></span><h3>Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permalink to this headline">¶</a></h3>
+<span id="suggestion-methods"></span><h2>Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permalink to this headline">¶</a></h2>
 <p>There are various methods to generate a list “suggested” frames for labeling or proofreading.</p>
 <p>The <strong>sample</strong> method is a quick way to get some number of frames for every video in your project. You can tell it how many samples (frames) to take from each video, and whether they should be evenly spaced throughout a video (the “stride” sampling method) or randomly distributed.</p>
 <p>The <strong>image feature</strong> method uses various algorithms to give you visually distinctive frames, since you will be able to train more robust models if the frames you’ve labeled are more representative of the visual variations in your videos. Generating suggestions based on image features can be slow.</p>
@@ -412,29 +372,28 @@
 <p>The <strong>velocity</strong> method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity “jump”).</p>
 </div>
 </div>
-</div>
 
       </article>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="remote.html">
+          <a class="next-page" href="cli.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Remote training</div>
+                <div class="title">Command line interfaces</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="proofreading.html">
+          <a class="prev-page" href="index.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Tracking and proofreading</div>
+                <div class="title">Guides</div>
                 
               </div>
             </a>
@@ -448,7 +407,7 @@
               <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
               <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
             |
-            <a class="muted-link" href="../_sources/guides/reference.rst.txt"
+            <a class="muted-link" href="../_sources/guides/gui.rst.txt"
                rel="nofollow">
               Show Source
             </a>
@@ -468,32 +427,20 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Feature Reference</a><ul>
-<li><a class="reference internal" href="#command-line-interfaces">Command Line Interfaces</a><ul>
-<li><a class="reference internal" href="#gui">GUI</a></li>
-<li><a class="reference internal" href="#training">Training</a></li>
-<li><a class="reference internal" href="#inference-and-tracking">Inference and Tracking</a></li>
-<li><a class="reference internal" href="#dataset-files">Dataset Files</a></li>
-<li><a class="reference internal" href="#debugging">Debugging</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#menus">Menus</a><ul>
+<li><a class="reference internal" href="#">GUI</a><ul>
+<li><a class="reference internal" href="#menus">Menus</a></li>
 <li><a class="reference internal" href="#file">File</a></li>
 <li><a class="reference internal" href="#go">Go</a></li>
 <li><a class="reference internal" href="#view">View</a></li>
 <li><a class="reference internal" href="#labels">Labels</a></li>
 <li><a class="reference internal" href="#predict">Predict</a></li>
 <li><a class="reference internal" href="#help">Help</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#application-gui">Application GUI</a><ul>
+<li><a class="reference internal" href="#application-gui">Application GUI</a></li>
 <li><a class="reference internal" href="#mouse">Mouse</a></li>
 <li><a class="reference internal" href="#navigation-keys">Navigation Keys</a></li>
 <li><a class="reference internal" href="#selection-keys">Selection Keys</a></li>
 <li><a class="reference internal" href="#seekbar">Seekbar</a></li>
 <li><a class="reference internal" href="#labeling-suggestions">Labeling Suggestions</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

@@ -1,42 +1,10 @@
-.. _reference:
-
-Feature Reference
-=================
-
-Command Line Interfaces
------------------------
+.. _gui:
 
 GUI
-~~~
-:code:`sleap-label` runs the GUI application. This is an entry-point for :py:mod:`sleap.gui.app`.
+====
 
-Training
-~~~~~~~~
-:code:`sleap-train` is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook. This is an entry-point for :py:mod:`sleap.nn.training`.
+The SLEAP labeling interface is accessible via the :code:`sleap_label` command (see :ref:`cli`).
 
-Inference and Tracking
-~~~~~~~~~~~~~~~~~~~~~~
-:code:`sleap-track` is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.  This is an entry-point for :py:mod:`sleap.nn.inference`.
-
-You can also use :code:`sleap-track` to run the cross-frame identity tracker (or re-run with different parameters) without needed to re-run inference. Instead of specifying models, you specify a predictions dataset file (with the :code:`--labels` argument) and the tracking parameters.
-
-If you specify how many identities there should be in a frame (i.e., the number of animals) with the :code:`--tracking.clean_instance_count` argument, then we will use a heuristic method to connect "breaks" in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify :code:`--tracking.tracker none`).
-
-Dataset Files
-~~~~~~~~~~~~~~~
-
-:code:`sleap-convert` allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See :py:mod:`sleap.io.convert` for more information.
-
-:code:`sleap-inspect` gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you're inspecting a predictions dataset (i.e., the output from running :code:`sleap-track` or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).
-
-Debugging
-~~~~~~~~~
-
-There's also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with :code:`sleap-diagnostic`. Otherwise, you can download `diagnostic.py <https://raw.githubusercontent.com/murthylab/sleap/main/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY>`_ and run :code:`python diagnostic.py`.
-
-.. note::
-
-    For more details about any command, run with the :code:`--help` argument (e.g., :code:`sleap-track --help`).
 
 
 Menus
@@ -45,7 +13,7 @@ Menus
 Note that many of the menu command have keyboard shortcuts which can be configured from "**Keyboard Reference**" in the "**Help**" menu.
 
 File
-~~~~
+----
 
 "**New...**", "**Open...**", "Save, and "**Save As...**" have their usual behavior.
 
@@ -63,7 +31,7 @@ File
 "**Replace Videos...**" allows you to *swap* the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn't affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).
 
 Go
-~~
+--
 
 "**Next Labeled Frame**" will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.
 
@@ -82,7 +50,7 @@ Go
 .. _view:
 
 View
-~~~~
+----
 
 "**Color Predicted Instances**" allows you to toggle whether *predicted* instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.
 
@@ -111,7 +79,7 @@ View
 "**Videos**", "**Skeleton**", "**Instances**", and "**Labeling Suggestions**" allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).
 
 Labels
-~~~~~~
+------
 
 "**Add Instance**" will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also "convert" the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won't be shown unless you delete the editable instance you just created).
 
@@ -132,7 +100,7 @@ Labels
 "**Clear Selection**" allows you to deselect the selected instance.
 
 Predict
-~~~~~~~
+-------
 "**Run Training...**" allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.
 
 "**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed, and you also have the option to select models saved elsewhere.
@@ -156,14 +124,14 @@ Predict
 "**Export Video with Visual Annotations...**" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.
 
 Help
-~~~~
+----
 "**Keyboard Shortcuts**" allows you to view and change keyboard shortcuts for common menu and GUI actions.
 
 Application GUI
 ---------------
 
 Mouse
-~~~~~
+-----
 
 **Right-click** (or control + click) on node: Toggle visibility
 
@@ -188,7 +156,7 @@ Mouse
 **Click** elsewhere on image: Clear selection
 
 Navigation Keys
-~~~~~~~~~~~~~~~
+---------------
 
 **Right arrow** key: Move one frame forward
 
@@ -213,14 +181,14 @@ Navigation Keys
     These keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.
 
 Selection Keys
-~~~~~~~~~~~~~~
+--------------
 
 *Number* (e.g., **2**) key: Select the instance corresponding to that number
 
 **Escape** key: Deselect all instances
 
 Seekbar
-~~~~~~~
+-------
 
 **Shift + drag**: Select a range of frames
 
@@ -233,7 +201,7 @@ Seekbar
 .. _suggestion-methods:
 
 Labeling Suggestions
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 There are various methods to generate a list "suggested" frames for labeling or proofreading.
 

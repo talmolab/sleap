@@ -2,10 +2,10 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tracking and proofreading" href="proofreading.html" /><link rel="prev" title="Choosing a set of models" href="choosing-models.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Skeleton design" href="skeletons.html" /><link rel="prev" title="GUI" href="gui.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
-        <title>Importing predictions for labeling - SLEAP (v1.1.3)</title>
+        <title>Command line interfaces - SLEAP (v1.1.3)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
@@ -92,7 +92,7 @@
       <a href="../index.html"><div class="brand">SLEAP (v1.1.3)</div></a>
     </div>
     <div class="header-right">
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
     </div>
@@ -130,10 +130,10 @@
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gui.html">GUI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cli.html">Command line interfaces</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Command line interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="skeletons.html">Skeleton design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choosing-models.html">Choosing a set of models</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Importing predictions for labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="merging.html">Importing predictions for labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking and proofreading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
@@ -242,46 +242,278 @@
   <main class="main">
     <div class="content">
       <article role="main">
-        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="importing-predictions-for-labeling">
-<span id="merging"></span><h1>Importing predictions for labeling<a class="headerlink" href="#importing-predictions-for-labeling" title="Permalink to this headline">¶</a></h1>
-<p><em>Case: You have predictions that aren’t in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.</em></p>
-<p>All of your training data must be in a single SLEAP project file (or labels package), so if you have data in multiple files, you’ll need to merge them before you can train on the entire set of data.</p>
-<p>When you run inference from the GUI, the predictions will be added to the same project as your training data (they’ll also be saved in a separate file). When you run inference from the command-line, they’ll only be in a separate file.</p>
-<p>If you open a separate predictions file, make corrections there and train a new model from that file, then new models will be trained from scratch using only those corrections. The new models will not be trained on any of the original data that was used to train the previous models—i.e., the models used to generate these predictions. Usually you’ll want to include both the original data and the new corrections.</p>
-<p><strong>Note</strong> that uncorrected predictions will never be used for training. Only predictions which you’ve “converted” into an editable instance will be used for training. To convert a predicted instance into an editable instance, you can <strong>double-click</strong> on the predicted instance or use the “<strong>Add Instance</strong>” command in the “Labels” menu (there’s also a keyboard shortcut). As you might guess, once you have an editable instance you can move nodes and toggle their “visibility” (see the <a class="reference internal" href="../tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a> if you’re not familiar with how to do this). When you’ve created an editable instance from a predicted instance, the predicted instance will no longer be shown, although it will re-appear if you delete the editable instance.</p>
-<p>Let’s suppose we have a project file and a predictions file with corrections, and we’d like to merge the corrections into the original project file.</p>
-<p>If you want to merge <em>only</em> the corrections, then you should first make a copy of the predictions file. You can either just copy the file itself, or make a copy from the GUI using “<strong>Save As..</strong>” in the “File” menu. Open the copy of the file in the GUI and use the “<strong>Delete All Predictions…</strong>” command in the “Predictions” menu to remove all of the predicted instances from the file. Save and you’ll be left with a file which just contains your corrections.</p>
-<p>Open the original project file (or whatever file you want to merge <strong>into</strong>). Then, use the “<strong>Merge Data From…</strong>” command in the “File” menu. You’ll need to select the file <strong>from which</strong> you are getting the data to merge—this would be the file with your corrected predictions.</p>
-<p>You’ll then see a window with information about the merge:</p>
-<p><img alt="clean-merge" src="../_images/clean-merge.jpg"/></p>
-<p>If there are no merge conflicts, then you can click “<strong>Finish Merge</strong>. If the two files contain conflicts—frames from the same video which both have editable instances or both have predicted instances—then you’ll need to decide how to resolve the conflicts. You can choose to use the “base” version (i.e., the original project file <strong>into which</strong> you are merging), the “new” version (i.e., from the predictions file with the data which you’re adding to the original project), or neither. Whichever you choose, you’ll also get all of the frames which can be merged without conflicts.</p>
-<p>After merging you should save (or save a copy of the project with the “<strong>Save As…</strong>” command). Once you have a single project file which contains both your old and new training data, you can train new models.</p>
+        <div class="section" id="command-line-interfaces">
+<span id="cli"></span><h1>Command line interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this headline">¶</a></h1>
+<p>SLEAP provides several types of functionality accessible through a command prompt.</p>
+<div class="section" id="gui">
+<h2>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> runs the GUI application for labeling and viewing <code class="code docutils literal notranslate"><span class="pre">.slp</span></code> files.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
+
+positional arguments:
+  labels_path  Path to labels file
+
+optional arguments:
+  -h, --help   show this help message and exit
+  --nonnative  Don't use native file dialogs
+  --profiling  Enable performance profiling
+  --reset      Reset GUI state and preferences. Use this flag if the GUI
+               appears incorrectly or fails to open.
+</pre></div>
+</div>
+</div>
+<div class="section" id="training">
+<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook instead of through the GUI.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
+                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
+                   [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
+                   [--suffix SUFFIX]
+                   training_job_path [labels_path]
+
+positional arguments:
+  training_job_path     Path to training job profile JSON file.
+  labels_path           Path to labels file to use for training. If specified,
+                        overrides the path specified in the training job
+                        config.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --video-paths VIDEO_PATHS
+                        List of paths for finding videos in case paths inside
+                        labels file are not accessible.
+  --val_labels VAL_LABELS, --val VAL_LABELS
+                        Path to labels file to use for validation. If
+                        specified, overrides the path specified in the
+                        training job config.
+  --test_labels TEST_LABELS, --test TEST_LABELS
+                        Path to labels file to use for test. If specified,
+                        overrides the path specified in the training job
+                        config.
+  --tensorboard         Enable TensorBoard logging to the run path if not
+                        already specified in the training job config.
+  --save_viz            Enable saving of prediction visualizations to the run
+                        folder if not already specified in the training job
+                        config.
+  --zmq                 Enable ZMQ logging (for GUI) if not already specified
+                        in the training job config.
+  --run_name RUN_NAME   Run name to use when saving file, overrides other run
+                        name settings.
+  --prefix PREFIX       Prefix to prepend to run name.
+  --suffix SUFFIX       Suffix to append to run name.
+</pre></div>
+</div>
+</div>
+<div class="section" id="inference-and-tracking">
+<h2>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Permalink to this headline">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.</p>
+<p>If you specify how many identities there should be in a frame (i.e., the number of animals) with the <code class="code docutils literal notranslate"><span class="pre">--tracking.clean_instance_count</span></code> argument, then we will use a heuristic method to connect “breaks” in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">none</span></code>). See <a class="reference internal" href="proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> for more details on tracking.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames]
+                   [--only-suggested-frames] [-o OUTPUT] [--no-empty-frames]
+                   [--verbosity {none,rich,json}]
+                   [--video.dataset VIDEO.DATASET]
+                   [--video.input_format VIDEO.INPUT_FORMAT]
+                   [--cpu | --first-gpu | --last-gpu | --gpu GPU]
+                   [--peak_threshold PEAK_THRESHOLD] [--batch_size BATCH_SIZE]
+                   [--open-in-gui] [--tracking.tracker TRACKING.TRACKER]
+                   [--tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT]
+                   [--tracking.pre_cull_to_target TRACKING.PRE_CULL_TO_TARGET]
+                   [--tracking.pre_cull_iou_threshold TRACKING.PRE_CULL_IOU_THRESHOLD]
+                   [--tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS]
+                   [--tracking.clean_instance_count TRACKING.CLEAN_INSTANCE_COUNT]
+                   [--tracking.clean_iou_threshold TRACKING.CLEAN_IOU_THRESHOLD]
+                   [--tracking.similarity TRACKING.SIMILARITY]
+                   [--tracking.match TRACKING.MATCH]
+                   [--tracking.track_window TRACKING.TRACK_WINDOW]
+                   [--tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS]
+                   [--tracking.min_match_points TRACKING.MIN_MATCH_POINTS]
+                   [--tracking.img_scale TRACKING.IMG_SCALE]
+                   [--tracking.of_window_size TRACKING.OF_WINDOW_SIZE]
+                   [--tracking.of_max_levels TRACKING.OF_MAX_LEVELS]
+                   [--tracking.kf_node_indices TRACKING.KF_NODE_INDICES]
+                   [--tracking.kf_init_frame_count TRACKING.KF_INIT_FRAME_COUNT]
+                   [data_path]
+
+positional arguments:
+  data_path             Path to data to predict on. This can be a labels
+                        (.slp) file or any supported video format.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m MODELS, --model MODELS
+                        Path to trained model directory (with
+                        training_config.json). Multiple models can be
+                        specified, each preceded by --model.
+  --frames FRAMES       List of frames to predict when running on a video. Can
+                        be specified as a comma separated list (e.g. 1,2,3) or
+                        a range separated by hyphen (e.g., 1-3, for 1,2,3). If
+                        not provided, defaults to predicting on the entire
+                        video.
+  --only-labeled-frames
+                        Only run inference on user labeled frames when running
+                        on labels dataset. This is useful for generating
+                        predictions to compare against ground truth.
+  --only-suggested-frames
+                        Only run inference on unlabeled suggested frames when
+                        running on labels dataset. This is useful for
+                        generating predictions for initialization during
+                        labeling.
+  -o OUTPUT, --output OUTPUT
+                        The output filename to use for the predicted data. If
+                        not provided, defaults to
+                        '[data_path].predictions.slp'.
+  --no-empty-frames     Clear any empty frames that did not have any detected
+                        instances before saving to output.
+  --verbosity {none,rich,json}
+                        Verbosity of inference progress reporting. 'none' does
+                        not output anything during inference, 'rich' displays
+                        an updating progress bar, and 'json' outputs the
+                        progress as a JSON encoded response to the console.
+  --video.dataset VIDEO.DATASET
+                        The dataset for HDF5 videos.
+  --video.input_format VIDEO.INPUT_FORMAT
+                        The input_format for HDF5 videos.
+  --cpu                 Run inference only on CPU. If not specified, will use
+                        available GPU.
+  --first-gpu           Run inference on the first GPU, if available.
+  --last-gpu            Run inference on the last GPU, if available.
+  --gpu GPU             Run inference on the i-th GPU specified.
+  --peak_threshold PEAK_THRESHOLD
+                        Minimum confidence map value to consider a peak as
+                        valid.
+  --batch_size BATCH_SIZE
+                        Number of frames to predict at a time. Larger values
+                        result in faster inference speeds, but require more
+                        memory.
+  --open-in-gui         Open the resulting predictions in the GUI when
+                        finished.
+  --tracking.tracker TRACKING.TRACKER
+                        Options: simple, flow, None (default: None)
+  --tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT
+                        Target number of instances to track per frame.
+                        (default: 0)
+  --tracking.pre_cull_to_target TRACKING.PRE_CULL_TO_TARGET
+                        If non-zero and target_instance_count is also non-
+                        zero, then cull instances over target count per frame
+                        *before* tracking. (default: 0)
+  --tracking.pre_cull_iou_threshold TRACKING.PRE_CULL_IOU_THRESHOLD
+                        If non-zero and pre_cull_to_target also set, then use
+                        IOU threshold to remove overlapping instances over
+                        count *before* tracking. (default: 0)
+  --tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS
+                        If non-zero and target_instance_count is also non-
+                        zero, then connect track breaks when exactly one track
+                        is lost and exactly one track is spawned in frame.
+                        (default: 0)
+  --tracking.clean_instance_count TRACKING.CLEAN_INSTANCE_COUNT
+                        Target number of instances to clean *after* tracking.
+                        (default: 0)
+  --tracking.clean_iou_threshold TRACKING.CLEAN_IOU_THRESHOLD
+                        IOU to use when culling instances *after* tracking.
+                        (default: 0)
+  --tracking.similarity TRACKING.SIMILARITY
+                        Options: instance, centroid, iou (default: instance)
+  --tracking.match TRACKING.MATCH
+                        Options: hungarian, greedy (default: greedy)
+  --tracking.track_window TRACKING.TRACK_WINDOW
+                        How many frames back to look for matches (default: 5)
+  --tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS
+                        Minimum number of instance points for spawning new
+                        track (default: 0)
+  --tracking.min_match_points TRACKING.MIN_MATCH_POINTS
+                        Minimum points for match candidates (default: 0)
+  --tracking.img_scale TRACKING.IMG_SCALE
+                        For optical-flow: Image scale (default: 1.0)
+  --tracking.of_window_size TRACKING.OF_WINDOW_SIZE
+                        For optical-flow: Optical flow window size to consider
+                        at each pyramid (default: 21)
+  --tracking.of_max_levels TRACKING.OF_MAX_LEVELS
+                        For optical-flow: Number of pyramid scale levels to
+                        consider (default: 3)
+  --tracking.kf_node_indices TRACKING.KF_NODE_INDICES
+                        For Kalman filter: Indices of nodes to track.
+                        (default: )
+  --tracking.kf_init_frame_count TRACKING.KF_INIT_FRAME_COUNT
+                        For Kalman filter: Number of frames to track with
+                        other tracker. 0 means no Kalman filters will be used.
+                        (default: 0)
+</pre></div>
+</div>
+</div>
+<div class="section" id="dataset-files">
+<h2>Dataset files<a class="headerlink" href="#dataset-files" title="Permalink to this headline">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-convert</span></code> allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See <a class="reference internal" href="../api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for more information.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO]
+                     input_path
+
+positional arguments:
+  input_path            Path to input file.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        Path to output file (optional).
+  --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
+                        'analysis' results in analysis.h5 file; 'h5' or 'json'
+                        results in SLEAP dataset with specified file format.
+  --video VIDEO         Path to video (if needed for conversion).
+</pre></div>
+</div>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-inspect</span></code> gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you’re inspecting a predictions dataset (i.e., the output from running <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-inspect [-h] [--verbose] data_path
+
+positional arguments:
+  data_path   Path to labels json file
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --verbose
+</pre></div>
+</div>
+</div>
+<div class="section" id="debugging">
+<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h2>
+<p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/murthylab/sleap/main/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        Path for saving output
+  --gui-check           Check if Qt GUI widgets can be used
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For more details about any command, run with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument (e.g., <code class="code docutils literal notranslate"><span class="pre">sleap-track</span> <span class="pre">--help</span></code>).</p>
+</div>
+</div>
 </div>
 
       </article>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="proofreading.html">
+          <a class="next-page" href="skeletons.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Tracking and proofreading</div>
+                <div class="title">Skeleton design</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="choosing-models.html">
+          <a class="prev-page" href="gui.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Choosing a set of models</div>
+                <div class="title">GUI</div>
                 
               </div>
             </a>
@@ -295,7 +527,7 @@
               <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
               <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
             |
-            <a class="muted-link" href="../_sources/guides/merging.rst.txt"
+            <a class="muted-link" href="../_sources/guides/cli.rst.txt"
                rel="nofollow">
               Show Source
             </a>
@@ -303,8 +535,31 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Command line interfaces</a><ul>
+<li><a class="reference internal" href="#gui">GUI</a></li>
+<li><a class="reference internal" href="#training">Training</a></li>
+<li><a class="reference internal" href="#inference-and-tracking">Inference and Tracking</a></li>
+<li><a class="reference internal" href="#dataset-files">Dataset files</a></li>
+<li><a class="reference internal" href="#debugging">Debugging</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

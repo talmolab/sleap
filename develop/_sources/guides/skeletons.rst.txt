@@ -1,7 +1,7 @@
-.. _skeleton_design:
+.. _skeletons:
 
 Skeleton design
-~~~~~~~~~~~~~~~~
+================
 
 **Can I add or remove nodes in the skeleton after I've already created instances?**
 

@@ -1,6 +1,6 @@
 .. _colab:
 
-Run training and/or inference on Colab
+Run training and inference on Colab
 --------------------------------------
 
 *Case: You already have a project with labeled training data and you'd like to run training or inference in a Colab notebook.*
