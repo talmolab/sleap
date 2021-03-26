@@ -1,7 +1,7 @@
 .. _merging:
 
-Add more training data to a project
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Importing predictions for labeling
+==================================
 
 *Case: You have predictions that aren't in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.*
 

@@ -1,3 +1,9 @@
+.. _remote:
+
+Running SLEAP remotely
+======================
+
+
 .. _remote_train:
 
 Remote training
@@ -40,40 +46,6 @@ Once you have your training job package (or labels package and training profile)
   sleap-train path/to/your/training_profile.json another/path/to/labels.pkg.slp
 
 The model will be saved in the :code:`models/` directory within the same directory as the **training job package** (in this case, :code:`another/path/to/models/run_name/`). You can specify the :code:`run_name` to use when saving the model with the :code:`-o` argument, otherwise the run name will be the date and time of the run (or whatever is specified as the run path inside the config file).
-
-.. _pretrained_weights_remote:
-
-Downloading pretrained weights for remote training
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**How can I download pretrained weights to use for my backbones?**
-Normally, pretrained weights will be automatically downloaded when the network is trained. This can be an issue when training in an environment that does not have internet access (e.g., HPC clusters). A simple solution is to manually trigger downloading of the pretrained weights in the same environment (e.g., the head node of a cluster). These one-liners will trigger weight downloading for the appropriate backbones:
-
-.. code-block:: bash
-
-  python -c "from tensorflow.keras import applications; applications.ResNet50(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
-
-  python -c "from tensorflow.keras import applications; applications.DenseNet121(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
-  python -c "from tensorflow.keras import applications; applications.DenseNet169(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
-  python -c "from tensorflow.keras import applications; applications.DenseNet201(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
-
-  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.25)"
-  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.5)"
-  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.75)"
-  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.0)"
-
-  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.35)"
-  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.5)"
-  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.75)"
-  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.0)"
-  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.3)"
-  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.4)"
-
-  python -c "from tensorflow.keras import applications; applications.NASNetMobile(weights='imagenet', include_top=False, input_shape=(224, 224, 3))"
-  python -c "from tensorflow.keras import applications; applications.NASNetLarge(weights='imagenet', include_top=False, input_shape=(331, 331, 3))"
-
-
-Be sure to run these with the same ``python`` binary as will be used for training so the weights can be loaded from the disk appropriately.
 
 
 .. _remote_inference:
@@ -135,6 +107,41 @@ This will run inference on the entire video. If you only want to run inference o
 
 This will give you predictions frame-by-frame, but will not connect those predictions across frames into `tracks`. If you want cross-frame identity tracking, you'll need to choose a tracker and specify this from the command-line with the :code:`--tracking.tracker` argument. For optical flow, use :code:`--tracking.tracker flow`. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use :code:`--tracking.tracker simple --tracking.similarity centroid`.
 
-**In future versions** it will also be possible to run tracking separately after you've generated a predictions file (see :ref:`reference`). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.
+**In future versions** it will also be possible to run tracking separately after you've generated a predictions file (see :ref:`cli`). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.
 
 When inference is finished, it will save the predictions in a new HDF5 file. This file has the same format as a standard SLEAP project file, and you can use the GUI to proofread this file or merge the predictions into an existing SLEAP project. The file will be in the same directory as the video and the filename will be :code:`{video filename}.predictions.h5`.
+
+
+.. _pretrained_weights_remote:
+
+Downloading pretrained weights for remote training
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**How can I download pretrained weights to use for my backbones?**
+Normally, pretrained weights will be automatically downloaded when the network is trained. This can be an issue when training in an environment that does not have internet access (e.g., HPC clusters). A simple solution is to manually trigger downloading of the pretrained weights in the same environment (e.g., the head node of a cluster). These one-liners will trigger weight downloading for the appropriate backbones:
+
+.. code-block:: bash
+
+  python -c "from tensorflow.keras import applications; applications.ResNet50(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
+
+  python -c "from tensorflow.keras import applications; applications.DenseNet121(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
+  python -c "from tensorflow.keras import applications; applications.DenseNet169(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
+  python -c "from tensorflow.keras import applications; applications.DenseNet201(weights='imagenet', include_top=False, input_shape=(256, 256, 3))"
+
+  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.25)"
+  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.5)"
+  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.75)"
+  python -c "from tensorflow.keras import applications; applications.MobileNet(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.0)"
+
+  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.35)"
+  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.5)"
+  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=0.75)"
+  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.0)"
+  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.3)"
+  python -c "from tensorflow.keras import applications; applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(256, 256, 3), alpha=1.4)"
+
+  python -c "from tensorflow.keras import applications; applications.NASNetMobile(weights='imagenet', include_top=False, input_shape=(224, 224, 3))"
+  python -c "from tensorflow.keras import applications; applications.NASNetLarge(weights='imagenet', include_top=False, input_shape=(331, 331, 3))"
+
+
+Be sure to run these with the same ``python`` binary as will be used for training so the weights can be loaded from the disk appropriately.

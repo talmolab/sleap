@@ -1,7 +1,7 @@
 .. _choosing_models:
 
 Choosing a set of models
-~~~~~~~~~~~~~~~~~~~~~~~~~
+========================
 
 Inference will run in different modes depending on the output types of the models you supply. SLEAP currently support two distinct modes for multi-animal inference.
 

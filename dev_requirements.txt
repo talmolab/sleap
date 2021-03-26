@@ -9,7 +9,7 @@ myst-nb
 sphinx-autobuild
 black
 pre-commit
-twine
+twine==3.3.0
 PyGithub
 jupyterlab
 jedi==0.17.2

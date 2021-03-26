@@ -32,15 +32,15 @@
 .. start-inclusion-marker-do-not-remove
 
 
-**SLEAP** - Social LEAP Estimates Animal Pose
----------------------------------------------
+**SLEAP** - Social LEAP Estimates Animal Poses
+==============================================
 
 .. image:: https://sleap.ai/docs/_static/sleap_movie.gif
     :width: 600px
 
 **SLEAP** is an open source deep-learning based framework for estimating positions of animal body parts. It supports *multi-animal pose estimation* and *tracking*, and includes an advanced labeling/training GUI for active learning and proofreading.
 
-SLEAP is developed in the `Princeton Neuroscience Institute <pni.princeton.edu>`_. It is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface.
+SLEAP is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface. SLEAP is the successor to `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al., Nature Methods, 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
 
 
 Features
@@ -48,15 +48,25 @@ Features
 
 * Purpose-built GUI and human-in-the-loop workflow for rapidly labeling large datasets
 * Multi-animal pose estimation with *top-down* and *bottom-up* training strategies
-* State-of-the-art pretrained and customizable Neural Network architectures that deliver *accurate predictions* with *very few* labels
+* State-of-the-art pretrained and customizable neural network architectures that deliver *accurate predictions* with *very few* labels
 * Fast training: 15 to 60 mins on a single GPU for a typical dataset
 * Fast inference: 400+ FPS for batch, 10ms latency for realtime
-* Support for remote training/inference workflow (for using without GPUs)
+* Support for remote training/inference workflow (for using SLEAP without GPUs)
 * Flexible developer API for building integrated apps and customization
 
 
+Getting started
+----------------
+
+To get started with SLEAP, head over to the `Documentation <https://sleap.ai>`_ where you'll find tutorials, guides and example notebooks.
+
+To learn more about the technical side of SLEAP and multi-animal pose tracking, check out our `preprint on bioRxiv <https://doi.org/10.1101/2020.08.31.276246>`_ or watch the `tutorial on SLEAP <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_. For a more general introduction to the field of quantitative animal behavior, check out our `review in Nature Neuroscience <https://rdcu.be/caH3H>`_.
+
+You can find the latest version of SLEAP in the `Releases <https://github.com/murthylab/sleap/releases>`_ page.
+
+
 References
-----------
+-----------
 If you use **SLEAP** in your research, please cite:
 
     Talmo D. Pereira, Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. "SLEAP: Multi-Animal Pose Tracking." *bioRxiv*. https://doi.org/10.1101/2020.08.31.276246.
@@ -89,19 +99,17 @@ Contributors
 * **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
 * **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
 
-SLEAP is developed in the Murthy and Shaevitz labs at Princeton University. Funding: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
-SLEAP is the successor to `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al., 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
-To learn more about SLEAP and multi-animal pose tracking download our `preprint on bioRxiv <https://doi.org/10.1101/2020.08.31.276246>`_ or watch the `tutorial on SLEAP <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_.
+SLEAP is developed in the `Murthy <https://murthylab.princeton.edu>`_ and `Shaevitz <https://shaevitzlab.princeton.edu>`_ labs at the `Princeton Neuroscience Institute <https://pni.princeton.edu>`_ at Princeton University. This work was made possible through our funding sources, including: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
 
 .. end-inclusion-marker-do-not-remove
 
-Getting Started with SLEAP
-----------------------------
+Links
+------
 * `Documentation Homepage <https://sleap.ai>`_
-* `Workflow Overview <https://sleap.ai/overview.html>`_
+* `Overview <https://sleap.ai/overview.html>`_
 * `Installation <https://sleap.ai/installation.html>`_
-* `End-to-end Tutorial <https://sleap.ai/tutorials/tutorial.html>`_
-* `Detailed Guides <https://sleap.ai/guides/index.html>`_
+* `Tutorial <https://sleap.ai/tutorials/tutorial.html>`_
+* `Guides <https://sleap.ai/guides/index.html>`_
 * `Notebooks <https://sleap.ai/notebooks/index.html>`_
 * `Developer API <https://sleap.ai/api.html>`_
 
