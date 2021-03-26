@@ -755,7 +755,7 @@ class MainWindow(QMainWindow):
         add_menu_item(
             predictionMenu,
             "training on colab",
-            "Train in Google Colab..",
+            "Train on Google Colab...",
             lambda: self.commands.openWebsite(
                 "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
             ),
