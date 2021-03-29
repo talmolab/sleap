@@ -265,9 +265,7 @@ class SimpleTrainingWidget(QWidget):
 if __name__ == "__main__":
     from PySide2.QtWidgets import QApplication
 
-    labels = sleap.load_file(
-        r"C:\Users\ariem\sleap_data\labels.v000.slp"
-    )
+    labels = sleap.load_file(r"C:\Users\ariem\sleap_data\labels.v000.slp")
 
     app = QApplication([])
     window = SimpleTrainingWidget(labels=labels)
