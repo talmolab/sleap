@@ -1,11 +1,12 @@
 """
 Module for writing avi/mp4 videos.
 
-Usage:
+Usage: ::
 
-> writer = VideoWriter.safe_builder(filename, height, width, fps)
-> writer.add_frame(img)
-> writer.close()
+   > writer = VideoWriter.safe_builder(filename, height, width, fps)
+   > writer.add_frame(img)
+   > writer.close()
+
 """
 
 from abc import ABC, abstractmethod

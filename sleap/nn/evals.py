@@ -3,11 +3,11 @@ Evaluation utilities for measuring pose estimation accuracy.
 
 To generate metrics, you'll need two `Labels` datasets, one with ground truth
 data and one with predicted data. The video paths in the datasets must match.
-Load both datasets and call `evaluate`, like so:
+Load both datasets and call `evaluate`, like so: ::
 
-> labels_gt = Labels.load_file("path/to/ground/truth.slp")
-> labels_pr = Labels.load_file("path/to/predictions.slp")
-> metrics = evaluate(labels_gt, labels_pr)
+   > labels_gt = Labels.load_file("path/to/ground/truth.slp")
+   > labels_pr = Labels.load_file("path/to/predictions.slp")
+   > metrics = evaluate(labels_gt, labels_pr)
 
 `evaluate` returns a dictionary, keys are strings which name the metric,
 values are either floats or numpy arrays.

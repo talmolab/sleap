@@ -109,7 +109,8 @@ def find_offsets_local_direction(
         This is a commonly used algorithm for subpixel peak refinement, described for
         pose estimation applications in [1].
 
-    Example:
+    Example: ::
+
         >>> find_offsets_local_direction(np.array(
         ...     [[0., 1., 0.],
         ...      [1., 3., 2.],
