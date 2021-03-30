@@ -28,9 +28,11 @@ def group_array(
         <https://jakevdp.github.io/blog/2017/03/22/group-by-from-scratch/>`
         for performance comparisons of different approaches.
 
-    Example:
+    Example: ::
+
         >>> group_array(np.arange(5), np.array([1, 5, 2, 1, 5]))
         {1: array([0, 3]), 5: array([1, 4]), 2: array([2])}
+
     """
 
     group_inds = defaultdict(list)

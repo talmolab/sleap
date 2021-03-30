@@ -3,7 +3,8 @@ Module for showing and manipulating skeleton instances within a video.
 
 All interactions should go through `QtVideoPlayer`.
 
-Example usage:
+Example usage: ::
+
     >>> my_video = Video(...)
     >>> my_instance = Instance(...)
 
@@ -523,8 +524,9 @@ class QtVideoPlayer(QWidget):
         selection), the `on_failure` callback is called (if given).
 
         Note:
-            If successful, we call
-            >>> on_success(list_of_instances)
+            If successful, we call ::
+
+               >>> on_success(list_of_instances)
 
         Args:
             seq_len: Number of instances we want to collect in sequence.

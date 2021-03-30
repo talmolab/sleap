@@ -1,10 +1,12 @@
 """
 Module for Qt Widget to show multiple checkboxes for selecting.
 
-Example:
+Example: ::
+
     >>> mc = MultiCheckWidget(count=5, selected=[0,1],title="My Items")
     >>> mc.selectionChanged.connect(window.plot)
     >>> window.layout.addWidget(mc)
+
 """
 
 from typing import List, Optional

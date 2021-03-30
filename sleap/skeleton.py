@@ -266,10 +266,10 @@ class Skeleton:
 
         This property is immutable because it is used to hash skeletons.
         If you want to rename a Skeleton you must use the class
-        method :code:`rename_skeleton`:
+        method :code:`rename_skeleton`: ::
 
-        >>> new_skeleton = Skeleton.rename_skeleton(
-        >>>     skeleton=old_skeleton, name="New Name")
+           >>> new_skeleton = Skeleton.rename_skeleton(
+           >>>     skeleton=old_skeleton, name="New Name")
 
         Args:
             name: The name of the Skeleton.
@@ -289,10 +289,10 @@ class Skeleton:
         """Make copy of skeleton with new name.
 
         This property is immutable because it is used to hash skeletons.
-        If you want to rename a Skeleton you must use this class method.
+        If you want to rename a Skeleton you must use this class method. ::
 
-        >>> new_skeleton = Skeleton.rename_skeleton(
-        >>>     skeleton=old_skeleton, name="New Name")
+           >>> new_skeleton = Skeleton.rename_skeleton(
+           >>>     skeleton=old_skeleton, name="New Name")
 
         Args:
             skeleton: The skeleton to copy.

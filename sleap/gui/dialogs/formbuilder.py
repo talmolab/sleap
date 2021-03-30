@@ -6,17 +6,17 @@ the widget as a model dialog, :py:class:`FormBuilderModalDialog` makes this
 a little more convenient (it provides methods for adding a message for the
 dialog and for getting the results when the dialog is closed).
 
-Example of form widget:
+Example of form widget: ::
 
->>> widget = YamlFormWidget(yaml_file="example.yaml")
->>> widget.mainAction.connect(my_function)
+   >>> widget = YamlFormWidget(yaml_file="example.yaml")
+   >>> widget.mainAction.connect(my_function)
 
 my_function will get called with form data when user clicks the main button
 (main button has type "button" and default "main action")
 
-Example of modal dialog:
+Example of modal dialog: ::
 
->>> results = FormBuilderModalDialog(form_name="example").get_results()
+   >>> results = FormBuilderModalDialog(form_name="example").get_results()
 
 The results will be empty dictionary if the user hit "cancel", otherwise it
 will contain all data from form (dict keys matching names of fields).
@@ -43,9 +43,9 @@ class YamlFormWidget(QtWidgets.QGroupBox):
 
     Typically you'll want to save the YAML in `sleap/config/` and use the
     :py:meth:`from_name` method to make the form (e.g., if your form data is in
-    `sleap/config/foo.yaml`, then you can create form like so:
+    `sleap/config/foo.yaml`, then you can create form like so: ::
 
-    >>> widget = YamlFormWidget.from_name("foo")
+       >>> widget = YamlFormWidget.from_name("foo")
 
     Args:
         yaml_file: filename of YAML file to load.

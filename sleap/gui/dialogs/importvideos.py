@@ -1,9 +1,9 @@
 """
 Interface to handle the UI for importing videos.
 
-Usage:
+Usage: ::
 
->>> import_list = ImportVideos().ask()
+   >>> import_list = ImportVideos().ask()
 
 This will show the user a file-selection dialog, and then a second dialog
 to select the import parameters for each file.
@@ -14,9 +14,9 @@ relevant for that specific type of file. It also includes a reference
 to the relevant method of :class:`Video`.
 
 For each `item` in `import_list`, we can load the video by calling this
-method while passing the user-selected params as the named parameters:
+method while passing the user-selected params as the named parameters: ::
 
->>> vid = item["video_class"](**item["params"])
+   >>> vid = item["video_class"](**item["params"])
 
 """
 
