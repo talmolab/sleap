@@ -158,5 +158,6 @@ class ModelsTableWidget(QWidget):
             self.table_model.items = self.config_infos + keep_cfgs
             self.table_view.resizeColumnsToContents()
 
-    def checked_model(self, cfgs):
-        print("checked:", len(cfgs))
+    @staticmethod
+    def checked_model(configs):
+        print("checked:", len(configs))

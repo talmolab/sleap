@@ -54,12 +54,10 @@ class VideosTableModel(GenericCheckableTableModel):
         if key == "First frame":
             val = min(val, len(video), item["Last frame"])
             val = max(val, 1)
-            # self.items[row]["First frame"] = val
             self._data[row]["First frame"] = val
         elif key == "Last frame":
             val = min(val, len(video))
             val = max(val, 1, item["First frame"])
-            # self.items[row]["Last frame"] = val
             self._data[row]["Last frame"] = val
 
 

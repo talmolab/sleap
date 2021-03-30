@@ -19,7 +19,6 @@ class InstanceListOverlay(BaseOverlay):
 
     def add_to_scene(self, video: Video, frame_idx: int):
         """Add list of instances as overlay on video."""
-        color_manager = self.player.color_manager
         qt_instances = self.player.view.all_instances
 
         html = f"Instances:"
@@ -50,4 +49,4 @@ class InstanceListOverlay(BaseOverlay):
         # pos = self.player.view.mapToScene(10, 300)
         pos = QPointF(10, 300)
         self.text_box.setPos(pos)
-        self.text_box.setVisible(False)  # TODO: Remove this
+        self.text_box.setVisible(True)
