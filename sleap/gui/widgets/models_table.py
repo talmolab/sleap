@@ -55,7 +55,7 @@ class ModelsTableModel(GenericCheckableTableModel):
             "Skeleton Nodes": len(cfg.skeleton) if cfg.skeleton is not None else "N/A",
             "OKS mAP": "N/A",
             "Dist: 95%": "N/A",
-            "Path": cfg.folder_path,
+            "Path": cfg.path,
         }
 
         metrics = cfg.metrics
@@ -132,7 +132,7 @@ class ModelsTableWidget(QWidget):
 
     @property
     def model_paths(self) -> List[str]:
-        return [cfg.folder_path for cfg in self.config_infos]
+        return [cfg.path for cfg in self.config_infos]
 
     def add_models(self, model_path: Optional[str] = None):
         if model_path is None:
@@ -151,7 +151,7 @@ class ModelsTableWidget(QWidget):
         self.cfg_getter.update()
         new_cfgs = self.cfg_getter.get_filtered_configs(only_trained=True)
         model_paths = self.model_paths
-        keep_cfgs = [cfg for cfg in new_cfgs if cfg.folder_path not in model_paths]
+        keep_cfgs = [cfg for cfg in new_cfgs if cfg.path not in model_paths]
 
         # Add ones that we don't already have.
         if len(keep_cfgs) > 0:
