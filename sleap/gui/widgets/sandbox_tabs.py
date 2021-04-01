@@ -2,6 +2,7 @@ import sys
 from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 
+from sleap.gui.widgets.models_table import ModelsTableWidget
 from sleap.gui.widgets.videos_table import VideosTableWidget
 
 
@@ -59,20 +60,18 @@ class InferenceConfigWidget(QWidget):
     @staticmethod
     def build_tabs_widget():
         tabs = QTabWidget()
-
         # Add tabs
+        InferenceConfigWidget.add_settings_tab(tabs)
         InferenceConfigWidget.add_videos_tab(tabs)
         InferenceConfigWidget.add_models_tab(tabs)
-        InferenceConfigWidget.add_tracking_tab(tabs)
-
         return tabs
 
     @staticmethod
     def add_videos_tab(tabs):
         tab = QWidget()
         tab.layout = QVBoxLayout()
-        videos_widget = VideosTableWidget()
-        tab.layout.addWidget(videos_widget)
+        tabs.videos_widget = VideosTableWidget()
+        tab.layout.addWidget(tabs.videos_widget)
         tab.setLayout(tab.layout)
         tabs.addTab(tab, "Videos")
 
@@ -80,43 +79,20 @@ class InferenceConfigWidget(QWidget):
     def add_models_tab(tabs):
         tab = QWidget()
         tab.layout = QVBoxLayout()
-        tab.push_button = QPushButton("PyQt5 button models")
-        tab.layout.addWidget(tab.push_button)
+        tab.models_widget = ModelsTableWidget()
+        tab.layout.addWidget(tab.models_widget)
         tab.setLayout(tab.layout)
         tabs.addTab(tab, "Models")
 
     @staticmethod
-    def add_tracking_tab(tabs):
+    def add_settings_tab(tabs):
         tab = QWidget()
         tab.layout = QVBoxLayout()
+        tab.setLayout(tab.layout)
 
-        ql = QLabel(
-            "Tracking is used to associate multiple detected instances across frames. "
-            "Tracking is not necessary for single animal videos.\n"
-        )
-        ql.setWordWrap(True)
-        tab.layout.addWidget(ql)
-
-        tracking_box = QGroupBox("Enable tracking")
-        tracking_box.setCheckable(True)
-        tab.layout.addWidget(tracking_box)
-        tracking = QFormLayout()
-        tracking_box.setLayout(tracking)
-
-        tracking_method_widget = QComboBox()
-        tracking_method_widget.addItems(
-            ["Simple", "Flow shift", "Kalman filter"]
-        )
-        tracking.addRow("Tracker:", tracking_method_widget)
-
-        tracking_window_widget = QSpinBox()
-        tracking_window_widget.setRange(0, 1000)
-        tracking_window_widget.setValue(5)
-        tracking_window_widget.setToolTip(
-            "Number of past frames to consider when associating tracks."
-        )
-        tracking.addRow("Window size:", tracking_window_widget)
-
+        InferenceConfigWidget.add_model_type_box(tab)
+        InferenceConfigWidget.add_num_instances_box(tab)
+        InferenceConfigWidget.add_tracking_box(tab)
 
         # TODO:
         # - number of instances
@@ -130,9 +106,73 @@ class InferenceConfigWidget(QWidget):
         # - [ ] open results in GUI
         # - [ ] export analysis file
 
+        tabs.addTab(tab, "Settings")
+
+    @staticmethod
+    def add_model_type_box(tab):
+        model_type_box = QGroupBox("Trained model type")
+        model_type = QFormLayout()
+        model_type_box.setLayout(model_type)
+
+        model_type_widget = QComboBox()
+        model_type_widget.addItems(
+            ["Multi Instance / Top Down", "Multi Instance / Bottom Up", "Single Instance"]
+        )
+        model_type_widget.setMaximumWidth(250)
+        model_type.addRow("Model type", model_type_widget)
+
+        tab.layout.addWidget(model_type_box)
+
+    @staticmethod
+    def add_num_instances_box(tab):
+        num_instances_box = QGroupBox("Number of instances")
+        num_instances = QFormLayout()
+        num_instances_box.setLayout(num_instances)
+
+        num_instances_widget = QSpinBox()
+        num_instances_widget.setRange(1, 100)
+        num_instances_widget.setValue(2)
+        num_instances_widget.setToolTip(
+            "Max number of instances in single frame."
+        )
+        num_instances_widget.setMaximumWidth(50)
+        num_instances.addRow("Max instances in frame", num_instances_widget)
+
+        tab.layout.addWidget(num_instances_box)
+
+    @staticmethod
+    def add_tracking_box(tab):
+        tracking_box = QGroupBox("Instance tracking")
+        tracking = QFormLayout()
+        tracking_box.setLayout(tracking)
+
+        ql = QLabel(
+            "Instance tracking is performed after inference to associate multiple detected animal instances "
+            "across frames. Note: Instance tracking is not necessary for single animal videos.\n"
+        )
+        ql.setWordWrap(True)
+        tracking.addRow("What?", ql)
+
+        enable_tracking = QCheckBox()
+        tracking.addRow("Enable tracking", enable_tracking)
+
+        tracking_method_widget = QComboBox()
+        tracking_method_widget.addItems(
+            ["Simple", "Flow shift", "Kalman filter"]
+        )
+        tracking_method_widget.setMaximumWidth(150)
+        tracking.addRow("Tracking method", tracking_method_widget)
+
+        tracking_window_widget = QSpinBox()
+        tracking_window_widget.setRange(0, 1000)
+        tracking_window_widget.setValue(5)
+        tracking_window_widget.setToolTip(
+            "Number of past frames to consider when associating tracks."
+        )
+        tracking_window_widget.setMaximumWidth(50)
+        tracking.addRow("Window size", tracking_window_widget)
+
         tab.layout.addWidget(tracking_box)
-        tab.setLayout(tab.layout)
-        tabs.addTab(tab, "Tracking")
 
     def on_click(self):
         print("\n")
