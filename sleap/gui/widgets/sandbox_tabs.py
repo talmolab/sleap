@@ -2,6 +2,7 @@ import sys
 from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 
+from sleap.gui.widgets.videos_table import VideosTableWidget
 
 
 class App(QMainWindow):
@@ -13,6 +14,8 @@ class App(QMainWindow):
 
         self.table_widget = InferenceConfigWidget(self)
         self.setCentralWidget(self.table_widget)
+
+        self.setMinimumWidth(800)
 
         self.show()
 
@@ -41,13 +44,13 @@ class InferenceConfigWidget(QWidget):
         action_buttons = QWidget()
         action_buttons.layout = QHBoxLayout()
 
-        action_buttons.train_button = QPushButton("Train")
+        action_buttons.train_button = QPushButton(" Start ")
         action_buttons.layout.addWidget(action_buttons.train_button)
 
-        action_buttons.save_button = QPushButton("Save")
+        action_buttons.save_button = QPushButton(" Save configuration ")
         action_buttons.layout.addWidget(action_buttons.save_button)
 
-        action_buttons.export_button = QPushButton("Export")
+        action_buttons.export_button = QPushButton(" Export inference job package ")
         action_buttons.layout.addWidget(action_buttons.export_button)
 
         action_buttons.setLayout(action_buttons.layout)
@@ -68,8 +71,8 @@ class InferenceConfigWidget(QWidget):
     def add_videos_tab(tabs):
         tab = QWidget()
         tab.layout = QVBoxLayout()
-        tab.push_button = QPushButton("PyQt5 button videos")
-        tab.layout.addWidget(tab.push_button)
+        videos_widget = VideosTableWidget()
+        tab.layout.addWidget(videos_widget)
         tab.setLayout(tab.layout)
         tabs.addTab(tab, "Videos")
 
@@ -87,15 +90,47 @@ class InferenceConfigWidget(QWidget):
         tab = QWidget()
         tab.layout = QVBoxLayout()
 
-        tab.enable_checkbox = QCheckBox("Enable tracking")
-        tab.layout.addWidget(tab.enable_checkbox)
+        ql = QLabel(
+            "Tracking is used to associate multiple detected instances across frames. "
+            "Tracking is not necessary for single animal videos.\n"
+        )
+        ql.setWordWrap(True)
+        tab.layout.addWidget(ql)
 
-        tab.tracking_type = QComboBox()
-        tab.tracking_type.addItems(["1", "2", "3"])
-        tab.layout.addWidget(tab.tracking_type)
+        tracking_box = QGroupBox("Enable tracking")
+        tracking_box.setCheckable(True)
+        tab.layout.addWidget(tracking_box)
+        tracking = QFormLayout()
+        tracking_box.setLayout(tracking)
 
-        tab.push_button = QPushButton("PyQt5 button tracking")
-        tab.layout.addWidget(tab.push_button)
+        tracking_method_widget = QComboBox()
+        tracking_method_widget.addItems(
+            ["Simple", "Flow shift", "Kalman filter"]
+        )
+        tracking.addRow("Tracker:", tracking_method_widget)
+
+        tracking_window_widget = QSpinBox()
+        tracking_window_widget.setRange(0, 1000)
+        tracking_window_widget.setValue(5)
+        tracking_window_widget.setToolTip(
+            "Number of past frames to consider when associating tracks."
+        )
+        tracking.addRow("Window size:", tracking_window_widget)
+
+
+        # TODO:
+        # - number of instances
+        # - centroid/instance similarity/iou
+
+        ####
+
+        # TODO:
+        # - batch size
+        # - output folder or same as videos (.prediction.slp)
+        # - [ ] open results in GUI
+        # - [ ] export analysis file
+
+        tab.layout.addWidget(tracking_box)
         tab.setLayout(tab.layout)
         tabs.addTab(tab, "Tracking")
 
