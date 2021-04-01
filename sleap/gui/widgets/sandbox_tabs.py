@@ -45,13 +45,13 @@ class InferenceConfigWidget(QWidget):
         action_buttons = QWidget()
         action_buttons.layout = QHBoxLayout()
 
-        action_buttons.train_button = QPushButton(" Start ")
+        action_buttons.train_button = QPushButton(" Run ")
         action_buttons.layout.addWidget(action_buttons.train_button)
 
-        action_buttons.save_button = QPushButton(" Save configuration ")
+        action_buttons.save_button = QPushButton(" Save configuration.. ")
         action_buttons.layout.addWidget(action_buttons.save_button)
 
-        action_buttons.export_button = QPushButton(" Export inference job package ")
+        action_buttons.export_button = QPushButton(" Export inference job package.. ")
         action_buttons.layout.addWidget(action_buttons.export_button)
 
         action_buttons.setLayout(action_buttons.layout)
@@ -61,9 +61,11 @@ class InferenceConfigWidget(QWidget):
     def build_tabs_widget():
         tabs = QTabWidget()
         # Add tabs
-        InferenceConfigWidget.add_settings_tab(tabs)
-        InferenceConfigWidget.add_videos_tab(tabs)
         InferenceConfigWidget.add_models_tab(tabs)
+        InferenceConfigWidget.add_videos_tab(tabs)
+        InferenceConfigWidget.add_instances_tab(tabs)
+        InferenceConfigWidget.add_output_tab(tabs)
+
         return tabs
 
     @staticmethod
@@ -79,18 +81,28 @@ class InferenceConfigWidget(QWidget):
     def add_models_tab(tabs):
         tab = QWidget()
         tab.layout = QVBoxLayout()
-        tab.models_widget = ModelsTableWidget()
-        tab.layout.addWidget(tab.models_widget)
         tab.setLayout(tab.layout)
+
+        InferenceConfigWidget.add_model_type_box(tab)
+
         tabs.addTab(tab, "Models")
 
     @staticmethod
-    def add_settings_tab(tabs):
+    def add_output_tab(tabs):
         tab = QWidget()
         tab.layout = QVBoxLayout()
         tab.setLayout(tab.layout)
 
         InferenceConfigWidget.add_model_type_box(tab)
+
+        tabs.addTab(tab, "Output")
+
+    @staticmethod
+    def add_instances_tab(tabs):
+        tab = QWidget()
+        tab.layout = QVBoxLayout()
+        tab.setLayout(tab.layout)
+
         InferenceConfigWidget.add_num_instances_box(tab)
         InferenceConfigWidget.add_tracking_box(tab)
 
@@ -106,11 +118,11 @@ class InferenceConfigWidget(QWidget):
         # - [ ] open results in GUI
         # - [ ] export analysis file
 
-        tabs.addTab(tab, "Settings")
+        tabs.addTab(tab, "Instances")
 
     @staticmethod
     def add_model_type_box(tab):
-        model_type_box = QGroupBox("Trained model type")
+        model_type_box = QGroupBox("Select trained model(s) for inference")
         model_type = QFormLayout()
         model_type_box.setLayout(model_type)
 
@@ -119,24 +131,33 @@ class InferenceConfigWidget(QWidget):
             ["Multi Instance / Top Down", "Multi Instance / Bottom Up", "Single Instance"]
         )
         model_type_widget.setMaximumWidth(250)
-        model_type.addRow("Model type", model_type_widget)
+        model_type.addRow("Type", model_type_widget)
+
+        InferenceConfigWidget.add_file_browser_row(model_type, "Single Instance Model")
+        InferenceConfigWidget.add_file_browser_row(model_type, "Bottom Up model")
+        InferenceConfigWidget.add_file_browser_row(model_type, "Top Down Centroid model")
+        InferenceConfigWidget.add_file_browser_row(model_type, "Top Down Centered Instance model")
 
         tab.layout.addWidget(model_type_box)
 
     @staticmethod
+    def add_file_browser_row(layout, caption):
+        widget = QHBoxLayout()
+        widget.addWidget(QLineEdit())
+        widget.addWidget(QPushButton("Browse.."))
+        layout.addRow(caption, widget)
+
+    @staticmethod
     def add_num_instances_box(tab):
-        num_instances_box = QGroupBox("Number of instances")
+        num_instances_box = QGroupBox("Animal instances")
         num_instances = QFormLayout()
         num_instances_box.setLayout(num_instances)
 
         num_instances_widget = QSpinBox()
         num_instances_widget.setRange(1, 100)
         num_instances_widget.setValue(2)
-        num_instances_widget.setToolTip(
-            "Max number of instances in single frame."
-        )
         num_instances_widget.setMaximumWidth(50)
-        num_instances.addRow("Max instances in frame", num_instances_widget)
+        num_instances.addRow("Max number of instances in frame", num_instances_widget)
 
         tab.layout.addWidget(num_instances_box)
 
