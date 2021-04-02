@@ -2,12 +2,14 @@ import sys
 from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 
+from sleap.gui.activities.inference.model import InferenceGuiModel
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.widgets.models_table import ModelsTableWidget
 from sleap.gui.widgets.videos_table import VideosTableWidget
 
 
 class App(QMainWindow):
+    model: InferenceGuiModel
 
     def __init__(self):
         super().__init__()
