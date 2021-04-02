@@ -2,6 +2,7 @@ import sys
 from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 
+from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.widgets.models_table import ModelsTableWidget
 from sleap.gui.widgets.videos_table import VideosTableWidget
 
@@ -144,7 +145,12 @@ class InferenceConfigWidget(QWidget):
     def add_file_browser_row(layout, caption):
         widget = QHBoxLayout()
         widget.addWidget(QLineEdit())
-        widget.addWidget(QPushButton("Browse.."))
+
+        browse_button = QPushButton("Browse..")
+        browse_button.clicked.connect(lambda: FileDialog.openDir(
+                None, dir=None, caption="Select model folder..."
+            ))
+        widget.addWidget(browse_button)
         layout.addRow(caption, widget)
 
     @staticmethod

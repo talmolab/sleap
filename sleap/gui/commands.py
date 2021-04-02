@@ -84,7 +84,7 @@ class AppCommand:
     Note that this is not an abstract base class. For specific commands, you
     should override `ask` and/or `do_action` methods, or add an `ask_and_do`
     method. In many cases you'll want to override the `topics` and `does_edits`
-    attributes. That said, these are not virtual methods/attributes and have
+    attributes. That said, these are not virtual methods/attributes and
     are implemented in the base class with default behaviors (i.e., doing
     nothing).
 
