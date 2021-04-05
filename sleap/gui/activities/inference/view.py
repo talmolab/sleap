@@ -1,19 +1,21 @@
 import sys
-from PySide2.QtCore import *
+from typing import Text, Optional
+
+from PySide2.QtCore import QObject
 from PySide2.QtWidgets import *
 
-from sleap.gui.activities.inference.model import InferenceGuiModel
+from sleap.gui.activities.inference.controller import InferenceGuiController
 from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.widgets.models_table import ModelsTableWidget
 from sleap.gui.widgets.videos_table import VideosTableWidget
 
 
-class App(QMainWindow):
-    model: InferenceGuiModel
+class InferenceActivity(QMainWindow):
 
-    def __init__(self):
-        super().__init__()
-        self.title = 'PyQt5 tabs - pythonspot.com'
+    def __init__(self, parent: Optional[QObject], ctrl: InferenceGuiController):
+        super().__init__(parent)
+        self.controller = ctrl
+
+        self.title = 'Inference'
         self.setWindowTitle(self.title)
 
         self.table_widget = InferenceConfigWidget(self)
@@ -28,86 +30,79 @@ class InferenceConfigWidget(QWidget):
 
     def __init__(self, parent):
         super(InferenceConfigWidget, self).__init__(parent)
+        self.controller = parent.controller
         self.layout = QVBoxLayout()
 
         # Tabs screen
-        self.tabs = InferenceConfigWidget.build_tabs_widget()
+        self.tabs = self.build_tabs_widget()
         self.layout.addWidget(self.tabs)
 
         # Separator
         self.layout.addSpacing(5)
 
         # Action buttons
-        self.action_buttons = InferenceConfigWidget.build_action_buttons_widget()
+        self.action_buttons = self.build_action_buttons_widget()
         self.layout.addWidget(self.action_buttons)
 
         self.setLayout(self.layout)
 
-    @staticmethod
-    def build_action_buttons_widget():
-        action_buttons = QWidget()
+    def build_action_buttons_widget(self):
+        action_buttons = QWidget(self)
         action_buttons.layout = QHBoxLayout()
 
-        action_buttons.train_button = QPushButton(" Run ")
-        action_buttons.layout.addWidget(action_buttons.train_button)
+        action_buttons.run_button = QPushButton(parent=self, text=" Run ")
+        action_buttons.run_button.clicked.connect(lambda: self.controller.run())
+        action_buttons.layout.addWidget(action_buttons.run_button)
 
-        action_buttons.save_button = QPushButton(" Save configuration.. ")
+        action_buttons.save_button = QPushButton(parent=self, text=" Save configuration.. ")
+        action_buttons.save_button.clicked.connect(lambda: self.controller.save())
         action_buttons.layout.addWidget(action_buttons.save_button)
 
-        action_buttons.export_button = QPushButton(" Export inference job package.. ")
+        action_buttons.export_button = QPushButton(parent=self, text=" Export inference job package.. ")
+        action_buttons.export_button.clicked.connect(lambda: self.controller.export())
         action_buttons.layout.addWidget(action_buttons.export_button)
 
         action_buttons.setLayout(action_buttons.layout)
         return action_buttons
 
-    @staticmethod
-    def build_tabs_widget():
-        tabs = QTabWidget()
+    def build_tabs_widget(self):
+        tabs = QTabWidget(self)
         # Add tabs
-        InferenceConfigWidget.add_models_tab(tabs)
-        InferenceConfigWidget.add_videos_tab(tabs)
-        InferenceConfigWidget.add_instances_tab(tabs)
-        InferenceConfigWidget.add_output_tab(tabs)
-
+        self.add_models_tab(tabs)
+        self.add_videos_tab(tabs)
+        self.add_instances_tab(tabs)
+        self.add_output_tab(tabs)
         return tabs
 
-    @staticmethod
-    def add_videos_tab(tabs):
-        tab = QWidget()
+    def add_videos_tab(self, tabs: QTabWidget):
+        tab = QWidget(self)
         tab.layout = QVBoxLayout()
-        tabs.videos_widget = VideosTableWidget()
-        tab.layout.addWidget(tabs.videos_widget)
+        tab.videos_widget = VideosTableWidget()
+        tab.layout.addWidget(tab.videos_widget)
         tab.setLayout(tab.layout)
         tabs.addTab(tab, "Videos")
 
-    @staticmethod
-    def add_models_tab(tabs):
-        tab = QWidget()
+    def add_models_tab(self, tabs: QTabWidget):
+        tab = QWidget(self)
         tab.layout = QVBoxLayout()
         tab.setLayout(tab.layout)
-
-        InferenceConfigWidget.add_model_type_box(tab)
-
+        self.add_model_type_box(tab.layout)
         tabs.addTab(tab, "Models")
 
-    @staticmethod
-    def add_output_tab(tabs):
-        tab = QWidget()
+    def add_output_tab(self, tabs: QTabWidget):
+        tab = QWidget(self)
         tab.layout = QVBoxLayout()
         tab.setLayout(tab.layout)
-
-        InferenceConfigWidget.add_model_type_box(tab)
-
+        self.add_model_type_box(tab.layout)
         tabs.addTab(tab, "Output")
 
-    @staticmethod
-    def add_instances_tab(tabs):
-        tab = QWidget()
+    def add_instances_tab(self, tabs: QTabWidget):
+        tab = QWidget(self)
         tab.layout = QVBoxLayout()
         tab.setLayout(tab.layout)
 
-        InferenceConfigWidget.add_num_instances_box(tab)
-        InferenceConfigWidget.add_tracking_box(tab)
+        self.add_num_instances_box(tab)
+        self.add_tracking_box(tab)
 
         # TODO:
         # - number of instances
@@ -123,8 +118,7 @@ class InferenceConfigWidget(QWidget):
 
         tabs.addTab(tab, "Instances")
 
-    @staticmethod
-    def add_model_type_box(tab):
+    def add_model_type_box(self, layout: QLayout):
         model_type_box = QGroupBox("Select trained model(s) for inference")
         model_type = QFormLayout()
         model_type_box.setLayout(model_type)
@@ -136,15 +130,14 @@ class InferenceConfigWidget(QWidget):
         model_type_widget.setMaximumWidth(250)
         model_type.addRow("Type", model_type_widget)
 
-        InferenceConfigWidget.add_file_browser_row(model_type, "Single Instance Model")
-        InferenceConfigWidget.add_file_browser_row(model_type, "Bottom Up model")
-        InferenceConfigWidget.add_file_browser_row(model_type, "Top Down Centroid model")
-        InferenceConfigWidget.add_file_browser_row(model_type, "Top Down Centered Instance model")
+        self.add_file_browser_row(model_type, "Single Instance Model")
+        self.add_file_browser_row(model_type, "Bottom Up model")
+        self.add_file_browser_row(model_type, "Top Down Centroid model")
+        self.add_file_browser_row(model_type, "Top Down Centered Instance model")
 
-        tab.layout.addWidget(model_type_box)
+        layout.addWidget(model_type_box)
 
-    @staticmethod
-    def add_file_browser_row(layout, caption):
+    def add_file_browser_row(self, layout: QLayout, caption: Text):
         widget = QHBoxLayout()
         widget.addWidget(QLineEdit())
 
@@ -155,10 +148,9 @@ class InferenceConfigWidget(QWidget):
         widget.addWidget(browse_button)
         layout.addRow(caption, widget)
 
-    @staticmethod
-    def add_num_instances_box(tab):
+    def add_num_instances_box(self, tab):
         num_instances_box = QGroupBox("Animal instances")
-        num_instances = QFormLayout()
+        num_instances = QFormLayout(self)
         num_instances_box.setLayout(num_instances)
 
         num_instances_widget = QSpinBox()
@@ -169,10 +161,9 @@ class InferenceConfigWidget(QWidget):
 
         tab.layout.addWidget(num_instances_box)
 
-    @staticmethod
-    def add_tracking_box(tab):
+    def add_tracking_box(self, tab):
         tracking_box = QGroupBox("Instance tracking")
-        tracking = QFormLayout()
+        tracking = QFormLayout(self)
         tracking_box.setLayout(tracking)
 
         ql = QLabel(
@@ -210,6 +201,7 @@ class InferenceConfigWidget(QWidget):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = App()
+    app = QApplication()
+    controller = InferenceGuiController()
+    ex = InferenceActivity(None, controller)
     sys.exit(app.exec_())
