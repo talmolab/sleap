@@ -1,6 +1,6 @@
 """General purpose video selector widget. Useful for prompting user for input videos."""
 
-from typing import Optional, List, Dict
+from typing import Optional
 
 import sleap
 from sleap.gui.dataviews import (
@@ -9,8 +9,6 @@ from sleap.gui.dataviews import (
 )
 from sleap.gui.dialogs.importvideos import ImportVideos
 
-from PySide2 import QtCore, QtWidgets
-from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
     QWidget,
     QLabel,

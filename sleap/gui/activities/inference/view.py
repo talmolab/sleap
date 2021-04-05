@@ -48,16 +48,19 @@ class InferenceConfigWidget(QWidget):
         action_buttons = QWidget(self)
         action_buttons.layout = QHBoxLayout()
 
+        # Run inference button
         action_buttons.run_button = QPushButton(parent=self, text=" Run ")
         action_buttons.run_button.clicked.connect(lambda: self.controller.run())
         action_buttons.layout.addWidget(action_buttons.run_button)
 
+        # Save configuration button
         action_buttons.save_button = QPushButton(
             parent=self, text=" Save configuration.. "
         )
         action_buttons.save_button.clicked.connect(lambda: self.controller.save())
         action_buttons.layout.addWidget(action_buttons.save_button)
 
+        # Export inference job button
         action_buttons.export_button = QPushButton(
             parent=self, text=" Export inference job package.. "
         )
