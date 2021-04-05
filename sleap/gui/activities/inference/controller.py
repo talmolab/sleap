@@ -15,5 +15,3 @@ class InferenceGuiController(object):
 
     def load(self):
         print("+++ Load stub...")
-
-

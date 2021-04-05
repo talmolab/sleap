@@ -10,12 +10,11 @@ from sleap.gui.widgets.videos_table import VideosTableWidget
 
 
 class InferenceActivity(QMainWindow):
-
     def __init__(self, parent: Optional[QObject], ctrl: InferenceGuiController):
         super().__init__(parent)
         self.controller = ctrl
 
-        self.title = 'Inference'
+        self.title = "Inference"
         self.setWindowTitle(self.title)
 
         self.table_widget = InferenceConfigWidget(self)
@@ -27,7 +26,6 @@ class InferenceActivity(QMainWindow):
 
 
 class InferenceConfigWidget(QWidget):
-
     def __init__(self, parent):
         super(InferenceConfigWidget, self).__init__(parent)
         self.controller = parent.controller
@@ -54,11 +52,15 @@ class InferenceConfigWidget(QWidget):
         action_buttons.run_button.clicked.connect(lambda: self.controller.run())
         action_buttons.layout.addWidget(action_buttons.run_button)
 
-        action_buttons.save_button = QPushButton(parent=self, text=" Save configuration.. ")
+        action_buttons.save_button = QPushButton(
+            parent=self, text=" Save configuration.. "
+        )
         action_buttons.save_button.clicked.connect(lambda: self.controller.save())
         action_buttons.layout.addWidget(action_buttons.save_button)
 
-        action_buttons.export_button = QPushButton(parent=self, text=" Export inference job package.. ")
+        action_buttons.export_button = QPushButton(
+            parent=self, text=" Export inference job package.. "
+        )
         action_buttons.export_button.clicked.connect(lambda: self.controller.export())
         action_buttons.layout.addWidget(action_buttons.export_button)
 
@@ -125,7 +127,11 @@ class InferenceConfigWidget(QWidget):
 
         model_type_widget = QComboBox()
         model_type_widget.addItems(
-            ["Multi Instance / Top Down", "Multi Instance / Bottom Up", "Single Instance"]
+            [
+                "Multi Instance / Top Down",
+                "Multi Instance / Bottom Up",
+                "Single Instance",
+            ]
         )
         model_type_widget.setMaximumWidth(250)
         model_type.addRow("Type", model_type_widget)
@@ -142,9 +148,9 @@ class InferenceConfigWidget(QWidget):
         widget.addWidget(QLineEdit())
 
         browse_button = QPushButton("Browse..")
-        browse_button.clicked.connect(lambda: FileDialog.openDir(
-                None, dir=None, caption="Select model folder..."
-            ))
+        browse_button.clicked.connect(
+            lambda: FileDialog.openDir(None, dir=None, caption="Select model folder...")
+        )
         widget.addWidget(browse_button)
         layout.addRow(caption, widget)
 
@@ -177,9 +183,7 @@ class InferenceConfigWidget(QWidget):
         tracking.addRow("Enable tracking", enable_tracking)
 
         tracking_method_widget = QComboBox()
-        tracking_method_widget.addItems(
-            ["Simple", "Flow shift", "Kalman filter"]
-        )
+        tracking_method_widget.addItems(["Simple", "Flow shift", "Kalman filter"])
         tracking_method_widget.setMaximumWidth(150)
         tracking.addRow("Tracking method", tracking_method_widget)
 
@@ -197,10 +201,14 @@ class InferenceConfigWidget(QWidget):
     def on_click(self):
         print("\n")
         for currentQTableWidgetItem in self.tableWidget.selectedItems():
-            print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
+            print(
+                currentQTableWidgetItem.row(),
+                currentQTableWidgetItem.column(),
+                currentQTableWidgetItem.text(),
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication()
     controller = InferenceGuiController()
     ex = InferenceActivity(None, controller)

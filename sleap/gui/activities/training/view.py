@@ -4,15 +4,14 @@ from PySide2.QtWidgets import *
 
 
 class stackedExample(QWidget):
-
     def __init__(self):
         super(stackedExample, self).__init__()
         self.leftlist = QListWidget()
         self.leftlist.setAutoFillBackground(False)
 
-        self.leftlist.insertItem(0, 'Contact')
-        self.leftlist.insertItem(1, 'Personal')
-        self.leftlist.insertItem(2, 'Educational')
+        self.leftlist.insertItem(0, "Contact")
+        self.leftlist.insertItem(1, "Personal")
+        self.leftlist.insertItem(2, "Educational")
 
         self.stack1 = QWidget()
         self.stack2 = QWidget()
@@ -33,10 +32,9 @@ class stackedExample(QWidget):
 
         self.setLayout(hbox)
         self.leftlist.currentRowChanged.connect(self.display)
-        #self.setGeometry(0, 50, 10, 10)
-        self.setWindowTitle('StackedWidget demo')
+        # self.setGeometry(0, 50, 10, 10)
+        self.setWindowTitle("StackedWidget demo")
         self.show()
-
 
     def stack1UI(self):
         layout = QFormLayout()
@@ -44,7 +42,6 @@ class stackedExample(QWidget):
         layout.addRow("Address", QLineEdit())
         # self.setTabText(0,"Contact Details")
         self.stack1.setLayout(layout)
-
 
     def stack2UI(self):
         layout = QFormLayout()
@@ -56,14 +53,12 @@ class stackedExample(QWidget):
 
         self.stack2.setLayout(layout)
 
-
     def stack3UI(self):
         layout = QHBoxLayout()
         layout.addWidget(QLabel("subjects"))
         layout.addWidget(QCheckBox("Physics"))
         layout.addWidget(QCheckBox("Maths"))
         self.stack3.setLayout(layout)
-
 
     def display(self, i):
         self.Stack.setCurrentIndex(i)
@@ -75,5 +70,5 @@ def main():
     sys.exit(app.exec_())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
