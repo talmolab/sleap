@@ -33,7 +33,7 @@ class InferenceGuiController(object):
 
     def run(self) -> None:
         for v in self.model.videos.videos_table_model.items:
-            cmd = f"sleap-track {v.path}"
+            cmd = f"sleap-track {v['Path']}"
 
             if self.model.models.model_type == ModelType.TOP_DOWN:
                 cmd += f" -m {self.model.models.centroid_model.path}"
