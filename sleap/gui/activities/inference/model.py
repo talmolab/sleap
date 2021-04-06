@@ -35,18 +35,18 @@ class Videos(object):
     video_metadata_list: List[VideoMetadata] = []
 
 
+class TrackerType(Enum):
+    SIMPLE = "Simple", "simple"
+    FLOW = "Flow Shift", "flow"
+    KALMAN = "Kalman Filter", "kalman"
+
+
 @attr.s(auto_attribs=True)
 class Instances(object):
-    class TrackerType(Enum):
-        SIMPLE = "Simple", "simple"
-        FLOW = "Flow Shift", "flow"
-        KALMAN = "Kalman Filter", "kalman"
-
     max_num_instances: int = 2
     enable_tracking: bool = False
     tracking_method: TrackerType = TrackerType.SIMPLE
     tracking_window: int = 5
-
 
 class Verbosity(Enum):
     JSON = "Json", "json"

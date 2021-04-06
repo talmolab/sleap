@@ -1,15 +1,27 @@
-from typing import Text
+from typing import Text, List
 
 import attr
 
-from sleap.gui.activities.inference.model import InferenceGuiModel, ModelType
+from sleap.gui.activities.inference.model import InferenceGuiModel, ModelType, TrackerType, Verbosity
 
 
 @attr.s(auto_attribs=True)
 class InferenceGuiController(object):
     model: InferenceGuiModel
 
-    def run(self):
+    @staticmethod
+    def model_type_names() -> List[Text]:
+        return [mt.value for mt in ModelType]
+
+    @staticmethod
+    def tracking_method_names() -> List[Text]:
+        return [tm.value[0] for tm in TrackerType]
+
+    @staticmethod
+    def verbosity_names() -> List[Text]:
+        return [v.value[0] for v in Verbosity]
+
+    def run(self) -> None:
         for v in self.model.videos.video_metadata_list:
             cmd = f"sleap-track {v.path}"
 

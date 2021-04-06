@@ -115,7 +115,7 @@ class InferenceConfigWidget(QWidget):
         output_box_layout.addRow("Include empty frames  ", empty_frames)
 
         verbosity_widget = QComboBox()
-        verbosity_widget.addItems(["Json", "Rich", "None"])
+        verbosity_widget.addItems(self.controller.verbosity_names())
         verbosity_widget.setMaximumWidth(150)
         output_box_layout.addRow("Log format / verbosity", verbosity_widget)
 
@@ -149,13 +149,7 @@ class InferenceConfigWidget(QWidget):
         model_type_box.setLayout(model_type)
 
         model_type_widget = QComboBox()
-        model_type_widget.addItems(
-            [
-                "Multi Instance / Top Down",
-                "Multi Instance / Bottom Up",
-                "Single Instance",
-            ]
-        )
+        model_type_widget.addItems(self.controller.model_type_names())
         model_type_widget.setMaximumWidth(250)
         model_type.addRow("Type", model_type_widget)
 
@@ -206,7 +200,7 @@ class InferenceConfigWidget(QWidget):
         tracking.addRow("Enable tracking", enable_tracking)
 
         tracking_method_widget = QComboBox()
-        tracking_method_widget.addItems(["Simple", "Flow shift", "Kalman filter"])
+        tracking_method_widget.addItems(self.controller.tracking_method_names())
         tracking_method_widget.setMaximumWidth(150)
         tracking.addRow("Tracking method", tracking_method_widget)
 
@@ -225,11 +219,15 @@ class InferenceConfigWidget(QWidget):
 if __name__ == "__main__":
     app = QApplication()
     model = InferenceGuiModel()
+
+    # Populate mock data in the GUI model
     model.videos.video_metadata_list.append(VideoMetadata(path="v1", frames=0, image_size="", from_frame=0, to_frame=0))
     model.videos.video_metadata_list.append(VideoMetadata(path="v2", frames=0, image_size="", from_frame=0, to_frame=0))
     model.models.centroid_model = ConfigFileInfo(path="cmp", config=None)
     model.models.centered_instance_model = ConfigFileInfo(path="cip", config=None)
 
     controller = InferenceGuiController(model)
-    ex = InferenceActivity(None, controller)
+
+    ex = InferenceActivity(parent=None, ctrl=controller)
+
     sys.exit(app.exec_())
