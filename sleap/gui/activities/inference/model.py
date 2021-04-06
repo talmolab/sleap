@@ -38,9 +38,9 @@ class Videos(object):
 @attr.s(auto_attribs=True)
 class Instances(object):
     class TrackerType(Enum):
-        SIMPLE = "Simple"
-        FLOW = "Flow Shift"
-        KALMAN = "Kalman Filter"
+        SIMPLE = "Simple", "simple"
+        FLOW = "Flow Shift", "flow"
+        KALMAN = "Kalman Filter", "kalman"
 
     max_num_instances: int = 2
     enable_tracking: bool = False
@@ -49,9 +49,9 @@ class Instances(object):
 
 
 class Verbosity(Enum):
-    JSON = "Json"
-    RICH = "Rich"
-    NONE = "None"
+    JSON = "Json", "json"
+    RICH = "Rich", "rich"
+    NONE = "None", "none"
 
 
 @attr.s(auto_attribs=True)
