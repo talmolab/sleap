@@ -1,20 +1,30 @@
+from typing import List, Text
+
 from sleap.gui.activities.inference.model import InferenceGuiModel
 
 
 class InferenceGuiController(object):
     model: InferenceGuiModel
 
-    def run(self):
-        print("+++ Run stub...")
-        print(
-            "sleap-track C:/Users/ariem/work/sleap_data/videos/centered_pair_small.mp4 "
-            "--frames 225,611,996,675,199,520,9,409,523,75,1067,591,656,401,271,372,821,694,345,477 "
-            "-m C:/Users/ariem/work/sleap_data\models\210316_114545.centroid.n=4\training_config.json "
-            "-m C:/Users/ariem/work/sleap_data\models\210316_114734.centered_instance.n=4\training_config.json "
-            "--tracking.tracker none "
-            "-o C:/Users/ariem/work/sleap_data\predictions\centered_pair_small.mp4.210405_103129.predictions.slp "
-            "--verbosity json --no-empty-frames"
-        )
+    def run(
+            self,
+            video_paths: List[Text],
+            model_paths: List[Text],
+            output_path: Text,
+            tracking_mode: Text = "none",
+            verbosity: Text = "json",
+            no_empty_frames: bool = True
+    ):
+        for v in video_paths:
+            cmd = f"sleap-track {v}"
+            for m in model_paths:
+                cmd += f" -m {m}"
+            cmd += f" -o {output_path}"
+            cmd += f" --tracking.tracker {tracking_mode}"
+            cmd += f" --verbosity {verbosity}"
+            if no_empty_frames:
+                cmd += " --no-empty-frames"
+            self._execute(cmd)
 
     def save(self):
         print("+++ Save stub...")
@@ -24,3 +34,6 @@ class InferenceGuiController(object):
 
     def load(self):
         print("+++ Load stub...")
+
+    def _execute(self, cmd: Text):
+        print(f"+++ Execute stub: {cmd}")
