@@ -48,7 +48,14 @@ class Instances(object):
 
 @attr.s(auto_attribs=True)
 class Output(object):
+    class Verbosity(Enum):
+        JSON = "Json"
+        RICH = "Rich"
+        NONE = "None"
+
     output_file_path: Optional[Text] = None
+    include_empty_frames: bool = False
+    verbosity: Verbosity = Verbosity.JSON
 
 
 @attr.s(auto_attribs=True)
