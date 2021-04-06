@@ -111,7 +111,9 @@ class InferenceConfigWidget(QWidget):
         self.add_file_browser_row(output_box_layout, "Output file")
 
         empty_frames = QCheckBox()
-        empty_frames.setToolTip("Include frames with no detected instances in the saved output file.")
+        empty_frames.setToolTip(
+            "Include frames with no detected instances in the saved output file."
+        )
         output_box_layout.addRow("Include empty frames  ", empty_frames)
 
         verbosity_widget = QComboBox()
@@ -221,8 +223,12 @@ if __name__ == "__main__":
     model = InferenceGuiModel()
 
     # Populate mock data in the GUI model
-    model.videos.video_metadata_list.append(VideoMetadata(path="v1", frames=0, image_size="", from_frame=0, to_frame=0))
-    model.videos.video_metadata_list.append(VideoMetadata(path="v2", frames=0, image_size="", from_frame=0, to_frame=0))
+    model.videos.video_metadata_list.append(
+        VideoMetadata(path="v1", frames=0, image_size="", from_frame=0, to_frame=0)
+    )
+    model.videos.video_metadata_list.append(
+        VideoMetadata(path="v2", frames=0, image_size="", from_frame=0, to_frame=0)
+    )
     model.models.centroid_model = ConfigFileInfo(path="cmp", config=None)
     model.models.centered_instance_model = ConfigFileInfo(path="cip", config=None)
 

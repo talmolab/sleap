@@ -48,6 +48,7 @@ class Instances(object):
     tracking_method: TrackerType = TrackerType.SIMPLE
     tracking_window: int = 5
 
+
 class Verbosity(Enum):
     JSON = "Json", "json"
     RICH = "Rich", "rich"

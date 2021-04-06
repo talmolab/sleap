@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Text
 
-'''
+"""
 import sleap
 from sleap.gui.dataviews import (
     GenericTableModel,
@@ -13,7 +13,7 @@ from sleap.gui.learning.configs import TrainingConfigsGetter, ConfigFileInfo
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
 from sleap.gui.widgets.models_table import ModelsTableWidget
 from sleap.gui.widgets.videos_table import VideosTableWidget
-'''
+"""
 from PySide2 import QtCore, QtWidgets
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
@@ -187,6 +187,7 @@ class FieldComboWidget(QtWidgets.QComboBox):
             val = self.options_list[val]
         super(FieldComboWidget, self).setCurrentText(str(val))
 
+
 class SandboxWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -196,7 +197,7 @@ class SandboxWidget(QWidget):
 
         #### Videos ####
         videos_box = QGroupBox("Videos")
-        self.videos = QWidget() #VideosTableWidget()
+        self.videos = QWidget()  # VideosTableWidget()
 
         vb = QVBoxLayout()
         vb.addWidget(self.videos)
@@ -206,7 +207,7 @@ class SandboxWidget(QWidget):
 
         #### Models ####
         models_box = QGroupBox("Select model(s)")
-        self.models = QWidget() #ModelsTableWidget()
+        self.models = QWidget()  # ModelsTableWidget()
 
         vb = QVBoxLayout()
         vb.addWidget(self.models)
@@ -265,7 +266,7 @@ class SandboxWidget(QWidget):
         hb.addWidget(QPushButton("Run"))
         ####
 
-        '''
+        """
         self.videos.add_videos(
             [
                 "tests/data/videos/centered_pair_small.mp4",
@@ -276,7 +277,8 @@ class SandboxWidget(QWidget):
             # r"D:\sleap-data\datasets\wt_gold.13pt\sample\models")
             "tests/data/models"
         )
-        '''
+        """
+
 
 if __name__ == "__main__":
     from PySide2.QtWidgets import QApplication
