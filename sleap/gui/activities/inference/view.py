@@ -98,8 +98,26 @@ class InferenceConfigWidget(QWidget):
         tab = QWidget(self)
         tab.layout = QVBoxLayout()
         tab.setLayout(tab.layout)
-        self.add_model_type_box(tab.layout)
+        self.add_output_box(tab.layout)
         tabs.addTab(tab, "Output")
+
+    def add_output_box(self, layout: QLayout):
+        output_box = QGroupBox("Inference Output")
+        output_box_layout = QFormLayout(self)
+        output_box.setLayout(output_box_layout)
+
+        self.add_file_browser_row(output_box_layout, "Output file")
+
+        empty_frames = QCheckBox()
+        empty_frames.setToolTip("Include frames with no detected instances in the saved output file.")
+        output_box_layout.addRow("Include empty frames  ", empty_frames)
+
+        verbosity_widget = QComboBox()
+        verbosity_widget.addItems(["Json", "Rich", "None"])
+        verbosity_widget.setMaximumWidth(150)
+        output_box_layout.addRow("Log format / verbosity", verbosity_widget)
+
+        layout.addWidget(output_box)
 
     def add_instances_tab(self, tabs: QTabWidget):
         tab = QWidget(self)
@@ -200,15 +218,6 @@ class InferenceConfigWidget(QWidget):
         tracking.addRow("Window size", tracking_window_widget)
 
         tab.layout.addWidget(tracking_box)
-
-    def on_click(self):
-        print("\n")
-        for currentQTableWidgetItem in self.tableWidget.selectedItems():
-            print(
-                currentQTableWidgetItem.row(),
-                currentQTableWidgetItem.column(),
-                currentQTableWidgetItem.text(),
-            )
 
 
 if __name__ == "__main__":
