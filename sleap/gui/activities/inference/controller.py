@@ -1,3 +1,4 @@
+import json
 from typing import Text, List
 
 import attr
@@ -44,7 +45,7 @@ class InferenceGuiController(object):
             self._execute(cmd)
 
     def save(self):
-        print("+++ Save stub...")
+        print(f"+++ Save stub:\n{attr.asdict(self.model)}")
 
     def export(self):
         print("+++ Export stub...")
@@ -53,4 +54,4 @@ class InferenceGuiController(object):
         print("+++ Load stub...")
 
     def _execute(self, cmd: Text):
-        print(f"+++ Execute stub: {cmd}")
+        print(f"+++ Execute stub:\n{cmd}")
