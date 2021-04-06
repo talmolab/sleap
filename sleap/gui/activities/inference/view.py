@@ -5,7 +5,9 @@ from PySide2.QtCore import QObject
 from PySide2.QtWidgets import *
 
 from sleap.gui.activities.inference.controller import InferenceGuiController
+from sleap.gui.activities.inference.model import InferenceGuiModel, VideoMetadata
 from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableWidget
 
 
@@ -222,6 +224,12 @@ class InferenceConfigWidget(QWidget):
 
 if __name__ == "__main__":
     app = QApplication()
-    controller = InferenceGuiController()
+    model = InferenceGuiModel()
+    model.videos.video_metadata_list.append(VideoMetadata(path="v1", frames=0, image_size="", from_frame=0, to_frame=0))
+    model.videos.video_metadata_list.append(VideoMetadata(path="v2", frames=0, image_size="", from_frame=0, to_frame=0))
+    model.models.centroid_model = ConfigFileInfo(path="cmp", config=None)
+    model.models.centered_instance_model = ConfigFileInfo(path="cip", config=None)
+
+    controller = InferenceGuiController(model)
     ex = InferenceActivity(None, controller)
     sys.exit(app.exec_())
