@@ -9,6 +9,7 @@ from sleap.gui.activities.inference.model import (
     TrackerType,
     Verbosity,
 )
+from sleap.gui.widgets.videos_table import VideosTableModel
 
 
 @attr.s(auto_attribs=True)
@@ -27,8 +28,11 @@ class InferenceGuiController(object):
     def verbosity_names() -> List[Text]:
         return [v.value[0] for v in Verbosity]
 
+    def video_table_model(self) -> VideosTableModel:
+        return self.model.videos.videos_table_model
+
     def run(self) -> None:
-        for v in self.model.videos.video_metadata_list:
+        for v in self.model.videos.videos_table_model.items:
             cmd = f"sleap-track {v.path}"
 
             if self.model.models.model_type == ModelType.TOP_DOWN:

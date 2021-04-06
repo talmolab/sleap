@@ -67,10 +67,10 @@ class VideosTableView(GenericTableView):
 
 
 class VideosTableWidget(QWidget):
-    def __init__(self):
+    def __init__(self, table_model: VideosTableModel):
         super().__init__()
 
-        self.table_model = VideosTableModel()
+        self.table_model = table_model
         self.table_view = VideosTableView(model=self.table_model)
 
         layout = QVBoxLayout()

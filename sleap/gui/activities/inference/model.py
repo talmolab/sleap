@@ -3,6 +3,7 @@ from typing import Optional, Text, List
 
 import attr
 
+from sleap.gui.widgets.videos_table import VideosTableModel
 from sleap.gui.learning.configs import ConfigFileInfo
 
 
@@ -22,17 +23,8 @@ class TrainedModels(object):
 
 
 @attr.s(auto_attribs=True)
-class VideoMetadata(object):
-    path: Text
-    frames: int
-    image_size: Text
-    from_frame: int
-    to_frame: int
-
-
-@attr.s(auto_attribs=True)
 class Videos(object):
-    video_metadata_list: List[VideoMetadata] = []
+    videos_table_model: VideosTableModel = VideosTableModel()
 
 
 class TrackerType(Enum):

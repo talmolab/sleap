@@ -4,8 +4,9 @@ from typing import Text, Optional
 from PySide2.QtCore import QObject
 from PySide2.QtWidgets import *
 
+import sleap
 from sleap.gui.activities.inference.controller import InferenceGuiController
-from sleap.gui.activities.inference.model import InferenceGuiModel, VideoMetadata
+from sleap.gui.activities.inference.model import InferenceGuiModel
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableWidget
@@ -30,7 +31,6 @@ class InferenceActivity(QMainWindow):
 class InferenceConfigWidget(QWidget):
     def __init__(self, parent):
         super(InferenceConfigWidget, self).__init__(parent)
-        self.controller = parent.controller
         self.layout = QVBoxLayout()
 
         # Tabs screen
@@ -45,6 +45,10 @@ class InferenceConfigWidget(QWidget):
         self.layout.addWidget(self.action_buttons)
 
         self.setLayout(self.layout)
+
+    @property
+    def controller(self) -> InferenceGuiController:
+        return self.parent().controller
 
     def build_action_buttons_widget(self):
         action_buttons = QWidget(self)
@@ -84,7 +88,9 @@ class InferenceConfigWidget(QWidget):
     def add_videos_tab(self, tabs: QTabWidget):
         tab = QWidget(self)
         tab.layout = QVBoxLayout()
-        tab.videos_widget = VideosTableWidget()
+        tab.videos_widget = VideosTableWidget(
+            table_model=self.controller.video_table_model()
+        )
         tab.layout.addWidget(tab.videos_widget)
         tab.setLayout(tab.layout)
         tabs.addTab(tab, "Videos")
@@ -223,12 +229,12 @@ if __name__ == "__main__":
     model = InferenceGuiModel()
 
     # Populate mock data in the GUI model
-    model.videos.video_metadata_list.append(
-        VideoMetadata(path="v1", frames=0, image_size="", from_frame=0, to_frame=0)
-    )
-    model.videos.video_metadata_list.append(
-        VideoMetadata(path="v2", frames=0, image_size="", from_frame=0, to_frame=0)
-    )
+    videos = [
+        sleap.load_video(f"C://Users//ariem//work//sleap_data//videos//{p}")
+        for p in ["small_robot.mp4", "centered_pair_small.mp4"]
+    ]
+    model.videos.videos_table_model.items = videos
+
     model.models.centroid_model = ConfigFileInfo(path="cmp", config=None)
     model.models.centered_instance_model = ConfigFileInfo(path="cip", config=None)
 
