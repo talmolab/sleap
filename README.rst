@@ -99,7 +99,7 @@ Contributors
 * **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
 * **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
 
-SLEAP is developed in the `Murthy <https://murthylab.princeton.edu>`_ and `Shaevitz <https://shaevitzlab.princeton.edu>`_ labs at the `Princeton Neuroscience Institute <https://pni.princeton.edu>`_ at Princeton University. This work was made possible through our funding sources, including: NIH BRAIN Initative R01 NS104899 and Princeton Innovation Accelerator Fund.
+SLEAP is developed in the `Murthy <https://murthylab.princeton.edu>`_ and `Shaevitz <https://shaevitzlab.princeton.edu>`_ labs at the `Princeton Neuroscience Institute <https://pni.princeton.edu>`_ at Princeton University. This work was made possible through our funding sources, including: NIH BRAIN Initiative R01 NS104899 and Princeton Innovation Accelerator Fund.
 
 .. end-inclusion-marker-do-not-remove
 
