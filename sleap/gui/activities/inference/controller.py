@@ -1,5 +1,4 @@
-import json
-from typing import Text, List
+from typing import Text, List, Optional
 
 import attr
 
@@ -9,27 +8,44 @@ from sleap.gui.activities.inference.model import (
     TrackerType,
     Verbosity,
 )
+from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableModel
 
 
 @attr.s(auto_attribs=True)
 class InferenceGuiController(object):
     model: InferenceGuiModel
+    logging_enabled: bool = True
+
+    # Getters
 
     @staticmethod
-    def model_type_names() -> List[Text]:
+    def get_model_type_names() -> List[Text]:
         return [mt.value for mt in ModelType]
 
     @staticmethod
-    def tracking_method_names() -> List[Text]:
+    def get_tracking_method_names() -> List[Text]:
         return [tm.value[0] for tm in TrackerType]
 
     @staticmethod
-    def verbosity_names() -> List[Text]:
+    def get_verbosity_names() -> List[Text]:
         return [v.value[0] for v in Verbosity]
 
-    def video_table_model(self) -> VideosTableModel:
+    def get_video_table_model(self) -> VideosTableModel:
         return self.model.videos.videos_table_model
+
+    # Setters
+
+    def set_model_type(self, model_type: str) -> None:
+        self.model.models.model_type = InferenceGuiController.lookup_enum(ModelType, model_type)
+        self.log(f"Model type set to {self.model.models.model_type}")
+
+    def set_single_instance_model_path(self, model_path: str) -> None:
+        self.model.models.single_instance_model = ConfigFileInfo(path=model_path, config=None)
+        self.log(f"Single instance model path set to {self.model.models.single_instance_model}")
+
+
+    # Actions
 
     def run(self) -> None:
         for v in self.model.videos.videos_table_model.items:
@@ -56,13 +72,30 @@ class InferenceGuiController(object):
             self._execute(cmd)
 
     def save(self):
-        print(f"+++ Save stub:\n{attr.asdict(self.model)}")
+        self.log(f"Save stub:\n{attr.asdict(self.model)}")
 
     def export(self):
-        print("+++ Export stub...")
+        self.log(f"Export stub...")
 
     def load(self):
-        print("+++ Load stub...")
+        self.log(f"Load stub...")
 
     def _execute(self, cmd: Text):
-        print(f"+++ Execute stub:\n{cmd}")
+        self.log(f"Execute stub:\n{cmd}")
+
+    # Utils
+
+    @staticmethod
+    def lookup_enum(enum, value: str, value_index: Optional[int] = None) -> object:
+        if value_index is None:
+            filtered = [v for v in enum if v.value == value]
+        else:
+            filtered = [v[value_index] for v in enum if v.value == value]
+        if len(filtered) == 1:
+            return filtered[0]
+        else:
+            raise ValueError(f"Enum {enum} has {len(filtered)} matching values for {value}")
+
+    def log(self, message: str) -> None:
+        if self.logging_enabled:
+            print(f"+++ {message}")

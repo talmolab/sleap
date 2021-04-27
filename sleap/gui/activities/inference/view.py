@@ -89,7 +89,7 @@ class InferenceConfigWidget(QWidget):
         tab = QWidget(self)
         tab.layout = QVBoxLayout()
         tab.videos_widget = VideosTableWidget(
-            table_model=self.controller.video_table_model()
+            table_model=self.controller.get_video_table_model()
         )
         tab.layout.addWidget(tab.videos_widget)
         tab.setLayout(tab.layout)
@@ -114,7 +114,7 @@ class InferenceConfigWidget(QWidget):
         output_box_layout = QFormLayout(self)
         output_box.setLayout(output_box_layout)
 
-        self.add_file_browser_row(output_box_layout, "Output file")
+        self.add_file_browser_row(output_box_layout, "Output file", controller.log)
 
         empty_frames = QCheckBox()
         empty_frames.setToolTip(
@@ -123,7 +123,7 @@ class InferenceConfigWidget(QWidget):
         output_box_layout.addRow("Include empty frames  ", empty_frames)
 
         verbosity_widget = QComboBox()
-        verbosity_widget.addItems(self.controller.verbosity_names())
+        verbosity_widget.addItems(self.controller.get_verbosity_names())
         verbosity_widget.setMaximumWidth(150)
         output_box_layout.addRow("Log format / verbosity", verbosity_widget)
 
@@ -153,28 +153,35 @@ class InferenceConfigWidget(QWidget):
 
     def add_model_type_box(self, layout: QLayout):
         model_type_box = QGroupBox("Select trained model(s) for inference")
-        model_type = QFormLayout()
-        model_type_box.setLayout(model_type)
+        model_type_layout = QFormLayout()
+        model_type_box.setLayout(model_type_layout)
 
         model_type_widget = QComboBox()
-        model_type_widget.addItems(self.controller.model_type_names())
+        model_type_widget.addItems(self.controller.get_model_type_names())
         model_type_widget.setMaximumWidth(250)
-        model_type.addRow("Type", model_type_widget)
+        model_type_layout.addRow("Type", model_type_widget)
 
-        self.add_file_browser_row(model_type, "Single Instance Model")
-        self.add_file_browser_row(model_type, "Bottom Up model")
-        self.add_file_browser_row(model_type, "Top Down Centroid model")
-        self.add_file_browser_row(model_type, "Top Down Centered Instance model")
+        self.add_file_browser_row(model_type_layout, "Single Instance Model", self.controller.set_single_instance_model_path)
+        self.add_file_browser_row(model_type_layout, "Bottom Up model", self.controller.set_single_instance_model_path)
+        self.add_file_browser_row(model_type_layout, "Top Down Centroid model", self.controller.set_single_instance_model_path)
+        self.add_file_browser_row(model_type_layout, "Top Down Centered Instance model", self.controller.set_single_instance_model_path)
 
         layout.addWidget(model_type_box)
 
-    def add_file_browser_row(self, layout: QLayout, caption: Text):
+    def add_file_browser_row(self, layout: QLayout, caption: Text, path_setter: callable):
         widget = QHBoxLayout()
-        widget.addWidget(QLineEdit())
+        path_text = QLineEdit()
+        widget.addWidget(path_text)
+
+        def browse():
+            path = FileDialog.openDir(None, dir=None, caption="Select model folder...")
+            path_text.setText(path)
+            path_setter(path)
 
         browse_button = QPushButton("Browse..")
+
         browse_button.clicked.connect(
-            lambda: FileDialog.openDir(None, dir=None, caption="Select model folder...")
+            lambda: browse()
         )
         widget.addWidget(browse_button)
         layout.addRow(caption, widget)
@@ -208,7 +215,7 @@ class InferenceConfigWidget(QWidget):
         tracking.addRow("Enable tracking", enable_tracking)
 
         tracking_method_widget = QComboBox()
-        tracking_method_widget.addItems(self.controller.tracking_method_names())
+        tracking_method_widget.addItems(self.controller.get_tracking_method_names())
         tracking_method_widget.setMaximumWidth(150)
         tracking.addRow("Tracking method", tracking_method_widget)
 
