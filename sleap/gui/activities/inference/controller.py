@@ -36,12 +36,17 @@ class InferenceGuiController(object):
         return self.model.videos.videos_table_model
 
     # Setters
-    def set_model_type(self, model_type: str,
-                           single_instance_model_widget: QWidget,
-                           bottom_up_model_widget: QWidget,
-                           top_down_centroid_model_widget: QWidget,
-                           top_down_centered_instance_model_widget: QWidget) -> None:
-        self.model.models.model_type = InferenceGuiController.lookup_enum(ModelType, model_type)
+    def set_model_type(
+        self,
+        model_type: str,
+        single_instance_model_widget: QWidget,
+        bottom_up_model_widget: QWidget,
+        top_down_centroid_model_widget: QWidget,
+        top_down_centered_instance_model_widget: QWidget,
+    ) -> None:
+        self.model.models.model_type = InferenceGuiController.lookup_enum(
+            ModelType, model_type
+        )
         if self.model.models.model_type.value == ModelType.SINGLE_INSTANCE.value:
             single_instance_model_widget.setDisabled(False)
             bottom_up_model_widget.setDisabled(True)
@@ -53,17 +58,18 @@ class InferenceGuiController(object):
             top_down_centroid_model_widget.setDisabled(True)
             top_down_centered_instance_model_widget.setDisabled(True)
         elif self.model.models.model_type.value == ModelType.TOP_DOWN.value:
-            self.log(f"BlaE+++")
             single_instance_model_widget.setDisabled(True)
             bottom_up_model_widget.setDisabled(True)
             top_down_centroid_model_widget.setDisabled(False)
             top_down_centered_instance_model_widget.setDisabled(False)
         self.log(f"Model type changed to {self.model.models.model_type}")
 
-    def set_tracking_enabled(self,
-                             tracking_enabled: bool,
-                             tracking_method_widget: QWidget,
-                             tracking_window_size_widget: QWidget):
+    def set_tracking_enabled(
+        self,
+        tracking_enabled: bool,
+        tracking_method_widget: QWidget,
+        tracking_window_size_widget: QWidget,
+    ):
         self.model.instances.enable_tracking = tracking_enabled
         tracking_method_widget.setEnabled(self.model.instances.enable_tracking)
         tracking_window_size_widget.setEnabled(self.model.instances.enable_tracking)
@@ -118,7 +124,9 @@ class InferenceGuiController(object):
         if len(filtered) == 1:
             return filtered[0]
         else:
-            raise ValueError(f"Enum {enum} has {len(filtered)} matching values for {value}")
+            raise ValueError(
+                f"Enum {enum} has {len(filtered)} matching values for {value}"
+            )
 
     def log(self, message: str) -> None:
         if self.logging_enabled:
