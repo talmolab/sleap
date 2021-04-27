@@ -1,5 +1,5 @@
 import sys
-from typing import Text, Optional
+from typing import Text, Optional, List
 
 from PySide2.QtCore import QObject
 from PySide2.QtWidgets import *
@@ -103,14 +103,26 @@ class InferenceActivityCentralWidget(QWidget):
         self.input_widgets.model_type = model_type_widget
 
         # model dirs
-        self.input_widgets.single_instance_model = self.add_file_browser_row(
-            model_form_layout, "Single Instance Model", self.controller.set_single_instance_model_path)
-        self.input_widgets.bottom_up_model = self.add_file_browser_row(
-            model_form_layout, "Bottom Up model", self.controller.set_single_instance_model_path)
-        self.input_widgets.top_down_centroid_model = self.add_file_browser_row(
-            model_form_layout, "Top Down Centroid model", self.controller.set_single_instance_model_path)
-        self.input_widgets.top_down_centered_instance_model = self.add_file_browser_row(
-            model_form_layout, "Top Down Centered Instance model", self.controller.set_single_instance_model_path)
+        self.input_widgets.single_instance_model = self.add_browse_widget(
+            model_form_layout,
+            directory=True,
+            caption="Single Instance Model Directory",
+        )
+        self.input_widgets.bottom_up_model = self.add_browse_widget(
+            model_form_layout,
+            directory=True,
+            caption="Bottom Up Model Directory",
+        )
+        self.input_widgets.top_down_centroid_model = self.add_browse_widget(
+            model_form_layout,
+            directory=True,
+            caption="Top Down Centroid Model Directory",
+        )
+        self.input_widgets.top_down_centered_instance_model = self.add_browse_widget(
+            model_form_layout,
+            directory=True,
+            caption="Top Down Centered Instance Model Directory",
+        )
 
         # set layout and add
         layout = QVBoxLayout()
@@ -194,8 +206,8 @@ class InferenceActivityCentralWidget(QWidget):
         output_box.setLayout(output_box_layout)
 
         # output dir and file name
-        self.input_widgets.output_dir_path = self.add_file_browser_row(
-            output_box_layout, "Output dir", controller.log)
+        self.input_widgets.output_dir_path = self.add_browse_widget(
+            output_box_layout, directory=True, caption="Output dir")
         output_file_name = QLineEdit()
         output_box_layout.addRow("Output file name", output_file_name)
         self.input_widgets.output_file_name = output_file_name
@@ -222,22 +234,26 @@ class InferenceActivityCentralWidget(QWidget):
         tab.setLayout(layout)
         tabs.addTab(tab, "Output")
 
-    def add_file_browser_row(self, layout: QLayout, caption: Text, path_setter: callable) -> QLineEdit:
+    def add_browse_widget(
+            self,
+            layout: QLayout,
+            directory: bool,
+            caption: Text,
+            from_dir: Optional[Text] = None,
+            filters: Optional[List[Text]] = None) -> QLineEdit:
         widget = QHBoxLayout()
         path_text = QLineEdit()
         widget.addWidget(path_text)
 
-        path_text.textChanged.connect(path_setter(path_text.text()))
-
         def browse():
-            path = FileDialog.openDir(None, dir=None, caption="Select model folder...")
+            if directory:
+                path = FileDialog.openDir(self, dir=from_dir, caption=caption)
+            else:
+                path = FileDialog.open(self, dir=from_dir, caption=caption, filters=";;".join(filters))
             path_text.setText(path)
 
         browse_button = QPushButton("Browse..")
-
-        browse_button.clicked.connect(
-            lambda: browse()
-        )
+        browse_button.clicked.connect(lambda: browse())
         widget.addWidget(browse_button)
         layout.addRow(caption, widget)
         return path_text

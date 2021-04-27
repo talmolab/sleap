@@ -579,7 +579,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             def select_file(*args, x=field):
                 filter = item.get("filter", "Any File (*.*)")
                 filename, _ = FileDialog.open(
-                    None, directory=None, caption="Open File", filter=filter
+                    None, dir=None, caption="Open File", filter=filter
                 )
                 if len(filename):
                     x.setText(filename)
