@@ -30,6 +30,11 @@ class InferenceActivity(QMainWindow):
 
 
 class InferenceActivityInputWidgets(object):
+    """
+    Contains all input widgets, and provides methods for loading a state (populating widgets) and exporting
+    a state (collecting widget values).
+    Using slots to enforce registration off all input widgets.
+    """
     __slots__ = [
         # models tab
         'model_type',
@@ -55,20 +60,18 @@ class InferenceActivityInputWidgets(object):
 class InferenceActivityCentralWidget(QWidget):
     def __init__(self, parent):
         super(InferenceActivityCentralWidget, self).__init__(parent)
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
-        # Tabs screen
-        self.tabs = self.build_tabs_widget()
-        self.layout.addWidget(self.tabs)
+        # Tabs
+        layout.addWidget(self.build_tabs_widget())
 
         # Separator
-        self.layout.addSpacing(5)
+        layout.addSpacing(5)
 
         # Action buttons
-        self.action_buttons = self.build_action_buttons_widget()
-        self.layout.addWidget(self.action_buttons)
+        layout.addWidget(self.build_action_buttons_widget())
 
-        self.setLayout(self.layout)
+        self.setLayout(layout)
 
     @property
     def controller(self) -> InferenceGuiController:
@@ -78,40 +81,43 @@ class InferenceActivityCentralWidget(QWidget):
     def input_widgets(self) -> InferenceActivityInputWidgets:
         return self.parent().input_widgets
 
-    def build_action_buttons_widget(self):
-        action_buttons = QWidget(self)
-        action_buttons.layout = QHBoxLayout()
-
-        # Run inference button
-        action_buttons.run_button = QPushButton(parent=self, text=" Run ")
-        action_buttons.run_button.clicked.connect(lambda: self.controller.run())
-        action_buttons.layout.addWidget(action_buttons.run_button)
-
-        # Save configuration button
-        action_buttons.save_button = QPushButton(
-            parent=self, text=" Save configuration.. "
-        )
-        action_buttons.save_button.clicked.connect(lambda: self.controller.save())
-        action_buttons.layout.addWidget(action_buttons.save_button)
-
-        # Export inference job button
-        action_buttons.export_button = QPushButton(
-            parent=self, text=" Export inference job package.. "
-        )
-        action_buttons.export_button.clicked.connect(lambda: self.controller.export())
-        action_buttons.layout.addWidget(action_buttons.export_button)
-
-        action_buttons.setLayout(action_buttons.layout)
-        return action_buttons
-
     def build_tabs_widget(self):
         tabs = QTabWidget(self)
-        # Add tabs
         self.add_models_tab(tabs)
         self.add_videos_tab(tabs)
         self.add_instances_tab(tabs)
         self.add_output_tab(tabs)
         return tabs
+
+    def add_models_tab(self, tabs: QTabWidget):
+        # group box
+        model_group_box = QGroupBox("Select trained model(s) for inference")
+        model_form_layout = QFormLayout()
+        model_group_box.setLayout(model_form_layout)
+
+        # model type
+        model_type_widget = QComboBox()
+        model_type_widget.addItems(self.controller.get_model_type_names())
+        model_type_widget.setMaximumWidth(250)
+        model_form_layout.addRow("Type", model_type_widget)
+        self.input_widgets.model_type = model_type_widget
+
+        # model dirs
+        self.input_widgets.single_instance_model = self.add_file_browser_row(
+            model_form_layout, "Single Instance Model", self.controller.set_single_instance_model_path)
+        self.input_widgets.bottom_up_model = self.add_file_browser_row(
+            model_form_layout, "Bottom Up model", self.controller.set_single_instance_model_path)
+        self.input_widgets.top_down_centroid_model = self.add_file_browser_row(
+            model_form_layout, "Top Down Centroid model", self.controller.set_single_instance_model_path)
+        self.input_widgets.top_down_centered_instance_model = self.add_file_browser_row(
+            model_form_layout, "Top Down Centered Instance model", self.controller.set_single_instance_model_path)
+
+        # set layout and add
+        layout = QVBoxLayout()
+        layout.addWidget(model_group_box)
+        tab = QWidget(self)
+        tab.setLayout(layout)
+        tabs.addTab(tab, "Models")
 
     def add_videos_tab(self, tabs: QTabWidget):
         tab = QWidget(self)
@@ -124,12 +130,14 @@ class InferenceActivityCentralWidget(QWidget):
         tab.setLayout(tab.layout)
         tabs.addTab(tab, "Videos")
 
-    def add_models_tab(self, tabs: QTabWidget):
+    def add_instances_tab(self, tabs: QTabWidget):
         tab = QWidget(self)
         tab.layout = QVBoxLayout()
         tab.setLayout(tab.layout)
-        self.add_model_type_box(tab.layout)
-        tabs.addTab(tab, "Models")
+
+        self.add_num_instances_box(tab)
+        self.add_tracking_box(tab)
+        tabs.addTab(tab, "Instances")
 
     def add_output_tab(self, tabs: QTabWidget):
         tab = QWidget(self)
@@ -166,52 +174,6 @@ class InferenceActivityCentralWidget(QWidget):
         self.input_widgets.verbosity = verbosity_widget
 
         layout.addWidget(output_box)
-
-    def add_instances_tab(self, tabs: QTabWidget):
-        tab = QWidget(self)
-        tab.layout = QVBoxLayout()
-        tab.setLayout(tab.layout)
-
-        self.add_num_instances_box(tab)
-        self.add_tracking_box(tab)
-
-        # TODO:
-        # - number of instances
-        # - centroid/instance similarity/iou
-
-        ####
-
-        # TODO:
-        # - batch size
-        # - output folder or same as videos (.prediction.slp)
-        # - [ ] open results in GUI
-        # - [ ] export analysis file
-
-        tabs.addTab(tab, "Instances")
-
-    def add_model_type_box(self, layout: QLayout):
-        model_type_box = QGroupBox("Select trained model(s) for inference")
-        model_type_layout = QFormLayout()
-        model_type_box.setLayout(model_type_layout)
-
-        # model type
-        model_type_widget = QComboBox()
-        model_type_widget.addItems(self.controller.get_model_type_names())
-        model_type_widget.setMaximumWidth(250)
-        model_type_layout.addRow("Type", model_type_widget)
-        self.input_widgets.model_type = model_type_widget
-
-        # model dirs
-        self.input_widgets.single_instance_model = self.add_file_browser_row(
-            model_type_layout, "Single Instance Model", self.controller.set_single_instance_model_path)
-        self.input_widgets.bottom_up_model = self.add_file_browser_row(
-            model_type_layout, "Bottom Up model", self.controller.set_single_instance_model_path)
-        self.input_widgets.top_down_centroid_model = self.add_file_browser_row(
-            model_type_layout, "Top Down Centroid model", self.controller.set_single_instance_model_path)
-        self.input_widgets.top_down_centered_instance_model = self.add_file_browser_row(
-            model_type_layout, "Top Down Centered Instance model", self.controller.set_single_instance_model_path)
-
-        layout.addWidget(model_type_box)
 
     def add_file_browser_row(self, layout: QLayout, caption: Text, path_setter: callable) -> QLineEdit:
         widget = QHBoxLayout()
@@ -282,6 +244,32 @@ class InferenceActivityCentralWidget(QWidget):
         self.input_widgets.tracking_window_size = tracking_window_widget
 
         tab.layout.addWidget(tracking_box)
+
+    def build_action_buttons_widget(self):
+        action_buttons = QWidget(self)
+        action_buttons.layout = QHBoxLayout()
+
+        # Run inference button
+        action_buttons.run_button = QPushButton(parent=self, text=" Run ")
+        action_buttons.run_button.clicked.connect(lambda: self.controller.run())
+        action_buttons.layout.addWidget(action_buttons.run_button)
+
+        # Save configuration button
+        action_buttons.save_button = QPushButton(
+            parent=self, text=" Save configuration.. "
+        )
+        action_buttons.save_button.clicked.connect(lambda: self.controller.save())
+        action_buttons.layout.addWidget(action_buttons.save_button)
+
+        # Export inference job button
+        action_buttons.export_button = QPushButton(
+            parent=self, text=" Export inference job package.. "
+        )
+        action_buttons.export_button.clicked.connect(lambda: self.controller.export())
+        action_buttons.layout.addWidget(action_buttons.export_button)
+
+        action_buttons.setLayout(action_buttons.layout)
+        return action_buttons
 
 
 if __name__ == "__main__":
