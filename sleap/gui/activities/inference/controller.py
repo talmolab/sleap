@@ -1,6 +1,7 @@
 from typing import Text, List, Optional
 
 import attr
+from PySide2.QtWidgets import QWidget
 
 from sleap.gui.activities.inference.model import (
     InferenceGuiModel,
@@ -35,15 +36,38 @@ class InferenceGuiController(object):
         return self.model.videos.videos_table_model
 
     # Setters
-
-    def set_model_type(self, model_type: str) -> None:
+    def set_model_type(self, model_type: str,
+                           single_instance_model_widget: QWidget,
+                           bottom_up_model_widget: QWidget,
+                           top_down_centroid_model_widget: QWidget,
+                           top_down_centered_instance_model_widget: QWidget) -> None:
         self.model.models.model_type = InferenceGuiController.lookup_enum(ModelType, model_type)
-        self.log(f"Model type set to {self.model.models.model_type}")
+        if self.model.models.model_type.value == ModelType.SINGLE_INSTANCE.value:
+            single_instance_model_widget.setDisabled(False)
+            bottom_up_model_widget.setDisabled(True)
+            top_down_centroid_model_widget.setDisabled(True)
+            top_down_centered_instance_model_widget.setDisabled(True)
+        elif self.model.models.model_type.value == ModelType.BOTTOM_UP.value:
+            single_instance_model_widget.setDisabled(True)
+            bottom_up_model_widget.setDisabled(False)
+            top_down_centroid_model_widget.setDisabled(True)
+            top_down_centered_instance_model_widget.setDisabled(True)
+        elif self.model.models.model_type.value == ModelType.TOP_DOWN.value:
+            self.log(f"BlaE+++")
+            single_instance_model_widget.setDisabled(True)
+            bottom_up_model_widget.setDisabled(True)
+            top_down_centroid_model_widget.setDisabled(False)
+            top_down_centered_instance_model_widget.setDisabled(False)
+        self.log(f"Model type changed to {self.model.models.model_type}")
 
-    def set_single_instance_model_path(self, model_path: str) -> None:
-        self.model.models.single_instance_model = ConfigFileInfo(path=model_path, config=None)
-        self.log(f"Single instance model path set to {self.model.models.single_instance_model}")
-
+    def set_tracking_enabled(self,
+                             tracking_enabled: bool,
+                             tracking_method_widget: QWidget,
+                             tracking_window_size_widget: QWidget):
+        self.model.instances.enable_tracking = tracking_enabled
+        tracking_method_widget.setEnabled(self.model.instances.enable_tracking)
+        tracking_window_size_widget.setEnabled(self.model.instances.enable_tracking)
+        self.log(f"Tracking enabled changed to {self.model.instances.enable_tracking}")
 
     # Actions
 

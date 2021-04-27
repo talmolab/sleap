@@ -24,10 +24,27 @@ class InferenceActivity(QMainWindow):
         self.central_widget = InferenceActivityCentralWidget(self)
         self.setCentralWidget(self.central_widget)
 
-        self.setMinimumWidth(800)
+        self.configure_logic()
 
+        self.setMinimumWidth(800)
         self.show()
 
+    def configure_logic(self):
+        self.input_widgets.model_type.currentIndexChanged.connect(
+            lambda: self.controller.set_model_type(
+                model_type=self.input_widgets.model_type.currentText(),
+                single_instance_model_widget=self.input_widgets.single_instance_model,
+                bottom_up_model_widget=self.input_widgets.bottom_up_model,
+                top_down_centroid_model_widget=self.input_widgets.top_down_centroid_model,
+                top_down_centered_instance_model_widget=self.input_widgets.top_down_centered_instance_model
+            ))
+
+        self.input_widgets.enable_tracking.stateChanged.connect(
+            lambda: self.controller.set_tracking_enabled(
+                tracking_enabled=self.input_widgets.enable_tracking.isChecked(),
+                tracking_method_widget=self.input_widgets.tracking_method,
+                tracking_window_size_widget=self.input_widgets.tracking_window_size
+            ))
 
 class InferenceActivityInputWidgets(object):
     """
