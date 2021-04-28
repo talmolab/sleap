@@ -21,16 +21,32 @@ class InferenceGuiController(object):
         return self.model.models.model_type
 
     def get_single_instance_model_path(self) -> str:
-        return self.model.models.single_instance_model.path if self.model.models.single_instance_model else None
+        return (
+            self.model.models.single_instance_model.path
+            if self.model.models.single_instance_model
+            else None
+        )
 
     def get_bottom_up_model_path(self) -> str:
-        return self.model.models.bottom_up_model.path if self.model.models.bottom_up_model else None
+        return (
+            self.model.models.bottom_up_model.path
+            if self.model.models.bottom_up_model
+            else None
+        )
 
     def get_top_down_centroid_model_path(self) -> str:
-        return self.model.models.centroid_model.path if self.model.models.centroid_model else None
+        return (
+            self.model.models.centroid_model.path
+            if self.model.models.centroid_model
+            else None
+        )
 
     def get_top_down_centered_instance_model_path(self) -> str:
-        return self.model.models.centered_instance_model.path if self.model.models.centered_instance_model else None
+        return (
+            self.model.models.centered_instance_model.path
+            if self.model.models.centered_instance_model
+            else None
+        )
 
     def get_video_paths(self) -> List[str]:
         return self.model.videos.paths
@@ -48,17 +64,24 @@ class InferenceGuiController(object):
         return self.model.instances.tracking_window
 
     def get_ouput_dir_path(self) -> str:
-        return os.path.split(self.model.output.output_file_path)[0] if self.model.output.output_file_path else None
+        return (
+            os.path.split(self.model.output.output_file_path)[0]
+            if self.model.output.output_file_path
+            else None
+        )
 
     def get_output_file_name(self) -> str:
-        return os.path.split(self.model.output.output_file_path)[1] if self.model.output.output_file_path else None
+        return (
+            os.path.split(self.model.output.output_file_path)[1]
+            if self.model.output.output_file_path
+            else None
+        )
 
     def get_include_empty_frames(self) -> bool:
         return self.model.output.include_empty_frames
 
     def get_verbosity(self) -> Verbosity:
         return self.model.output.verbosity
-
 
     # Setters
 
@@ -76,9 +99,7 @@ class InferenceGuiController(object):
             elif self.model.models.model_type == ModelType.SINGLE_INSTANCE:
                 cmd += f" -m {self.model.models.single_instance_model.path}"
 
-            cmd += (
-                f" --tracking.tracker {self.model.instances.tracking_method.arg()}"
-            )
+            cmd += f" --tracking.tracker {self.model.instances.tracking_method.arg()}"
             cmd += f" --tracking.track_window {self.model.instances.tracking_window}"
             cmd += f" --tracking.target_instance_count {self.model.instances.max_num_instances}"
 
@@ -89,7 +110,9 @@ class InferenceGuiController(object):
             self._execute(cmd)
 
     def save(self, content: dict) -> None:
-        self.log(f"Save stub:\n current model: {attr.asdict(self.model)}\n content: {content}")
+        self.log(
+            f"Save stub:\n current model: {attr.asdict(self.model)}\n content: {content}"
+        )
 
     def export(self):
         self.log(f"Export stub...")

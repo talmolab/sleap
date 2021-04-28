@@ -124,14 +124,11 @@ class InferenceActivityInputWidgets(object):
             "bottom_up_model": self.bottom_up_model.text(),
             "top_down_centroid_model": self.top_down_centroid_model.text(),
             "top_down_centered_instance_model": self.top_down_centered_instance_model.text(),
-
             "video_paths": self.videos_table.checked_video_paths,
-
             "max_num_instances_in_frame": self.max_num_instances_in_frame.text(),
             "enable_tracking": self.enable_tracking.isChecked(),
             "tracking_method": self.tracking_method.currentText(),
             "tracking_window_size": self.tracking_window_size.text(),
-
             "output_dir_path": self.output_dir_path.text(),
             "output_file_name": self.output_file_name.text(),
             "include_empty_frames": self.include_empty_frames.isChecked(),
@@ -140,21 +137,21 @@ class InferenceActivityInputWidgets(object):
         return res
 
     def set_content(
-            self,
-            model_type: str,
-            single_instance_model: str,
-            bottom_up_model: str,
-            top_down_centroid_model: str,
-            top_down_centered_instance_model: str,
-            video_paths: List[str],
-            max_num_instances_in_frame: int,
-            enable_tracking: bool,
-            tracking_method: str,
-            tracking_window_size: int,
-            output_dir_path: str,
-            output_file_name: str,
-            include_empty_frames: bool,
-            verbosity: str
+        self,
+        model_type: str,
+        single_instance_model: str,
+        bottom_up_model: str,
+        top_down_centroid_model: str,
+        top_down_centered_instance_model: str,
+        video_paths: List[str],
+        max_num_instances_in_frame: int,
+        enable_tracking: bool,
+        tracking_method: str,
+        tracking_window_size: int,
+        output_dir_path: str,
+        output_file_name: str,
+        include_empty_frames: bool,
+        verbosity: str,
     ) -> None:
         self.model_type.setCurrentText(model_type)
         self.single_instance_model.setText(single_instance_model)
@@ -225,25 +222,25 @@ class InferenceActivityCentralWidget(QWidget):
             model_form_layout,
             directory=False,
             caption="Single Instance Model",
-            filter="JSON (*.json)"
+            filter="JSON (*.json)",
         )
         self.input_widgets.bottom_up_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Bottom Up Model",
-            filter="JSON (*.json)"
+            filter="JSON (*.json)",
         )
         self.input_widgets.top_down_centroid_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Top Down Centroid Model",
-            filter="JSON (*.json)"
+            filter="JSON (*.json)",
         )
         self.input_widgets.top_down_centered_instance_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Top Down Centered Instance Model",
-            filter="JSON (*.json)"
+            filter="JSON (*.json)",
         )
 
         # set layout and add
@@ -397,9 +394,9 @@ class InferenceActivityCentralWidget(QWidget):
         action_buttons.save_button = QPushButton(
             parent=self, text=" Save configuration.. "
         )
-        action_buttons.save_button.clicked.connect(lambda: self.controller.save(
-            self.input_widgets.extract_content()
-        ))
+        action_buttons.save_button.clicked.connect(
+            lambda: self.controller.save(self.input_widgets.extract_content())
+        )
         action_buttons.layout.addWidget(action_buttons.save_button)
 
         # Export inference job button
@@ -418,7 +415,10 @@ if __name__ == "__main__":
     model = InferenceGuiModel()
 
     # Populate mock data in the GUI model
-    videos = [f"C://Users//ariem//work//sleap_data//videos//{p}" for p in ["small_robot.mp4", "centered_pair_small.mp4"]]
+    videos = [
+        f"C://Users//ariem//work//sleap_data//videos//{p}"
+        for p in ["small_robot.mp4", "centered_pair_small.mp4"]
+    ]
     model.videos.paths = videos
 
     model.models.centroid_model = ConfigFileInfo(path="cmp", config=None)
