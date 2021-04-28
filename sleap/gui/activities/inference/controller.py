@@ -1,5 +1,5 @@
 import os
-from typing import Text, Optional
+from typing import Text, List
 
 import attr
 
@@ -32,8 +32,8 @@ class InferenceGuiController(object):
     def get_top_down_centered_instance_model_path(self) -> str:
         return self.model.models.centered_instance_model.path if self.model.models.centered_instance_model else None
 
-    def get_video_table_model(self) -> VideosTableModel:
-        return self.model.videos.videos_table_model
+    def get_video_paths(self) -> List[str]:
+        return self.model.videos.paths
 
     def get_max_num_instances_in_frame(self) -> int:
         return self.model.instances.max_num_instances

@@ -1,9 +1,8 @@
-from typing import Optional, Text
+from typing import Optional, Text, List
 
 import attr
 
 from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
-from sleap.gui.widgets.videos_table import VideosTableModel
 from sleap.gui.learning.configs import ConfigFileInfo
 
 
@@ -18,7 +17,7 @@ class TrainedModels(object):
 
 @attr.s(auto_attribs=True)
 class Videos(object):
-    videos_table_model: VideosTableModel = VideosTableModel()
+    paths: List[str] = []
 
 
 @attr.s(auto_attribs=True)

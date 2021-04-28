@@ -1,6 +1,6 @@
 """General purpose video selector widget. Useful for prompting user for input videos."""
 
-from typing import Optional
+from typing import Optional, List, Union
 
 import sleap
 from sleap.gui.dataviews import (
@@ -144,7 +144,7 @@ class VideosTableWidget(QWidget):
     def checked_video_paths(self):
         return [video.filename for video in self.checked_videos]
 
-    def add_videos(self, video_paths: Optional[str] = None):
+    def add_videos(self, video_paths: Optional[Union[str, List[str]]] = None):
         if video_paths is None:
             videos = ImportVideos().ask_and_return_videos()
 
@@ -159,3 +159,11 @@ class VideosTableWidget(QWidget):
             self.table_model.items = self.videos + videos
             self.table_model.set_checked(videos, True)
             self.table_view.resizeColumnsToContents()
+
+    def set_videos(self, video_paths: Union[str, List[str]]):
+        if isinstance(video_paths, str):
+            video_paths = [video_paths]
+        videos = [sleap.load_video(p) for p in video_paths]
+        self.table_model.items = videos
+        self.table_model.set_checked(videos, True)
+        self.table_view.resizeColumnsToContents()

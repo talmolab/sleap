@@ -10,7 +10,7 @@ from sleap.gui.activities.inference.model import InferenceGuiModel
 from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import ConfigFileInfo
-from sleap.gui.widgets.videos_table import VideosTableWidget
+from sleap.gui.widgets.videos_table import VideosTableWidget, VideosTableModel
 
 
 class InferenceActivity(QMainWindow):
@@ -39,7 +39,7 @@ class InferenceActivity(QMainWindow):
             bottom_up_model=self.controller.get_bottom_up_model_path(),
             top_down_centroid_model=self.controller.get_top_down_centroid_model_path(),
             top_down_centered_instance_model=self.controller.get_top_down_centered_instance_model_path(),
-            videos_table=self.controller.get_video_table_model(),
+            video_paths=self.controller.get_video_paths(),
             max_num_instances_in_frame=self.controller.get_max_num_instances_in_frame(),
             enable_tracking=self.controller.get_enable_tracking(),
             tracking_method=self.controller.get_tracking_method().display(),
@@ -146,7 +146,7 @@ class InferenceActivityInputWidgets(object):
             bottom_up_model: str,
             top_down_centroid_model: str,
             top_down_centered_instance_model: str,
-            videos_table: VideosTableWidget,
+            video_paths: List[str],
             max_num_instances_in_frame: int,
             enable_tracking: bool,
             tracking_method: str,
@@ -162,7 +162,7 @@ class InferenceActivityInputWidgets(object):
         self.top_down_centroid_model.setText(top_down_centroid_model)
         self.top_down_centered_instance_model.setText(top_down_centered_instance_model)
 
-        #self.videos_table.checked_video_paths
+        self.videos_table.set_videos(video_paths)
 
         self.max_num_instances_in_frame.setValue(max_num_instances_in_frame)
         self.enable_tracking.setChecked(enable_tracking)
@@ -255,9 +255,7 @@ class InferenceActivityCentralWidget(QWidget):
 
     def add_videos_tab(self, tabs: QTabWidget):
         layout = QVBoxLayout()
-        videos_table_widget = VideosTableWidget(
-            table_model=self.controller.get_video_table_model()
-        )
+        videos_table_widget = VideosTableWidget(table_model=VideosTableModel())
         layout.addWidget(videos_table_widget)
         self.input_widgets.videos_table = videos_table_widget
 
@@ -420,11 +418,8 @@ if __name__ == "__main__":
     model = InferenceGuiModel()
 
     # Populate mock data in the GUI model
-    videos = [
-        sleap.load_video(f"C://Users//ariem//work//sleap_data//videos//{p}")
-        for p in ["small_robot.mp4", "centered_pair_small.mp4"]
-    ]
-    model.videos.videos_table_model.items = videos
+    videos = [f"C://Users//ariem//work//sleap_data//videos//{p}" for p in ["small_robot.mp4", "centered_pair_small.mp4"]]
+    model.videos.paths = videos
 
     model.models.centroid_model = ConfigFileInfo(path="cmp", config=None)
     model.models.centered_instance_model = ConfigFileInfo(path="cip", config=None)
