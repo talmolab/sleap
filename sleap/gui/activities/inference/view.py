@@ -46,17 +46,17 @@ class InferenceActivity(QMainWindow):
 
     def update_model_type(self) -> None:
         model_type = self.input_widgets.model_type.currentText()
-        if model_type == ModelType.SINGLE_INSTANCE.value:
+        if model_type == ModelType.SINGLE_INSTANCE.display():
             self.input_widgets.single_instance_model.setEnabled(True)
             self.input_widgets.bottom_up_model.setEnabled(False)
             self.input_widgets.top_down_centroid_model.setEnabled(False)
             self.input_widgets.top_down_centered_instance_model.setEnabled(False)
-        elif model_type == ModelType.BOTTOM_UP.value:
+        elif model_type == ModelType.BOTTOM_UP.display():
             self.input_widgets.single_instance_model.setEnabled(False)
             self.input_widgets.bottom_up_model.setEnabled(True)
             self.input_widgets.top_down_centroid_model.setEnabled(False)
             self.input_widgets.top_down_centered_instance_model.setEnabled(False)
-        elif model_type == ModelType.TOP_DOWN.value:
+        elif model_type == ModelType.TOP_DOWN.display():
             self.input_widgets.single_instance_model.setEnabled(False)
             self.input_widgets.bottom_up_model.setEnabled(False)
             self.input_widgets.top_down_centroid_model.setEnabled(True)
@@ -162,7 +162,7 @@ class InferenceActivityCentralWidget(QWidget):
 
         # model type
         model_type_widget = QComboBox()
-        model_type_widget.addItems([mt.value for mt in ModelType])
+        model_type_widget.addItems([mt.display() for mt in ModelType])
         model_type_widget.setMaximumWidth(250)
         model_form_layout.addRow("Type", model_type_widget)
         self.input_widgets.model_type = model_type_widget
@@ -246,7 +246,7 @@ class InferenceActivityCentralWidget(QWidget):
 
         # tracking method
         tracking_method_widget = QComboBox()
-        tracking_method_widget.addItems([tm.value[0] for tm in TrackerType])
+        tracking_method_widget.addItems([tm.display() for tm in TrackerType])
         tracking_method_widget.setMaximumWidth(150)
         tracking_layout.addRow("Tracking method", tracking_method_widget)
         self.input_widgets.tracking_method = tracking_method_widget
@@ -292,7 +292,7 @@ class InferenceActivityCentralWidget(QWidget):
 
         # verbosity
         verbosity_widget = QComboBox()
-        verbosity_widget.addItems([v.value[0] for v in Verbosity])
+        verbosity_widget.addItems([v.display() for v in Verbosity])
         verbosity_widget.setMaximumWidth(150)
         output_box_layout.addRow("Log format / verbosity", verbosity_widget)
         self.input_widgets.verbosity = verbosity_widget
