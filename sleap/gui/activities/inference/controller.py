@@ -65,8 +65,8 @@ class InferenceGuiController(object):
     # Actions
 
     def run(self) -> None:
-        for v in self.model.videos.videos_table_model.items:
-            cmd = f"sleap-track {v['Path']}"
+        for v in self.model.videos.paths:
+            cmd = f"sleap-track {v}"
 
             if self.model.models.model_type == ModelType.TOP_DOWN:
                 cmd += f" -m {self.model.models.centroid_model.path}"
