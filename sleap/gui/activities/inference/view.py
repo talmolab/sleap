@@ -25,11 +25,30 @@ class InferenceActivity(QMainWindow):
         self.central_widget = InferenceActivityCentralWidget(self)
         self.setCentralWidget(self.central_widget)
 
+        self.load_content()
         self.connect_widgets()
         self.update_widgets()
 
         self.setMinimumWidth(800)
         self.show()
+
+    def load_content(self):
+        self.input_widgets.set_content(
+            model_type=self.controller.get_model_type().display(),
+            single_instance_model=self.controller.get_single_instance_model_path(),
+            bottom_up_model=self.controller.get_bottom_up_model_path(),
+            top_down_centroid_model=self.controller.get_top_down_centroid_model_path(),
+            top_down_centered_instance_model=self.controller.get_top_down_centered_instance_model_path(),
+            videos_table=self.controller.get_video_table_model(),
+            max_num_instances_in_frame=self.controller.get_max_num_instances_in_frame(),
+            enable_tracking=self.controller.get_enable_tracking(),
+            tracking_method=self.controller.get_tracking_method().display(),
+            tracking_window_size=self.controller.get_tracking_window_size(),
+            output_dir_path=self.controller.get_ouput_dir_path(),
+            output_file_name=self.controller.get_output_file_name(),
+            include_empty_frames=self.controller.get_include_empty_frames(),
+            verbosity=self.controller.get_verbosity().display(),
+        )
 
     def update_widgets(self):
         self.update_model_type()
@@ -98,7 +117,7 @@ class InferenceActivityInputWidgets(object):
         "verbosity",
     ]
 
-    def content(self) -> dict:
+    def extract_content(self) -> dict:
         res = {
             "model_type": self.model_type.currentText(),
             "single_instance_model": self.single_instance_model.text(),
@@ -106,7 +125,7 @@ class InferenceActivityInputWidgets(object):
             "top_down_centroid_model": self.top_down_centroid_model.text(),
             "top_down_centered_instance_model": self.top_down_centered_instance_model.text(),
 
-            "videos_table": self.videos_table.checked_video_paths,
+            "video_paths": self.videos_table.checked_video_paths,
 
             "max_num_instances_in_frame": self.max_num_instances_in_frame.text(),
             "enable_tracking": self.enable_tracking.isChecked(),
@@ -120,6 +139,40 @@ class InferenceActivityInputWidgets(object):
         }
         return res
 
+    def set_content(
+            self,
+            model_type: str,
+            single_instance_model: str,
+            bottom_up_model: str,
+            top_down_centroid_model: str,
+            top_down_centered_instance_model: str,
+            videos_table: VideosTableWidget,
+            max_num_instances_in_frame: int,
+            enable_tracking: bool,
+            tracking_method: str,
+            tracking_window_size: int,
+            output_dir_path: str,
+            output_file_name: str,
+            include_empty_frames: bool,
+            verbosity: str
+    ) -> None:
+        self.model_type.setCurrentText(model_type)
+        self.single_instance_model.setText(single_instance_model)
+        self.bottom_up_model.setText(bottom_up_model)
+        self.top_down_centroid_model.setText(top_down_centroid_model)
+        self.top_down_centered_instance_model.setText(top_down_centered_instance_model)
+
+        #self.videos_table.checked_video_paths
+
+        self.max_num_instances_in_frame.setValue(max_num_instances_in_frame)
+        self.enable_tracking.setChecked(enable_tracking)
+        self.tracking_method.setCurrentText(tracking_method)
+        self.tracking_window_size.setValue(tracking_window_size)
+
+        self.output_dir_path.setText(output_dir_path)
+        self.output_file_name.setText(output_file_name)
+        self.include_empty_frames.setChecked(include_empty_frames)
+        self.verbosity.setCurrentText(verbosity)
 
 
 class InferenceActivityCentralWidget(QWidget):
@@ -347,7 +400,7 @@ class InferenceActivityCentralWidget(QWidget):
             parent=self, text=" Save configuration.. "
         )
         action_buttons.save_button.clicked.connect(lambda: self.controller.save(
-            self.input_widgets.content()
+            self.input_widgets.extract_content()
         ))
         action_buttons.layout.addWidget(action_buttons.save_button)
 
