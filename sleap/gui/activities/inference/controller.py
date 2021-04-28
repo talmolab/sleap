@@ -1,11 +1,11 @@
-from typing import Text, List, Optional, Callable
+from typing import Text, Optional
 
 import attr
 
 from sleap.gui.activities.inference.model import (
     InferenceGuiModel,
 )
-from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
+from sleap.gui.activities.inference.enums import ModelType
 from sleap.gui.widgets.videos_table import VideosTableModel
 
 
@@ -16,24 +16,10 @@ class InferenceGuiController(object):
 
     # Getters
 
-    @staticmethod
-    def get_model_type_names() -> List[Text]:
-        return [mt.value for mt in ModelType]
-
-    @staticmethod
-    def get_tracking_method_names() -> List[Text]:
-        return [tm.value[0] for tm in TrackerType]
-
-    @staticmethod
-    def get_verbosity_names() -> List[Text]:
-        return [v.value[0] for v in Verbosity]
-
     def get_video_table_model(self) -> VideosTableModel:
         return self.model.videos.videos_table_model
 
     # Setters
-
-
 
     # Actions
 

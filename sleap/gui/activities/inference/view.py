@@ -7,7 +7,7 @@ from PySide2.QtWidgets import *
 import sleap
 from sleap.gui.activities.inference.controller import InferenceGuiController
 from sleap.gui.activities.inference.model import InferenceGuiModel
-from sleap.gui.activities.inference.enums import ModelType
+from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableWidget
@@ -137,7 +137,7 @@ class InferenceActivityCentralWidget(QWidget):
 
         # model type
         model_type_widget = QComboBox()
-        model_type_widget.addItems(self.controller.get_model_type_names())
+        model_type_widget.addItems([mt.value for mt in ModelType])
         model_type_widget.setMaximumWidth(250)
         model_form_layout.addRow("Type", model_type_widget)
         self.input_widgets.model_type = model_type_widget
@@ -217,7 +217,7 @@ class InferenceActivityCentralWidget(QWidget):
 
         # tracking method
         tracking_method_widget = QComboBox()
-        tracking_method_widget.addItems(self.controller.get_tracking_method_names())
+        tracking_method_widget.addItems([tm.value[0] for tm in TrackerType])
         tracking_method_widget.setMaximumWidth(150)
         tracking_layout.addRow("Tracking method", tracking_method_widget)
         self.input_widgets.tracking_method = tracking_method_widget
@@ -263,7 +263,7 @@ class InferenceActivityCentralWidget(QWidget):
 
         # verbosity
         verbosity_widget = QComboBox()
-        verbosity_widget.addItems(self.controller.get_verbosity_names())
+        verbosity_widget.addItems([v.value[0] for v in Verbosity])
         verbosity_widget.setMaximumWidth(150)
         output_box_layout.addRow("Log format / verbosity", verbosity_widget)
         self.input_widgets.verbosity = verbosity_widget
