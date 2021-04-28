@@ -2,12 +2,11 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Command line interfaces" href="cli.html" /><link rel="prev" title="Guides" href="index.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Command line interfaces" href="cli.html" /><link rel="prev" title="Guides" href="index.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
         <title>GUI - SLEAP (v1.1.3)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
@@ -21,8 +20,8 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
   
     }
   }
@@ -34,8 +33,8 @@
   
   }
   .override-dark {
-    --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+    --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
   
   }
 </style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -152,53 +151,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.skeleton.html">sleap.skeleton</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.util.html">sleap.util</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.inference.html">sleap.nn.inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.losses.html">sleap.nn.losses</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.model.html">sleap.nn.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.monitor.html">sleap.nn.monitor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.system.html">sleap.nn.system</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracking.html">sleap.nn.tracking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.general.html">sleap.nn.data.general</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
@@ -227,6 +179,53 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
@@ -246,22 +245,22 @@
         <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <section id="gui">
+        <div class="section" id="gui">
 <span id="id1"></span><h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h1>
 <p>The SLEAP labeling interface is accessible via the <code class="code docutils literal notranslate"><span class="pre">sleap_label</span></code> command (see <a class="reference internal" href="cli.html#cli"><span class="std std-ref">Command line interfaces</span></a>).</p>
-<section id="menus">
+<div class="section" id="menus">
 <h2>Menus<a class="headerlink" href="#menus" title="Permalink to this headline">¶</a></h2>
 <p>Note that many of the menu command have keyboard shortcuts which can be configured from “<strong>Keyboard Reference</strong>” in the “<strong>Help</strong>” menu.</p>
-</section>
-<section id="file">
+</div>
+<div class="section" id="file">
 <h2>File<a class="headerlink" href="#file" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>New…</strong>”, “<strong>Open…</strong>”, “Save, and “<strong>Save As…</strong>” have their usual behavior.</p>
 <p>“<strong>Import…</strong>” allows you to import the data external formats into a new SLEAP dataset. This includes <a class="reference external" href="http://cocodataset.org/#format-data">COCO</a> keypoint detection (<code class="code docutils literal notranslate"><span class="pre">.json</span></code> files), <a class="reference external" href="http://deeplabcut.org">DeepLabCut</a> (<code class="code docutils literal notranslate"><span class="pre">.csv</span></code>), <a class="reference external" href="http://deepposekit.org">DeepPoseKit</a> (<code class="code docutils literal notranslate"><span class="pre">.h5</span></code>), and <a class="reference external" href="https://github.com/talmo/leap">LEAP</a> (<code class="code docutils literal notranslate"><span class="pre">.mat</span></code>).</p>
 <p>“<strong>Merge Data From…</strong>” allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you’ve trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you’d like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.</p>
 <p>“<strong>Add Videos…</strong>” allows you to add videos to your currently open project.</p>
 <p>“<strong>Replace Videos…</strong>” allows you to <em>swap</em> the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn’t affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).</p>
-</section>
-<section id="go">
+</div>
+<div class="section" id="go">
 <h2>Go<a class="headerlink" href="#go" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Next Labeled Frame</strong>” will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.</p>
 <p>“<strong>Next User Labeled Frame</strong>” will take you to the next frame which has labels added by the user, skipping any frames which are unlabeled or have only predictions.</p>
@@ -270,8 +269,8 @@
 <p>“<strong>Next Video</strong>” will show the next video in the project (if your project has multiple videos). All the videos are listed in the “Videos” window.</p>
 <p>“<strong>Go to Frame…</strong>” allows you to go to a specific frame (in the current video) by frame number. It’s also handy if you want to copy the current frame number to the clipboard.</p>
 <p>“<strong>Select to Frame…</strong>” allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use <strong>Go to</strong> to go to X then <strong>Select to</strong> to select from X to Y.</p>
-</section>
-<section id="view">
+</div>
+<div class="section" id="view">
 <span id="id2"></span><h2>View<a class="headerlink" href="#view" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Color Predicted Instances</strong>” allows you to toggle whether <em>predicted</em> instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.</p>
 <p>“<strong>Color Palette</strong>” allows you to choose the palette which will be used for coloring instances. Most of the palettes cycle colors, so that if there are five colors in the palette, the sixth item to color will be the same as the first. A few things to know:</p>
@@ -288,8 +287,8 @@
 <p>“<strong>Fit Instances to View</strong>” allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.</p>
 <p>“<strong>Seekbar Header</strong>” allows you to plot relevant information above the seekbar. Note that the seekbar is not updated when you modify instances; it only updates when you select a new seekbar header.</p>
 <p>“<strong>Videos</strong>”, “<strong>Skeleton</strong>”, “<strong>Instances</strong>”, and “<strong>Labeling Suggestions</strong>” allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).</p>
-</section>
-<section id="labels">
+</div>
+<div class="section" id="labels">
 <h2>Labels<a class="headerlink" href="#labels" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Add Instance</strong>” will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also “convert” the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won’t be shown unless you delete the editable instance you just created).</p>
 <p>“<strong>Instance Placement Method</strong>” allows you to pick how we determine where to place the instance and its nodes on the video frame. “Best” (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the “average” method which creates an “average” instance from the instances you’ve already labeled.</p>
@@ -300,8 +299,8 @@
 <p>“<strong>Custom Instance Delete…</strong>” allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.</p>
 <p>“<strong>Select Next Instance</strong>” allows you to cycle through the instances in the current frame.</p>
 <p>“<strong>Clear Selection</strong>” allows you to deselect the selected instance.</p>
-</section>
-<section id="predict">
+</div>
+<div class="section" id="predict">
 <h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Run Training…</strong>” allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.</p>
 <p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">models</span></code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
@@ -314,15 +313,15 @@
 <p>“<strong>Delete All Predictions with Low Score…</strong>” deletes all instances with a prediction score below the specified value. You’ll be asked for the value, and then asked to confirm before instances are deleted. Instance scores are shown in the “Instances” table and below the selected instance in the current frame.</p>
 <p>“<strong>Delete All Predictions beyond Frame Limit…</strong>” deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You’ll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.</p>
 <p>“<strong>Export Video with Visual Annotations…</strong>” allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.</p>
-</section>
-<section id="help">
+</div>
+<div class="section" id="help">
 <h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
 <p>“<strong>Keyboard Shortcuts</strong>” allows you to view and change keyboard shortcuts for common menu and GUI actions.</p>
-</section>
-<section id="application-gui">
+</div>
+<div class="section" id="application-gui">
 <h2>Application GUI<a class="headerlink" href="#application-gui" title="Permalink to this headline">¶</a></h2>
-</section>
-<section id="mouse">
+</div>
+<div class="section" id="mouse">
 <h2>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">¶</a></h2>
 <p><strong>Right-click</strong> (or control + click) on node: Toggle visibility</p>
 <p><strong>Right-click</strong> (or control + click) elsewhere on image: Add instance (with pop-up menu)</p>
@@ -335,8 +334,8 @@
 <p><strong>Double-click</strong> on editable instance: Any missing nodes (nodes added to the skeleton after this instance was created) will be added and marked as “non-visible”</p>
 <p><strong>Click</strong> on instance: Select that instance</p>
 <p><strong>Click</strong> elsewhere on image: Clear selection</p>
-</section>
-<section id="navigation-keys">
+</div>
+<div class="section" id="navigation-keys">
 <h2>Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permalink to this headline">¶</a></h2>
 <p><strong>Right arrow</strong> key: Move one frame forward</p>
 <p><strong>Left arrow</strong> key: Move one frame back</p>
@@ -351,28 +350,28 @@
 <p class="admonition-title">Note</p>
 <p>These keys are the defaults; you can configure them with <strong>Keyboard Shortcuts</strong> in the <strong>Help</strong> menu.</p>
 </div>
-</section>
-<section id="selection-keys">
+</div>
+<div class="section" id="selection-keys">
 <h2>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">¶</a></h2>
 <p><em>Number</em> (e.g., <strong>2</strong>) key: Select the instance corresponding to that number</p>
 <p><strong>Escape</strong> key: Deselect all instances</p>
-</section>
-<section id="seekbar">
+</div>
+<div class="section" id="seekbar">
 <h2>Seekbar<a class="headerlink" href="#seekbar" title="Permalink to this headline">¶</a></h2>
 <p><strong>Shift + drag</strong>: Select a range of frames</p>
 <p><strong>Shift + click</strong>: Clear frame selection</p>
 <p><strong>Alt + drag</strong>: Zoom into a range of frames</p>
 <p><strong>Alt + click</strong>: Zoom out so that all frames are visible in seekbar</p>
-</section>
-<section id="labeling-suggestions">
+</div>
+<div class="section" id="labeling-suggestions">
 <span id="suggestion-methods"></span><h2>Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permalink to this headline">¶</a></h2>
 <p>There are various methods to generate a list “suggested” frames for labeling or proofreading.</p>
 <p>The <strong>sample</strong> method is a quick way to get some number of frames for every video in your project. You can tell it how many samples (frames) to take from each video, and whether they should be evenly spaced throughout a video (the “stride” sampling method) or randomly distributed.</p>
 <p>The <strong>image feature</strong> method uses various algorithms to give you visually distinctive frames, since you will be able to train more robust models if the frames you’ve labeled are more representative of the visual variations in your videos. Generating suggestions based on image features can be slow.</p>
 <p>The <strong>prediction score</strong> method will identify frames which have more than some number of instances predicted and where the instance prediction score is below some threshold. This method can be useful when proofreading frame-by-frame prediction results. The instance score depends on your specific skeleton so you’ll need to look at the instance scores you’re getting to decide an appropriate threshold.</p>
 <p>The <strong>velocity</strong> method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity “jump”).</p>
-</section>
-</section>
+</div>
+</div>
 
       </article>
       <footer>

@@ -2,12 +2,11 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Analysis examples" href="Analysis_examples.html" /><link rel="prev" title="Training and inference on an example dataset" href="Training_and_inference_on_an_example_dataset.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Analysis examples" href="Analysis_examples.html" /><link rel="prev" title="Training and inference on an example dataset" href="Training_and_inference_on_an_example_dataset.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
         <title>Training and inference on your own data using Google Drive - SLEAP (v1.1.3)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
@@ -21,8 +20,8 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
   
     }
   }
@@ -34,8 +33,8 @@
   
   }
   .override-dark {
-    --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+    --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
   
   }
 </style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -152,53 +151,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.skeleton.html">sleap.skeleton</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.util.html">sleap.util</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.inference.html">sleap.nn.inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.losses.html">sleap.nn.losses</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.model.html">sleap.nn.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.monitor.html">sleap.nn.monitor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.system.html">sleap.nn.system</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracking.html">sleap.nn.tracking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.general.html">sleap.nn.data.general</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
@@ -227,6 +179,53 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.inference.html">sleap.nn.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.losses.html">sleap.nn.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.model.html">sleap.nn.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.monitor.html">sleap.nn.monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.system.html">sleap.nn.system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracking.html">sleap.nn.tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.general.html">sleap.nn.data.general</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
@@ -247,10 +246,10 @@
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
-<section id="training-and-inference-on-your-own-data-using-google-drive">
+<div class="section" id="training-and-inference-on-your-own-data-using-google-drive">
 <h1>Training and inference on your own data using Google Drive<a class="headerlink" href="#training-and-inference-on-your-own-data-using-google-drive" title="Permalink to this headline">¶</a></h1>
 <p>In this notebook we’ll install SLEAP, import training data into Colab using <a class="reference external" href="https://www.google.com/drive">Google Drive</a>, and run training and inference.</p>
-<section id="install-sleap">
+<div class="section" id="install-sleap">
 <h2>Install SLEAP<a class="headerlink" href="#install-sleap" title="Permalink to this headline">¶</a></h2>
 <p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/murthylab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
@@ -260,21 +259,21 @@
 </div>
 </div>
 </div>
-</section>
-<section id="import-training-data-into-colab-with-google-drive">
+</div>
+<div class="section" id="import-training-data-into-colab-with-google-drive">
 <h2>Import training data into Colab with Google Drive<a class="headerlink" href="#import-training-data-into-colab-with-google-drive" title="Permalink to this headline">¶</a></h2>
 <p>We’ll first prepare and export the training data from SLEAP, then upload it to Google Drive, and then mount Google Drive  into this Colab notebook.</p>
-<section id="create-and-export-the-training-job-package">
+<div class="section" id="create-and-export-the-training-job-package">
 <h3>Create and export the training job package<a class="headerlink" href="#create-and-export-the-training-job-package" title="Permalink to this headline">¶</a></h3>
 <p>A self-contained <strong>training job package</strong> contains a .slp file with labeled data and images which will be used for training, as well as .json training configuration file(s).</p>
 <p>A training job package can be exported in the SLEAP GUI fron the “Run Training..” dialog under the “Predict” menu.</p>
-</section>
-<section id="upload-training-job-package-to-google-drive">
+</div>
+<div class="section" id="upload-training-job-package-to-google-drive">
 <h3>Upload training job package to Google Drive<a class="headerlink" href="#upload-training-job-package-to-google-drive" title="Permalink to this headline">¶</a></h3>
 <p>To be consistent with the examples in this notebook, name the SLEAP project <code class="docutils literal notranslate"><span class="pre">colab</span></code> and create a directory called <code class="docutils literal notranslate"><span class="pre">sleap</span></code> in the root of your Google Drive. Then upload the exported training job package <code class="docutils literal notranslate"><span class="pre">colab.slp.training_job.zip</span></code> into <code class="docutils literal notranslate"><span class="pre">sleap</span></code> directory.</p>
 <p>If you place your training pckage somewhere else, or name it differently, adjust the paths/filenames/parameters below accordingly.</p>
-</section>
-<section id="mount-your-google-drive">
+</div>
+<div class="section" id="mount-your-google-drive">
 <h3>Mount your Google Drive<a class="headerlink" href="#mount-your-google-drive" title="Permalink to this headline">¶</a></h3>
 <p>Mounting your Google Drive will allow you to accessed the uploaded training job package in this notebook. When prompted to log into your Google account, give Colab access and the copy the authorization code into a field below (+ hit ‘return’).</p>
 <div class="cell docutils container">
@@ -301,12 +300,12 @@
 </div>
 </div>
 </div>
-</section>
-</section>
-<section id="train-a-model">
+</div>
+</div>
+<div class="section" id="train-a-model">
 <h2>Train a model<a class="headerlink" href="#train-a-model" title="Permalink to this headline">¶</a></h2>
 <p>Let’s train a model with the training profile (.json file) and the project data (.slp file) you have exported from SLEAP.</p>
-<section id="note-on-training-profiles">
+<div class="section" id="note-on-training-profiles">
 <h3>Note on training profiles<a class="headerlink" href="#note-on-training-profiles" title="Permalink to this headline">¶</a></h3>
 <p>Depending on the pipeline you chose in the training dialog, the config filename(s) will be:</p>
 <ul class="simple">
@@ -314,8 +313,8 @@
 <li><p>for a <strong>top-down</strong> pipeline, you’ll have a different profile for each of the models: <code class="docutils literal notranslate"><span class="pre">centroid.json</span></code> and <code class="docutils literal notranslate"><span class="pre">centered_instance.json</span></code>,</p></li>
 <li><p>for a <strong>single animal</strong> pipeline: <code class="docutils literal notranslate"><span class="pre">single_instance.json</span></code>.</p></li>
 </ul>
-</section>
-<section id="note-on-training-process">
+</div>
+<div class="section" id="note-on-training-process">
 <h3>Note on training process<a class="headerlink" href="#note-on-training-process" title="Permalink to this headline">¶</a></h3>
 <p>When you start training, you’ll first see the training parameters and then the training and validation loss for each training epoch.</p>
 <p>As soon as you’re satisfied with the validation loss you see for an epoch during training, you’re welcome to stop training by clicking the stop button. The version of the model with the lowest validation loss is saved during training, and that’s what will be used for inference.</p>
@@ -332,9 +331,9 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">!sleap-train</span> <span class="pre">centroid.json</span> <span class="pre">colab.pkg.slp</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">!sleap-train</span> <span class="pre">centered_instance.json</span> <span class="pre">colab.pkg.slp</span></code></p></li>
 </ul>
-</section>
-</section>
-<section id="run-inference-to-predict-instances">
+</div>
+</div>
+<div class="section" id="run-inference-to-predict-instances">
 <h2>Run inference to predict instances<a class="headerlink" href="#run-inference-to-predict-instances" title="Permalink to this headline">¶</a></h2>
 <p>Once training finishes, you’ll see a new directory (or two new directories for top-down training pipeline) containing all the model files SLEAP needs to use for inference.</p>
 <p>Here we’ll use the created model files to run inference in two modes:</p>
@@ -343,7 +342,7 @@
 <li><p>predicting and tracking instances in uploaded video</p></li>
 </ul>
 <p>You can also download the trained models for running inference from the SLEAP GUI on your computer (or anywhere else).</p>
-<section id="predicting-instances-in-suggested-frames">
+<div class="section" id="predicting-instances-in-suggested-frames">
 <h3>Predicting instances in suggested frames<a class="headerlink" href="#predicting-instances-in-suggested-frames" title="Permalink to this headline">¶</a></h3>
 <p>This mode of predicting instances is useful for accelerating the manual labeling work; it allows you to get early predictions on suggested frames and merge them back into the project for faster labeling.</p>
 <p>Here we assume you’ve trained a bottom-up model and that the model files were written in directory named <code class="docutils literal notranslate"><span class="pre">colab_demo.bottomup</span></code>; later in this notebook we’ll also show how to run inference with the pair of top-down models instead.</p>
@@ -359,8 +358,8 @@
 </div>
 </div>
 <p>Now, you can download the generated <code class="docutils literal notranslate"><span class="pre">colab.predicted_suggestions.slp</span></code> file and merge it into your labeling project (<strong>File -&gt; Merge into Project…</strong> from the GUI) to get new predictions for your suggested frames.</p>
-</section>
-<section id="predicting-and-tracking-instances-in-uploaded-video">
+</div>
+<div class="section" id="predicting-and-tracking-instances-in-uploaded-video">
 <h3>Predicting and tracking instances in uploaded video<a class="headerlink" href="#predicting-and-tracking-instances-in-uploaded-video" title="Permalink to this headline">¶</a></h3>
 <p>Let’s first upload the video we want to run inference on and name it <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>. (If your video is not named <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>, adjust the names below accordingly.)</p>
 <p>For this demo we’ll just get predictions for the first 200 frames (or you can adjust the –frames parameter below or remove it to run on the whole video).</p>
@@ -384,8 +383,8 @@
 </div>
 </div>
 <p>You can copy this file from your Google Drive to a local drive and open it in the SLEAP GUI app (or open it directly if you have your Google Drive mounted on your local machine). If the video is in the same directory as the predictions file, SLEAP will automatically find it; otherwise, you’ll be prompted to locate the video (since the path to the video on your local machine will be different than the path to the video on Colab).</p>
-</section>
-<section id="inference-with-top-down-models">
+</div>
+<div class="section" id="inference-with-top-down-models">
 <h3>Inference with top-down models<a class="headerlink" href="#inference-with-top-down-models" title="Permalink to this headline">¶</a></h3>
 <p>If you trained the pair of models needed for top-down inference, you can call <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> with <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">path/to/model</span></code> for each model, like so:</p>
 <div class="cell docutils container">
@@ -399,9 +398,9 @@
 </div>
 </div>
 </div>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
       </article>
       <footer>
