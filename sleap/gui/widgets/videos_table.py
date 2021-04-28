@@ -133,12 +133,16 @@ class VideosTableWidget(QWidget):
         return self.table_model.original_items
 
     @property
+    def video_paths(self):
+        return [video.filename for video in self.videos]
+
+    @property
     def checked_videos(self):
         return self.table_model.checked_items
 
     @property
-    def video_paths(self):
-        return [video.filename for video in self.videos]
+    def checked_video_paths(self):
+        return [video.filename for video in self.checked_videos]
 
     def add_videos(self, video_paths: Optional[str] = None):
         if video_paths is None:

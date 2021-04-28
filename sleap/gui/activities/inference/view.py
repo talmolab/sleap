@@ -98,6 +98,29 @@ class InferenceActivityInputWidgets(object):
         "verbosity",
     ]
 
+    def content(self) -> dict:
+        res = {
+            "model_type": self.model_type.currentText(),
+            "single_instance_model": self.single_instance_model.text(),
+            "bottom_up_model": self.bottom_up_model.text(),
+            "top_down_centroid_model": self.top_down_centroid_model.text(),
+            "top_down_centered_instance_model": self.top_down_centered_instance_model.text(),
+
+            "videos_table": self.videos_table.checked_video_paths,
+
+            "max_num_instances_in_frame": self.max_num_instances_in_frame.text(),
+            "enable_tracking": self.enable_tracking.isChecked(),
+            "tracking_method": self.tracking_method.currentText(),
+            "tracking_window_size": self.tracking_window_size.text(),
+
+            "output_dir_path": self.output_dir_path.text(),
+            "output_file_name": self.output_file_name.text(),
+            "include_empty_frames": self.include_empty_frames.isChecked(),
+            "verbosity": self.verbosity.currentText(),
+        }
+        return res
+
+
 
 class InferenceActivityCentralWidget(QWidget):
     def __init__(self, parent):
@@ -323,7 +346,9 @@ class InferenceActivityCentralWidget(QWidget):
         action_buttons.save_button = QPushButton(
             parent=self, text=" Save configuration.. "
         )
-        action_buttons.save_button.clicked.connect(lambda: self.controller.save())
+        action_buttons.save_button.clicked.connect(lambda: self.controller.save(
+            self.input_widgets.content()
+        ))
         action_buttons.layout.addWidget(action_buttons.save_button)
 
         # Export inference job button

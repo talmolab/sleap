@@ -47,8 +47,8 @@ class InferenceGuiController(object):
                 cmd += " --no-empty-frames"
             self._execute(cmd)
 
-    def save(self):
-        self.log(f"Save stub:\n{attr.asdict(self.model)}")
+    def save(self, content: dict) -> None:
+        self.log(f"Save stub:\n current model: {attr.asdict(self.model)}\n content: {content}")
 
     def export(self):
         self.log(f"Export stub...")
