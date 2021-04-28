@@ -144,26 +144,30 @@ class InferenceActivityCentralWidget(QWidget):
         model_form_layout.addRow("Type", model_type_widget)
         self.input_widgets.model_type = model_type_widget
 
-        # model dirs
+        # model paths
         self.input_widgets.single_instance_model = self.add_browse_widget(
             model_form_layout,
-            directory=True,
-            caption="Single Instance Model Directory",
+            directory=False,
+            caption="Single Instance Model",
+            filter="JSON (*.json)"
         )
         self.input_widgets.bottom_up_model = self.add_browse_widget(
             model_form_layout,
-            directory=True,
-            caption="Bottom Up Model Directory",
+            directory=False,
+            caption="Bottom Up Model",
+            filter="JSON (*.json)"
         )
         self.input_widgets.top_down_centroid_model = self.add_browse_widget(
             model_form_layout,
-            directory=True,
-            caption="Top Down Centroid Model Directory",
+            directory=False,
+            caption="Top Down Centroid Model",
+            filter="JSON (*.json)"
         )
         self.input_widgets.top_down_centered_instance_model = self.add_browse_widget(
             model_form_layout,
-            directory=True,
-            caption="Top Down Centered Instance Model Directory",
+            directory=False,
+            caption="Top Down Centered Instance Model",
+            filter="JSON (*.json)"
         )
 
         # set layout and add
@@ -283,7 +287,7 @@ class InferenceActivityCentralWidget(QWidget):
         directory: bool,
         caption: Text,
         from_dir: Optional[Text] = None,
-        filters: Optional[List[Text]] = None,
+        filter: Optional[Text] = None,
     ) -> QLineEdit:
         widget = QHBoxLayout()
         path_text = QLineEdit()
@@ -293,10 +297,12 @@ class InferenceActivityCentralWidget(QWidget):
             if directory:
                 path = FileDialog.openDir(self, dir=from_dir, caption=caption)
             else:
-                path = FileDialog.open(
-                    self, dir=from_dir, caption=caption, filters=";;".join(filters)
+                open_res = FileDialog.open(
+                    self, dir=from_dir, caption=caption, filter=filter
                 )
-            path_text.setText(path)
+                path = open_res[0] if open_res else None
+            if path:
+                path_text.setText(path)
 
         browse_button = QPushButton("Browse..")
         browse_button.clicked.connect(lambda: browse())
