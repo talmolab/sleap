@@ -4,10 +4,8 @@ import attr
 
 from sleap.gui.activities.inference.model import (
     InferenceGuiModel,
-    ModelType,
-    TrackerType,
-    Verbosity,
 )
+from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
 from sleap.gui.widgets.videos_table import VideosTableModel
 
 

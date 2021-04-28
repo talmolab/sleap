@@ -6,7 +6,8 @@ from PySide2.QtWidgets import *
 
 import sleap
 from sleap.gui.activities.inference.controller import InferenceGuiController
-from sleap.gui.activities.inference.model import InferenceGuiModel, ModelType
+from sleap.gui.activities.inference.model import InferenceGuiModel
+from sleap.gui.activities.inference.enums import ModelType
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableWidget

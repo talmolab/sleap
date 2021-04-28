@@ -1,16 +1,10 @@
-from enum import Enum
 from typing import Optional, Text
 
 import attr
 
+from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
 from sleap.gui.widgets.videos_table import VideosTableModel
 from sleap.gui.learning.configs import ConfigFileInfo
-
-
-class ModelType(Enum):
-    SINGLE_INSTANCE = "Single Instance"
-    BOTTOM_UP = "Multi Instance Bottom Up"
-    TOP_DOWN = "Multi Instance Top Down"
 
 
 @attr.s(auto_attribs=True)
@@ -27,24 +21,12 @@ class Videos(object):
     videos_table_model: VideosTableModel = VideosTableModel()
 
 
-class TrackerType(Enum):
-    SIMPLE = "Simple", "simple"
-    FLOW = "Flow Shift", "flow"
-    KALMAN = "Kalman Filter", "kalman"
-
-
 @attr.s(auto_attribs=True)
 class Instances(object):
     max_num_instances: int = 2
     enable_tracking: bool = False
     tracking_method: TrackerType = TrackerType.SIMPLE
     tracking_window: int = 5
-
-
-class Verbosity(Enum):
-    JSON = "Json", "json"
-    RICH = "Rich", "rich"
-    NONE = "None", "none"
 
 
 @attr.s(auto_attribs=True)
