@@ -36,7 +36,7 @@ jobs:
         python-version: 3.6
     - name: Install Dependencies
       run: |
-        pip install black
+        pip install black==20.8b1
     - name: Run Black
       run: |
         black --check sleap tests

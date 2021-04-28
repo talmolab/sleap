@@ -66,6 +66,11 @@ Training
                             name settings.
       --prefix PREFIX       Prefix to prepend to run name.
       --suffix SUFFIX       Suffix to append to run name.
+      --cpu                 Run training only on CPU. If not specified, will use
+                            available GPU.
+      --first-gpu           Run training on the first GPU, if available.
+      --last-gpu            Run training on the last GPU, if available.
+      --gpu GPU             Run training on the i-th GPU on the system.
 
 
 Inference and Tracking
