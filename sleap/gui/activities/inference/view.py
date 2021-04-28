@@ -37,10 +37,12 @@ class InferenceActivity(QMainWindow):
 
     def connect_widgets(self):
         self.input_widgets.model_type.currentIndexChanged.connect(
-            lambda: self.update_model_type())
+            lambda: self.update_model_type()
+        )
 
         self.input_widgets.enable_tracking.stateChanged.connect(
-            lambda: self.update_enable_tracking())
+            lambda: self.update_enable_tracking()
+        )
 
     def update_model_type(self) -> None:
         model_type = self.input_widgets.model_type.currentText()
