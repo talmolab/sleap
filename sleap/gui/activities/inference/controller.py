@@ -61,19 +61,6 @@ class InferenceGuiController(object):
 
     # Utils
 
-    @staticmethod
-    def lookup_enum(enum, value: str, value_index: Optional[int] = None) -> object:
-        if value_index is None:
-            filtered = [v for v in enum if v.value == value]
-        else:
-            filtered = [v[value_index] for v in enum if v.value == value]
-        if len(filtered) == 1:
-            return filtered[0]
-        else:
-            raise ValueError(
-                f"Enum {enum} has {len(filtered)} matching values for {value}"
-            )
-
     def log(self, message: str) -> None:
         if self.logging_enabled:
             print(f"+++ {message}")
