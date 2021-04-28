@@ -1,7 +1,6 @@
-from typing import Text, List, Optional
+from typing import Text, List, Optional, Callable
 
 import attr
-from PySide2.QtWidgets import QWidget
 
 from sleap.gui.activities.inference.model import (
     InferenceGuiModel,
@@ -9,7 +8,6 @@ from sleap.gui.activities.inference.model import (
     TrackerType,
     Verbosity,
 )
-from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableModel
 
 
@@ -39,40 +37,40 @@ class InferenceGuiController(object):
     def set_model_type(
         self,
         model_type: str,
-        single_instance_model_widget: QWidget,
-        bottom_up_model_widget: QWidget,
-        top_down_centroid_model_widget: QWidget,
-        top_down_centered_instance_model_widget: QWidget,
+        single_instance_model_enable: Callable[[bool], None],
+        bottom_up_model_enable: Callable[[bool], None],
+        top_down_centroid_model_enable: Callable[[bool], None],
+        top_down_centered_instance_model_enable: Callable[[bool], None],
     ) -> None:
         self.model.models.model_type = InferenceGuiController.lookup_enum(
             ModelType, model_type
         )
         if self.model.models.model_type.value == ModelType.SINGLE_INSTANCE.value:
-            single_instance_model_widget.setDisabled(False)
-            bottom_up_model_widget.setDisabled(True)
-            top_down_centroid_model_widget.setDisabled(True)
-            top_down_centered_instance_model_widget.setDisabled(True)
+            single_instance_model_enable(True)
+            bottom_up_model_enable(False)
+            top_down_centroid_model_enable(False)
+            top_down_centered_instance_model_enable(False)
         elif self.model.models.model_type.value == ModelType.BOTTOM_UP.value:
-            single_instance_model_widget.setDisabled(True)
-            bottom_up_model_widget.setDisabled(False)
-            top_down_centroid_model_widget.setDisabled(True)
-            top_down_centered_instance_model_widget.setDisabled(True)
+            single_instance_model_enable(False)
+            bottom_up_model_enable(True)
+            top_down_centroid_model_enable(False)
+            top_down_centered_instance_model_enable(False)
         elif self.model.models.model_type.value == ModelType.TOP_DOWN.value:
-            single_instance_model_widget.setDisabled(True)
-            bottom_up_model_widget.setDisabled(True)
-            top_down_centroid_model_widget.setDisabled(False)
-            top_down_centered_instance_model_widget.setDisabled(False)
+            single_instance_model_enable(False)
+            bottom_up_model_enable(False)
+            top_down_centroid_model_enable(True)
+            top_down_centered_instance_model_enable(True)
         self.log(f"Model type changed to {self.model.models.model_type}")
 
     def set_tracking_enabled(
         self,
         tracking_enabled: bool,
-        tracking_method_widget: QWidget,
-        tracking_window_size_widget: QWidget,
+        tracking_method_enable: Callable[[bool], None],
+        tracking_window_size_enable: Callable[[bool], None],
     ):
         self.model.instances.enable_tracking = tracking_enabled
-        tracking_method_widget.setEnabled(self.model.instances.enable_tracking)
-        tracking_window_size_widget.setEnabled(self.model.instances.enable_tracking)
+        tracking_method_enable(self.model.instances.enable_tracking)
+        tracking_window_size_enable(self.model.instances.enable_tracking)
         self.log(f"Tracking enabled changed to {self.model.instances.enable_tracking}")
 
     # Actions

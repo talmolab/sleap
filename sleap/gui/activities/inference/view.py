@@ -33,18 +33,18 @@ class InferenceActivity(QMainWindow):
         self.input_widgets.model_type.currentIndexChanged.connect(
             lambda: self.controller.set_model_type(
                 model_type=self.input_widgets.model_type.currentText(),
-                single_instance_model_widget=self.input_widgets.single_instance_model,
-                bottom_up_model_widget=self.input_widgets.bottom_up_model,
-                top_down_centroid_model_widget=self.input_widgets.top_down_centroid_model,
-                top_down_centered_instance_model_widget=self.input_widgets.top_down_centered_instance_model,
+                single_instance_model_enable=lambda v: self.input_widgets.single_instance_model.setEnabled(v),
+                bottom_up_model_enable=lambda v: self.input_widgets.bottom_up_model.setEnabled(v),
+                top_down_centroid_model_enable=lambda v: self.input_widgets.top_down_centroid_model.setEnabled(v),
+                top_down_centered_instance_model_enable=lambda v: self.input_widgets.top_down_centered_instance_model.setEnabled(v)
             )
         )
 
         self.input_widgets.enable_tracking.stateChanged.connect(
             lambda: self.controller.set_tracking_enabled(
                 tracking_enabled=self.input_widgets.enable_tracking.isChecked(),
-                tracking_method_widget=self.input_widgets.tracking_method,
-                tracking_window_size_widget=self.input_widgets.tracking_window_size,
+                tracking_method_enable=lambda v: self.input_widgets.tracking_method.setEnabled(v),
+                tracking_window_size_enable=lambda v: self.input_widgets.tracking_window_size.setEnabled(v),
             )
         )
 

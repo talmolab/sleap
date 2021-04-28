@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Text, List
+from typing import Optional, Text
 
 import attr
 
