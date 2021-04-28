@@ -34,44 +34,8 @@ class InferenceGuiController(object):
         return self.model.videos.videos_table_model
 
     # Setters
-    def set_model_type(
-        self,
-        model_type: str,
-        single_instance_model_enable: Callable[[bool], None],
-        bottom_up_model_enable: Callable[[bool], None],
-        top_down_centroid_model_enable: Callable[[bool], None],
-        top_down_centered_instance_model_enable: Callable[[bool], None],
-    ) -> None:
-        self.model.models.model_type = InferenceGuiController.lookup_enum(
-            ModelType, model_type
-        )
-        if self.model.models.model_type.value == ModelType.SINGLE_INSTANCE.value:
-            single_instance_model_enable(True)
-            bottom_up_model_enable(False)
-            top_down_centroid_model_enable(False)
-            top_down_centered_instance_model_enable(False)
-        elif self.model.models.model_type.value == ModelType.BOTTOM_UP.value:
-            single_instance_model_enable(False)
-            bottom_up_model_enable(True)
-            top_down_centroid_model_enable(False)
-            top_down_centered_instance_model_enable(False)
-        elif self.model.models.model_type.value == ModelType.TOP_DOWN.value:
-            single_instance_model_enable(False)
-            bottom_up_model_enable(False)
-            top_down_centroid_model_enable(True)
-            top_down_centered_instance_model_enable(True)
-        self.log(f"Model type changed to {self.model.models.model_type}")
 
-    def set_tracking_enabled(
-        self,
-        tracking_enabled: bool,
-        tracking_method_enable: Callable[[bool], None],
-        tracking_window_size_enable: Callable[[bool], None],
-    ):
-        self.model.instances.enable_tracking = tracking_enabled
-        tracking_method_enable(self.model.instances.enable_tracking)
-        tracking_window_size_enable(self.model.instances.enable_tracking)
-        self.log(f"Tracking enabled changed to {self.model.instances.enable_tracking}")
+
 
     # Actions
 

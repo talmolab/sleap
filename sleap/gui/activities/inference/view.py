@@ -6,7 +6,7 @@ from PySide2.QtWidgets import *
 
 import sleap
 from sleap.gui.activities.inference.controller import InferenceGuiController
-from sleap.gui.activities.inference.model import InferenceGuiModel
+from sleap.gui.activities.inference.model import InferenceGuiModel, ModelType
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableWidget
@@ -25,28 +25,46 @@ class InferenceActivity(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self.connect_widgets()
+        self.update_widgets()
 
         self.setMinimumWidth(800)
         self.show()
 
+    def update_widgets(self):
+        self.update_model_type()
+        self.update_enable_tracking()
+
     def connect_widgets(self):
         self.input_widgets.model_type.currentIndexChanged.connect(
-            lambda: self.controller.set_model_type(
-                model_type=self.input_widgets.model_type.currentText(),
-                single_instance_model_enable=lambda v: self.input_widgets.single_instance_model.setEnabled(v),
-                bottom_up_model_enable=lambda v: self.input_widgets.bottom_up_model.setEnabled(v),
-                top_down_centroid_model_enable=lambda v: self.input_widgets.top_down_centroid_model.setEnabled(v),
-                top_down_centered_instance_model_enable=lambda v: self.input_widgets.top_down_centered_instance_model.setEnabled(v)
-            )
-        )
+            lambda: self.update_model_type())
 
         self.input_widgets.enable_tracking.stateChanged.connect(
-            lambda: self.controller.set_tracking_enabled(
-                tracking_enabled=self.input_widgets.enable_tracking.isChecked(),
-                tracking_method_enable=lambda v: self.input_widgets.tracking_method.setEnabled(v),
-                tracking_window_size_enable=lambda v: self.input_widgets.tracking_window_size.setEnabled(v),
-            )
-        )
+            lambda: self.update_enable_tracking())
+
+    def update_model_type(self) -> None:
+        model_type = self.input_widgets.model_type.currentText()
+        if model_type == ModelType.SINGLE_INSTANCE.value:
+            self.input_widgets.single_instance_model.setEnabled(True)
+            self.input_widgets.bottom_up_model.setEnabled(False)
+            self.input_widgets.top_down_centroid_model.setEnabled(False)
+            self.input_widgets.top_down_centered_instance_model.setEnabled(False)
+        elif model_type == ModelType.BOTTOM_UP.value:
+            self.input_widgets.single_instance_model.setEnabled(False)
+            self.input_widgets.bottom_up_model.setEnabled(True)
+            self.input_widgets.top_down_centroid_model.setEnabled(False)
+            self.input_widgets.top_down_centered_instance_model.setEnabled(False)
+        elif model_type == ModelType.TOP_DOWN.value:
+            self.input_widgets.single_instance_model.setEnabled(False)
+            self.input_widgets.bottom_up_model.setEnabled(False)
+            self.input_widgets.top_down_centroid_model.setEnabled(True)
+            self.input_widgets.top_down_centered_instance_model.setEnabled(True)
+        else:
+            raise ValueError(f"Invalid model type {model_type}")
+
+    def update_enable_tracking(self):
+        tracking_enabled = self.input_widgets.enable_tracking.isChecked()
+        self.input_widgets.tracking_method.setEnabled(tracking_enabled)
+        self.input_widgets.tracking_window_size.setEnabled(tracking_enabled)
 
 
 class InferenceActivityInputWidgets(object):
