@@ -8,10 +8,10 @@ from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosi
 @attr.s(auto_attribs=True)
 class TrainedModels(object):
     model_type: Optional[ModelType] = ModelType.TOP_DOWN
-    single_instance_model: Optional[str] = None
-    bottom_up_model: Optional[str] = None
-    centroid_model: Optional[str] = None
-    centered_instance_model: Optional[str] = None
+    single_instance_model_path: Optional[str] = None
+    bottom_up_model_path: Optional[str] = None
+    centroid_model_path: Optional[str] = None
+    centered_instance_model_path: Optional[str] = None
 
 
 @attr.s(auto_attribs=True)

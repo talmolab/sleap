@@ -420,8 +420,8 @@ if __name__ == "__main__":
     ]
     model.videos.paths = videos
 
-    model.models.centroid_model = "cmp"
-    model.models.centered_instance_model = "cip"
+    model.models.centroid_model_path = "cmp"
+    model.models.centered_instance_model_path = "cip"
 
     controller = InferenceGuiController(model)
 
