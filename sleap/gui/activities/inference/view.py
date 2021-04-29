@@ -421,7 +421,9 @@ class InferenceActivityCentralWidget(QWidget):
 
         # Run inference button
         action_buttons.run_button = QPushButton(parent=self, text=" Run ")
-        action_buttons.run_button.clicked.connect(lambda: self.controller.run())
+        action_buttons.run_button.clicked.connect(
+            lambda: self.controller.run(content=self.input_widgets.extract_content())
+        )
         action_buttons.layout.addWidget(action_buttons.run_button)
 
         # Save configuration button
@@ -429,7 +431,7 @@ class InferenceActivityCentralWidget(QWidget):
             parent=self, text=" Save configuration.. "
         )
         action_buttons.save_button.clicked.connect(
-            lambda: self.controller.save(self.input_widgets.extract_content())
+            lambda: self.controller.save(content=self.input_widgets.extract_content())
         )
         action_buttons.layout.addWidget(action_buttons.save_button)
 
