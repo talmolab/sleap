@@ -28,7 +28,7 @@ class InferenceActivity(QMainWindow):
         self.connect_widgets()
         self.update_widgets()
 
-        self.setMinimumWidth(1200)
+        self.setMinimumWidth(1000)
         self.show()
 
     def load_content(self):
@@ -217,29 +217,30 @@ class InferenceActivityCentralWidget(QWidget):
         self.input_widgets.model_type = model_type_widget
 
         # model paths
-        self.input_widgets.single_instance_model = self.add_browse_widget(
-            model_form_layout,
-            directory=False,
-            caption="Single Instance Model",
-            filter="JSON (*.json)",
-        )
-        self.input_widgets.bottom_up_model = self.add_browse_widget(
-            model_form_layout,
-            directory=False,
-            caption="Bottom Up Model",
-            filter="JSON (*.json)",
-        )
+        file_dialog_filter = "Config (training_config.json)"
         self.input_widgets.top_down_centroid_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
-            caption="Top Down Centroid Model",
-            filter="JSON (*.json)",
+            caption="Top Down Centroid Training Config",
+            filter=file_dialog_filter,
         )
         self.input_widgets.top_down_centered_instance_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
-            caption="Top Down Centered Instance Model",
-            filter="JSON (*.json)",
+            caption="Top Down Centered Instance Training Config",
+            filter=file_dialog_filter,
+        )
+        self.input_widgets.bottom_up_model = self.add_browse_widget(
+            model_form_layout,
+            directory=False,
+            caption="Bottom Up Training Config",
+            filter=file_dialog_filter,
+        )
+        self.input_widgets.single_instance_model = self.add_browse_widget(
+            model_form_layout,
+            directory=False,
+            caption="Single Instance Training Config",
+            filter=file_dialog_filter,
         )
 
         # set layout and add
