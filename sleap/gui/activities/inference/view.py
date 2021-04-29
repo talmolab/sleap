@@ -200,14 +200,23 @@ class InferenceActivityCentralWidget(QWidget):
         return self.parent().input_widgets
 
     def view_config(self, config_path: str) -> None:
-        config_viewer = self.config_viewer_widgets.get(config_path)
-        if config_viewer is None:
-            config_file_info = ConfigFileInfo.from_config_file(config_path)
-            config_viewer = TrainingEditorWidget.from_trained_config(config_file_info)
-            self.config_viewer_widgets[config_path] = config_path
-        config_viewer.show()
-        config_viewer.raise_()
-        config_viewer.activateWindow()
+        if not config_path:
+            QMessageBox(windowTitle="No file", text="Training config file not specified.").exec_()
+            return 
+        widget = self.config_viewer_widgets.get(config_path)
+        if widget is None:
+            try:
+                config_file_info = ConfigFileInfo.from_config_file(config_path)
+                widget = TrainingEditorWidget.from_trained_config(config_file_info)
+                # Without this the viewer goes out of scope and destroys itself
+                self.config_viewer_widgets[config_path] = widget
+            except Exception as e:
+                QMessageBox(windowTitle="Error", text=str(e)).exec_()
+                return
+
+        widget.show()
+        widget.raise_()
+        widget.activateWindow()
 
     def build_tabs_widget(self):
         tabs = QTabWidget(self)
