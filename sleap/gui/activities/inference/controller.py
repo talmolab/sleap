@@ -21,32 +21,16 @@ class InferenceGuiController(object):
         return self.model.models.model_type
 
     def get_single_instance_model_path(self) -> str:
-        return (
-            self.model.models.single_instance_model.path
-            if self.model.models.single_instance_model
-            else None
-        )
+        return self.model.models.single_instance_model
 
     def get_bottom_up_model_path(self) -> str:
-        return (
-            self.model.models.bottom_up_model.path
-            if self.model.models.bottom_up_model
-            else None
-        )
+        return self.model.models.bottom_up_model
 
     def get_top_down_centroid_model_path(self) -> str:
-        return (
-            self.model.models.centroid_model.path
-            if self.model.models.centroid_model
-            else None
-        )
+        return self.model.models.centroid_model
 
     def get_top_down_centered_instance_model_path(self) -> str:
-        return (
-            self.model.models.centered_instance_model.path
-            if self.model.models.centered_instance_model
-            else None
-        )
+        return self.model.models.centered_instance_model
 
     def get_video_paths(self) -> List[str]:
         return self.model.videos.paths
@@ -92,12 +76,12 @@ class InferenceGuiController(object):
             cmd = f"sleap-track {v}"
 
             if self.model.models.model_type == ModelType.TOP_DOWN:
-                cmd += f" -m {self.model.models.centroid_model.path}"
-                cmd += f" -m {self.model.models.centered_instance_model.path}"
+                cmd += f" -m {self.model.models.centroid_model}"
+                cmd += f" -m {self.model.models.centered_instance_model}"
             elif self.model.models.model_type == ModelType.BOTTOM_UP:
-                cmd += f" -m {self.model.models.bottom_up_model.path}"
+                cmd += f" -m {self.model.models.bottom_up_model}"
             elif self.model.models.model_type == ModelType.SINGLE_INSTANCE:
-                cmd += f" -m {self.model.models.single_instance_model.path}"
+                cmd += f" -m {self.model.models.single_instance_model}"
 
             cmd += f" --tracking.tracker {self.model.instances.tracking_method.arg()}"
             cmd += f" --tracking.track_window {self.model.instances.tracking_window}"

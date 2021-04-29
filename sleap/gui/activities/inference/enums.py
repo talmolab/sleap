@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class ModelType(Enum):
-    SINGLE_INSTANCE = "Single Instance"
-    BOTTOM_UP = "Multi Instance Bottom Up"
     TOP_DOWN = "Multi Instance Top Down"
+    BOTTOM_UP = "Multi Instance Bottom Up"
+    SINGLE_INSTANCE = "Single Instance"
 
     def display(self):
         return self.value

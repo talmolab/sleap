@@ -9,7 +9,6 @@ from sleap.gui.activities.inference.controller import InferenceGuiController
 from sleap.gui.activities.inference.model import InferenceGuiModel
 from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
 from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.widgets.videos_table import VideosTableWidget, VideosTableModel
 
 
@@ -421,8 +420,8 @@ if __name__ == "__main__":
     ]
     model.videos.paths = videos
 
-    model.models.centroid_model = ConfigFileInfo(path="cmp", config=None)
-    model.models.centered_instance_model = ConfigFileInfo(path="cip", config=None)
+    model.models.centroid_model = "cmp"
+    model.models.centered_instance_model = "cip"
 
     controller = InferenceGuiController(model)
 

@@ -1,18 +1,17 @@
-from typing import Optional, Text, List
+from typing import Optional, List
 
 import attr
 
 from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
-from sleap.gui.learning.configs import ConfigFileInfo
 
 
 @attr.s(auto_attribs=True)
 class TrainedModels(object):
     model_type: Optional[ModelType] = ModelType.TOP_DOWN
-    single_instance_model: Optional[ConfigFileInfo] = None
-    bottom_up_model: Optional[ConfigFileInfo] = None
-    centroid_model: Optional[ConfigFileInfo] = None
-    centered_instance_model: Optional[ConfigFileInfo] = None
+    single_instance_model: Optional[str] = None
+    bottom_up_model: Optional[str] = None
+    centroid_model: Optional[str] = None
+    centered_instance_model: Optional[str] = None
 
 
 @attr.s(auto_attribs=True)
@@ -30,7 +29,7 @@ class Instances(object):
 
 @attr.s(auto_attribs=True)
 class Output(object):
-    output_file_path: Optional[Text] = None
+    output_file_path: Optional[str] = None
     include_empty_frames: bool = False
     verbosity: Verbosity = Verbosity.JSON
 
