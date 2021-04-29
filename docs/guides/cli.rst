@@ -156,7 +156,7 @@ If you specify how many identities there should be in a frame (i.e., the number 
       --open-in-gui         Open the resulting predictions in the GUI when
                             finished.
       --tracking.tracker TRACKING.TRACKER
-                            Options: simple, flow, None (default: None)
+                            Options: simple, flow, kalman, None (default: None)
       --tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT
                             Target number of instances to track per frame.
                             (default: 0)

@@ -4,7 +4,6 @@ from typing import Text, Optional, List, Callable
 from PySide2.QtCore import QObject
 from PySide2.QtWidgets import *
 
-import sleap
 from sleap.gui.activities.inference.controller import InferenceGuiController
 from sleap.gui.activities.inference.model import InferenceGuiModel
 from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
@@ -45,8 +44,8 @@ class InferenceActivity(QMainWindow):
             enable_tracking=self.controller.get_enable_tracking(),
             tracking_method=self.controller.get_tracking_method().display(),
             tracking_window_size=self.controller.get_tracking_window_size(),
-            output_dir_path=self.controller.get_ouput_dir_path(),
-            output_file_name=self.controller.get_output_file_name(),
+            output_dir_path=self.controller.get_output_dir_path(),
+            output_file_suffix=self.controller.get_output_file_suffix(),
             include_empty_frames=self.controller.get_include_empty_frames(),
             verbosity=self.controller.get_verbosity().display(),
         )
@@ -113,7 +112,7 @@ class InferenceActivityInputWidgets(object):
         "tracking_window_size",
         # output tab
         "output_dir_path",
-        "output_file_name",
+        "output_file_suffix",
         "include_empty_frames",
         "verbosity",
     ]
@@ -131,7 +130,7 @@ class InferenceActivityInputWidgets(object):
             "tracking_method": self.tracking_method.currentText(),
             "tracking_window_size": self.tracking_window_size.text(),
             "output_dir_path": self.output_dir_path.text(),
-            "output_file_name": self.output_file_name.text(),
+            "output_file_suffix": self.output_file_suffix.text(),
             "include_empty_frames": self.include_empty_frames.isChecked(),
             "verbosity": self.verbosity.currentText(),
         }
@@ -150,7 +149,7 @@ class InferenceActivityInputWidgets(object):
         tracking_method: str,
         tracking_window_size: int,
         output_dir_path: str,
-        output_file_name: str,
+        output_file_suffix: str,
         include_empty_frames: bool,
         verbosity: str,
     ) -> None:
@@ -168,7 +167,7 @@ class InferenceActivityInputWidgets(object):
         self.tracking_window_size.setValue(tracking_window_size)
 
         self.output_dir_path.setText(output_dir_path)
-        self.output_file_name.setText(output_file_name)
+        self.output_file_suffix.setText(output_file_suffix)
         self.include_empty_frames.setChecked(include_empty_frames)
         self.verbosity.setCurrentText(verbosity)
 
@@ -202,7 +201,7 @@ class InferenceActivityCentralWidget(QWidget):
     def view_config(self, config_path: str) -> None:
         if not config_path:
             QMessageBox(windowTitle="No file", text="Training config file not specified.").exec_()
-            return 
+            return
         widget = self.config_viewer_widgets.get(config_path)
         if widget is None:
             try:
@@ -354,9 +353,9 @@ class InferenceActivityCentralWidget(QWidget):
         self.input_widgets.output_dir_path = self.add_browse_widget(
             output_box_layout, directory=True, caption="Output dir"
         )
-        output_file_name = QLineEdit()
-        output_box_layout.addRow("Output file name", output_file_name)
-        self.input_widgets.output_file_name = output_file_name
+        output_file_suffix = QLineEdit()
+        output_box_layout.addRow("Output file suffix", output_file_suffix)
+        self.input_widgets.output_file_suffix = output_file_suffix
 
         # include empty frames
         empty_frames = QCheckBox()

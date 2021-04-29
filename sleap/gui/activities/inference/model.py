@@ -29,7 +29,8 @@ class Instances(object):
 
 @attr.s(auto_attribs=True)
 class Output(object):
-    output_file_path: Optional[str] = None
+    output_dir_path: Optional[str] = None
+    output_file_suffix: Optional[str] = ".predictions.slp"
     include_empty_frames: bool = False
     verbosity: Verbosity = Verbosity.JSON
 

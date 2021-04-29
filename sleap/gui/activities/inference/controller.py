@@ -7,7 +7,6 @@ from sleap.gui.activities.inference.model import (
     InferenceGuiModel,
 )
 from sleap.gui.activities.inference.enums import ModelType, Verbosity, TrackerType
-from sleap.gui.widgets.videos_table import VideosTableModel
 
 
 @attr.s(auto_attribs=True)
@@ -47,19 +46,11 @@ class InferenceGuiController(object):
     def get_tracking_window_size(self) -> int:
         return self.model.instances.tracking_window
 
-    def get_ouput_dir_path(self) -> str:
-        return (
-            os.path.split(self.model.output.output_file_path)[0]
-            if self.model.output.output_file_path
-            else None
-        )
+    def get_output_dir_path(self) -> str:
+        return self.model.output.output_dir_path
 
-    def get_output_file_name(self) -> str:
-        return (
-            os.path.split(self.model.output.output_file_path)[1]
-            if self.model.output.output_file_path
-            else None
-        )
+    def get_output_file_suffix(self) -> str:
+        return self.model.output.output_file_suffix
 
     def get_include_empty_frames(self) -> bool:
         return self.model.output.include_empty_frames
@@ -72,24 +63,28 @@ class InferenceGuiController(object):
     # Actions
 
     def run(self) -> None:
-        for v in self.model.videos.paths:
+        for v in self.get_video_paths():
             cmd = f"sleap-track {v}"
 
-            if self.model.models.model_type == ModelType.TOP_DOWN:
-                cmd += f" -m {self.model.models.centroid_model_path}"
-                cmd += f" -m {self.model.models.centered_instance_model_path}"
-            elif self.model.models.model_type == ModelType.BOTTOM_UP:
-                cmd += f" -m {self.model.models.bottom_up_model_path}"
-            elif self.model.models.model_type == ModelType.SINGLE_INSTANCE:
-                cmd += f" -m {self.model.models.single_instance_model_path}"
+            if self.get_model_type() == ModelType.TOP_DOWN:
+                cmd += f" -m {os.path.dirname(self.get_top_down_centroid_model_path())}"
+                cmd += f" -m {os.path.dirname(self.get_top_down_centered_instance_model_path())}"
+            elif self.get_model_type() == ModelType.BOTTOM_UP:
+                cmd += f" -m {os.path.dirname(self.get_bottom_up_model_path())}"
+            elif self.get_model_type() == ModelType.SINGLE_INSTANCE:
+                cmd += f" -m {os.path.dirname(self.get_single_instance_model_path())}"
 
-            cmd += f" --tracking.tracker {self.model.instances.tracking_method.arg()}"
-            cmd += f" --tracking.track_window {self.model.instances.tracking_window}"
-            cmd += f" --tracking.target_instance_count {self.model.instances.max_num_instances}"
+            if self.get_enable_tracking():
+                cmd += f" --tracking.tracker {self.get_tracking_method().arg()}"
+                cmd += f" --tracking.track_window {self.get_tracking_window_size()}"
+                cmd += f" --tracking.target_instance_count {self.get_max_num_instances_in_frame()}"
 
-            cmd += f" -o {self.model.output.output_file_path}"
-            cmd += f" --verbosity {self.model.output.verbosity.arg()}"
-            if not self.model.output.include_empty_frames:
+            output_file_path = f"{os.path.basename(v)}{self.get_output_file_suffix()}"
+            if self.get_output_dir_path():
+                output_file_path = os.path.join(self.get_output_dir_path(), output_file_path)
+            cmd += f" -o {output_file_path}"
+            cmd += f" --verbosity {self.get_verbosity().arg()}"
+            if not self.get_include_empty_frames():
                 cmd += " --no-empty-frames"
             self._execute(cmd)
 
