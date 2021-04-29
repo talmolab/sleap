@@ -209,14 +209,14 @@ class InferenceActivityCentralWidget(QWidget):
         model_form_layout = QFormLayout()
         model_group_box.setLayout(model_form_layout)
 
-        # model type
+        # model pipeline type
         model_type_widget = QComboBox()
         model_type_widget.addItems([mt.display() for mt in ModelType])
         model_type_widget.setMaximumWidth(250)
         model_form_layout.addRow("Type", model_type_widget)
         self.input_widgets.model_type = model_type_widget
 
-        # model paths
+        # model training config paths
         file_dialog_filter = "Config (training_config.json)"
         self.input_widgets.top_down_centroid_model = self.add_browse_widget(
             model_form_layout,
