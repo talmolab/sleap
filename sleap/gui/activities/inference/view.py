@@ -28,7 +28,7 @@ class InferenceActivity(QMainWindow):
         self.connect_widgets()
         self.update_widgets()
 
-        self.setMinimumWidth(800)
+        self.setMinimumWidth(1200)
         self.show()
 
     def load_content(self):

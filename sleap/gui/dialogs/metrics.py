@@ -100,11 +100,6 @@ class MetricsTableDialog(QtWidgets.QWidget):
             self._cfg_getter.dir_paths.append(dir)
             self._update_cfgs()
 
-    def _show_model(self, cfg_info: Optional[ConfigFileInfo] = None):
-        """Method to show both hyperparam and metrics windows."""
-        self._show_model_params(cfg_info)
-        self._show_metric_details(cfg_info)
-
     def _show_model_params(
         self, cfg_info: Optional[ConfigFileInfo] = None, model_detail_widgets=dict()
     ):
