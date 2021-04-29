@@ -1,5 +1,5 @@
 import sys
-from typing import Text, Optional, List
+from typing import Text, Optional, List, Callable
 
 from PySide2.QtCore import QObject
 from PySide2.QtWidgets import *
@@ -9,6 +9,8 @@ from sleap.gui.activities.inference.controller import InferenceGuiController
 from sleap.gui.activities.inference.model import InferenceGuiModel
 from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
 from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.learning.configs import ConfigFileInfo
+from sleap.gui.learning.dialog import TrainingEditorWidget
 from sleap.gui.widgets.videos_table import VideosTableWidget, VideosTableModel
 
 
@@ -172,6 +174,8 @@ class InferenceActivityInputWidgets(object):
 
 
 class InferenceActivityCentralWidget(QWidget):
+    config_viewer_widgets = {}
+
     def __init__(self, parent):
         super(InferenceActivityCentralWidget, self).__init__(parent)
         layout = QVBoxLayout()
@@ -194,6 +198,16 @@ class InferenceActivityCentralWidget(QWidget):
     @property
     def input_widgets(self) -> InferenceActivityInputWidgets:
         return self.parent().input_widgets
+
+    def view_config(self, config_path: str) -> None:
+        config_viewer = self.config_viewer_widgets.get(config_path)
+        if config_viewer is None:
+            config_file_info = ConfigFileInfo.from_config_file(config_path)
+            config_viewer = TrainingEditorWidget.from_trained_config(config_file_info)
+            self.config_viewer_widgets[config_path] = config_path
+        config_viewer.show()
+        config_viewer.raise_()
+        config_viewer.activateWindow()
 
     def build_tabs_widget(self):
         tabs = QTabWidget(self)
@@ -218,29 +232,34 @@ class InferenceActivityCentralWidget(QWidget):
 
         # model training config paths
         file_dialog_filter = "Config (training_config.json)"
+
         self.input_widgets.top_down_centroid_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Top Down Centroid Training Config",
             filter=file_dialog_filter,
+            view_callback=lambda: self.view_config(self.input_widgets.top_down_centroid_model.text())
         )
         self.input_widgets.top_down_centered_instance_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Top Down Centered Instance Training Config",
             filter=file_dialog_filter,
+            view_callback=lambda: self.view_config(self.input_widgets.top_down_centered_instance_model.text())
         )
         self.input_widgets.bottom_up_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Bottom Up Training Config",
             filter=file_dialog_filter,
+            view_callback=lambda: self.view_config(self.input_widgets.bottom_up_model.text())
         )
         self.input_widgets.single_instance_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Single Instance Training Config",
             filter=file_dialog_filter,
+            view_callback=lambda: self.view_config(self.input_widgets.single_instance_model.text())
         )
 
         # set layout and add
@@ -359,6 +378,7 @@ class InferenceActivityCentralWidget(QWidget):
         caption: Text,
         from_dir: Optional[Text] = None,
         filter: Optional[Text] = None,
+        view_callback: Optional[Callable[[], None]] = None
     ) -> QLineEdit:
         widget = QHBoxLayout()
         path_text = QLineEdit()
@@ -378,6 +398,12 @@ class InferenceActivityCentralWidget(QWidget):
         browse_button = QPushButton("Browse..")
         browse_button.clicked.connect(lambda: browse())
         widget.addWidget(browse_button)
+
+        if view_callback is not None:
+            view_button = QPushButton("View")
+            view_button.clicked.connect(lambda: view_callback())
+            widget.addWidget(view_button)
+
         layout.addRow(caption, widget)
         return path_text
 
@@ -421,7 +447,7 @@ if __name__ == "__main__":
     ]
     model.videos.paths = videos
 
-    model.models.centroid_model_path = "cmp"
+    model.models.centroid_model_path = "C:/Users/ariem/work/sleap_data/models/210225_170029.centroid.n=5/training_config.json"
     model.models.centered_instance_model_path = "cip"
 
     controller = InferenceGuiController(model)
