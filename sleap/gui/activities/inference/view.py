@@ -446,7 +446,7 @@ class InferenceActivityCentralWidget(QWidget):
         return action_buttons
 
 
-if __name__ == "__main__":
+def launch_inference_activity():
     app = QApplication()
     model = InferenceGuiModel()
 
@@ -465,3 +465,7 @@ if __name__ == "__main__":
     ex = InferenceActivity(parent=None, ctrl=controller)
 
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    launch_inference_activity()
