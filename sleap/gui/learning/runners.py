@@ -255,9 +255,7 @@ class InferenceTask:
         """Runs inference in a subprocess."""
         cli_args, output_path = self.make_predict_cli_call(item_for_inference, gui=gui)
 
-        print("Command line call:")
-        print(" ".join(cli_args))
-        print()
+        print(f"Command line call: {' '.join(cli_args)}\n")
 
         # Run inference CLI capturing output.
         with subprocess.Popen(cli_args, stdout=subprocess.PIPE) as proc:
