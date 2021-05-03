@@ -707,6 +707,16 @@ class MainWindow(QMainWindow):
             "Run Inference...",
             lambda: self._show_learning_dialog("inference"),
         )
+        add_menu_item(
+            predictionMenu,
+            "batch_inference",
+            "Batch Inference...",
+            lambda: QMessageBox(
+                windowTitle="Batch Inference",
+                text="Batch Inference GUI helps running inference and tracking on multiple video files "
+                     "using trained models. To launch Batch Inference GUI close this app and "
+                     "run 'sleap-track' (without additional arguments) from the terminal.").exec_()
+        )
 
         predictionMenu.addSeparator()
 
