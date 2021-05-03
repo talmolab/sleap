@@ -11,6 +11,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.learning.dialog import TrainingEditorWidget
 from sleap.gui.widgets.videos_table import VideosTableWidget, VideosTableModel
+from sleap.nn.inference import main as run_inference_and_tracking_from_cli
 
 
 class InferenceActivity(QMainWindow):
@@ -467,5 +468,13 @@ def launch_inference_activity():
     sys.exit(app.exec_())
 
 
+def main():
+    if len(sys.argv) == 1:
+        print(f"No args provided, launching inference and tracking GUI")
+        launch_inference_activity()
+    else:
+        run_inference_and_tracking_from_cli()
+
+
 if __name__ == "__main__":
-    launch_inference_activity()
+    main()

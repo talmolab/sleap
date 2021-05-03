@@ -1,7 +1,7 @@
 import os
 import subprocess
 import time
-from typing import Text, List, Callable, Optional
+from typing import List, Callable, Optional
 
 import attr
 

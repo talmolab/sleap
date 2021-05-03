@@ -14,7 +14,6 @@ import attr
 from typing import Optional, Callable, List, Union, Text, TypeVar
 from abc import ABC, abstractmethod
 
-import cattr
 import json
 import copy
 

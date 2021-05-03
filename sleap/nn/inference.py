@@ -36,7 +36,6 @@ from collections import deque
 import json
 from time import time
 from datetime import datetime
-from pathlib import Path
 
 from abc import ABC, abstractmethod
 from typing import Text, Optional, List, Dict, Union, Iterator, Tuple
@@ -2986,23 +2985,24 @@ def _make_tracker_from_cli(args: argparse.Namespace) -> Optional[Tracker]:
 
 
 def main():
-    """Entrypoint for `sleap-track` CLI for running inference."""
+    """Entrypoint for `sleap-track` CLI for running inference and tracking."""
     t0 = time()
     start_timestamp = str(datetime.now())
     print("Started inference at:", start_timestamp)
+    print(f"Versions:\n{sleap.versions()}\nSystem:\n{sleap.nn.system.summary()}\n")
 
     # Setup CLI.
     parser = _make_cli_parser()
 
     # Parse inputs.
     args, _ = parser.parse_known_args()
-
-    args_msg = ["Args:"]
-    for name, val in vars(args).items():
-        if name == "frames" and val is not None:
-            args_msg.append(f"  frames: {min(val)}-{max(val)} ({len(val)})")
-        else:
-            args_msg.append(f"  {name}: {val}")
+    args_msg = ["Parsed args and defaults:"]
+    for name, val in [(n, v) for (n, v) in vars(args).items() if v is not None]:
+        if val:
+            if name == "frames" and val is not None:
+                args_msg.append(f"  frames: {min(val)}-{max(val)} ({len(val)})")
+            else:
+                args_msg.append(f"  {name}: {val}")
     print("\n".join(args_msg))
 
     # Setup devices.
@@ -3016,14 +3016,6 @@ def main():
         else:
             sleap.nn.system.use_gpu(args.gpu)
     sleap.disable_preallocation()
-
-    print("Versions:")
-    sleap.versions()
-    print()
-
-    print("System:")
-    sleap.nn.system.summary()
-    print()
 
     # Setup data loader.
     provider, data_path = _make_provider_from_cli(args)
