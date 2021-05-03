@@ -37,6 +37,9 @@ class InferenceGuiController(object):
     def get_video_paths(self) -> List[str]:
         return self.model.videos.paths
 
+    def get_video_frames(self) -> List[str]:
+        return self.model.videos.frames
+
     def get_max_num_instances_in_frame(self) -> int:
         return self.model.instances.max_num_instances
 
@@ -81,6 +84,9 @@ class InferenceGuiController(object):
     def set_video_paths(self, value: List[str]) -> None:
         self.model.videos.paths = value
 
+    def set_video_frames(self, value: List[str]) -> None:
+        self.model.videos.frames = value
+
     def set_max_num_instances_in_frame(self, value: int) -> None:
         self.model.instances.max_num_instances = value
 
@@ -114,8 +120,10 @@ class InferenceGuiController(object):
             self.log(f"Output line: {output_line}")
             return False
 
-        for v in self.get_video_paths():
-            cmd_args = ["sleap-track", v]
+        for video_path, frames in zip(self.get_video_paths(), self.get_video_frames()):
+            cmd_args = ["sleap-track", video_path]
+            if frames:
+                cmd_args.extend(["--frames", frames])
 
             if self.get_model_type() == ModelType.TOP_DOWN:
                 cmd_args.extend(["-m", os.path.dirname(self.get_top_down_centroid_model_path())])
@@ -130,7 +138,7 @@ class InferenceGuiController(object):
                 cmd_args.extend(["--tracking.track_window", self.get_tracking_window_size()])
                 cmd_args.extend(["--tracking.target_instance_count", self.get_max_num_instances_in_frame()])
 
-            output_file_path = f"{os.path.basename(v)}{self.get_output_file_suffix()}"
+            output_file_path = f"{os.path.basename(video_path)}{self.get_output_file_suffix()}"
             if self.get_output_dir_path():
                 output_file_path = os.path.join(self.get_output_dir_path(), output_file_path)
             cmd_args.extend(["-o", output_file_path])
@@ -149,6 +157,7 @@ class InferenceGuiController(object):
         self.set_top_down_centroid_model_path(content["top_down_centroid_model"]),
         self.set_top_down_centered_instance_model_path(content["top_down_centered_instance_model"]),
         self.set_video_paths(content["video_paths"]),
+        self.set_video_frames(content["video_frames"]),
         self.set_max_num_instances_in_frame(content["max_num_instances_in_frame"]),
         self.set_enable_tracking(content["enable_tracking"]),
         self.set_tracking_method(TrackerType.from_display(content["tracking_method"])),

@@ -41,6 +41,7 @@ class InferenceActivity(QMainWindow):
             top_down_centroid_model=self.controller.get_top_down_centroid_model_path(),
             top_down_centered_instance_model=self.controller.get_top_down_centered_instance_model_path(),
             video_paths=self.controller.get_video_paths(),
+            video_frames=self.controller.get_video_frames(),
             max_num_instances_in_frame=self.controller.get_max_num_instances_in_frame(),
             enable_tracking=self.controller.get_enable_tracking(),
             tracking_method=self.controller.get_tracking_method().display(),
@@ -126,6 +127,7 @@ class InferenceActivityInputWidgets(object):
             "top_down_centroid_model": self.top_down_centroid_model.text(),
             "top_down_centered_instance_model": self.top_down_centered_instance_model.text(),
             "video_paths": self.videos_table.checked_video_paths,
+            "video_frames": self.videos_table.checked_video_frames,
             "max_num_instances_in_frame": self.max_num_instances_in_frame.text(),
             "enable_tracking": self.enable_tracking.isChecked(),
             "tracking_method": self.tracking_method.currentText(),
@@ -145,6 +147,7 @@ class InferenceActivityInputWidgets(object):
         top_down_centroid_model: str,
         top_down_centered_instance_model: str,
         video_paths: List[str],
+        video_frames: List[str],
         max_num_instances_in_frame: int,
         enable_tracking: bool,
         tracking_method: str,
@@ -160,7 +163,7 @@ class InferenceActivityInputWidgets(object):
         self.top_down_centroid_model.setText(top_down_centroid_model)
         self.top_down_centered_instance_model.setText(top_down_centered_instance_model)
 
-        self.videos_table.set_videos(video_paths)
+        self.videos_table.set_videos(video_paths, video_frames)
 
         self.max_num_instances_in_frame.setValue(max_num_instances_in_frame)
         self.enable_tracking.setChecked(enable_tracking)
@@ -459,7 +462,7 @@ def launch_inference_activity():
     model.videos.paths = videos
 
     model.models.centroid_model_path = "C:/Users/ariem/work/sleap_data/models/210225_170029.centroid.n=5/training_config.json"
-    model.models.centered_instance_model_path = "cip"
+    model.models.centered_instance_model_path = "C:/Users/ariem/work/sleap_data/models/210225_170213.centered_instance.n=5/training_config.json"
 
     controller = InferenceGuiController(model)
 

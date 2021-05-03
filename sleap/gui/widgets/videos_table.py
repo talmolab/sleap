@@ -17,14 +17,15 @@ from PySide2.QtWidgets import (
     QPushButton,
 )
 
+from sleap.util import frame_list
+
 
 class VideosTableModel(GenericCheckableTableModel):
     properties = (
         "Path",
         "Frames",
         "Image size",
-        "First frame",
-        "Last frame",
+        "Selected frames",
     )
     sort_as_string = ("Path",)
     row_name = "videos"
@@ -34,29 +35,21 @@ class VideosTableModel(GenericCheckableTableModel):
             "Path": video.filename,
             "Frames": video.frames,
             "Image size": str(video.shape[1:]),
-            "First frame": 1,
-            "Last frame": video.frames,
+            "Selected frames": f"{1}-{video.frames}",
         }
         return item_data
 
     def can_set(self, item, key):
-        return key in ["First frame", "Last frame"]
+        return key in ["Selected frames"]
 
     def set_item(self, video, key, value):
         row = self.original_items.index(video)
-        item = self.items[row]
-        try:
-            val = int(value)
-        except:
-            return
-        if key == "First frame":
-            val = min(val, len(video), item["Last frame"])
-            val = max(val, 1)
-            self._data[row]["First frame"] = val
-        elif key == "Last frame":
-            val = min(val, len(video))
-            val = max(val, 1, item["First frame"])
-            self._data[row]["Last frame"] = val
+        if key == "Selected frames":
+            if not value or len(frame_list(value)) == 0:
+                value = f"{1}-{video.frames}"
+            self._data[row]["Selected frames"] = value
+        else:
+            raise ValueError(f"Unknown property {key}")
 
 
 class VideosTableView(GenericTableView):
@@ -110,10 +103,7 @@ class VideosTableWidget(QWidget):
             else:
                 n_frames = 0
                 for video in videos:
-                    item = self.table_model.items[
-                        self.table_model.original_items.index(video)
-                    ]
-                    n_frames += item["Last frame"] - item["First frame"] + 1
+                    n_frames += len(frame_list(self.selected_frames(video)))
                 status_label.setText(
                     f"{len(videos)} videos selected. " f"Total: {n_frames:,} frames"
                 )
@@ -127,6 +117,12 @@ class VideosTableWidget(QWidget):
         )
         self.table_model.checked.connect(update_status_label)
         self.table_model.dataChanged.connect(update_status_label)
+
+    def selected_frames(self, video):
+        item = self.table_model.items[
+            self.table_model.original_items.index(video)
+        ]
+        return item["Selected frames"]
 
     @property
     def videos(self):
@@ -144,6 +140,10 @@ class VideosTableWidget(QWidget):
     def checked_video_paths(self):
         return [video.filename for video in self.checked_videos]
 
+    @property
+    def checked_video_frames(self):
+        return [self.selected_frames(video) for video in self.checked_videos]
+
     def add_videos(self, video_paths: Optional[Union[str, List[str]]] = None):
         if video_paths is None:
             videos = ImportVideos().ask_and_return_videos()
@@ -160,10 +160,11 @@ class VideosTableWidget(QWidget):
             self.table_model.set_checked(videos, True)
             self.table_view.resizeColumnsToContents()
 
-    def set_videos(self, video_paths: Union[str, List[str]]):
-        if isinstance(video_paths, str):
-            video_paths = [video_paths]
+    def set_videos(self, video_paths: List[str], selected_frames: Optional[List[str]] = None):
         videos = [sleap.load_video(p) for p in video_paths]
         self.table_model.items = videos
+        if selected_frames:
+            for v, f in zip(video_paths, selected_frames):
+                self.table_model.set_item(v, "Selected frames", f)
         self.table_model.set_checked(videos, True)
         self.table_view.resizeColumnsToContents()

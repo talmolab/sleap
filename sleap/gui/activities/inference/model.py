@@ -17,6 +17,7 @@ class TrainedModels(object):
 @attr.s(auto_attribs=True)
 class Videos(object):
     paths: List[str] = []
+    frames: List[str] = []
 
 
 @attr.s(auto_attribs=True)
