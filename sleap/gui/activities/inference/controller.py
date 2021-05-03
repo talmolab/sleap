@@ -1,5 +1,7 @@
 import os
-from typing import Text, List
+import subprocess
+import time
+from typing import Text, List, Callable, Optional
 
 import attr
 
@@ -7,6 +9,7 @@ from sleap.gui.activities.inference.model import (
     InferenceGuiModel,
 )
 from sleap.gui.activities.inference.enums import ModelType, Verbosity, TrackerType
+from sleap.gui.learning.runners import kill_process
 
 
 @attr.s(auto_attribs=True)
@@ -106,30 +109,37 @@ class InferenceGuiController(object):
 
     def run(self, content: dict) -> None:
         self.save(content=content)
+
+        def output_consumer(output_line: str) -> int:
+            self.log(f"Output line: {output_line}")
+            return False
+
         for v in self.get_video_paths():
-            cmd = f"sleap-track {v}"
+            cmd_args = ["sleap-track", v]
 
             if self.get_model_type() == ModelType.TOP_DOWN:
-                cmd += f" -m {os.path.dirname(self.get_top_down_centroid_model_path())}"
-                cmd += f" -m {os.path.dirname(self.get_top_down_centered_instance_model_path())}"
+                cmd_args.extend(["-m", os.path.dirname(self.get_top_down_centroid_model_path())])
+                cmd_args.extend(["-m", os.path.dirname(self.get_top_down_centered_instance_model_path())])
             elif self.get_model_type() == ModelType.BOTTOM_UP:
-                cmd += f" -m {os.path.dirname(self.get_bottom_up_model_path())}"
+                cmd_args.extend(["-m", os.path.dirname(self.get_bottom_up_model_path())])
             elif self.get_model_type() == ModelType.SINGLE_INSTANCE:
-                cmd += f" -m {os.path.dirname(self.get_single_instance_model_path())}"
+                cmd_args.extend(["-m", os.path.dirname(self.get_single_instance_model_path())])
 
             if self.get_enable_tracking():
-                cmd += f" --tracking.tracker {self.get_tracking_method().arg()}"
-                cmd += f" --tracking.track_window {self.get_tracking_window_size()}"
-                cmd += f" --tracking.target_instance_count {self.get_max_num_instances_in_frame()}"
+                cmd_args.extend(["--tracking.tracker", self.get_tracking_method().arg()])
+                cmd_args.extend(["--tracking.track_window", self.get_tracking_window_size()])
+                cmd_args.extend(["--tracking.target_instance_count", self.get_max_num_instances_in_frame()])
 
             output_file_path = f"{os.path.basename(v)}{self.get_output_file_suffix()}"
             if self.get_output_dir_path():
                 output_file_path = os.path.join(self.get_output_dir_path(), output_file_path)
-            cmd += f" -o {output_file_path}"
-            cmd += f" --verbosity {self.get_verbosity().arg()}"
+            cmd_args.extend(["-o", output_file_path])
+
+            cmd_args.extend(["--verbosity", self.get_verbosity().arg()])
+
             if not self.get_include_empty_frames():
-                cmd += " --no-empty-frames"
-            self._execute(cmd)
+                cmd_args.append("--no-empty-frames")
+            self._execute(cmd_args=cmd_args, output_consumer=lambda s: output_consumer(s))
 
     def save(self, content: dict) -> None:
         self.log(f"Saving: {content}")
@@ -154,8 +164,22 @@ class InferenceGuiController(object):
     def load(self):
         self.log(f"Load stub...")
 
-    def _execute(self, cmd: Text):
-        self.log(f"Execute stub:\n{cmd}")
+    def _execute(self, cmd_args: List[str], output_consumer: Optional[Callable[[str], int]] = None) -> int:
+        print(f"Executing: {' '.join(cmd_args)}\n")
+        with subprocess.Popen(cmd_args, stdout=subprocess.PIPE) as proc:
+            while proc.poll() is None:
+                output_line = proc.stdout.readline().decode().rstrip()
+                if output_consumer is not None:
+                    cancel_request = output_consumer(output_line)
+                    if cancel_request:
+                        self.log(f"Received cancel request from output consumer. Cancelling {proc.pid}..")
+                        kill_process(proc.pid)
+                        return -1
+                else:
+                    self.log(f"Output line:{output_line}")
+                time.sleep(0.1)
+            self.log(f"Process return code: {proc.returncode}")
+            return proc.returncode
 
     # Utils
 
