@@ -1,9 +1,11 @@
 import sys
 from typing import Text, Optional, List, Callable
 
+from PySide2 import QtGui
 from PySide2.QtCore import QObject
 from PySide2.QtWidgets import *
 
+import sleap
 from sleap.gui.activities.inference.controller import InferenceGuiController
 from sleap.gui.activities.inference.model import InferenceGuiModel
 from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
@@ -20,7 +22,7 @@ class InferenceActivity(QMainWindow):
         self.controller = ctrl
         self.input_widgets = InferenceActivityInputWidgets()
 
-        self.title = "Inference"
+        self.title = "Inference and Tracking"
         self.setWindowTitle(self.title)
 
         self.central_widget = InferenceActivityCentralWidget(self)
@@ -452,6 +454,9 @@ class InferenceActivityCentralWidget(QWidget):
 
 def launch_inference_activity():
     app = QApplication()
+    app.setApplicationName(f"Inference and Tracking | SLEAP v{sleap.version.__version__}")
+    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
+
     model = InferenceGuiModel()
 
     # Populate mock data in the GUI model
@@ -463,6 +468,7 @@ def launch_inference_activity():
 
     model.models.centroid_model_path = "C:/Users/ariem/work/sleap_data/models/210225_170029.centroid.n=5/training_config.json"
     model.models.centered_instance_model_path = "C:/Users/ariem/work/sleap_data/models/210225_170213.centered_instance.n=5/training_config.json"
+    model.output.output_dir_path = "C:/Users/ariem/work/sleap_data/predictions"
 
     controller = InferenceGuiController(model)
 
