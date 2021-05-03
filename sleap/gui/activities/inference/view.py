@@ -343,7 +343,7 @@ class InferenceActivityCentralWidget(QWidget):
         # set layout and add tab
         tab = QWidget(self)
         tab.setLayout(layout)
-        tabs.addTab(tab, "Instances")
+        tabs.addTab(tab, "Instance Tracking")
 
     def add_output_tab(self, tabs: QTabWidget):
         output_box = QGroupBox("Inference Output")
