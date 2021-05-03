@@ -35,7 +35,7 @@ class VideosTableModel(GenericCheckableTableModel):
             "Path": video.filename,
             "Frames": video.frames,
             "Image size": str(video.shape[1:]),
-            "Selected frames": f"{1}-{video.frames}",
+            "Selected frames": f"{0}-{video.frames-1}",
         }
         return item_data
 
@@ -46,7 +46,7 @@ class VideosTableModel(GenericCheckableTableModel):
         row = self.original_items.index(video)
         if key == "Selected frames":
             if not value or len(frame_list(value)) == 0:
-                value = f"{1}-{video.frames}"
+                value = f"{0}-{video.frames-1}"
             self._data[row]["Selected frames"] = value
         else:
             raise ValueError(f"Unknown property {key}")

@@ -180,19 +180,31 @@ class InferenceActivityInputWidgets(object):
 
 class InferenceActivityCentralWidget(QWidget):
     config_viewer_widgets = {}
+    tabs_view = None
+    progress_view = None
+    run_button = None
+    stop_button = None
+    stop_requested = False
 
     def __init__(self, parent):
         super(InferenceActivityCentralWidget, self).__init__(parent)
         layout = QVBoxLayout()
 
         # Tabs
-        layout.addWidget(self.build_tabs_widget())
+        self.tabs_view = self.build_tabs_widget()
+        layout.addWidget(self.tabs_view)
+
+        # Progress viewer
+        self.progress_view = self.build_progress_widget()
+        layout.addWidget(self.progress_view)
 
         # Separator
         layout.addSpacing(5)
 
         # Action buttons
         layout.addWidget(self.build_action_buttons_widget())
+
+        self.set_inference_running(False)
 
         self.setLayout(layout)
 
@@ -421,35 +433,91 @@ class InferenceActivityCentralWidget(QWidget):
         layout.addRow(caption, widget)
         return path_text
 
+    def build_progress_widget(self):
+        widget = QWidget(self)
+        widget.layout = QFormLayout(self)
+
+        current_video = QLabel(text="Current video")
+        widget.layout.addRow("Processing now", current_video)
+
+        progress = QLabel(text="frames")
+        widget.layout.addRow("Processing now", progress)
+
+        eta = QLabel(text="eta")
+        widget.layout.addRow("Time left for video", eta)
+
+        widget.setLayout(widget.layout)
+        return widget
+
     def build_action_buttons_widget(self):
         action_buttons = QWidget(self)
         action_buttons.layout = QHBoxLayout()
 
         # Run inference button
-        action_buttons.run_button = QPushButton(parent=self, text=" Run ")
-        action_buttons.run_button.clicked.connect(
-            lambda: self.controller.run(content=self.input_widgets.extract_content())
+        self.run_button = QPushButton(parent=self, text=" Run ")
+        self.run_button.clicked.connect(
+            lambda: [
+                self.set_inference_running(True),
+                self.controller.run(
+                    content=self.input_widgets.extract_content(),
+                    callback=lambda output: self.inference_callback(output)
+                )
+            ]
         )
-        action_buttons.layout.addWidget(action_buttons.run_button)
+        action_buttons.layout.addWidget(self.run_button)
 
-        # Save configuration button
-        action_buttons.save_button = QPushButton(
-            parent=self, text=" Save configuration.. "
-        )
-        action_buttons.save_button.clicked.connect(
-            lambda: self.controller.save(content=self.input_widgets.extract_content())
-        )
-        action_buttons.layout.addWidget(action_buttons.save_button)
+        # Stop inference button
+        self.stop_button = QPushButton(parent=self, text=" Stop ")
+        self.stop_button.clicked.connect(lambda: self.request_stop())
+        action_buttons.layout.addWidget(self.stop_button)
 
-        # Export inference job button
-        action_buttons.export_button = QPushButton(
-            parent=self, text=" Export inference job package.. "
-        )
-        action_buttons.export_button.clicked.connect(lambda: self.controller.export())
-        action_buttons.layout.addWidget(action_buttons.export_button)
+        # TODO: Implement these
+        import_export_enabled = False
+        if import_export_enabled:
+            # Save configuration button
+            action_buttons.save_button = QPushButton(
+                parent=self, text=" Save configuration.. "
+            )
+            action_buttons.save_button.clicked.connect(
+                lambda: self.controller.save(content=self.input_widgets.extract_content())
+            )
+            action_buttons.layout.addWidget(action_buttons.save_button)
+
+            # Export inference job button
+            action_buttons.export_button = QPushButton(
+                parent=self, text=" Export inference job package.. "
+            )
+            action_buttons.export_button.clicked.connect(lambda: self.controller.export())
+            action_buttons.layout.addWidget(action_buttons.export_button)
 
         action_buttons.setLayout(action_buttons.layout)
         return action_buttons
+
+    def inference_callback(self, output: dict) -> bool:
+        if output:
+            self.controller.log(f"Processing from view: {output}")
+        if 'status' in output:
+            self.set_inference_running(False)
+        QApplication.processEvents()
+        return self.stop_requested
+
+    def set_inference_running(self, running: bool) -> None:
+        self.controller.log(f"Updating running state: {running}")
+        if running:
+            self.run_button.setVisible(False)
+            self.stop_button.setVisible(True)
+            self.tabs_view.setVisible(False)
+            self.progress_view.setVisible(True)
+        else:
+            self.run_button.setVisible(True)
+            self.stop_button.setVisible(False)
+            self.tabs_view.setVisible(True)
+            self.progress_view.setVisible(False)
+            self.stop_requested = False
+        QApplication.processEvents()
+
+    def request_stop(self):
+        self.stop_requested = True
 
 
 def launch_inference_activity():

@@ -1,6 +1,8 @@
+import json
 import os
 import subprocess
 import time
+from json import JSONDecodeError
 from typing import List, Callable, Optional
 
 import attr
@@ -113,14 +115,13 @@ class InferenceGuiController(object):
 
     # Actions
 
-    def run(self, content: dict) -> None:
+    def run(self, content: dict, callback: Callable[[dict], bool]) -> None:
         self.save(content=content)
-
-        def output_consumer(output_line: str) -> int:
-            self.log(f"Output line: {output_line}")
-            return False
-
-        for video_path, frames in zip(self.get_video_paths(), self.get_video_frames()):
+        statuses = []
+        num_videos = len(self.get_video_paths())
+        for video_idx in range(num_videos):
+            video_path = self.get_video_paths()[video_idx]
+            frames = self.get_video_frames()[video_idx]
             cmd_args = ["sleap-track", video_path]
             if frames:
                 cmd_args.extend(["--frames", frames])
@@ -147,7 +148,21 @@ class InferenceGuiController(object):
 
             if not self.get_include_empty_frames():
                 cmd_args.append("--no-empty-frames")
-            self._execute(cmd_args=cmd_args, output_consumer=lambda s: output_consumer(s))
+
+            def process_output_line(line: str) -> bool:
+                try:
+                    output = json.loads(line)
+                    output['video'] = f"{video_path} ({video_idx + 1} out of {num_videos})"
+                    return callback(output)
+                except JSONDecodeError:
+                    # not json, pass thru
+                    self.log(line)
+                    return False
+
+            status = self._execute(cmd_args=cmd_args, output_consumer=lambda o: process_output_line(o))
+            statuses.append(status)
+
+        callback({'status': statuses})
 
     def save(self, content: dict) -> None:
         self.log(f"Saving: {content}")
