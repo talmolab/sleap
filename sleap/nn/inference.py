@@ -2998,11 +2998,10 @@ def main():
     args, _ = parser.parse_known_args()
     args_msg = ["Parsed args and defaults:"]
     for name, val in [(n, v) for (n, v) in vars(args).items() if v is not None]:
-        if val:
-            if name == "frames" and val is not None:
-                args_msg.append(f"  frames: {min(val)}-{max(val)} ({len(val)})")
-            else:
-                args_msg.append(f"  {name}: {val}")
+        if name == "frames" and val is not None:
+            args_msg.append(f"  frames: {min(val)}-{max(val)} ({len(val)})")
+        else:
+            args_msg.append(f"  {name}: {val}")
     print("\n".join(args_msg))
 
     # Setup devices.

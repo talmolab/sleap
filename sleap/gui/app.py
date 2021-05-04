@@ -56,13 +56,7 @@ from typing import Callable, List, Optional, Tuple
 from PySide2 import QtCore, QtGui
 from PySide2.QtCore import Qt, QEvent
 
-from PySide2.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QWidget,
-    QDockWidget,
-    QTabWidget,
-)
+from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
 from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
 from PySide2.QtWidgets import QMessageBox
@@ -76,7 +70,6 @@ from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
-from sleap.gui.widgets.guide import GuideWidget
 from sleap.gui.dataviews import (
     GenericTableView,
     VideosTableModel,
@@ -93,7 +86,6 @@ from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
-from sleap.gui.overlays.instance_list import InstanceListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.release_checker import ReleaseChecker
@@ -848,7 +840,7 @@ class MainWindow(QMainWindow):
             if tab_with is not None:
                 self.tabifyDockWidget(tab_with, dock)
 
-            return layout, dock
+            return layout
 
         def _add_button(to, label, action, key=None):
             key = key or label.lower()
@@ -858,58 +850,8 @@ class MainWindow(QMainWindow):
             self._buttons[key] = btn
             return btn
 
-        ####### Guide #######
-        guide_layout, guide_dock = _make_dock("Guide")
-        self.guide_widget = GuideWidget()
-        self.guide_widget.addStep("videos", "Add videos to the project.")
-        self.guide_widget.addStep("skeleton", "Define a skeleton.")
-        self.guide_widget.addStep(
-            "generate_suggestions", "Generate a list of frames to label."
-        )
-        self.guide_widget.addStep("labeling_initial", "Label an initial set of frames.")
-        self.guide_widget.addStep(
-            "train_predict", "Train a model to predict labels in the remaining frames."
-        )
-        self.guide_widget.addStep("correct", "Correct predictions and re-train.")
-        guide_layout.addWidget(self.guide_widget)
-
-        ##########
-        main_tabs_layout, main_tabs_dock = _make_dock("Main")
-        main_tabs_dock.setFeatures(QDockWidget.NoDockWidgetFeatures)
-        self.main_tabs = QTabWidget()
-        main_tabs_layout.addWidget(self.main_tabs)
-
-        def add_main_tab(name, step_name=None):
-            page_widget = QWidget()
-            page_widget.setObjectName(name + "PageWidget")
-            page_layout = QVBoxLayout()
-            page_widget.setLayout(page_layout)
-            self.main_tabs.addTab(page_widget, name)
-
-            if step_name is not None:
-                if isinstance(step_name, str):
-                    step_name = [step_name]
-
-                def _activate_tab(h, _name):
-                    if _name in step_name:
-                        self.main_tabs.setCurrentWidget(page_widget)
-
-                self.guide_widget.stepClicked.connect(_activate_tab)
-            return page_layout, page_widget
-
         ####### Videos #######
-        videos_layout, videos_dock = add_main_tab("Videos", step_name="videos")
-        desc = QLabel(
-            """
-            <p>Select the videos that will be used for labeling.</p>
-            <p>These videos will be used to train SLEAP models, so be sure to select a
-            good variety of videos that represent the diversity of your data.</p>
-            <p>Once trained, your SLEAP model will be able to track new videos that
-            look like the ones you select here.</p>
-            """
-        )
-        desc.setWordWrap(True)
-        videos_layout.addWidget(desc)
+        videos_layout = _make_dock("Videos")
         self.videosTable = GenericTableView(
             state=self.state,
             row_name="video",
@@ -928,37 +870,18 @@ class MainWindow(QMainWindow):
         videos_layout.addWidget(hbw)
 
         ####### Skeleton #######
-        skeleton_layout, skeleton_dock = add_main_tab("Skeleton", step_name="skeleton")
-
-        desc = QLabel(
-            """
-            <p>The <strong>skeleton</strong> defines which body parts that SLEAP will
-            learn to detect on each animal (an <strong>\"instance\"</strong>).</p>
-            """
+        skeleton_layout = _make_dock(
+            "Skeleton", tab_with=videos_layout.parent().parent()
         )
-        desc.setWordWrap(True)
-        skeleton_layout.addWidget(desc)
 
         gb = QGroupBox("Nodes")
         vb = QVBoxLayout()
-        desc = QLabel(
-            """
-            <p><strong>Nodes</strong> are the names of distinct body parts.
-            They can be named anything and you can define as many as you want.</p>
-            <p><strong>Important:</strong> To ensure that data augmentation functions
-            correctly, make sure to specify which nodes are symmetric to each other
-            (e.g., <em>"left leg"</em> and <em>"right leg"</em>).</p>
-            """
-        )
-        desc.setWordWrap(True)
-        vb.addWidget(desc)
         self.skeletonNodesTable = GenericTableView(
             state=self.state,
             row_name="node",
             model=SkeletonNodesTableModel(
                 items=self.state["skeleton"], context=self.commands
             ),
-            resize="stretch",
         )
         vb.addWidget(self.skeletonNodesTable)
         hb = QHBoxLayout()
@@ -976,24 +899,12 @@ class MainWindow(QMainWindow):
 
         gb = QGroupBox("Edges")
         vb = QVBoxLayout()
-        desc = QLabel(
-            """
-            <p><strong>Edges</strong> define the connections between body parts.</p>
-
-            <p>This is useful for visualizing poses of individuals. In some models, this
-            information is also used to group detected nodes into distinct
-            instances.</p>
-            """
-        )
-        desc.setWordWrap(True)
-        vb.addWidget(desc)
         self.skeletonEdgesTable = GenericTableView(
             state=self.state,
             row_name="edge",
             model=SkeletonEdgesTableModel(
                 items=self.state["skeleton"], context=self.commands
             ),
-            resize="stretch",
         )
 
         vb.addWidget(self.skeletonEdgesTable)
@@ -1003,9 +914,7 @@ class MainWindow(QMainWindow):
         self.skeletonEdgesSrc.currentIndexChanged.connect(_update_edge_src)
         self.skeletonEdgesSrc.setModel(SkeletonNodeModel(self.state["skeleton"]))
         hb.addWidget(self.skeletonEdgesSrc)
-        ql = QLabel("to")
-        ql.setAlignment(Qt.AlignHCenter)
-        hb.addWidget(ql)
+        hb.addWidget(QLabel("to"))
         self.skeletonEdgesDst = QComboBox()
         self.skeletonEdgesDst.setEditable(False)
         hb.addWidget(self.skeletonEdgesDst)
@@ -1025,18 +934,6 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         vb.addWidget(hbw)
-
-        self.arborescence_label = QLabel(
-            """
-            <p><strong>Warning:</strong> These connections do not form a tree. For
-            bottom-up models to function correctly, every node (except one) must have
-            exactly one incoming connection.</p>
-            """
-        )
-        self.arborescence_label.setWordWrap(True)
-        self.arborescence_label.setVisible(False)
-        vb.addWidget(self.arborescence_label)
-
         gb.setLayout(vb)
         skeleton_layout.addWidget(gb)
 
@@ -1049,7 +946,7 @@ class MainWindow(QMainWindow):
         skeleton_layout.addWidget(hbw)
 
         ####### Instances #######
-        instances_layout, instances_dock = _make_dock("Instances")
+        instances_layout = _make_dock("Instances")
         self.instancesTable = GenericTableView(
             state=self.state,
             row_name="instance",
@@ -1067,33 +964,15 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         instances_layout.addWidget(hbw)
-        instances_dock.setVisible(False)
 
-        ####### Generate suggestions #######
-
-        generate_suggestions_layout, generate_suggestions_dock = add_main_tab(
-            "Generate Suggestions", step_name="generate_suggestions"
-        )
-
-        self.suggestions_form_widget = YamlFormWidget.from_name(
-            "suggestions",
-        )
-        self.suggestions_form_widget.mainAction.connect(
-            self.process_events_then(self.commands.generateSuggestions)
-        )
-        generate_suggestions_layout.addWidget(self.suggestions_form_widget)
-
-        ####### Labeling queue #######
-        suggestions_layout, suggestions_dock = add_main_tab(
-            "Labeling Queue", step_name=["labeling_initial", "correct"]
-        )
+        ####### Suggestions #######
+        suggestions_layout = _make_dock("Labeling Suggestions")
         self.suggestionsTable = GenericTableView(
             state=self.state,
             is_sortable=True,
             model=SuggestionsTableModel(
                 items=self.labels.suggestions, context=self.commands
             ),
-            resize="contents",
         )
 
         suggestions_layout.addWidget(self.suggestionsTable)
@@ -1135,7 +1014,6 @@ class MainWindow(QMainWindow):
         )
 
         self.suggested_count_label = QLabel()
-        self.suggested_count_label.setAlignment(Qt.AlignHCenter)
         hb.addWidget(self.suggested_count_label)
 
         _add_button(
@@ -1148,6 +1026,15 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         suggestions_layout.addWidget(hbw)
+
+        self.suggestions_form_widget = YamlFormWidget.from_name(
+            "suggestions",
+            title="Generate Suggestions",
+        )
+        self.suggestions_form_widget.mainAction.connect(
+            self.process_events_then(self.commands.generateSuggestions)
+        )
+        suggestions_layout.addWidget(self.suggestions_form_widget)
 
         def goto_suggestion(*args):
             selected_frame = self.suggestionsTable.getSelectedRowItem()
@@ -1166,7 +1053,6 @@ class MainWindow(QMainWindow):
         self.overlays["instance"] = InstanceOverlay(
             self.labels, self.player, self.state
         )
-        self.overlays["instance_list"] = InstanceListOverlay(self.labels, self.player)
 
         # When gui state changes, we also want to set corresponding attribute
         # on overlay (or color manager shared by overlays) so that they can
@@ -1313,10 +1199,6 @@ class MainWindow(QMainWindow):
                 self.suggestions_form_widget.set_field_options(
                     "node", self.labels.skeletons[0].node_names
                 )
-                if len(self.state["skeleton"]) > 0:
-                    self.arborescence_label.setVisible(
-                        not self.state["skeleton"].is_arborescence
-                    )
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instancesTable.model().items = self.state["labeled_frame"]
@@ -1339,26 +1221,6 @@ class MainWindow(QMainWindow):
                     f"{labeled_count}/{len(suggestion_list)} labeled ({prc:.1f}%)"
                 )
             self.suggested_count_label.setText(suggestion_status_text)
-
-        if _has_topic([UpdateTopic.video]):
-            self.guide_widget.setComplete("videos", len(self.labels.videos) > 0)
-
-        if _has_topic([UpdateTopic.skeleton]):
-            if len(self.labels.skeletons) > 0:
-                self.guide_widget.setComplete("skeleton", len(self.labels.skeleton) > 0)
-
-        if _has_topic([UpdateTopic.suggestions]):
-            self.guide_widget.setComplete(
-                "generate_suggestions", len(self.labels.suggestions) > 0
-            )
-
-        if _has_topic([UpdateTopic.project_instances]):
-            self.guide_widget.setComplete(
-                "labeling_initial", self.labels.has_user_instances
-            )
-            self.guide_widget.setComplete(
-                "train_predict", self.labels.has_predicted_instances
-            )
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
