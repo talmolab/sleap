@@ -32,7 +32,7 @@ class InferenceActivity(QMainWindow):
         self.connect_widgets()
         self.update_widgets()
 
-        self.setMinimumWidth(1000)
+        self.setMinimumWidth(1200)
         self.show()
 
     def load_content(self):
@@ -470,7 +470,7 @@ class InferenceActivityCentralWidget(QWidget):
 
         # Stop inference button
         self.stop_button = QPushButton(parent=self, text=" Stop ")
-        self.stop_button.clicked.connect(lambda: self.request_stop())
+        self.stop_button.clicked.connect(lambda: self.request_stop(True))
         action_buttons.layout.addWidget(self.stop_button)
 
         # TODO: Implement these
@@ -501,25 +501,31 @@ class InferenceActivityCentralWidget(QWidget):
 
     def inference_callback(self, output: dict) -> bool:
         if output:
-            self.controller.log(f"Processing from view: {output}")
-            self.video_processing_label.setText(output.get("video", ""))
-            if "n_processed" in output:
-                self.frame_processing_label.setText(
-                    f"Processed {output['n_processed']} frames out of {output['n_total']}"
-                )
+            if "status" in output:
+                num_processed = len(output["status"])
+                num_failed = len([s for s in output["status"] if s != 0])
+                msg = f"Processed {num_processed} files"
+                if num_failed > 0:
+                    msg += f" with {num_failed} failures"
+                QMessageBox(windowTitle="Summary", text=msg).exec_()
+                self.set_inference_running(False)
             else:
-                self.frame_processing_label.setText("")
-            if "eta" in output:
-                self.eta_processing_label.setText(f"{output['eta']} seconds")
-            else:
-                self.eta_processing_label.setText("loading..")
-        if "status" in output:
-            self.set_inference_running(False)
+                self.controller.log(f"Processing from view: {output}")
+                self.video_processing_label.setText(output.get("video", ""))
+                if "n_processed" in output:
+                    self.frame_processing_label.setText(
+                        f"Processed {output['n_processed']} frames out of {output['n_total']}"
+                    )
+                else:
+                    self.frame_processing_label.setText("")
+                if "eta" in output:
+                    self.eta_processing_label.setText("{:.2f} seconds".format(output['eta']))
+                else:
+                    self.eta_processing_label.setText("loading..")
         QApplication.processEvents()
         return self.stop_requested
 
     def set_inference_running(self, running: bool) -> None:
-        self.controller.log(f"Updating running state: {running}")
         if running:
             self.run_button.setVisible(False)
             self.stop_button.setVisible(True)
@@ -530,17 +536,19 @@ class InferenceActivityCentralWidget(QWidget):
             self.stop_button.setVisible(False)
             self.tabs_view.setVisible(True)
             self.progress_view.setVisible(False)
-            self.stop_requested = False
+            self.request_stop(False)
         QApplication.processEvents()
 
-    def request_stop(self):
-        self.stop_requested = True
+    def request_stop(self, value: bool):
+        self.stop_requested = value
+        self.stop_button.setText(" Stopping... " if value else " Stop ")
+        QApplication.processEvents()
 
 
 def launch_inference_activity():
     app = QApplication()
     app.setApplicationName(
-        f"Inference and Tracking | SLEAP v{sleap.version.__version__}"
+        f"SLEAP v{sleap.version.__version__}"
     )
     app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
 
