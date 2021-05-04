@@ -552,21 +552,8 @@ def launch_inference_activity():
     app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
 
     model = InferenceGuiModel()
-
-    # Populate mock data in the GUI model
-    videos = [
-        f"C://Users//ariem//work//sleap_data//videos//{p}"
-        for p in ["small_robot.mp4", "centered_pair_small.mp4"]
-    ]
-    model.videos.paths = videos
-
-    model.models.centroid_model_path = "C:/Users/ariem/work/sleap_data/models/210225_170029.centroid.n=5/training_config.json"
-    model.models.centered_instance_model_path = "C:/Users/ariem/work/sleap_data/models/210225_170213.centered_instance.n=5/training_config.json"
-    model.output.output_dir_path = "C:/Users/ariem/work/sleap_data/predictions"
-
     controller = InferenceGuiController(model)
-
-    ex = InferenceActivity(parent=None, ctrl=controller)
+    InferenceActivity(parent=None, ctrl=controller)
 
     sys.exit(app.exec_())
 
