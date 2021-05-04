@@ -242,12 +242,12 @@ class InferenceGuiController(object):
                     cancel_request = output_consumer(output_line)
                     if cancel_request:
                         self.log(
-                            f"Received cancel request from output consumer. Cancelling {proc.pid}.."
+                            f"Received cancel request from callback. Cancelling {proc.pid}.."
                         )
                         kill_process(proc.pid)
                         return -1
                 else:
-                    self.log(f"Output line:{output_line}")
+                    self.log(f"Output line: {output_line}")
                 time.sleep(0.1)
             self.log(f"Process return code: {proc.returncode}")
             return proc.returncode

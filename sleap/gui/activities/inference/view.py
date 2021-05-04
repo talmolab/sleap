@@ -50,7 +50,7 @@ class InferenceActivity(QMainWindow):
             tracking_window_size=self.controller.get_tracking_window_size(),
             output_dir_path=self.controller.get_output_dir_path(),
             output_file_suffix=self.controller.get_output_file_suffix(),
-            include_empty_frames=self.controller.get_include_empty_frames()
+            include_empty_frames=self.controller.get_include_empty_frames(),
         )
 
     def update_widgets(self):
@@ -116,7 +116,7 @@ class InferenceActivityInputWidgets(object):
         # output tab
         "output_dir_path",
         "output_file_suffix",
-        "include_empty_frames"
+        "include_empty_frames",
     ]
 
     def extract_content(self) -> dict:
@@ -134,7 +134,7 @@ class InferenceActivityInputWidgets(object):
             "tracking_window_size": self.tracking_window_size.text(),
             "output_dir_path": self.output_dir_path.text(),
             "output_file_suffix": self.output_file_suffix.text(),
-            "include_empty_frames": self.include_empty_frames.isChecked()
+            "include_empty_frames": self.include_empty_frames.isChecked(),
         }
         return res
 
@@ -153,7 +153,7 @@ class InferenceActivityInputWidgets(object):
         tracking_window_size: int,
         output_dir_path: str,
         output_file_suffix: str,
-        include_empty_frames: bool
+        include_empty_frames: bool,
     ) -> None:
         self.model_type.setCurrentText(model_type)
         self.single_instance_model.setText(single_instance_model)
@@ -510,7 +510,6 @@ class InferenceActivityCentralWidget(QWidget):
                 QMessageBox(windowTitle="Summary", text=msg).exec_()
                 self.set_inference_running(False)
             else:
-                self.controller.log(f"Processing from view: {output}")
                 self.video_processing_label.setText(output.get("video", ""))
                 if "n_processed" in output:
                     self.frame_processing_label.setText(
@@ -519,7 +518,9 @@ class InferenceActivityCentralWidget(QWidget):
                 else:
                     self.frame_processing_label.setText("")
                 if "eta" in output:
-                    self.eta_processing_label.setText("{:.2f} seconds".format(output['eta']))
+                    self.eta_processing_label.setText(
+                        "{:.2f} seconds".format(output["eta"])
+                    )
                 else:
                     self.eta_processing_label.setText("loading..")
         QApplication.processEvents()
@@ -547,9 +548,7 @@ class InferenceActivityCentralWidget(QWidget):
 
 def launch_inference_activity():
     app = QApplication()
-    app.setApplicationName(
-        f"SLEAP v{sleap.version.__version__}"
-    )
+    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
     app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
 
     model = InferenceGuiModel()
