@@ -219,7 +219,7 @@ class InferenceGuiController(object):
         self.set_output_dir_path(content["output_dir_path"]),
         self.set_output_file_suffix(content["output_file_suffix"]),
         self.set_include_empty_frames(content["include_empty_frames"]),
-        self.set_verbosity(Verbosity.from_display(content["verbosity"])),
+        self.set_verbosity(Verbosity.JSON),
 
     def export(self):
         self.log(f"Export stub...")

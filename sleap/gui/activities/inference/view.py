@@ -8,7 +8,7 @@ from PySide2.QtWidgets import *
 import sleap
 from sleap.gui.activities.inference.controller import InferenceGuiController
 from sleap.gui.activities.inference.model import InferenceGuiModel
-from sleap.gui.activities.inference.enums import ModelType, TrackerType, Verbosity
+from sleap.gui.activities.inference.enums import ModelType, TrackerType
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.learning.dialog import TrainingEditorWidget
@@ -50,8 +50,7 @@ class InferenceActivity(QMainWindow):
             tracking_window_size=self.controller.get_tracking_window_size(),
             output_dir_path=self.controller.get_output_dir_path(),
             output_file_suffix=self.controller.get_output_file_suffix(),
-            include_empty_frames=self.controller.get_include_empty_frames(),
-            verbosity=self.controller.get_verbosity().display(),
+            include_empty_frames=self.controller.get_include_empty_frames()
         )
 
     def update_widgets(self):
@@ -117,8 +116,7 @@ class InferenceActivityInputWidgets(object):
         # output tab
         "output_dir_path",
         "output_file_suffix",
-        "include_empty_frames",
-        "verbosity",
+        "include_empty_frames"
     ]
 
     def extract_content(self) -> dict:
@@ -136,8 +134,7 @@ class InferenceActivityInputWidgets(object):
             "tracking_window_size": self.tracking_window_size.text(),
             "output_dir_path": self.output_dir_path.text(),
             "output_file_suffix": self.output_file_suffix.text(),
-            "include_empty_frames": self.include_empty_frames.isChecked(),
-            "verbosity": self.verbosity.currentText(),
+            "include_empty_frames": self.include_empty_frames.isChecked()
         }
         return res
 
@@ -156,8 +153,7 @@ class InferenceActivityInputWidgets(object):
         tracking_window_size: int,
         output_dir_path: str,
         output_file_suffix: str,
-        include_empty_frames: bool,
-        verbosity: str,
+        include_empty_frames: bool
     ) -> None:
         self.model_type.setCurrentText(model_type)
         self.single_instance_model.setText(single_instance_model)
@@ -175,7 +171,6 @@ class InferenceActivityInputWidgets(object):
         self.output_dir_path.setText(output_dir_path)
         self.output_file_suffix.setText(output_file_suffix)
         self.include_empty_frames.setChecked(include_empty_frames)
-        self.verbosity.setCurrentText(verbosity)
 
 
 class InferenceActivityCentralWidget(QWidget):
@@ -396,13 +391,6 @@ class InferenceActivityCentralWidget(QWidget):
         )
         output_box_layout.addRow("Include empty frames  ", empty_frames)
         self.input_widgets.include_empty_frames = empty_frames
-
-        # verbosity
-        verbosity_widget = QComboBox()
-        verbosity_widget.addItems([v.display() for v in Verbosity])
-        verbosity_widget.setMaximumWidth(150)
-        output_box_layout.addRow("Log format / verbosity", verbosity_widget)
-        self.input_widgets.verbosity = verbosity_widget
 
         # set layout and add tab
         layout = QVBoxLayout()
