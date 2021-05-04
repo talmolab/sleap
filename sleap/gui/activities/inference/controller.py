@@ -122,27 +122,59 @@ class InferenceGuiController(object):
         for video_idx in range(num_videos):
             video_path = self.get_video_paths()[video_idx]
             frames = self.get_video_frames()[video_idx]
-            callback(dict(video=f"{video_path} ({video_idx + 1} out of {num_videos})", n_processed=0, n_total=frames))
+            callback(
+                dict(
+                    video=f"{video_path} ({video_idx + 1} out of {num_videos})",
+                    n_processed=0,
+                    n_total=frames,
+                )
+            )
             cmd_args = ["sleap-track", video_path]
             if frames:
                 cmd_args.extend(["--frames", frames])
 
             if self.get_model_type() == ModelType.TOP_DOWN:
-                cmd_args.extend(["-m", os.path.dirname(self.get_top_down_centroid_model_path())])
-                cmd_args.extend(["-m", os.path.dirname(self.get_top_down_centered_instance_model_path())])
+                cmd_args.extend(
+                    ["-m", os.path.dirname(self.get_top_down_centroid_model_path())]
+                )
+                cmd_args.extend(
+                    [
+                        "-m",
+                        os.path.dirname(
+                            self.get_top_down_centered_instance_model_path()
+                        ),
+                    ]
+                )
             elif self.get_model_type() == ModelType.BOTTOM_UP:
-                cmd_args.extend(["-m", os.path.dirname(self.get_bottom_up_model_path())])
+                cmd_args.extend(
+                    ["-m", os.path.dirname(self.get_bottom_up_model_path())]
+                )
             elif self.get_model_type() == ModelType.SINGLE_INSTANCE:
-                cmd_args.extend(["-m", os.path.dirname(self.get_single_instance_model_path())])
+                cmd_args.extend(
+                    ["-m", os.path.dirname(self.get_single_instance_model_path())]
+                )
 
             if self.get_enable_tracking():
-                cmd_args.extend(["--tracking.tracker", self.get_tracking_method().arg()])
-                cmd_args.extend(["--tracking.track_window", self.get_tracking_window_size()])
-                cmd_args.extend(["--tracking.target_instance_count", self.get_max_num_instances_in_frame()])
+                cmd_args.extend(
+                    ["--tracking.tracker", self.get_tracking_method().arg()]
+                )
+                cmd_args.extend(
+                    ["--tracking.track_window", self.get_tracking_window_size()]
+                )
+                cmd_args.extend(
+                    [
+                        "--tracking.target_instance_count",
+                        self.get_max_num_instances_in_frame(),
+                    ]
+                )
 
-            output_file_path = f"{os.path.basename(video_path)}{self.get_output_file_suffix()}"
+            output_file_path = (
+                f"{os.path.basename(video_path)}{self.get_output_file_suffix()}"
+            )
             if self.get_output_dir_path():
-                output_file_path = os.path.join(self.get_output_dir_path(), output_file_path)
+                output_file_path = os.path.join(
+                    self.get_output_dir_path(), output_file_path
+                )
             cmd_args.extend(["-o", output_file_path])
 
             cmd_args.extend(["--verbosity", self.get_verbosity().arg()])
@@ -153,17 +185,21 @@ class InferenceGuiController(object):
             def process_output_line(line: str) -> bool:
                 try:
                     output = json.loads(line)
-                    output['video'] = f"{video_path} ({video_idx + 1} out of {num_videos})"
+                    output[
+                        "video"
+                    ] = f"{video_path} ({video_idx + 1} out of {num_videos})"
                     return callback(output)
                 except JSONDecodeError:
                     # not json, pass thru
                     self.log(line)
                     return False
 
-            status = self._execute(cmd_args=cmd_args, output_consumer=lambda o: process_output_line(o))
+            status = self._execute(
+                cmd_args=cmd_args, output_consumer=lambda o: process_output_line(o)
+            )
             statuses.append(status)
 
-        callback({'status': statuses})
+        callback({"status": statuses})
 
     def save(self, content: dict) -> None:
         self.log(f"Saving: {content}")
@@ -171,7 +207,9 @@ class InferenceGuiController(object):
         self.set_single_instance_model_path(content["single_instance_model"]),
         self.set_bottom_up_model_path(content["bottom_up_model"]),
         self.set_top_down_centroid_model_path(content["top_down_centroid_model"]),
-        self.set_top_down_centered_instance_model_path(content["top_down_centered_instance_model"]),
+        self.set_top_down_centered_instance_model_path(
+            content["top_down_centered_instance_model"]
+        ),
         self.set_video_paths(content["video_paths"]),
         self.set_video_frames(content["video_frames"]),
         self.set_max_num_instances_in_frame(content["max_num_instances_in_frame"]),
@@ -189,7 +227,11 @@ class InferenceGuiController(object):
     def load(self):
         self.log(f"Load stub...")
 
-    def _execute(self, cmd_args: List[str], output_consumer: Optional[Callable[[str], int]] = None) -> int:
+    def _execute(
+        self,
+        cmd_args: List[str],
+        output_consumer: Optional[Callable[[str], int]] = None,
+    ) -> int:
         print(f"Executing: {' '.join(cmd_args)}\n")
         with subprocess.Popen(cmd_args, stdout=subprocess.PIPE) as proc:
             while proc.poll() is None:
@@ -197,7 +239,9 @@ class InferenceGuiController(object):
                 if output_consumer is not None:
                     cancel_request = output_consumer(output_line)
                     if cancel_request:
-                        self.log(f"Received cancel request from output consumer. Cancelling {proc.pid}..")
+                        self.log(
+                            f"Received cancel request from output consumer. Cancelling {proc.pid}.."
+                        )
                         kill_process(proc.pid)
                         return -1
                 else:
@@ -210,4 +254,4 @@ class InferenceGuiController(object):
 
     def log(self, message: str) -> None:
         if self.logging_enabled:
-            print(f"+++ {message}")
+            print(message)

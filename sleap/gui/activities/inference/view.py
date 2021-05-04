@@ -222,7 +222,9 @@ class InferenceActivityCentralWidget(QWidget):
 
     def view_config(self, config_path: str) -> None:
         if not config_path:
-            QMessageBox(windowTitle="No file", text="Training config file not specified.").exec_()
+            QMessageBox(
+                windowTitle="No file", text="Training config file not specified."
+            ).exec_()
             return
         widget = self.config_viewer_widgets.get(config_path)
         if widget is None:
@@ -268,28 +270,36 @@ class InferenceActivityCentralWidget(QWidget):
             directory=False,
             caption="Top Down Centroid Training Config",
             filter=file_dialog_filter,
-            view_callback=lambda: self.view_config(self.input_widgets.top_down_centroid_model.text())
+            view_callback=lambda: self.view_config(
+                self.input_widgets.top_down_centroid_model.text()
+            ),
         )
         self.input_widgets.top_down_centered_instance_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Top Down Centered Instance Training Config",
             filter=file_dialog_filter,
-            view_callback=lambda: self.view_config(self.input_widgets.top_down_centered_instance_model.text())
+            view_callback=lambda: self.view_config(
+                self.input_widgets.top_down_centered_instance_model.text()
+            ),
         )
         self.input_widgets.bottom_up_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Bottom Up Training Config",
             filter=file_dialog_filter,
-            view_callback=lambda: self.view_config(self.input_widgets.bottom_up_model.text())
+            view_callback=lambda: self.view_config(
+                self.input_widgets.bottom_up_model.text()
+            ),
         )
         self.input_widgets.single_instance_model = self.add_browse_widget(
             model_form_layout,
             directory=False,
             caption="Single Instance Training Config",
             filter=file_dialog_filter,
-            view_callback=lambda: self.view_config(self.input_widgets.single_instance_model.text())
+            view_callback=lambda: self.view_config(
+                self.input_widgets.single_instance_model.text()
+            ),
         )
 
         # set layout and add
@@ -408,7 +418,7 @@ class InferenceActivityCentralWidget(QWidget):
         caption: Text,
         from_dir: Optional[Text] = None,
         filter: Optional[Text] = None,
-        view_callback: Optional[Callable[[], None]] = None
+        view_callback: Optional[Callable[[], None]] = None,
     ) -> QLineEdit:
         widget = QHBoxLayout()
         path_text = QLineEdit()
@@ -464,8 +474,8 @@ class InferenceActivityCentralWidget(QWidget):
                 self.set_inference_running(True),
                 self.controller.run(
                     content=self.input_widgets.extract_content(),
-                    callback=lambda output: self.inference_callback(output)
-                )
+                    callback=lambda output: self.inference_callback(output),
+                ),
             ]
         )
         action_buttons.layout.addWidget(self.run_button)
@@ -483,7 +493,9 @@ class InferenceActivityCentralWidget(QWidget):
                 parent=self, text=" Save configuration.. "
             )
             action_buttons.save_button.clicked.connect(
-                lambda: self.controller.save(content=self.input_widgets.extract_content())
+                lambda: self.controller.save(
+                    content=self.input_widgets.extract_content()
+                )
             )
             action_buttons.layout.addWidget(action_buttons.save_button)
 
@@ -491,7 +503,9 @@ class InferenceActivityCentralWidget(QWidget):
             action_buttons.export_button = QPushButton(
                 parent=self, text=" Export inference job package.. "
             )
-            action_buttons.export_button.clicked.connect(lambda: self.controller.export())
+            action_buttons.export_button.clicked.connect(
+                lambda: self.controller.export()
+            )
             action_buttons.layout.addWidget(action_buttons.export_button)
 
         action_buttons.setLayout(action_buttons.layout)
@@ -500,18 +514,18 @@ class InferenceActivityCentralWidget(QWidget):
     def inference_callback(self, output: dict) -> bool:
         if output:
             self.controller.log(f"Processing from view: {output}")
-            self.video_processing_label.setText(output.get('video', ''))
-            if 'n_processed' in output:
+            self.video_processing_label.setText(output.get("video", ""))
+            if "n_processed" in output:
                 self.frame_processing_label.setText(
                     f"Processed {output['n_processed']} frames out of {output['n_total']}"
                 )
             else:
-                self.frame_processing_label.setText('')
-            if 'eta' in output:
+                self.frame_processing_label.setText("")
+            if "eta" in output:
                 self.eta_processing_label.setText(f"{output['eta']} seconds")
             else:
-                self.eta_processing_label.setText('loading..')
-        if 'status' in output:
+                self.eta_processing_label.setText("loading..")
+        if "status" in output:
             self.set_inference_running(False)
         QApplication.processEvents()
         return self.stop_requested
@@ -537,7 +551,9 @@ class InferenceActivityCentralWidget(QWidget):
 
 def launch_inference_activity():
     app = QApplication()
-    app.setApplicationName(f"Inference and Tracking | SLEAP v{sleap.version.__version__}")
+    app.setApplicationName(
+        f"Inference and Tracking | SLEAP v{sleap.version.__version__}"
+    )
     app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
 
     model = InferenceGuiModel()

@@ -31,4 +31,3 @@ class Verbosity(BaseDisplayEnum):
     JSON = "Json", "json"
     RICH = "Rich", "rich"
     NONE = "None", "none"
-

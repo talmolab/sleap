@@ -119,9 +119,7 @@ class VideosTableWidget(QWidget):
         self.table_model.dataChanged.connect(update_status_label)
 
     def selected_frames(self, video):
-        item = self.table_model.items[
-            self.table_model.original_items.index(video)
-        ]
+        item = self.table_model.items[self.table_model.original_items.index(video)]
         return item["Selected frames"]
 
     @property
@@ -160,7 +158,9 @@ class VideosTableWidget(QWidget):
             self.table_model.set_checked(videos, True)
             self.table_view.resizeColumnsToContents()
 
-    def set_videos(self, video_paths: List[str], selected_frames: Optional[List[str]] = None):
+    def set_videos(
+        self, video_paths: List[str], selected_frames: Optional[List[str]] = None
+    ):
         videos = [sleap.load_video(p) for p in video_paths]
         self.table_model.items = videos
         if selected_frames:

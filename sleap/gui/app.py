@@ -714,8 +714,9 @@ class MainWindow(QMainWindow):
             lambda: QMessageBox(
                 windowTitle="Batch Inference",
                 text="Batch Inference GUI helps running inference and tracking on multiple video files "
-                     "using trained models. To launch Batch Inference GUI close this app and "
-                     "run 'sleap-track' (without additional arguments) from the terminal.").exec_()
+                "using trained models. To launch Batch Inference GUI close this app and "
+                "run 'sleap-track' (without additional arguments) from the terminal.",
+            ).exec_(),
         )
 
         predictionMenu.addSeparator()
@@ -1850,27 +1851,5 @@ def main():
         app.exec_()
 
 
-# TODO(+++): Clean this up
-def dbg_main():
-    app = QApplication([])
-    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
-    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
-
-    window = MainWindow()
-    window.showMaximized()
-
-    # Disable GPU in GUI process. This does not affect subprocesses.
-    sleap.use_cpu_only()
-
-    # Print versions.
-    print()
-    print("Software versions:")
-    sleap.versions()
-    print()
-    print("Happy SLEAPing! :)")
-
-    app.exec_()
-
-
 if __name__ == "__main__":
-    dbg_main()
+    main()
