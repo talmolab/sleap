@@ -234,20 +234,17 @@ class InferenceGuiController(object):
         cmd_args: List[str],
         output_consumer: Optional[Callable[[str], int]] = None,
     ) -> int:
-        print(f"Executing: {' '.join(cmd_args)}\n")
+        self.log(f"Executing: {' '.join(cmd_args)}\n")
         with subprocess.Popen(cmd_args, stdout=subprocess.PIPE) as proc:
             while proc.poll() is None:
                 output_line = proc.stdout.readline().decode().rstrip()
-                if output_consumer is not None:
-                    cancel_request = output_consumer(output_line)
-                    if cancel_request:
-                        self.log(
-                            f"Received cancel request from callback. Cancelling {proc.pid}.."
-                        )
-                        kill_process(proc.pid)
-                        return -1
-                else:
-                    self.log(f"Output line: {output_line}")
+                cancel_request = output_consumer(output_line)
+                if cancel_request:
+                    self.log(
+                        f"Received cancel request from callback. Cancelling {proc.pid}.."
+                    )
+                    kill_process(proc.pid)
+                    return -1
                 time.sleep(0.1)
             self.log(f"Process return code: {proc.returncode}")
             return proc.returncode
