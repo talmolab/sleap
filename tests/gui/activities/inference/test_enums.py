@@ -17,4 +17,3 @@ def test_from_display():
     assert ModelType.from_display("Single Instance") == ModelType.SINGLE_INSTANCE
     assert TrackerType.from_display("Simple") == TrackerType.SIMPLE
     assert TrackerType.from_display("na") is None
-
