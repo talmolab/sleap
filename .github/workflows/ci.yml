@@ -39,7 +39,7 @@ jobs:
         pip install black
     - name: Run Black
       run: |
-        black --check sleap tests
+        black --check sleap tests --diff
   tests:
     name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
