@@ -180,10 +180,14 @@ class InferenceActivityInputWidgets(object):
 
 class InferenceActivityCentralWidget(QWidget):
     config_viewer_widgets = {}
+
     tabs_view = None
     progress_view = None
     run_button = None
     stop_button = None
+    video_processing_label = None
+    frame_processing_label = None
+    eta_processing_label = None
     stop_requested = False
 
     def __init__(self, parent):
@@ -437,14 +441,14 @@ class InferenceActivityCentralWidget(QWidget):
         widget = QWidget(self)
         widget.layout = QFormLayout(self)
 
-        current_video = QLabel(text="Current video")
-        widget.layout.addRow("Processing now", current_video)
+        self.video_processing_label = QLabel(text="")
+        widget.layout.addRow("Processing file", self.video_processing_label)
 
-        progress = QLabel(text="frames")
-        widget.layout.addRow("Processing now", progress)
+        self.frame_processing_label = QLabel(text="")
+        widget.layout.addRow("Frames", self.frame_processing_label)
 
-        eta = QLabel(text="eta")
-        widget.layout.addRow("Time left for video", eta)
+        self.eta_processing_label = QLabel(text="")
+        widget.layout.addRow("ETA for current file", self.eta_processing_label)
 
         widget.setLayout(widget.layout)
         return widget
@@ -496,6 +500,17 @@ class InferenceActivityCentralWidget(QWidget):
     def inference_callback(self, output: dict) -> bool:
         if output:
             self.controller.log(f"Processing from view: {output}")
+            self.video_processing_label.setText(output.get('video', ''))
+            if 'n_processed' in output:
+                self.frame_processing_label.setText(
+                    f"Processed {output['n_processed']} frames out of {output['n_total']}"
+                )
+            else:
+                self.frame_processing_label.setText('')
+            if 'eta' in output:
+                self.eta_processing_label.setText(f"{output['eta']} seconds")
+            else:
+                self.eta_processing_label.setText('loading..')
         if 'status' in output:
             self.set_inference_running(False)
         QApplication.processEvents()

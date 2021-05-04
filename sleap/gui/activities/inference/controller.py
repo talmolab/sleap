@@ -122,6 +122,7 @@ class InferenceGuiController(object):
         for video_idx in range(num_videos):
             video_path = self.get_video_paths()[video_idx]
             frames = self.get_video_frames()[video_idx]
+            callback(dict(video=f"{video_path} ({video_idx + 1} out of {num_videos})", n_processed=0, n_total=frames))
             cmd_args = ["sleap-track", video_path]
             if frames:
                 cmd_args.extend(["--frames", frames])
