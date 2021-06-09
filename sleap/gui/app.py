@@ -60,6 +60,7 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
 from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
 from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
 from PySide2.QtWidgets import QMessageBox
+from PySide2.QtWidgets import QCheckBox
 
 import sleap
 from sleap.gui.dialogs.metrics import MetricsTableDialog
@@ -145,6 +146,7 @@ class MainWindow(QMainWindow):
         self.state.connect("marker size", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
+        self.state["inference_client"] = None
 
         self._initialize_gui()
 
@@ -1025,6 +1027,33 @@ class MainWindow(QMainWindow):
 
         self.state.connect("suggestion_idx", self.suggestionsTable.selectRow)
 
+
+        ####### Live Inference #######
+        live_inference_layout = _make_dock("Live Inference")
+
+        vb = QVBoxLayout()
+
+        _add_button(
+            vb,
+            "Connect",
+            self.process_events_then(self.commands.connectToInferenceServer),
+            "connect to inference server",
+        )
+
+        _add_button(
+            vb,
+            "Predict",
+            self.process_events_then(self.commands.predictOnCurrentFrame),
+            "predict on current frame",
+        )
+        auto_predict_chkbox = QCheckBox("Auto-predict on every frame")
+        self._buttons["auto predict"] = auto_predict_chkbox
+        vb.addWidget(auto_predict_chkbox)
+
+        vbw = QWidget()
+        vbw.setLayout(vb)
+        live_inference_layout.addWidget(vbw)
+
     def _load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
@@ -1131,6 +1160,11 @@ class MainWindow(QMainWindow):
             control_key_down and has_selected_instance
         )
 
+        # Live inference
+        self._buttons["connect to inference server"].setEnabled(self.state["inference_client"] is None)
+        self._buttons["predict on current frame"].setEnabled(self.state["inference_client"] is not None)
+        self._buttons["auto predict"].setEnabled(self.state["inference_client"] is not None)
+
     def on_data_update(self, what: List[UpdateTopic]):
         def _has_topic(topic_list):
             if UpdateTopic.all in what:
@@ -1215,6 +1249,12 @@ class MainWindow(QMainWindow):
         self.state["labeled_frame"] = self.labels.find(
             self.state["video"], frame_idx, return_new=True
         )[0]
+
+        # Auto-predict
+        auto_predict_enabled = self._buttons["auto predict"].isChecked()
+        has_pred_insts = len(self.state["labeled_frame"].predicted_instances) > 0
+        if auto_predict_enabled and not has_pred_insts:
+            self.commands.predictOnCurrentFrame()
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():

@@ -58,6 +58,8 @@ from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
+from sleap.gui.triton import InferenceClient
+
 
 # whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -541,6 +543,12 @@ class CommandContext:
     def openPrereleaseVersion(self):
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
+
+    def connectToInferenceServer(self):
+        self.execute(ConnectToInferenceServer)
+
+    def predictOnCurrentFrame(self):
+        self.execute(PredictOnCurrentFrame)
 
 
 # File Commands
@@ -2454,3 +2462,48 @@ def copy_to_clipboard(text: str):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
+
+
+class ConnectToInferenceServer(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        context.state["inference_client"] = InferenceClient()
+        context.state["inference_client"].connect()
+
+
+class PredictOnCurrentFrame(EditCommand):
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.suggestions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        lf = context.state["labeled_frame"]
+        # print(lf)
+        if lf is None:
+            return
+
+        img = lf.image
+        img = img.reshape((-1,) + img.shape[-3:])
+        pred = context.state["inference_client"].predict(img)
+        
+        # Clear non-user instances if any
+        lf.instances = lf.user_instances
+
+        # Create instances from predictions
+        tracks = context.state["labels"].tracks
+        skel = context.state["labels"].skeleton
+        for pts, scores, class_probs in zip(pred["instance_peaks"], pred["instance_peak_vals"], pred["class_probabilities"]):
+            k = class_probs.argmax()
+            inst = PredictedInstance.from_numpy(
+                pts,
+                scores,
+                class_probs[k],
+                skeleton=skel,
+                track=tracks[k]
+            )
+
+            # Add the predicted instance
+            context.labels.add_instance(context.state["labeled_frame"], inst)
+
+        # Add labeled frame if it wasn't already in labels
+        if context.state["labeled_frame"] not in context.labels.labels:
+            context.labels.append(context.state["labeled_frame"])
