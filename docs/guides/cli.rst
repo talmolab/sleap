@@ -237,13 +237,15 @@ Dataset files
 
 :code:`sleap-inspect` gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you're inspecting a predictions dataset (i.e., the output from running :code:`sleap-track` or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).
 
+You can also specify a model folder to get a quick summary of the configuration and metrics (if available).
+
 
 .. code-block:: none
 
     usage: sleap-inspect [-h] [--verbose] data_path
 
     positional arguments:
-      data_path   Path to labels json file
+      data_path   Path to labels file (.slp) or model folder
 
     optional arguments:
       -h, --help  show this help message and exit

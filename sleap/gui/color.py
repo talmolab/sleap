@@ -151,11 +151,11 @@ class ColorManager:
         if not instance.frame:
             return 0
 
-        non_track_instances = [
-            inst for inst in instance.frame.instances_to_show if inst.track is None
+        untracked_instances = [
+            inst for inst in instance.frame.user_instances if inst.track is None
         ]
 
-        return len(self.tracks) + non_track_instances.index(instance)
+        return len(self.tracks) + untracked_instances.index(instance)
 
     def get_track_color(self, track: Union[Track, int]) -> ColorTupleType:
         """Returns the color to use for a given track.

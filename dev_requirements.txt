@@ -7,7 +7,7 @@ furo
 sphinx-copybutton
 myst-nb
 sphinx-autobuild
-black
+black==21.6b0
 pre-commit
 twine==3.3.0
 PyGithub

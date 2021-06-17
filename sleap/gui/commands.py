@@ -505,6 +505,10 @@ class CommandContext:
         """Delete a track and remove from all instances."""
         self.execute(DeleteTrack, track=track)
 
+    def deleteAllTracks(self):
+        """Delete all tracks."""
+        self.execute(DeleteAllTracks)
+
     def setTrackName(self, track: "Track", name: str):
         """Sets name for track."""
         self.execute(SetTrackName, track=track, name=name)
@@ -1937,6 +1941,14 @@ class DeleteTrack(EditCommand):
     def do_action(context: CommandContext, params: dict):
         track = params["track"]
         context.labels.remove_track(track)
+
+
+class DeleteAllTracks(EditCommand):
+    topics = [UpdateTopic.tracks]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        context.labels.remove_all_tracks()
 
 
 class SetTrackName(EditCommand):

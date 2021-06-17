@@ -1042,11 +1042,17 @@ class Labels(MutableSequence):
         self._cache.add_track(video, track)
 
     def remove_track(self, track: Track):
-        """Remove a track from the labels, updating instances."""
+        """Remove a track from the labels, updating (but not removing) instances."""
         for inst in self.instances():
             if inst.track == track:
                 inst.track = None
         self.tracks.remove(track)
+
+    def remove_all_tracks(self):
+        """Remove all tracks from labels, updating (but not removing) instances."""
+        for inst in self.instances():
+            inst.track = None
+        self.tracks = []
 
     def track_set_instance(
         self, frame: LabeledFrame, instance: Instance, new_track: Track
@@ -2081,6 +2087,8 @@ class Labels(MutableSequence):
         lfs = self.find(video=video)
 
         if all_frames:
+            first_frame, last_frame = 0, video.shape[0] - 1
+        else:
             first_frame, last_frame = None, None
             for lf in lfs:
                 if first_frame is None:
@@ -2089,8 +2097,6 @@ class Labels(MutableSequence):
                     last_frame = lf.frame_idx
                 first_frame = min(first_frame, lf.frame_idx)
                 last_frame = max(last_frame, lf.frame_idx)
-        else:
-            first_frame, last_frame = 0, video.shape[0] - 1
 
         n_frames = last_frame - first_frame + 1
         n_tracks = len(self.tracks)

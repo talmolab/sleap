@@ -1219,3 +1219,44 @@ def test_remove_predictions_with_new_labels(removal_test_labels):
     assert labels[1].frame_idx == 2
     assert labels[1].has_user_instances
     assert labels[1].has_predicted_instances
+
+
+def test_labels_numpy(centered_pair_predictions):
+    trx = centered_pair_predictions.numpy(video=None, all_frames=False)
+    assert trx.shape == (1100, 27, 24, 2)
+
+    trx = centered_pair_predictions.numpy(video=None, all_frames=True)
+    assert trx.shape == (1100, 27, 24, 2)
+
+    # Remove the first labeled frame
+    centered_pair_predictions.remove_frame(centered_pair_predictions[0])
+    assert len(centered_pair_predictions) == 1099
+
+    trx = centered_pair_predictions.numpy(video=None, all_frames=False)
+    assert trx.shape == (1099, 27, 24, 2)
+
+    trx = centered_pair_predictions.numpy(video=None, all_frames=True)
+    assert trx.shape == (1100, 27, 24, 2)
+
+
+def test_remove_track(centered_pair_predictions):
+    labels = centered_pair_predictions
+
+    track = labels.tracks[-1]
+    track_insts = [inst for inst in labels.instances() if inst.track == track]
+    labels.remove_track(track)
+    assert track not in labels.tracks
+    assert all(inst.track != track for inst in labels.instances())
+
+    track = labels.tracks[0]
+    track_insts = [inst for inst in labels.instances() if inst.track == track]
+    labels.remove_track(track)
+    assert track not in labels.tracks
+    assert all(inst.track != track for inst in labels.instances())
+
+
+def test_remove_all_tracks(centered_pair_predictions):
+    labels = centered_pair_predictions
+    labels.remove_all_tracks()
+    assert len(labels.tracks) == 0
+    assert all(inst.track is None for inst in labels.instances())
