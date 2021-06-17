@@ -24,6 +24,7 @@ import numpy as np
 from typing import Any, Dict, List, Tuple
 
 from sleap.io.dataset import Labels
+from sleap import PredictedInstance
 
 
 def get_tracks_as_np_strings(labels: Labels) -> List[np.string_]:
@@ -38,7 +39,7 @@ def get_nodes_as_np_strings(labels: Labels) -> List[np.string_]:
 
 def get_occupancy_and_points_matrices(
     labels: Labels, all_frames: bool
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Builds numpy matrices with track occupancy and point location data.
 
@@ -50,10 +51,13 @@ def get_occupancy_and_points_matrices(
             first and last frames with labeling data.
 
     Returns:
-        tuple of two matrices:
+        tuple of arrays:
 
         * occupancy matrix with shape (tracks, frames)
-        * point location matrix with shape (frames, nodes, 2, tracks)
+        * point location array with shape (frames, nodes, 2, tracks)
+        * point scores array with shape (frames, nodes, tracks)
+        * instance scores array with shape (frames, tracks)
+        * tracking scores array with shape (frames, tracks)
     """
     track_count = len(labels.tracks) or 1
     node_count = len(labels.skeletons[0].nodes)
@@ -71,11 +75,17 @@ def get_occupancy_and_points_matrices(
     # "track_occupancy"     tracks * frames
     # "tracks"              frames * nodes * 2 * tracks
     # "track_names"         tracks
+    # "point_scores"        frames * nodes * tracks
+    # "instance_scores"     frames * tracks
+    # "tracking_scores"     frames * tracks
 
     occupancy_matrix = np.zeros((track_count, frame_count), dtype=np.uint8)
     locations_matrix = np.full(
         (frame_count, node_count, 2, track_count), np.nan, dtype=float
     )
+    point_scores = np.full((frame_count, node_count, track_count), np.nan, dtype=float)
+    instance_scores = np.full((frame_count, track_count), np.nan, dtype=float)
+    tracking_scores = np.full((frame_count, track_count), np.nan, dtype=float)
 
     for lf, inst in [(lf, inst) for lf in labels for inst in lf.instances]:
         frame_i = lf.frame_idx - first_frame_idx
@@ -90,15 +100,29 @@ def get_occupancy_and_points_matrices(
 
         occupancy_matrix[track_i, frame_i] = 1
 
-        inst_points = inst.points_array
-        locations_matrix[frame_i, ..., track_i] = inst_points
+        locations_matrix[frame_i, ..., track_i] = inst.numpy()
+        if type(inst) == PredictedInstance:
+            point_scores[frame_i, ..., track_i] = inst.scores
+            instance_scores[frame_i, ..., track_i] = inst.score
+            tracking_scores[frame_i, ..., track_i] = inst.tracking_score
 
-    return occupancy_matrix, locations_matrix
+    return (
+        occupancy_matrix,
+        locations_matrix,
+        point_scores,
+        instance_scores,
+        tracking_scores,
+    )
 
 
 def remove_empty_tracks_from_matrices(
-    track_names: List, occupancy_matrix: np.ndarray, locations_matrix: np.ndarray
-) -> Tuple[List, np.ndarray, np.ndarray]:
+    track_names: List,
+    occupancy_matrix: np.ndarray,
+    locations_matrix: np.ndarray,
+    point_scores: np.ndarray,
+    instance_scores: np.ndarray,
+    tracking_scores: np.ndarray,
+) -> Tuple[List, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Removes matrix rows/columns for unoccupied tracks.
 
@@ -106,10 +130,13 @@ def remove_empty_tracks_from_matrices(
         track_names: List of track names
         occupancy_matrix: 2d numpy matrix, rows correspond to tracks
         locations_matrix: 4d numpy matrix, last index is track
+        point_scores: 3d numpy matrix, last index is track
+        instance_scores: 2d numpy matrix, last index is track
+        tracking_scores: 2d numpy matrix, last index is track
 
     Returns:
-        track_names, occupancy_matrix, locations_matrix from input,
-        but without the rows/columns corresponding to unoccupied tracks.
+        track_names, occupancy_matrix, locations_matrix, point_scores, instance_scores
+        tracking_scores but without the rows/columns corresponding to unoccupied tracks.
     """
     # Make mask with only the occupied tracks
     occupied_track_mask = np.sum(occupancy_matrix, axis=1) > 0
@@ -121,11 +148,21 @@ def remove_empty_tracks_from_matrices(
 
         occupancy_matrix = occupancy_matrix[occupied_track_mask]
         locations_matrix = locations_matrix[..., occupied_track_mask]
+        point_scores = point_scores[..., occupied_track_mask]
+        instance_scores = instance_scores[..., occupied_track_mask]
+        tracking_scores = tracking_scores[..., occupied_track_mask]
         track_names = [
             track_names[i] for i in range(len(track_names)) if occupied_track_mask[i]
         ]
 
-    return track_names, occupancy_matrix, locations_matrix
+    return (
+        track_names,
+        occupancy_matrix,
+        locations_matrix,
+        point_scores,
+        instance_scores,
+        tracking_scores,
+    )
 
 
 def write_occupancy_file(
@@ -188,12 +225,28 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
     """
     track_names = get_tracks_as_np_strings(labels)
 
-    occupancy_matrix, locations_matrix = get_occupancy_and_points_matrices(
-        labels, all_frames
-    )
+    (
+        occupancy_matrix,
+        locations_matrix,
+        point_scores,
+        instance_scores,
+        tracking_scores,
+    ) = get_occupancy_and_points_matrices(labels, all_frames)
 
-    track_names, occupancy_matrix, locations_matrix = remove_empty_tracks_from_matrices(
-        track_names, occupancy_matrix, locations_matrix
+    (
+        track_names,
+        occupancy_matrix,
+        locations_matrix,
+        point_scores,
+        instance_scores,
+        tracking_scores,
+    ) = remove_empty_tracks_from_matrices(
+        track_names,
+        occupancy_matrix,
+        locations_matrix,
+        point_scores,
+        instance_scores,
+        tracking_scores,
     )
 
     data_dict = dict(
@@ -201,6 +254,9 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
         node_names=get_nodes_as_np_strings(labels),
         tracks=locations_matrix,
         track_occupancy=occupancy_matrix,
+        point_scores=point_scores,
+        instance_scores=instance_scores,
+        tracking_scores=tracking_scores,
     )
 
     write_occupancy_file(output_path, data_dict, transpose=True)
