@@ -2081,6 +2081,8 @@ class Labels(MutableSequence):
         lfs = self.find(video=video)
 
         if all_frames:
+            first_frame, last_frame = 0, video.shape[0] - 1
+        else:
             first_frame, last_frame = None, None
             for lf in lfs:
                 if first_frame is None:
@@ -2089,8 +2091,6 @@ class Labels(MutableSequence):
                     last_frame = lf.frame_idx
                 first_frame = min(first_frame, lf.frame_idx)
                 last_frame = max(last_frame, lf.frame_idx)
-        else:
-            first_frame, last_frame = 0, video.shape[0] - 1
 
         n_frames = last_frame - first_frame + 1
         n_tracks = len(self.tracks)
