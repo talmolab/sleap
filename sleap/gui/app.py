@@ -635,8 +635,6 @@ class MainWindow(QMainWindow):
 
         tracksMenu = self.menuBar().addMenu("Tracks")
         self.track_menu = tracksMenu.addMenu("Set Instance Track")
-        self.delete_tracks_menu = tracksMenu.addMenu("Delete Track")
-        self.delete_tracks_menu.setEnabled(False)
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
         ).setToolTip(
@@ -649,11 +647,24 @@ class MainWindow(QMainWindow):
             "Transpose Instance Tracks",
             self.commands.transposeInstance,
         )
+
+        tracksMenu.addSeparator()
+
         add_menu_item(
             tracksMenu,
             "delete track",
             "Delete Instance and Track",
             self.commands.deleteSelectedInstanceTrack,
+        )
+        self.delete_tracks_menu = tracksMenu.addMenu("Delete Track")
+        self.delete_tracks_menu.setEnabled(False)
+        add_menu_item(
+            tracksMenu,
+            "delete all tracks",
+            "Delete All Tracks",
+            self.commands.deleteAllTracks,
+        ).setToolTip(
+            "Delete all tracks and update instances. Instances are not removed."
         )
 
         tracksMenu.addSeparator()
