@@ -4,9 +4,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="sleap.info.trackcleaner" href="sleap.info.trackcleaner.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.3, furo 2021.03.20.beta30"/>
-        <title>sleap.info.write_tracking_h5 - SLEAP (v1.1.3)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=978e1795dfe158b585dda6a8417f6411828bf3ed">
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
+        <title>sleap.info.write_tracking_h5 - SLEAP (v1.1.4)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
@@ -20,8 +20,8 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
   
     }
   }
@@ -33,8 +33,8 @@
   
   }
   .override-dark {
-    --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+    --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
   
   }
 </style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.3)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.4)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.3)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.4)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -186,8 +186,6 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
@@ -219,6 +217,8 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
@@ -262,12 +262,12 @@ of video.</p>
 <p>Note: the datasets are stored column-major as expected by MATLAB.</p>
 <dl class="py function">
 <dt id="sleap.info.write_tracking_h5.get_nodes_as_np_strings">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">get_nodes_as_np_strings</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.bytes_</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.3/sleap/info/write_tracking_h5.py#L34-L36"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_nodes_as_np_strings" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">get_nodes_as_np_strings</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.bytes_</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/info/write_tracking_h5.py#L35-L37"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_nodes_as_np_strings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get list of node names as <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.string_</span></code>.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.write_tracking_h5.get_occupancy_and_points_matrices">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">get_occupancy_and_points_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_frames</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.3/sleap/info/write_tracking_h5.py#L39-L96"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">get_occupancy_and_points_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_frames</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/info/write_tracking_h5.py#L40-L115"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds numpy matrices with track occupancy and point location data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -282,23 +282,26 @@ first and last frames with labeling data.</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>occupancy matrix with shape (tracks, frames)</p></li>
-<li><p>point location matrix with shape (frames, nodes, 2, tracks)</p></li>
+<li><p>point location array with shape (frames, nodes, 2, tracks)</p></li>
+<li><p>point scores array with shape (frames, nodes, tracks)</p></li>
+<li><p>instance scores array with shape (frames, tracks)</p></li>
+<li><p>tracking scores array with shape (frames, tracks)</p></li>
 </ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple of two matrices</p>
+<dd class="field-odd"><p>tuple of arrays</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.write_tracking_h5.get_tracks_as_np_strings">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">get_tracks_as_np_strings</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.bytes_</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.3/sleap/info/write_tracking_h5.py#L29-L31"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_tracks_as_np_strings" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">get_tracks_as_np_strings</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.bytes_</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/info/write_tracking_h5.py#L30-L32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.get_tracks_as_np_strings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get list of track names as <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.string_</span></code>.</p>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.write_tracking_h5.main">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">main</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_frames</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.3/sleap/info/write_tracking_h5.py#L174-L206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.main" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">main</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_frames</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/info/write_tracking_h5.py#L211-L262"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes HDF5 file with matrices of track occupancy and coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -318,7 +321,7 @@ first and last frames with labeling data.</p></li>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.write_tracking_h5.remove_empty_tracks_from_matrices">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">remove_empty_tracks_from_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_names</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">occupancy_matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locations_matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.3/sleap/info/write_tracking_h5.py#L99-L128"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.remove_empty_tracks_from_matrices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">remove_empty_tracks_from_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_names</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">occupancy_matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locations_matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_scores</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_scores</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking_scores</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/info/write_tracking_h5.py#L118-L165"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.remove_empty_tracks_from_matrices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes matrix rows/columns for unoccupied tracks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -326,17 +329,20 @@ first and last frames with labeling data.</p></li>
 <li><p><strong>track_names</strong> – List of track names</p></li>
 <li><p><strong>occupancy_matrix</strong> – 2d numpy matrix, rows correspond to tracks</p></li>
 <li><p><strong>locations_matrix</strong> – 4d numpy matrix, last index is track</p></li>
+<li><p><strong>point_scores</strong> – 3d numpy matrix, last index is track</p></li>
+<li><p><strong>instance_scores</strong> – 2d numpy matrix, last index is track</p></li>
+<li><p><strong>tracking_scores</strong> – 2d numpy matrix, last index is track</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>track_names, occupancy_matrix, locations_matrix from input,
-but without the rows/columns corresponding to unoccupied tracks.</p>
+<dd class="field-even"><p>track_names, occupancy_matrix, locations_matrix, point_scores, instance_scores
+tracking_scores but without the rows/columns corresponding to unoccupied tracks.</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py function">
 <dt id="sleap.info.write_tracking_h5.write_occupancy_file">
-<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">write_occupancy_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transpose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.3/sleap/info/write_tracking_h5.py#L131-L171"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.write_occupancy_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">sleap.info.write_tracking_h5.</span></code><code class="sig-name descname"><span class="pre">write_occupancy_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transpose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/info/write_tracking_h5.py#L168-L208"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.write_tracking_h5.write_occupancy_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write HDF5 file with data from given dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
