@@ -1220,24 +1220,31 @@ class QtNodeLabel(QGraphicsTextItem):
         complete_color = (
             QColor(80, 194, 159) if self.node.point.complete else QColor(232, 45, 32)
         )
+        missing_color = QColor(128, 128, 128)
 
         if self.predicted:
             self._base_font.setBold(False)
+            self._base_font.setItalic(False)
             self.setFont(self._base_font)
             self.setDefaultTextColor(QColor(128, 128, 128))
         elif not self.node.point.visible:
-            self._base_font.setBold(False)
+            self._base_font.setBold(True)
+            self._base_font.setItalic(True)
             self.setFont(self._base_font)
-            # self.setDefaultTextColor(self.node.pen().color())
-            self.setDefaultTextColor(complete_color)
+            self.setPlainText(f"{self.node.name}*")
+            self.setDefaultTextColor(missing_color)
         elif self.node.point.complete:
             self._base_font.setBold(True)
+            self._base_font.setItalic(False)
+            self.setPlainText(f"{self.node.name}")
             self.setFont(self._base_font)
             self.setDefaultTextColor(complete_color)  # greenish
             # FIXME: Adjust style of node here as well?
             # self.node.setBrush(complete_color)
         else:
             self._base_font.setBold(False)
+            self._base_font.setItalic(False)
+            self.setPlainText(f"{self.node.name}")
             self.setFont(self._base_font)
             self.setDefaultTextColor(complete_color)  # redish
 
@@ -1354,10 +1361,10 @@ class QtNode(QGraphicsEllipseItem):
             self.pen_default.setCosmetic(
                 True
             )  # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
-            self.pen_missing = QPen(line_color, 1)
+            self.pen_missing = QPen(line_color, 1)  # thin border
             self.pen_missing.setCosmetic(True)
             self.brush = QBrush(QColor(*self.color, a=128))
-            self.brush_missing = QBrush(QColor(*self.color, a=0))
+            self.brush_missing = QBrush(QColor(*self.color, a=0))  # no fill
 
         self.setPos(self.point.x, self.point.y)
         self.updatePoint(user_change=False)
@@ -1373,7 +1380,7 @@ class QtNode(QGraphicsEllipseItem):
         if self.point.visible:
             return self.radius / self.player.view.zoomFactor
         else:
-            return self.radius / (2.0 * self.player.view.zoomFactor)
+            return self.radius / (2.0 * self.player.view.zoomFactor)  # smaller marker
 
     def updatePoint(self, user_change: bool = False):
         """
@@ -1397,7 +1404,7 @@ class QtNode(QGraphicsEllipseItem):
             self.setPen(self.pen_default)
             self.setBrush(self.brush)
         else:
-            radius = self.radius / 2.0
+            radius = self.radius / 2.0  # smaller marker
             self.setPen(self.pen_missing)
             self.setBrush(self.brush_missing)
             if not self.show_non_visible:
