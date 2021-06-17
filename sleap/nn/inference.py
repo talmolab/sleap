@@ -2914,6 +2914,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             provider = LabelsReader(labels)
 
     else:
+        print(f"Video: {data_path}")
         # TODO: Clean this up.
         video_kwargs = dict(
             dataset=vars(args).get("video.dataset"),
