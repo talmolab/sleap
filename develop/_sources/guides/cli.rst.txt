@@ -239,7 +239,6 @@ Dataset files
 
 You can also specify a model folder to get a quick summary of the configuration and metrics (if available).
 
-
 .. code-block:: none
 
     usage: sleap-inspect [-h] [--verbose] data_path
