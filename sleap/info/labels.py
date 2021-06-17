@@ -134,7 +134,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="Path to labels file")
+    parser.add_argument("data_path", help="Path to labels file (.slp) or model folder")
     parser.add_argument("--verbose", default=False, action="store_true")
     args = parser.parse_args()
 
