@@ -270,7 +270,7 @@ class VideoMarkerThread(Thread):
 
         # Add the instances to the image
         overlay = self._plot_instances_cv(video_frame.copy(), frame_idx)
-        
+
         return cv2.addWeighted(overlay, self.alpha, video_frame, 1 - self.alpha, 0)
 
     def _plot_instances_cv(
@@ -365,7 +365,7 @@ class VideoMarkerThread(Thread):
         img: np.ndarray,
         instance: "Instance",
         offset: Optional[Tuple[int, int]] = None,
-        fill: bool = True
+        fill: bool = True,
     ):
         """
         Add visual annotations for single instance.

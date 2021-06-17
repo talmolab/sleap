@@ -3,8 +3,10 @@ Command line utility which prints data about labels file.
 """
 import os
 
+
 def describe_labels(data_path, verbose=False):
     from sleap.io.dataset import Labels
+
     video_callback = Labels.make_video_callback([os.path.dirname(data_path)])
     labels = Labels.load_file(data_path, video_search=video_callback)
 
@@ -95,14 +97,22 @@ def describe_model(model_path, verbose=False):
         if isinstance(metrics, str):
             metrics = np.load(metrics, allow_pickle=True)["metrics"].tolist()
 
-        print(f"Dist (90%/95%/99%): {metrics['dist.p90']} / {metrics['dist.p95']} / {metrics['dist.p99']}")
-        print(f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / {metrics['oks_voc.mAR']}")
-        print(f"PCK (mean {metrics['pck.thresholds'][0]}-{metrics['pck.thresholds'][-1]} px): {metrics['pck.mPCK']}")
+        print(
+            f"Dist (90%/95%/99%): {metrics['dist.p90']} / {metrics['dist.p95']} / {metrics['dist.p99']}"
+        )
+        print(
+            f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / {metrics['oks_voc.mAR']}"
+        )
+        print(
+            f"PCK (mean {metrics['pck.thresholds'][0]}-{metrics['pck.thresholds'][-1]} px): {metrics['pck.mPCK']}"
+        )
 
     def describe_dataset(split_name):
         if os.path.exists(rel_path(f"labels_gt.{split_name}.slp")):
             labels = sleap.load_file(rel_path(f"labels_gt.{split_name}.slp"))
-            print(f"Frames: {len(labels.user_labeled_frames)} / Instances: {len(labels.user_instances)}")
+            print(
+                f"Frames: {len(labels.user_labeled_frames)} / Instances: {len(labels.user_instances)}"
+            )
 
         if os.path.exists(rel_path(f"metrics.{split_name}.npz")):
             print("Metrics:")
@@ -144,6 +154,7 @@ def main():
     elif os.path.isdir(args.data_path):
         if os.path.exists(os.path.join(args.data_path, "training_config.json")):
             describe_model(args.data_path, verbose=args.verbose)
+
 
 if __name__ == "__main__":
     main()
