@@ -5,9 +5,11 @@ Currently a `DataOverlay` gets data from a model (i.e., it runs inference on the
 current frame) and then uses a `ConfMapsPlot` object to show the resulting
 confidence maps.
 
-Example:
+Example: ::
+
     >>> cm = ConfMapsPlot(conf_data.get_frame(0))
     >>> window.view.scene.addItem(cm)
+
 """
 
 from PySide2 import QtWidgets, QtCore, QtGui

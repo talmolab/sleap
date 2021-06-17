@@ -195,6 +195,10 @@ class VideoMarkerThread(Thread):
         unscaled_marker_radius = 3
         self.marker_radius = max(1, int(unscaled_marker_radius // (1 / scale)))
 
+        self.edge_line_width *= 2
+        self.marker_radius *= 2
+        self.alpha = 0.6
+
         self.crop = False
         if crop_size_xy:
             self.crop = True
@@ -265,7 +269,9 @@ class VideoMarkerThread(Thread):
         video_frame = img_to_cv(video_frame)
 
         # Add the instances to the image
-        return self._plot_instances_cv(video_frame, frame_idx)
+        overlay = self._plot_instances_cv(video_frame.copy(), frame_idx)
+
+        return cv2.addWeighted(overlay, self.alpha, video_frame, 1 - self.alpha, 0)
 
     def _plot_instances_cv(
         self,
@@ -359,6 +365,7 @@ class VideoMarkerThread(Thread):
         img: np.ndarray,
         instance: "Instance",
         offset: Optional[Tuple[int, int]] = None,
+        fill: bool = True,
     ):
         """
         Add visual annotations for single instance.
@@ -398,10 +405,10 @@ class VideoMarkerThread(Thread):
                 cv2.circle(
                     img=img,
                     center=(x, y),
-                    radius=self.marker_radius,
+                    radius=int(self.marker_radius),
                     color=node_color_bgr,
-                    thickness=self.node_line_width,
-                    lineType=cv2.LINE_AA,
+                    thickness=cv2.FILLED if fill else self.node_line_width,
+                    lineType=cv2.FILLED if fill else cv2.LINE_AA,
                 )
 
         if self.show_edges:
@@ -426,7 +433,7 @@ class VideoMarkerThread(Thread):
                         pt1=(src_x, src_y),
                         pt2=(dst_x, dst_y),
                         color=edge_color_bgr,
-                        thickness=self.edge_line_width,
+                        thickness=int(self.edge_line_width),
                         lineType=cv2.LINE_AA,
                     )
 
@@ -569,7 +576,7 @@ def main_cli():
         default=None,
         help="The output filename for the video",
     )
-    parser.add_argument("-f", "--fps", type=int, default=15, help="Frames per second")
+    parser.add_argument("-f", "--fps", type=int, default=25, help="Frames per second")
     parser.add_argument("--scale", type=float, default=1.0, help="Output image scale")
     parser.add_argument(
         "--crop", type=str, default="", help="Crop size as <width>,<height>"

@@ -5,33 +5,33 @@ This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
 (videos, skeletons, etc.).
 
-The most convenient way to load SLEAP labels files is to use the high level loader:
+The most convenient way to load SLEAP labels files is to use the high level loader: ::
 
-> import sleap
-> labels = sleap.load_file(filename)
+   > import sleap
+   > labels = sleap.load_file(filename)
 
 The Labels class provides additional functionality for loading SLEAP labels files. To
-load a labels dataset file from disk:
+load a labels dataset file from disk: ::
 
-> labels = Labels.load_file(filename)
+   > labels = Labels.load_file(filename)
 
 If you're opening a dataset file created on a different computer (or if you've
 moved the video files), it's likely that the paths to the original videos will
 not work. We automatically check for the videos in the same directory as the
 labels file, but if the videos aren't there, you can tell `load_file` where
-to search for the videos. There are various ways to do this:
+to search for the videos. There are various ways to do this: ::
 
-> Labels.load_file(filename, single_path_to_search)
-> Labels.load_file(filename, [path_a, path_b])
-> Labels.load_file(filename, callback_function)
-> Labels.load_file(filename, video_search=...)
+   > Labels.load_file(filename, single_path_to_search)
+   > Labels.load_file(filename, [path_a, path_b])
+   > Labels.load_file(filename, callback_function)
+   > Labels.load_file(filename, video_search=...)
 
 The callback_function can be created via `make_video_callback()` and has the
 option to make a callback with a GUI window so the user can locate the videos.
 
-To save a labels dataset file, run:
+To save a labels dataset file, run: ::
 
-> Labels.save_file(labels, filename)
+   > Labels.save_file(labels, filename)
 
 If the filename has a supported extension (e.g., ".slp", ".h5", ".json") then
 the file will be saved in the corresponding format. You can also specify the
@@ -1042,11 +1042,17 @@ class Labels(MutableSequence):
         self._cache.add_track(video, track)
 
     def remove_track(self, track: Track):
-        """Remove a track from the labels, updating instances."""
+        """Remove a track from the labels, updating (but not removing) instances."""
         for inst in self.instances():
             if inst.track == track:
                 inst.track = None
         self.tracks.remove(track)
+
+    def remove_all_tracks(self):
+        """Remove all tracks from labels, updating (but not removing) instances."""
+        for inst in self.instances():
+            inst.track = None
+        self.tracks = []
 
     def track_set_instance(
         self, frame: LabeledFrame, instance: Instance, new_track: Track
@@ -2081,6 +2087,8 @@ class Labels(MutableSequence):
         lfs = self.find(video=video)
 
         if all_frames:
+            first_frame, last_frame = 0, video.shape[0] - 1
+        else:
             first_frame, last_frame = None, None
             for lf in lfs:
                 if first_frame is None:
@@ -2089,8 +2097,6 @@ class Labels(MutableSequence):
                     last_frame = lf.frame_idx
                 first_frame = min(first_frame, lf.frame_idx)
                 last_frame = max(last_frame, lf.frame_idx)
-        else:
-            first_frame, last_frame = 0, video.shape[0] - 1
 
         n_frames = last_frame - first_frame + 1
         n_tracks = len(self.tracks)

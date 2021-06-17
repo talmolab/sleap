@@ -1,11 +1,12 @@
 """
 Module for writing avi/mp4 videos.
 
-Usage:
+Usage: ::
 
-> writer = VideoWriter.safe_builder(filename, height, width, fps)
-> writer.add_frame(img)
-> writer.close()
+   > writer = VideoWriter.safe_builder(filename, height, width, fps)
+   > writer.add_frame(img)
+   > writer.close()
+
 """
 
 from abc import ABC, abstractmethod
@@ -68,9 +69,22 @@ class VideoWriterOpenCV(VideoWriter):
 
 
 class VideoWriterSkvideo(VideoWriter):
-    """Writes video using scikit-video as wrapper for ffmpeg."""
+    """Writes video using scikit-video as wrapper for ffmpeg.
 
-    def __init__(self, filename, height, width, fps):
+    Attributes:
+        filename: Path to mp4 file to save to.
+        height: Height of movie frames.
+        width: Width of movie frames.
+        fps: Playback framerate to save at.
+        crf: Compression rate factor to control lossiness of video. Values go from
+            2 to 32, with numbers in the 18 to 30 range being most common. Lower values
+            mean less compressed/higher quality.
+        preset: Name of the libx264 preset to use (default: "superfast").
+    """
+
+    def __init__(
+        self, filename, height, width, fps, crf: int = 21, preset: str = "superfast"
+    ):
         import skvideo.io
 
         fps = str(fps)
@@ -81,11 +95,9 @@ class VideoWriterSkvideo(VideoWriter):
             },
             outputdict={
                 "-c:v": "libx264",
-                "-preset": "superfast",
-                "-g": "1",
-                # % grouping keyframe interval
+                "-preset": preset,
                 "-framerate": fps,
-                "-crf": "15",
+                "-crf": str(crf),
                 "-pix_fmt": "yuv420p",
             },
         )

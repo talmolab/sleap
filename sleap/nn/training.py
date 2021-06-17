@@ -1518,6 +1518,26 @@ def main():
     parser.add_argument("--prefix", default="", help="Prefix to prepend to run name.")
     parser.add_argument("--suffix", default="", help="Suffix to append to run name.")
 
+    device_group = parser.add_mutually_exclusive_group(required=False)
+    device_group.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Run training only on CPU. If not specified, will use available GPU.",
+    )
+    device_group.add_argument(
+        "--first-gpu",
+        action="store_true",
+        help="Run training on the first GPU, if available.",
+    )
+    device_group.add_argument(
+        "--last-gpu",
+        action="store_true",
+        help="Run training on the last GPU, if available.",
+    )
+    device_group.add_argument(
+        "--gpu", type=int, default=0, help="Run training on the i-th GPU on the system."
+    )
+
     args, _ = parser.parse_known_args()
 
     # Find job configuration file.
@@ -1563,10 +1583,25 @@ def main():
     logger.info(job_config.to_json())
     logger.info("")
 
-    logger.info("System:")
-    if sleap.nn.system.is_gpu_system():
+    # Setup devices.
+    if args.cpu or not sleap.nn.system.is_gpu_system():
+        sleap.nn.system.use_cpu_only()
+        logger.info("Running in CPU-only mode.")
+    else:
+        if args.first_gpu:
+            sleap.nn.system.use_first_gpu()
+            logger.info("Using the first GPU for acceleration.")
+        elif args.last_gpu:
+            sleap.nn.system.use_last_gpu()
+            logger.info("Using the last GPU for acceleration.")
+        else:
+            sleap.nn.system.use_gpu(args.gpu)
+            logger.info(f"Using GPU {args.gpu} for acceleration.")
+
         # Disable preallocation to handle Linux/low GPU memory issue.
-        sleap.nn.system.disable_preallocation()
+        sleap.disable_preallocation()
+        logger.info("Disabled GPU memory pre-allocation.")
+    logger.info("System:")
     sleap.nn.system.summary()
     logger.info("")
 
