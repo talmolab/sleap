@@ -36,6 +36,29 @@ def test_augmentation(min_labels):
     assert tf.reduce_all(example["instances"] != example_preaug["instances"])
 
 
+def test_augmentation_with_no_instances(min_labels):
+    # reproduces #555
+    min_labels.append(
+        sleap.LabeledFrame(
+            video=min_labels.video,
+            frame_idx=min_labels[-1].frame_idx + 1,
+            instances=[
+                sleap.Instance.from_numpy(
+                    np.full([len(min_labels.skeleton.nodes), 2], np.nan),
+                    skeleton=min_labels.skeleton,
+                )
+            ],
+        )
+    )
+
+    p = min_labels.to_pipeline()
+    p += augmentation.ImgaugAugmenter.from_config(
+        augmentation.AugmentationConfig(rotate=True)
+    )
+    exs = p.run()
+    assert exs[-1]["instances"].shape[0] == 0
+
+
 def test_random_cropper(min_labels):
     cropper = augmentation.RandomCropper(crop_height=64, crop_width=32)
     assert "image" in cropper.input_keys
