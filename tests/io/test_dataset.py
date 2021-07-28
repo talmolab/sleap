@@ -1147,6 +1147,14 @@ def removal_test_labels():
     return labels
 
 
+def test_copy(removal_test_labels):
+    new_labels = removal_test_labels.copy()
+    new_labels[0].instances = []
+    new_labels.remove_frame(new_labels[-1])
+    assert len(removal_test_labels[0].instances) == 1
+    assert len(removal_test_labels) == 3
+
+
 def test_remove_user_instances(removal_test_labels):
     labels = removal_test_labels
     assert len(labels) == 3

@@ -699,16 +699,17 @@ class Labels(MutableSequence):
         except KeyError:
             return None
 
-    def extract(self, inds) -> "Labels":
+    def extract(self, inds, copy: bool = False) -> "Labels":
         """Extract labeled frames from indices and return a new `Labels` object.
-
         Args:
             inds: Any valid indexing keys, e.g., a range, slice, list of label indices,
                 numpy array, `Video`, etc. See `__getitem__` for full list.
-
+            copy: If `True`, create a new copy of all of the extracted labeled frames
+                and associated labels. If `False` (the default), a shallow copy with
+                references to the original labeled frames and other objects will be
+                returned.
         Returns:
             A new `Labels` object with the specified labeled frames.
-
             This will preserve the other data structures even if they are not found in
             the extracted labels, including:
                 - `Labels.videos`
@@ -726,7 +727,18 @@ class Labels(MutableSequence):
             suggestions=self.suggestions,
             provenance=self.provenance,
         )
+        if copy:
+            new_labels = new_labels.copy()
         return new_labels
+
+    def copy(self) -> "Labels":
+        """Return a full deep copy of the labels.
+        Notes:
+            All objects will be re-created by serializing and then deserializing the
+            labels. This may be slow and will create new instances of all data
+            structures.
+        """
+        return type(self).from_json(self.to_json())
 
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
