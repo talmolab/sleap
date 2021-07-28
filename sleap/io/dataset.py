@@ -788,6 +788,23 @@ class Labels(MutableSequence):
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
         self.update_cache()
 
+    def remove_empty_instances(self, keep_empty_frames: bool = True):
+        """Remove instances with no visible points.
+
+        Args:
+            keep_empty_frames: If True (the default), frames with no remaining instances
+                will not be removed.
+
+        Notes:
+            This will modify the labels in place. If a copy is desired, call
+            `labels.copy()` before this.
+        """
+        for lf in self.labeled_frames:
+            lf.remove_empty_instances()
+        self.update_cache()
+        if not keep_empty_frames:
+            self.remove_empty_frames()
+
     def remove_empty_frames(self):
         """Remove frames with no instances."""
         self.labeled_frames = [
