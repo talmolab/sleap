@@ -242,7 +242,7 @@ inference:
       type: optional_int
       none_label: No target
       default_disabled: true
-      range: 1,10
+      range: 1,100
       default: 1
     - name: tracking.pre_cull_to_target
       label: Cull to Target Instance Count
