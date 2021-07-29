@@ -235,7 +235,7 @@ class ImgaugAugmenter:
 
             # This will get converted to a rank 3 tensor (n_instances, n_nodes, 2).
             aug_instances = np.full_like(instances, np.nan)
-            
+
             # Augment each set of points for each instance.
             for i, instance in enumerate(instances):
                 kps = ia.KeypointsOnImage.from_xy_array(

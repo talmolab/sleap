@@ -1294,4 +1294,3 @@ def test_remove_empty_instances_and_frames(min_labels):
             pt.visible = False
     min_labels.remove_empty_instances(keep_empty_frames=False)
     assert len(min_labels) == 0
-    

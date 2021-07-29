@@ -32,9 +32,7 @@ class LabelsReader:
     user_instances_only: bool = False
 
     @classmethod
-    def from_user_instances(
-        cls, labels: sleap.Labels
-    ) -> "LabelsReader":
+    def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
         """Create a `LabelsReader` using the user instances in a `Labels` set.
         Args:
             labels: A `sleap.Labels` instance containing user instances.

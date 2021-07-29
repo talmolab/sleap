@@ -43,7 +43,7 @@ def test_labels_reader(min_labels):
 
 
 def test_labels_reader_no_visible_points(min_labels):
-    
+
     # There should be two instances in the labels dataset
     labels = min_labels.copy()
     assert len(labels.labeled_frames[0].instances) == 2
