@@ -876,7 +876,11 @@ class Instance:
     @property
     def n_visible_points(self) -> int:
         """Return the number of visible points in this instance."""
-        return sum(~np.isnan(self.points_array[:, 0]))
+        n = 0
+        for p in self.points:
+            if p.visible:
+                n += 1
+        return n
 
     def __len__(self) -> int:
         """Return the number of visible points in this instance."""
@@ -1385,6 +1389,10 @@ class LabeledFrame:
     def has_predicted_instances(self) -> bool:
         """Return whether the frame contains any predicted instances."""
         return len(self.predicted_instances) > 0
+
+    def remove_empty_instances(self):
+        """Remove instances with no visible nodes from the labeled frame."""
+        self.instances = [inst for inst in self.instances if inst.n_visible_points > 0]
 
     @property
     def unused_predictions(self) -> List[Instance]:

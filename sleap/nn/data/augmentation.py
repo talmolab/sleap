@@ -233,23 +233,15 @@ class ImgaugAugmenter:
             # Augment the image.
             aug_img = aug_det.augment_image(image.numpy())
 
+            # This will get converted to a rank 3 tensor (n_instances, n_nodes, 2).
+            aug_instances = np.full_like(instances, np.nan)
+
             # Augment each set of points for each instance.
-            aug_instances = []
-            for instance in instances:
+            for i, instance in enumerate(instances):
                 kps = ia.KeypointsOnImage.from_xy_array(
                     instance.numpy(), tuple(image.shape)
                 )
-                aug_instance = aug_det.augment_keypoints(kps).to_xy_array()
-                aug_instances.append(aug_instance)
-
-            # Convert the results to tensors.
-            # aug_img = tf.convert_to_tensor(aug_img, dtype=image.dtype)
-
-            # This will get converted to a rank 3 tensor (n_instances, n_nodes, 2).
-            aug_instances = np.stack(aug_instances, axis=0)
-            # aug_instances = [
-            #     tf.convert_to_tensor(x, dtype=instances.dtype) for x in aug_instances
-            # ]
+                aug_instances[i] = aug_det.augment_keypoints(kps).to_xy_array()
 
             return aug_img, aug_instances
 
