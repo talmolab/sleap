@@ -51,7 +51,7 @@ def test_augmentation_with_no_instances(min_labels):
         )
     )
 
-    p = min_labels.to_pipeline()
+    p = min_labels.to_pipeline(user_labeled_only=False)
     p += augmentation.ImgaugAugmenter.from_config(
         augmentation.AugmentationConfig(rotate=True)
     )
