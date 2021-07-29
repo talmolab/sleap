@@ -571,6 +571,63 @@ def test_merge_with_package(min_labels_robot, tmpdir):
     assert labels_pkg.predicted_instances[0].frame.frame_idx == 1
 
 
+def test_merge_with_skeleton_conflict(min_labels, tmpdir):
+    # Save out base labels
+    base_labels = min_labels.copy()
+    base_labels.save(f"{tmpdir}/base_labels.slp")
+
+    # Merge labels with a renamed node
+    labels = base_labels.copy()
+    labels[0].frame_idx = 1
+    labels.skeleton.relabel_node("A", "a")
+    labels.save(f"{tmpdir}/labels.renamed_node.slp")
+
+    labels = base_labels.copy()
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(
+        labels, sleap.load_file(f"{tmpdir}/labels.renamed_node.slp")
+    )
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels.skeleton.node_names == ["A", "B", "a"]
+    assert np.isnan(labels[0][0].numpy()).any(axis=1).tolist() == [False, False, True]
+    assert np.isnan(labels[1][0].numpy()).any(axis=1).tolist() == [True, False, False]
+
+    # Merge labels with a new node
+    labels = base_labels.copy()
+    labels[0].frame_idx = 1
+    labels.skeleton.add_node("C")
+    inst = labels[0][0]
+    inst["C"] = sleap.instance.Point(x=1, y=2, visible=True)
+    labels.save(f"{tmpdir}/labels.new_node.slp")
+
+    labels = base_labels.copy()
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(
+        labels, sleap.load_file(f"{tmpdir}/labels.new_node.slp")
+    )
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels.skeleton.node_names == ["A", "B", "C"]
+    assert np.isnan(labels[0][0].numpy()).any(axis=1).tolist() == [False, False, True]
+    assert np.isnan(labels[1][0].numpy()).any(axis=1).tolist() == [False, False, False]
+
+    # Merge labels with a deleted node
+    labels = base_labels.copy()
+    labels[0].frame_idx = 1
+    labels.skeleton.delete_node("A")
+    labels.save(f"{tmpdir}/labels.deleted_node.slp")
+
+    labels = base_labels.copy()
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(
+        labels, sleap.load_file(f"{tmpdir}/labels.deleted_node.slp")
+    )
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels.skeleton.node_names == ["A", "B"]
+    assert np.isnan(labels[0][0].numpy()).any(axis=1).tolist() == [False, False]
+    assert np.isnan(labels[1][0].numpy()).any(axis=1).tolist() == [True, False]
+    assert (labels[0][0].numpy()[1] == labels[1][0].numpy()[1]).all()
+
+
 def skeleton_ids_from_label_instances(labels):
     return list(map(id, (lf.instances[0].skeleton for lf in labels.labeled_frames)))
 
@@ -1294,3 +1351,26 @@ def test_remove_empty_instances_and_frames(min_labels):
             pt.visible = False
     min_labels.remove_empty_instances(keep_empty_frames=False)
     assert len(min_labels) == 0
+
+
+def test_merge_nodes(min_labels):
+    labels = min_labels.copy()
+    labels.skeleton.add_node("a")
+
+    inst = labels[0][0]
+    inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst = labels[0][1]
+    inst["A"] = Point(x=0, y=1, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+
+    labels.merge_nodes("A", "a")
+
+    assert labels.skeleton.node_names == ["A", "B"]
+
+    inst = labels[0][0]
+    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert len(inst.nodes) == 2
+    inst = labels[0][1]
+    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert len(inst.nodes) == 2

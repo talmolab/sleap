@@ -1505,7 +1505,13 @@ class SetNodeName(EditCommand):
         node = params["node"]
         name = params["name"]
         skeleton = params["skeleton"]
-        skeleton.relabel_node(node.name, name)
+
+        if name in skeleton.node_names:
+            # Merge
+            context.labels.merge_nodes(name, node.name)
+        else:
+            # Simple relabel
+            skeleton.relabel_node(node.name, name)
 
 
 class SetNodeSymmetry(EditCommand):
