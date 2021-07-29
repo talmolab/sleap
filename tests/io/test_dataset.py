@@ -1363,7 +1363,7 @@ def test_merge_nodes(min_labels):
     inst = labels[0][1]
     inst["A"] = Point(x=0, y=1, visible=False)
     inst["a"] = Point(x=1, y=2, visible=True)
-    
+
     labels.merge_nodes("A", "a")
 
     assert labels.skeleton.node_names == ["A", "B"]

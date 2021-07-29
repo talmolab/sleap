@@ -158,7 +158,7 @@ def test_instance_comparison(skeleton):
 
 
 def test_points_array(skeleton):
-    """ Test conversion of instances to points array"""
+    """Test conversion of instances to points array"""
 
     node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
@@ -388,7 +388,7 @@ def test_merge_nodes_data(min_labels):
     inst["a"] = Point(x=1, y=2, visible=True)
     inst._merge_nodes_data("A", "a")
     assert inst["A"].x == 0 and inst["A"].y == 1
-    
+
     # case: base node point unset
     inst = labels[0][0]
     inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
