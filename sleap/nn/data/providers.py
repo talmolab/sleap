@@ -32,13 +32,22 @@ class LabelsReader:
     user_instances_only: bool = False
 
     @classmethod
-    def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
+    def from_user_instances(
+        cls, labels: sleap.Labels
+    ) -> "LabelsReader":
         """Create a `LabelsReader` using the user instances in a `Labels` set.
         Args:
             labels: A `sleap.Labels` instance containing user instances.
+
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
+
+        Notes:
+            This will remove "empty" instances, i.e., instances with no visible points,
+            in the original labels. Make a copy of the original labels if needed as they
+            will be modified in place.
         """
+        labels.remove_empty_instances(keep_empty_frames=False)
         obj = cls.from_user_labeled_frames(labels)
         obj.user_instances_only = True
         return obj
@@ -51,7 +60,7 @@ class LabelsReader:
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
             Note that this constructor will load ALL instances in frames that have user
-            instances. To load only user labeled indices, use
+            instances. To load only user labeled instances, use
             `LabelsReader.from_user_instances`.
         """
         return cls(labels=labels, example_indices=labels.user_labeled_frame_inds)

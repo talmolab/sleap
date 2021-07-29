@@ -43,21 +43,30 @@ def test_labels_reader(min_labels):
 
 
 def test_labels_reader_no_visible_points(min_labels):
-    inst = min_labels.labeled_frames[0].instances[0]
+    
+    # There should be two instances in the labels dataset
+    labels = min_labels.copy()
+    assert len(labels.labeled_frames[0].instances) == 2
+
+    # Non-visible ones will be removed in place
+    inst = labels.labeled_frames[0].instances[0]
     for pt in inst.points:
         pt.visible = False
-
-    labels_reader = providers.LabelsReader.from_user_instances(min_labels)
-    ds = labels_reader.make_dataset()
-    assert not labels_reader.is_from_multi_size_videos
-
-    example = next(iter(ds))
-
-    # There should be two instances in the labels dataset
-    assert len(min_labels.labeled_frames[0].instances) == 2
+    labels_reader = providers.LabelsReader.from_user_instances(labels)
+    assert len(labels.labeled_frames[0].instances) == 1
 
     # Make sure there's only one included with the instances for training
+    example = next(iter(labels_reader.make_dataset()))
     assert len(example["instances"]) == 1
+
+    # Now try with no visible instances
+    labels = min_labels.copy()
+    for inst in labels.labeled_frames[0].instances:
+        for pt in inst.points:
+            pt.visible = False
+    labels_reader = providers.LabelsReader.from_user_instances(labels)
+    assert len(labels) == 0
+    assert len(labels_reader) == 0
 
 
 def test_labels_reader_subset(min_labels):
