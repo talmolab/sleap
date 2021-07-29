@@ -1122,6 +1122,7 @@ class SingleInstancePredictor(Predictor):
                 keras_model=self.confmap_model.keras_model,
                 input_scale=self.confmap_config.data.preprocessing.input_scaling,
                 pad_to_stride=self.confmap_model.maximum_stride,
+                peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
             )
