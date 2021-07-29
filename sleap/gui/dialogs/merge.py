@@ -40,8 +40,27 @@ class MergeDialog(QtWidgets.QDialog):
 
         super(MergeDialog, self).__init__(*args, **kwargs)
 
+        layout = QtWidgets.QVBoxLayout()
+
         self.base_labels = base_labels
         self.new_labels = new_labels
+
+        if self.base_labels.skeleton.node_names != self.new_labels.skeleton.node_names:
+            # Warn about mismatching skeletons
+            base_nodes = self.base_labels.skeleton.node_names
+            merge_nodes = self.new_labels.skeleton.node_names
+            missing_nodes = [node for node in base_nodes if node not in merge_nodes]
+            new_nodes = [node for node in merge_nodes if node not in base_nodes]
+            layout.addWidget(
+                QtWidgets.QLabel(
+                    "<p><strong>Warning:</strong> Skeletons do not match. "
+                    "The following nodes will be added to all instances:<p>"
+                    f"<p><em>From base labels</em>: {','.join(missing_nodes)}<br>"
+                    f"<em>From new labels</em>: {','.join(new_nodes)}</p>"
+                    "<p>Nodes can be deleted or merged from the skeleton editor after "
+                    "merging labels.</p><br>"
+                )
+            )
 
         merged, self.extra_base, self.extra_new = Labels.complex_merge_between(
             self.base_labels, self.new_labels
@@ -54,8 +73,6 @@ class MergeDialog(QtWidgets.QDialog):
             merge_frames += len(vid_frame_list.keys())
             # number of instances across frames for this video
             merge_total += sum((map(len, vid_frame_list.values())))
-
-        layout = QtWidgets.QVBoxLayout()
 
         merged_text = f"Cleanly merged {merge_total} instances"
         if merge_total:
@@ -298,15 +315,19 @@ def show_instance_type_counts(instance_list: List["Instance"]) -> str:
         list(filter(lambda inst: hasattr(inst, "score"), instance_list))
     )
     user_count = len(instance_list) - prediction_count
-    return f"{user_count}/{prediction_count}"
+    return f"{user_count} (user) / {prediction_count} (pred)"
 
 
 if __name__ == "__main__":
 
     #     file_a = "tests/data/json_format_v1/centered_pair.json"
     #     file_b = "tests/data/json_format_v2/centered_pair_predictions.json"
-    file_a = "files/merge/a.h5"
-    file_b = "files/merge/b.h5"
+    # file_a = "files/merge/a.h5"
+    # file_b = "files/merge/b.h5"
+    file_a = r"sleap_sandbox/skeleton_merge_conflicts/base_labels.slp"
+    # file_b = r"sleap_sandbox/skeleton_merge_conflicts/labels.renamed_node.slp")
+    # file_b = r"sleap_sandbox/skeleton_merge_conflicts/labels.new_node.slp"
+    file_b = r"sleap_sandbox/skeleton_merge_conflicts/labels.deleted_node.slp"
 
     base_labels = Labels.load_file(file_a)
     new_labels = Labels.load_file(file_b)
