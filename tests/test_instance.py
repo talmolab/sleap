@@ -376,3 +376,30 @@ def test_instance_rotation(skeleton):
 
     assert int(instance["head"].x) == 45
     assert int(instance["head"].y) == 31
+
+
+def test_merge_nodes_data(min_labels):
+    labels = min_labels.copy()
+    labels.skeleton.add_node("a")
+
+    # case: base node point set and visible
+    inst = labels[0][0]
+    inst["A"] = Point(x=0, y=1, visible=True)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst._merge_nodes_data("A", "a")
+    assert inst["A"].x == 0 and inst["A"].y == 1
+    
+    # case: base node point unset
+    inst = labels[0][0]
+    inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst._merge_nodes_data("A", "a")
+    assert inst["A"].x == 1 and inst["A"].y == 2
+
+    # case: base node point set but not visible
+    inst = labels[0][1]
+    inst["A"] = Point(x=0, y=1, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst._merge_nodes_data("A", "a")
+    assert inst["A"].x == 1 and inst["A"].y == 2
+

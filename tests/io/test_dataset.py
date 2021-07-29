@@ -597,7 +597,6 @@ def test_merge_with_skeleton_conflict(min_labels, tmpdir):
     labels[0].frame_idx = 1
     labels.skeleton.add_node("C")
     inst = labels[0][0]
-    inst._fix_array()
     inst["C"] = sleap.instance.Point(x=1, y=2, visible=True)
     labels.save(f"{tmpdir}/labels.new_node.slp")
 

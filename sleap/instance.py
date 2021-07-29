@@ -954,6 +954,28 @@ class Instance:
         """
         return cls.from_pointsarray(points, skeleton, track=track)
 
+    def _merge_nodes_data(self, base_node: str, merge_node: str):
+        """Copy point data from one node to another.
+
+        Args:
+            base_node: Name of node that will be merged into.
+            merge_node: Name of node that will be removed after merge.
+
+        Notes:
+            This is used when merging skeleton nodes and should not be called directly.
+        """
+        base_pt = self[base_node]
+        merge_pt = self[merge_node]
+        if merge_pt.isnan():
+            return
+        if base_pt.isnan() or not base_pt.visible:
+            base_pt.x = merge_pt.x
+            base_pt.y = merge_pt.y
+            base_pt.visible = merge_pt.visible
+            base_pt.complete = merge_pt.complete
+            if hasattr(base_pt, "score"):
+                base_pt.score = merge_pt.score
+
 
 @attr.s(eq=False, order=False, slots=True, repr=False, str=False)
 class PredictedInstance(Instance):
