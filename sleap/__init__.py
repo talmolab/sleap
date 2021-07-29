@@ -17,3 +17,4 @@ from sleap.nn.inference import load_model
 from sleap.nn.system import use_cpu_only, disable_preallocation
 from sleap.nn.system import summary as system_summary
 from sleap.nn.config import TrainingJobConfig, load_config
+from sleap.nn.evals import load_metrics

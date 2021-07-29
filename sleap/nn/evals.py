@@ -724,3 +724,18 @@ def evaluate_model(
         logger.info("OKS mAP: %f", metrics["oks_voc.mAP"])
 
     return labels_pr, metrics
+
+
+def load_metrics(model_path: str, split: str = "val") -> Dict[str, Any]:
+    """Load metrics for a model.
+
+    Args:
+        model_path: Path to a model folder.
+        split: Name of the split to load the metrics for. Must be `"train"`, `"val"` or
+            `"test"` (default: `"val"`).
+
+    Returns:
+        The loaded metrics as a dictionary.
+    """
+    with np.load(metrics_path, allow_pickle=True) as data:
+        return data["metrics"].item()
