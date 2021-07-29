@@ -408,7 +408,7 @@ class LabelsJsonAdaptor(Adaptor):
                             # use skeleton from match
                             skeletons[idx] = old_sk
                             break
-            else:
+            elif len(skeletons) == 1 and len(match_to.skeletons) == 1:
                 # Match by node names
                 old_skel = match_to.skeleton
                 new_skel = skeletons[0]
