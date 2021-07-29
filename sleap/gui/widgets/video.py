@@ -1130,6 +1130,7 @@ class QtNodeLabel(QGraphicsTextItem):
         node: The `QtNode` to which this label is attached.
         parent: The `QtInstance` which will contain this item.
         predicted: Whether this is for a predicted point.
+        fontSize: Size of the label text.
     """
 
     def __init__(
@@ -1137,6 +1138,7 @@ class QtNodeLabel(QGraphicsTextItem):
         node: Node,
         parent: QGraphicsObject,
         predicted: bool = False,
+        fontSize: float = 12,
         *args,
         **kwargs,
     ):
@@ -1150,7 +1152,7 @@ class QtNodeLabel(QGraphicsTextItem):
         self._anchor_x = self.pos().y()
 
         self._base_font = QFont()
-        self._base_font.setPixelSize(12)
+        self._base_font.setPixelSize(fontSize)
         self.setFont(self._base_font)
 
         # set color to match node color
@@ -1672,6 +1674,7 @@ class QtInstance(QGraphicsObject):
     Args:
         instance: The :class:`Instance` to show.
         markerRadius: Radius of nodes.
+        nodeLabelSize: Font size of node labels.
         show_non_visible: Whether to show "non-visible" nodes/edges.
     """
 
@@ -1680,6 +1683,7 @@ class QtInstance(QGraphicsObject):
         instance: Instance = None,
         player: Optional[QtVideoPlayer] = None,
         markerRadius=4,
+        nodeLabelSize=12,
         show_non_visible=True,
         *args,
         **kwargs,
@@ -1696,6 +1700,7 @@ class QtInstance(QGraphicsObject):
         self.show_non_visible = show_non_visible
         self.selectable = not self.predicted or color_manager.color_predicted
         self.markerRadius = markerRadius
+        self.nodeLabelSize = nodeLabelSize
 
         self.nodes = {}
         self.edges = []
@@ -1783,7 +1788,12 @@ class QtInstance(QGraphicsObject):
         # We do this after adding edges so that we can position labels to avoid overlap
         if not self.predicted:
             for node in self.nodes.values():
-                node_label = QtNodeLabel(node, predicted=self.predicted, parent=self)
+                node_label = QtNodeLabel(
+                    node,
+                    predicted=self.predicted,
+                    parent=self,
+                    fontSize=self.nodeLabelSize,
+                )
                 node_label.adjustPos()
 
                 self.labels[node.name] = node_label

@@ -24,6 +24,7 @@ class Preferences(object):
         "marker size": 4,
         "edge style": "Line",
         "window state": b"",
+        "node label size": 12,
     }
     _filename = "preferences.yaml"
 
