@@ -544,6 +544,7 @@ class Instance:
             to each node.
 
         """
+        self._fix_array()
         # If the node is a list of nodes, use get item recursively and return a list of
         # _points.
         if isinstance(node, (list, tuple, np.ndarray)):
@@ -603,6 +604,7 @@ class Instance:
                 one of the inputs is a list.
             KeyError: If skeleton does not have (one of) the node(s).
         """
+        self._fix_array()
         # Make sure node and value, if either are lists, are of compatible size
         if isinstance(node, (list, np.ndarray)):
             if not isinstance(value, (list, np.ndarray)) or len(value) != len(node):
