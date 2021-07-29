@@ -2141,6 +2141,35 @@ class Labels(MutableSequence):
 
         return tracks
 
+    def merge_nodes(self, base_node: str, merge_node: str):
+        """Merge two nodes and update data accordingly.
+
+        Args:
+            base_node: Name of skeleton node that will remain after merging.
+            merge_node: Name of skeleton node that will be merged into the base node.
+
+        Notes:
+            This method can be used to merge two nodes that might have been named
+            differently but that should be associated with the same node.
+
+            This is useful, for example, when merging a different set of labels where
+            a node was named differently.
+
+            If the `base_node` is visible and has data, it will not be updated.
+            Otherwise, it will be updated with the data from the `merge_node` on the
+            same instance.
+        """
+        # Update data on all instances.
+        for inst in self.instances():
+            inst._merge_nodes_data(base_node, merge_node)
+
+        # Remove merge node from skeleton.
+        self.skeleton.delete_node(merge_node)
+
+        # Fix instances.
+        for inst in self.instances():
+            inst._fix_array()
+
     @classmethod
     def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
         return cls.make_video_callback(search_paths=search_paths, use_gui=True)

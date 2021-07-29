@@ -403,6 +403,7 @@ def test_merge_nodes_data(min_labels):
     inst._merge_nodes_data("A", "a")
     assert inst["A"].x == 1 and inst["A"].y == 2
 
+    # case: predicted instance/point
     inst = PredictedInstance.from_numpy(
         points=np.array([[np.nan, np.nan], [1, 2], [2, 3]]),
         point_confidences=np.array([0.1, 0.8, 0.9]),

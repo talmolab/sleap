@@ -1351,3 +1351,26 @@ def test_remove_empty_instances_and_frames(min_labels):
             pt.visible = False
     min_labels.remove_empty_instances(keep_empty_frames=False)
     assert len(min_labels) == 0
+
+
+def test_merge_nodes(min_labels):
+    labels = min_labels.copy()
+    labels.skeleton.add_node("a")
+
+    inst = labels[0][0]
+    inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst = labels[0][1]
+    inst["A"] = Point(x=0, y=1, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    
+    labels.merge_nodes("A", "a")
+
+    assert labels.skeleton.node_names == ["A", "B"]
+
+    inst = labels[0][0]
+    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert len(inst.nodes) == 2
+    inst = labels[0][1]
+    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert len(inst.nodes) == 2
