@@ -727,7 +727,7 @@ class GraphicsView(QGraphicsView):
     rightMouseButtonDoubleClicked = QtCore.Signal(float, float)
 
     def __init__(self, state=None, player=None, *args, **kwargs):
-        """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
+        """https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py"""
         QGraphicsView.__init__(self)
         self.state = state or GuiState()
 
@@ -827,7 +827,7 @@ class GraphicsView(QGraphicsView):
         self.updateViewer()
 
     def updateViewer(self):
-        """ Apply current zoom. """
+        """Apply current zoom."""
         if not self.hasImage():
             return
 
