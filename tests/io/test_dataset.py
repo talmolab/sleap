@@ -1294,3 +1294,29 @@ def test_remove_empty_instances_and_frames(min_labels):
             pt.visible = False
     min_labels.remove_empty_instances(keep_empty_frames=False)
     assert len(min_labels) == 0
+
+
+def test_split(centered_pair_predictions):
+    labels_a, labels_b = centered_pair_predictions.split(0.8)
+    assert len(labels_a) == 880
+    assert len(labels_b) == 220
+
+    assert (
+        len(
+            np.intersect1d(
+                [lf.frame_idx for lf in labels_a], [lf.frame_idx for lf in labels_b]
+            )
+        )
+        == 0
+    )
+
+    labels_a, labels_b = centered_pair_predictions.extract([0]).split(0.8)
+    assert len(labels_a) == 1
+    assert len(labels_b) == 1
+    assert labels_a[0] != labels_b[0]
+    assert labels_a[0].frame_idx == labels_b[0].frame_idx
+
+    labels_a, labels_b = centered_pair_predictions.extract([0]).split(0.8, copy=False)
+    assert len(labels_a) == 1
+    assert len(labels_b) == 1
+    assert labels_a[0] == labels_b[0]

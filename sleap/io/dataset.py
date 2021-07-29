@@ -58,6 +58,7 @@ import attr
 import cattr
 import h5py as h5
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 try:
     from typing import ForwardRef
@@ -739,6 +740,47 @@ class Labels(MutableSequence):
             structures.
         """
         return type(self).from_json(self.to_json())
+
+    def split(
+        self, n: Union[float, int], copy: bool = True
+    ) -> Tuple["Labels", "Labels"]:
+        """Split labels randomly.
+
+        Args:
+            n: Number or fraction of elements in the first split.
+            copy: If `True` (the default), return copies of the labels.
+
+        Returns:
+            A tuple of `(labels_a, labels_b)` where both are `sleap.Labels` instances
+            subsampled from these labels.
+
+        Notes:
+            If there is only 1 labeled frame, this will return two copies of the same
+            labels. For `len(labels) > 1`, splits are guaranteed to be mutually
+            exclusive.
+
+        Example:
+            You can generate multiple splits by calling this repeatedly:
+
+            ```py
+            # Generate a 0.8/0.1/0.1 train/val/test split.
+            labels_train, labels_val_test = labels.split(n=0.8)
+            labels_val, labels_test = labels_val_test.split(n=0.5)
+            ```
+        """
+        if len(self) == 1:
+            if copy:
+                return self.copy(), self.copy()
+            else:
+                return self, self
+
+        # Split indices.
+        if type(n) != int:
+            n = round(len(self) * n)
+        n = max(min(n, len(self) - 1), 1)
+        idx_a, idx_b = train_test_split(list(range(len(self))), train_size=n)
+
+        return self.extract(idx_a, copy=copy), self.extract(idx_b, copy=copy)
 
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
