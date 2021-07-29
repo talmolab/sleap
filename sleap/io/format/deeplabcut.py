@@ -198,10 +198,11 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                 # frame.
                 instances.append(Instance(skeleton=skeleton, points=instance_points))
 
-            # Create LabeledFrame and add it to list.
-            lfs.append(
-                LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
-            )
+            if len(instances) > 0:
+                # Create LabeledFrame and add it to list.
+                lfs.append(
+                    LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+                )
 
         return lfs
 

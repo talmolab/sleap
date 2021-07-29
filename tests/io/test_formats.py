@@ -166,6 +166,13 @@ def test_madlc():
     )
 
     assert labels.skeleton.node_names == ["A", "B", "C"]
+    assert len(labels.videos) == 1
+    assert len(labels.video.filenames) == 4
+    assert labels.videos[0].filenames[0].endswith("img000.png")
+    assert labels.videos[0].filenames[1].endswith("img001.png")
+    assert labels.videos[0].filenames[2].endswith("img002.png")
+    assert labels.videos[0].filenames[3].endswith("img003.png")
+
     assert len(labels) == 3
     assert len(labels[0]) == 2
     assert len(labels[1]) == 2
@@ -176,3 +183,4 @@ def test_madlc():
     assert_array_equal(labels[1][0].numpy(), [[12, 13], [np.nan, np.nan], [15, 16]])
     assert_array_equal(labels[1][1].numpy(), [[17, 18], [np.nan, np.nan], [20, 21]])
     assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
+    assert labels[2].frame_idx == 3
