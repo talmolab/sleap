@@ -158,7 +158,7 @@ def test_instance_comparison(skeleton):
 
 
 def test_points_array(skeleton):
-    """ Test conversion of instances to points array"""
+    """Test conversion of instances to points array"""
 
     node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
@@ -376,3 +376,39 @@ def test_instance_rotation(skeleton):
 
     assert int(instance["head"].x) == 45
     assert int(instance["head"].y) == 31
+
+
+def test_merge_nodes_data(min_labels):
+    labels = min_labels.copy()
+    labels.skeleton.add_node("a")
+
+    # case: base node point set and visible
+    inst = labels[0][0]
+    inst["A"] = Point(x=0, y=1, visible=True)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst._merge_nodes_data("A", "a")
+    assert inst["A"].x == 0 and inst["A"].y == 1
+
+    # case: base node point unset
+    inst = labels[0][0]
+    inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst._merge_nodes_data("A", "a")
+    assert inst["A"].x == 1 and inst["A"].y == 2
+
+    # case: base node point set but not visible
+    inst = labels[0][1]
+    inst["A"] = Point(x=0, y=1, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst._merge_nodes_data("A", "a")
+    assert inst["A"].x == 1 and inst["A"].y == 2
+
+    # case: predicted instance/point
+    inst = PredictedInstance.from_numpy(
+        points=np.array([[np.nan, np.nan], [1, 2], [2, 3]]),
+        point_confidences=np.array([0.1, 0.8, 0.9]),
+        instance_score=0.7,
+        skeleton=labels.skeleton,
+    )
+    inst._merge_nodes_data("A", "a")
+    assert inst["A"].x == 2 and inst["A"].y == 3 and inst["A"].score == 0.9

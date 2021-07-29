@@ -544,6 +544,7 @@ class Instance:
             to each node.
 
         """
+        self._fix_array()
         # If the node is a list of nodes, use get item recursively and return a list of
         # _points.
         if isinstance(node, (list, tuple, np.ndarray)):
@@ -603,6 +604,7 @@ class Instance:
                 one of the inputs is a list.
             KeyError: If skeleton does not have (one of) the node(s).
         """
+        self._fix_array()
         # Make sure node and value, if either are lists, are of compatible size
         if isinstance(node, (list, np.ndarray)):
             if not isinstance(value, (list, np.ndarray)) or len(value) != len(node):
@@ -799,7 +801,9 @@ class Instance:
         w, h = y2 - y1, x2 - x1
         for node in self.skeleton.nodes:
             if node not in self.nodes or self[node].isnan():
-                x, y = np.random.rand(2) * np.array([w, h]) + np.array([x1, y1])
+                x, y = np.random.rand(2) * np.array([w + 2, h + 2]) + np.array(
+                    [x1 - 2, y1 - 2]
+                )
                 self[node] = Point(x=x, y=y, visible=False)
 
     @property
@@ -949,6 +953,28 @@ class Instance:
             This is an alias for `Instance.from_pointsarray()`.
         """
         return cls.from_pointsarray(points, skeleton, track=track)
+
+    def _merge_nodes_data(self, base_node: str, merge_node: str):
+        """Copy point data from one node to another.
+
+        Args:
+            base_node: Name of node that will be merged into.
+            merge_node: Name of node that will be removed after merge.
+
+        Notes:
+            This is used when merging skeleton nodes and should not be called directly.
+        """
+        base_pt = self[base_node]
+        merge_pt = self[merge_node]
+        if merge_pt.isnan():
+            return
+        if base_pt.isnan() or not base_pt.visible:
+            base_pt.x = merge_pt.x
+            base_pt.y = merge_pt.y
+            base_pt.visible = merge_pt.visible
+            base_pt.complete = merge_pt.complete
+            if hasattr(base_pt, "score"):
+                base_pt.score = merge_pt.score
 
 
 @attr.s(eq=False, order=False, slots=True, repr=False, str=False)
