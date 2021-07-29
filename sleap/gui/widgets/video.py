@@ -727,7 +727,7 @@ class GraphicsView(QGraphicsView):
     rightMouseButtonDoubleClicked = QtCore.Signal(float, float)
 
     def __init__(self, state=None, player=None, *args, **kwargs):
-        """ https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py """
+        """https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py"""
         QGraphicsView.__init__(self)
         self.state = state or GuiState()
 
@@ -827,7 +827,7 @@ class GraphicsView(QGraphicsView):
         self.updateViewer()
 
     def updateViewer(self):
-        """ Apply current zoom. """
+        """Apply current zoom."""
         if not self.hasImage():
             return
 
@@ -1130,6 +1130,7 @@ class QtNodeLabel(QGraphicsTextItem):
         node: The `QtNode` to which this label is attached.
         parent: The `QtInstance` which will contain this item.
         predicted: Whether this is for a predicted point.
+        fontSize: Size of the label text.
     """
 
     def __init__(
@@ -1137,6 +1138,7 @@ class QtNodeLabel(QGraphicsTextItem):
         node: Node,
         parent: QGraphicsObject,
         predicted: bool = False,
+        fontSize: float = 12,
         *args,
         **kwargs,
     ):
@@ -1150,13 +1152,19 @@ class QtNodeLabel(QGraphicsTextItem):
         self._anchor_x = self.pos().y()
 
         self._base_font = QFont()
-        self._base_font.setPixelSize(12)
+        self._base_font.setPixelSize(fontSize)
         self.setFont(self._base_font)
 
         # set color to match node color
         self.setDefaultTextColor(self.node.pen().color())
+
         # don't rescale when view is scaled (i.e., zoom)
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+
+        self.complete_color = QColor(80, 194, 159)
+        self.incomplete_color = QColor(232, 45, 32)
+        self.missing_color = QColor(128, 128, 128)
+        self.missing_bg_color = QColor(0, 0, 0, a=100)
 
         self.adjustStyle()
 
@@ -1216,12 +1224,6 @@ class QtNodeLabel(QGraphicsTextItem):
 
     def adjustStyle(self):
         """Update visual display of the label and its node."""
-
-        complete_color = (
-            QColor(80, 194, 159) if self.node.point.complete else QColor(232, 45, 32)
-        )
-        missing_color = QColor(128, 128, 128)
-
         if self.predicted:
             self._base_font.setBold(False)
             self._base_font.setItalic(False)
@@ -1231,30 +1233,29 @@ class QtNodeLabel(QGraphicsTextItem):
             self._base_font.setBold(True)
             self._base_font.setItalic(True)
             self.setFont(self._base_font)
-            self.setPlainText(f"{self.node.name}*")
-            self.setDefaultTextColor(missing_color)
+            self.setPlainText(self.node.name)
+            self.setDefaultTextColor(self.missing_color)
         elif self.node.point.complete:
             self._base_font.setBold(True)
             self._base_font.setItalic(False)
-            self.setPlainText(f"{self.node.name}")
+            self.setPlainText(self.node.name)
             self.setFont(self._base_font)
-            self.setDefaultTextColor(complete_color)  # greenish
+            self.setDefaultTextColor(self.complete_color)  # greenish
             # FIXME: Adjust style of node here as well?
             # self.node.setBrush(complete_color)
         else:
             self._base_font.setBold(False)
             self._base_font.setItalic(False)
-            self.setPlainText(f"{self.node.name}")
+            self.setPlainText(self.node.name)
             self.setFont(self._base_font)
-            self.setDefaultTextColor(complete_color)  # redish
+            self.setDefaultTextColor(self.incomplete_color)  # redish
 
-    def boundingRect(self):
-        """Method required by Qt."""
-        return super(QtNodeLabel, self).boundingRect()
-
-    def paint(self, *args, **kwargs):
-        """Method required by Qt."""
-        super(QtNodeLabel, self).paint(*args, **kwargs)
+    def paint(self, painter, option, widget):
+        """Paint overload."""
+        if not self.node.point.visible:
+            # Add background box for missing nodes
+            painter.fillRect(option.rect, self.missing_bg_color)
+        super(QtNodeLabel, self).paint(painter, option, widget)
 
     def mousePressEvent(self, event):
         """Pass events along so that clicking label is like clicking node."""
@@ -1673,6 +1674,7 @@ class QtInstance(QGraphicsObject):
     Args:
         instance: The :class:`Instance` to show.
         markerRadius: Radius of nodes.
+        nodeLabelSize: Font size of node labels.
         show_non_visible: Whether to show "non-visible" nodes/edges.
     """
 
@@ -1681,6 +1683,7 @@ class QtInstance(QGraphicsObject):
         instance: Instance = None,
         player: Optional[QtVideoPlayer] = None,
         markerRadius=4,
+        nodeLabelSize=12,
         show_non_visible=True,
         *args,
         **kwargs,
@@ -1697,6 +1700,7 @@ class QtInstance(QGraphicsObject):
         self.show_non_visible = show_non_visible
         self.selectable = not self.predicted or color_manager.color_predicted
         self.markerRadius = markerRadius
+        self.nodeLabelSize = nodeLabelSize
 
         self.nodes = {}
         self.edges = []
@@ -1784,7 +1788,12 @@ class QtInstance(QGraphicsObject):
         # We do this after adding edges so that we can position labels to avoid overlap
         if not self.predicted:
             for node in self.nodes.values():
-                node_label = QtNodeLabel(node, predicted=self.predicted, parent=self)
+                node_label = QtNodeLabel(
+                    node,
+                    predicted=self.predicted,
+                    parent=self,
+                    fontSize=self.nodeLabelSize,
+                )
                 node_label.adjustPos()
 
                 self.labels[node.name] = node_label
