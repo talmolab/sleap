@@ -1131,7 +1131,7 @@ def test_has_frame():
 @pytest.fixture
 def removal_test_labels():
     skeleton = Skeleton()
-    video = Video(backend=MediaVideo)
+    video = Video(backend=MediaVideo(filename="test"))
     lf_user_only = LabeledFrame(
         video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
     )
@@ -1145,6 +1145,14 @@ def removal_test_labels():
     )
     labels = Labels([lf_user_only, lf_pred_only, lf_both])
     return labels
+
+
+def test_copy(removal_test_labels):
+    new_labels = removal_test_labels.copy()
+    new_labels[0].instances = []
+    new_labels.remove_frame(new_labels[-1])
+    assert len(removal_test_labels[0].instances) == 1
+    assert len(removal_test_labels) == 3
 
 
 def test_remove_user_instances(removal_test_labels):
@@ -1260,3 +1268,29 @@ def test_remove_all_tracks(centered_pair_predictions):
     labels.remove_all_tracks()
     assert len(labels.tracks) == 0
     assert all(inst.track is None for inst in labels.instances())
+
+
+def test_remove_empty_frames(min_labels):
+    min_labels.append(sleap.LabeledFrame(video=min_labels.video, frame_idx=2))
+    assert len(min_labels) == 2
+    assert len(min_labels[-1]) == 0
+    min_labels.remove_empty_frames()
+    assert len(min_labels) == 1
+    assert len(min_labels[0]) == 2
+
+
+def test_remove_empty_instances(min_labels):
+    for inst in min_labels.labeled_frames[0].instances:
+        for pt in inst.points:
+            pt.visible = False
+    min_labels.remove_empty_instances(keep_empty_frames=True)
+    assert len(min_labels) == 1
+    assert len(min_labels[0]) == 0
+
+
+def test_remove_empty_instances_and_frames(min_labels):
+    for inst in min_labels.labeled_frames[0].instances:
+        for pt in inst.points:
+            pt.visible = False
+    min_labels.remove_empty_instances(keep_empty_frames=False)
+    assert len(min_labels) == 0
