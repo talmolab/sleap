@@ -737,5 +737,9 @@ def load_metrics(model_path: str, split: str = "val") -> Dict[str, Any]:
     Returns:
         The loaded metrics as a dictionary.
     """
+    if os.path.isdir(model_path):
+        metrics_path = os.path.join(model_path, f"metrics.{split}.npz")
+    else:
+        metrics_path = model_path
     with np.load(metrics_path, allow_pickle=True) as data:
         return data["metrics"].item()
