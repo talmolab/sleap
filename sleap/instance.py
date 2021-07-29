@@ -799,7 +799,9 @@ class Instance:
         w, h = y2 - y1, x2 - x1
         for node in self.skeleton.nodes:
             if node not in self.nodes or self[node].isnan():
-                x, y = np.random.rand(2) * np.array([w, h]) + np.array([x1, y1])
+                x, y = np.random.rand(2) * np.array([w + 2, h + 2]) + np.array(
+                    [x1 - 2, y1 - 2]
+                )
                 self[node] = Point(x=x, y=y, visible=False)
 
     @property
