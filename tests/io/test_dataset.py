@@ -1131,7 +1131,7 @@ def test_has_frame():
 @pytest.fixture
 def removal_test_labels():
     skeleton = Skeleton()
-    video = Video(backend=MediaVideo)
+    video = Video(backend=MediaVideo(filename="test"))
     lf_user_only = LabeledFrame(
         video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
     )
