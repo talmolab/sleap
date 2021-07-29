@@ -1352,6 +1352,7 @@ def test_remove_empty_instances_and_frames(min_labels):
     min_labels.remove_empty_instances(keep_empty_frames=False)
     assert len(min_labels) == 0
 
+
 def test_merge_nodes(min_labels):
     labels = min_labels.copy()
     labels.skeleton.add_node("a")
