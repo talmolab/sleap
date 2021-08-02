@@ -18,6 +18,12 @@ This notebook can be a good place to start since you'll be able to see how train
 Once you're ready to run training and inference on your own SLEAP dataset, this notebook walks you through the process of using `Google Drive <https://www.google.com/drive>`_ to copy data to and from Colab (as well as running training and inference on your dataset).
 
 
+`Model evaluation <./Model_evaluation.html>`_
+------------------------------------------------
+
+After you've trained several models, you may want to compute some metrics for benchmarking and comparisons. This notebook walks through some of the types of metrics that SLEAP can compute for you, as well as how to recompute them.
+
+
 `Analysis examples <./Analysis_examples.html>`_
 ------------------------------------------------
 
@@ -29,4 +35,5 @@ Once you've used SLEAP to successfully estimate animal pose and track animals in
        
     Training_and_inference_on_an_example_dataset
     Training_and_inference_using_Google_Drive
+    Model_evaluation
     Analysis_examples

@@ -730,9 +730,10 @@ def load_metrics(model_path: str, split: str = "val") -> Dict[str, Any]:
     """Load metrics for a model.
 
     Args:
-        model_path: Path to a model folder.
+        model_path: Path to a model folder or metrics file (.npz).
         split: Name of the split to load the metrics for. Must be `"train"`, `"val"` or
-            `"test"` (default: `"val"`).
+            `"test"` (default: `"val"`). Ignored if a path to a metrics NPZ file is
+            provided.
 
     Returns:
         The loaded metrics as a dictionary with keys:
