@@ -4,11 +4,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.heads" href="sleap.nn.heads.html" /><link rel="prev" title="sleap.nn.callbacks" href="sleap.nn.callbacks.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/>
         <title>sleap.nn.evals - SLEAP (v1.1.4)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="../_static/pygments.css">
-    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
 
 
@@ -40,7 +39,8 @@
 </style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
-    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=ee12cdd73c4bbac24afec78d92c4afd7c2d8ea7f"></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -143,6 +143,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Model_evaluation.html">Model evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Analysis examples</a></li>
 </ul>
 </li>
@@ -172,6 +173,13 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
@@ -186,12 +194,6 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
@@ -201,6 +203,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -217,15 +227,6 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
@@ -467,6 +468,48 @@ also be considered for matching.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A list of pairs of <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.LabeledFrame`s</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">form</span> <span class="pre">`(frame_gt,</span> <span class="pre">frame_pr)</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt id="sleap.nn.evals.load_metrics">
+<code class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></code><code class="sig-name descname"><span class="pre">load_metrics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'val'</span></span></em><span class="sig-paren">)</span> → <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/nn/evals.py#L729-L766"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.load_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load metrics for a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_path</strong> – Path to a model folder or metrics file (.npz).</p></li>
+<li><p><strong>split</strong> – Name of the split to load the metrics for. Must be <code class="xref py py-obj docutils literal notranslate"><span class="pre">"train"</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">"val"</span></code> or
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">"test"</span></code> (default: <code class="xref py py-obj docutils literal notranslate"><span class="pre">"val"</span></code>). Ignored if a path to a metrics NPZ file is
+provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"vis.tp"</span></code>: Visibility - True Positives</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"vis.fp"</span></code>: Visibility - False Positives</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"vis.tn"</span></code>: Visibility - True Negatives</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"vis.fn"</span></code>: Visibility - False Negatives</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"vis.precision"</span></code>: Visibility - Precision</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"vis.recall"</span></code>: Visibility - Recall</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"dist.avg"</span></code>: Average Distance (ground truth vs prediction)</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"dist.p50"</span></code>: Distance for 50th percentile</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"dist.p75"</span></code>: Distance for 75th percentile</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"dist.p90"</span></code>: Distance for 90th percentile</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"dist.p95"</span></code>: Distance for 95th percentile</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"dist.p99"</span></code>: Distance for 99th percentile</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"dist.dists"</span></code>: All distances</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"pck.mPCK"</span></code>: Mean Percentage of Correct Keypoints (PCK)</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"oks.mOKS"</span></code>: Mean Object Keypoint Similarity (OKS)</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"oks_voc.mAP"</span></code>: VOC with OKS scores - mean Average Precision (mAP)</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"oks_voc.mAR"</span></code>: VOC with OKS scores - mean Average Recall (mAR)</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"pck_voc.mAP"</span></code>: VOC with PCK scores - mean Average Precision (mAP)</p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">"pck_voc.mAR"</span></code>: VOC with PCK scores - mean Average Recall (mAR)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>The loaded metrics as a dictionary with keys</p>
 </dd>
 </dl>
 </dd></dl>
