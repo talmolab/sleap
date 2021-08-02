@@ -50,7 +50,7 @@ Features
 * Multi-animal pose estimation with *top-down* and *bottom-up* training strategies
 * State-of-the-art pretrained and customizable neural network architectures that deliver *accurate predictions* with *very few* labels
 * Fast training: 15 to 60 mins on a single GPU for a typical dataset
-* Fast inference: 400+ FPS for batch, 10ms latency for realtime
+* Fast inference: 400+ FPS for batch, <10ms latency for realtime
 * Support for remote training/inference workflow (for using SLEAP without GPUs)
 * Flexible developer API for building integrated apps and customization
 
@@ -80,7 +80,7 @@ Contact
 
 Follow `@MurthyLab <https://twitter.com/MurthyLab>`_ on Twitter for news and updates!
 
-**Technical issue with the software?** `Open an issue on GitHub. <https://github.com/murthylab/sleap/issues>`_
+**Technical issue with the software?** Check the `Help page <https://sleap.ai/help.html>`_ first, then `open an issue on GitHub. <https://github.com/murthylab/sleap/issues>`_
 
 **Press inquiries? Interested in using SLEAP in a commercial application?** Reach out at `sleap@princeton.edu`_.
 
@@ -112,4 +112,4 @@ Links
 * `Guides <https://sleap.ai/guides/index.html>`_
 * `Notebooks <https://sleap.ai/notebooks/index.html>`_
 * `Developer API <https://sleap.ai/api.html>`_
-
+* `Help <https://sleap.ai/help.html>`_
