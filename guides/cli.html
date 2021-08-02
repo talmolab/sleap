@@ -4,11 +4,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Skeleton design" href="skeletons.html" /><link rel="prev" title="GUI" href="gui.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
-        <title>Command line interfaces - SLEAP (v1.1.4)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/>
+        <title>Command line interfaces - SLEAP (v1.1.5)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="../_static/pygments.css">
-    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
 
 
@@ -40,7 +39,8 @@
 </style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
-    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=ee12cdd73c4bbac24afec78d92c4afd7c2d8ea7f"></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.4)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.4)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -143,6 +143,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Model_evaluation.html">Model evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Analysis examples</a></li>
 </ul>
 </li>
@@ -172,6 +173,13 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
@@ -186,12 +194,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
@@ -201,6 +203,14 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -217,20 +227,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help.html">Help</a></li>
 </ul>
 
 </div>
@@ -250,6 +252,8 @@
 <p>SLEAP provides several types of functionality accessible through a command prompt.</p>
 <div class="section" id="gui">
 <h2>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sleap-label">
+<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-label</span></code><a class="headerlink" href="#sleap-label" title="Permalink to this headline">¶</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> runs the GUI application for labeling and viewing <code class="code docutils literal notranslate"><span class="pre">.slp</span></code> files.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
 
@@ -265,8 +269,11 @@ optional arguments:
 </pre></div>
 </div>
 </div>
+</div>
 <div class="section" id="training">
 <h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sleap-train">
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code><a class="headerlink" href="#sleap-train" title="Permalink to this headline">¶</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook instead of through the GUI.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
                    [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
@@ -312,8 +319,11 @@ optional arguments:
 </pre></div>
 </div>
 </div>
+</div>
 <div class="section" id="inference-and-tracking">
 <h2>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sleap-track">
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code><a class="headerlink" href="#sleap-track" title="Permalink to this headline">¶</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.</p>
 <p>If you specify how many identities there should be in a frame (i.e., the number of animals) with the <code class="code docutils literal notranslate"><span class="pre">--tracking.clean_instance_count</span></code> argument, then we will use a heuristic method to connect “breaks” in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">none</span></code>). See <a class="reference internal" href="proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> for more details on tracking.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames]
@@ -448,8 +458,11 @@ optional arguments:
 </pre></div>
 </div>
 </div>
+</div>
 <div class="section" id="dataset-files">
 <h2>Dataset files<a class="headerlink" href="#dataset-files" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sleap-convert">
+<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-convert</span></code><a class="headerlink" href="#sleap-convert" title="Permalink to this headline">¶</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-convert</span></code> allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See <a class="reference internal" href="../api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for more information.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO]
                      input_path
@@ -467,6 +480,14 @@ optional arguments:
   --video VIDEO         Path to video (if needed for conversion).
 </pre></div>
 </div>
+<p>For example, to convert a predictions SLP file to an analysis HDF5 file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">convert</span> <span class="o">--</span><span class="nb">format</span> <span class="n">analysis</span> <span class="o">-</span><span class="n">o</span> <span class="s2">"session1.predictions.analysis.h5"</span> <span class="s2">"session1.predictions.slp"</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="../notebooks/Analysis_examples.html">Analysis examples</a> for how to work with these outputs.</p>
+</div>
+<div class="section" id="sleap-inspect">
+<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code><a class="headerlink" href="#sleap-inspect" title="Permalink to this headline">¶</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-inspect</span></code> gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you’re inspecting a predictions dataset (i.e., the output from running <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).</p>
 <p>You can also specify a model folder to get a quick summary of the configuration and metrics (if available).</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-inspect [-h] [--verbose] data_path
@@ -480,8 +501,11 @@ optional arguments:
 </pre></div>
 </div>
 </div>
+</div>
 <div class="section" id="debugging">
 <h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sleap-diagnostic">
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code><a class="headerlink" href="#sleap-diagnostic" title="Permalink to this headline">¶</a></h3>
 <p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/murthylab/sleap/main/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
 
@@ -495,6 +519,7 @@ optional arguments:
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For more details about any command, run with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument (e.g., <code class="code docutils literal notranslate"><span class="pre">sleap-track</span> <span class="pre">--help</span></code>).</p>
+</div>
 </div>
 </div>
 </div>
@@ -554,11 +579,27 @@ optional arguments:
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Command line interfaces</a><ul>
-<li><a class="reference internal" href="#gui">GUI</a></li>
-<li><a class="reference internal" href="#training">Training</a></li>
-<li><a class="reference internal" href="#inference-and-tracking">Inference and Tracking</a></li>
-<li><a class="reference internal" href="#dataset-files">Dataset files</a></li>
-<li><a class="reference internal" href="#debugging">Debugging</a></li>
+<li><a class="reference internal" href="#gui">GUI</a><ul>
+<li><a class="reference internal" href="#sleap-label"><code class="docutils literal notranslate"><span class="pre">sleap-label</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#training">Training</a><ul>
+<li><a class="reference internal" href="#sleap-train"><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#inference-and-tracking">Inference and Tracking</a><ul>
+<li><a class="reference internal" href="#sleap-track"><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dataset-files">Dataset files</a><ul>
+<li><a class="reference internal" href="#sleap-convert"><code class="docutils literal notranslate"><span class="pre">sleap-convert</span></code></a></li>
+<li><a class="reference internal" href="#sleap-inspect"><code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debugging">Debugging</a><ul>
+<li><a class="reference internal" href="#sleap-diagnostic"><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

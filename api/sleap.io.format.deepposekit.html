@@ -4,11 +4,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.io.format.dispatch" href="sleap.io.format.dispatch.html" /><link rel="prev" title="sleap.io.format.deeplabcut" href="sleap.io.format.deeplabcut.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
-        <title>sleap.io.format.deepposekit - SLEAP (v1.1.4)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/>
+        <title>sleap.io.format.deepposekit - SLEAP (v1.1.5)</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="../_static/pygments.css">
-    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
 
 
@@ -40,7 +39,8 @@
 </style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
-    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=ee12cdd73c4bbac24afec78d92c4afd7c2d8ea7f"></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.4)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.4)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -143,6 +143,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/Model_evaluation.html">Model evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Analysis examples</a></li>
 </ul>
 </li>
@@ -172,6 +173,13 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
@@ -186,12 +194,6 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.training.html">sleap.nn.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.utils.html">sleap.nn.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
@@ -201,6 +203,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -217,20 +227,12 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help.html">Help</a></li>
 </ul>
 
 </div>
@@ -250,7 +252,7 @@
 <p>Adaptor for reading DeepPoseKit datasets (HDF5).</p>
 <dl class="py class">
 <dt id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.io.format.deepposekit.</span></code><code class="sig-name descname"><span class="pre">LabelsDeepPoseKitAdaptor</span></code><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/io/format/deepposekit.py#L16-L95"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.io.format.deepposekit.</span></code><code class="sig-name descname"><span class="pre">LabelsDeepPoseKitAdaptor</span></code><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/io/format/deepposekit.py#L16-L95"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.all_exts">
 <em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">all_exts</span></code><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.all_exts" title="Permalink to this definition">¶</a></dt>
@@ -258,12 +260,12 @@
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_read_file">
-<code class="sig-name descname"><span class="pre">can_read_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/io/format/deepposekit.py#L33-L40"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">can_read_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/io/format/deepposekit.py#L33-L40"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_read_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can read this file.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_write_filename">
-<code class="sig-name descname"><span class="pre">can_write_filename</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/io/format/deepposekit.py#L42-L43"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">can_write_filename</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/io/format/deepposekit.py#L42-L43"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_write_filename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor can write format of this filename.</p>
 </dd></dl>
 <dl class="py method">
@@ -273,12 +275,12 @@
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_read">
-<code class="sig-name descname"><span class="pre">does_read</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/io/format/deepposekit.py#L45-L46"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">does_read</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/io/format/deepposekit.py#L45-L46"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor supports reading.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_write">
-<code class="sig-name descname"><span class="pre">does_write</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/io/format/deepposekit.py#L48-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">does_write</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/io/format/deepposekit.py#L48-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether this adaptor supports writing.</p>
 </dd></dl>
 <dl class="py method">
@@ -295,7 +297,7 @@ determine which to use for reading/writing.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.read">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">read</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/io/format/deepposekit.py#L51-L95"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.read" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">read</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/io/format/deepposekit.py#L51-L95"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads the file and returns the appropriate deserialized object.</p>
 </dd></dl>
 </dd></dl>

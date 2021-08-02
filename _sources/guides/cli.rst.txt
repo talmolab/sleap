@@ -8,6 +8,12 @@ SLEAP provides several types of functionality accessible through a command promp
 
 GUI
 ---
+
+.. _`sleap-label`:
+
+``sleap-label``
++++++++++++++++++
+
 :code:`sleap-label` runs the GUI application for labeling and viewing :code:`.slp` files.
 
 .. code-block:: none
@@ -26,6 +32,12 @@ GUI
 
 Training
 --------
+
+.. _`sleap-train`:
+
+``sleap-train``
++++++++++++++++++
+
 :code:`sleap-train` is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook instead of through the GUI.
 
 .. code-block:: none
@@ -75,6 +87,12 @@ Training
 
 Inference and Tracking
 ----------------------
+
+.. _`sleap-track`:
+
+``sleap-track``
++++++++++++++++++
+
 :code:`sleap-track` is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.
 
 If you specify how many identities there should be in a frame (i.e., the number of animals) with the :code:`--tracking.clean_instance_count` argument, then we will use a heuristic method to connect "breaks" in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify :code:`--tracking.tracker none`). See :ref:`proofreading` for more details on tracking.
@@ -215,6 +233,11 @@ If you specify how many identities there should be in a frame (i.e., the number 
 Dataset files
 ---------------
 
+.. _`sleap-convert`:
+
+``sleap-convert``
++++++++++++++++++
+
 :code:`sleap-convert` allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See :py:mod:`sleap.io.convert` for more information.
 
 .. code-block:: none
@@ -235,6 +258,20 @@ Dataset files
       --video VIDEO         Path to video (if needed for conversion).
 
 
+For example, to convert a predictions SLP file to an analysis HDF5 file:
+
+::
+
+  sleap-convert --format analysis -o "session1.predictions.analysis.h5" "session1.predictions.slp"
+
+See `Analysis examples <../notebooks/Analysis_examples.html>`_ for how to work with these outputs.
+
+
+.. _`sleap-inspect`:
+
+``sleap-inspect``
++++++++++++++++++
+
 :code:`sleap-inspect` gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you're inspecting a predictions dataset (i.e., the output from running :code:`sleap-track` or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).
 
 You can also specify a model folder to get a quick summary of the configuration and metrics (if available).
@@ -253,6 +290,11 @@ You can also specify a model folder to get a quick summary of the configuration 
 
 Debugging
 ---------
+
+.. _`sleap-diagnostic`:
+
+``sleap-diagnostic``
+++++++++++++++++++++
 
 There's also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with :code:`sleap-diagnostic`. Otherwise, you can download `diagnostic.py <https://raw.githubusercontent.com/murthylab/sleap/main/sleap/diagnostic.py?token=ALBFDHR54MUCZQEU4PKGK4S6PX2KY>`_ and run :code:`python diagnostic.py`.
 
