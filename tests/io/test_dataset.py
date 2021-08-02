@@ -571,6 +571,63 @@ def test_merge_with_package(min_labels_robot, tmpdir):
     assert labels_pkg.predicted_instances[0].frame.frame_idx == 1
 
 
+def test_merge_with_skeleton_conflict(min_labels, tmpdir):
+    # Save out base labels
+    base_labels = min_labels.copy()
+    base_labels.save(f"{tmpdir}/base_labels.slp")
+
+    # Merge labels with a renamed node
+    labels = base_labels.copy()
+    labels[0].frame_idx = 1
+    labels.skeleton.relabel_node("A", "a")
+    labels.save(f"{tmpdir}/labels.renamed_node.slp")
+
+    labels = base_labels.copy()
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(
+        labels, sleap.load_file(f"{tmpdir}/labels.renamed_node.slp")
+    )
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels.skeleton.node_names == ["A", "B", "a"]
+    assert np.isnan(labels[0][0].numpy()).any(axis=1).tolist() == [False, False, True]
+    assert np.isnan(labels[1][0].numpy()).any(axis=1).tolist() == [True, False, False]
+
+    # Merge labels with a new node
+    labels = base_labels.copy()
+    labels[0].frame_idx = 1
+    labels.skeleton.add_node("C")
+    inst = labels[0][0]
+    inst["C"] = sleap.instance.Point(x=1, y=2, visible=True)
+    labels.save(f"{tmpdir}/labels.new_node.slp")
+
+    labels = base_labels.copy()
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(
+        labels, sleap.load_file(f"{tmpdir}/labels.new_node.slp")
+    )
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels.skeleton.node_names == ["A", "B", "C"]
+    assert np.isnan(labels[0][0].numpy()).any(axis=1).tolist() == [False, False, True]
+    assert np.isnan(labels[1][0].numpy()).any(axis=1).tolist() == [False, False, False]
+
+    # Merge labels with a deleted node
+    labels = base_labels.copy()
+    labels[0].frame_idx = 1
+    labels.skeleton.delete_node("A")
+    labels.save(f"{tmpdir}/labels.deleted_node.slp")
+
+    labels = base_labels.copy()
+    merged, extra_base, extra_new = sleap.Labels.complex_merge_between(
+        labels, sleap.load_file(f"{tmpdir}/labels.deleted_node.slp")
+    )
+    assert len(extra_base) == 0
+    assert len(extra_new) == 0
+    assert labels.skeleton.node_names == ["A", "B"]
+    assert np.isnan(labels[0][0].numpy()).any(axis=1).tolist() == [False, False]
+    assert np.isnan(labels[1][0].numpy()).any(axis=1).tolist() == [True, False]
+    assert (labels[0][0].numpy()[1] == labels[1][0].numpy()[1]).all()
+
+
 def skeleton_ids_from_label_instances(labels):
     return list(map(id, (lf.instances[0].skeleton for lf in labels.labeled_frames)))
 
@@ -1131,7 +1188,7 @@ def test_has_frame():
 @pytest.fixture
 def removal_test_labels():
     skeleton = Skeleton()
-    video = Video(backend=MediaVideo)
+    video = Video(backend=MediaVideo(filename="test"))
     lf_user_only = LabeledFrame(
         video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
     )
@@ -1145,6 +1202,14 @@ def removal_test_labels():
     )
     labels = Labels([lf_user_only, lf_pred_only, lf_both])
     return labels
+
+
+def test_copy(removal_test_labels):
+    new_labels = removal_test_labels.copy()
+    new_labels[0].instances = []
+    new_labels.remove_frame(new_labels[-1])
+    assert len(removal_test_labels[0].instances) == 1
+    assert len(removal_test_labels) == 3
 
 
 def test_remove_user_instances(removal_test_labels):
@@ -1260,3 +1325,78 @@ def test_remove_all_tracks(centered_pair_predictions):
     labels.remove_all_tracks()
     assert len(labels.tracks) == 0
     assert all(inst.track is None for inst in labels.instances())
+
+
+def test_remove_empty_frames(min_labels):
+    min_labels.append(sleap.LabeledFrame(video=min_labels.video, frame_idx=2))
+    assert len(min_labels) == 2
+    assert len(min_labels[-1]) == 0
+    min_labels.remove_empty_frames()
+    assert len(min_labels) == 1
+    assert len(min_labels[0]) == 2
+
+
+def test_remove_empty_instances(min_labels):
+    for inst in min_labels.labeled_frames[0].instances:
+        for pt in inst.points:
+            pt.visible = False
+    min_labels.remove_empty_instances(keep_empty_frames=True)
+    assert len(min_labels) == 1
+    assert len(min_labels[0]) == 0
+
+
+def test_remove_empty_instances_and_frames(min_labels):
+    for inst in min_labels.labeled_frames[0].instances:
+        for pt in inst.points:
+            pt.visible = False
+    min_labels.remove_empty_instances(keep_empty_frames=False)
+    assert len(min_labels) == 0
+
+
+def test_merge_nodes(min_labels):
+    labels = min_labels.copy()
+    labels.skeleton.add_node("a")
+
+    inst = labels[0][0]
+    inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+    inst = labels[0][1]
+    inst["A"] = Point(x=0, y=1, visible=False)
+    inst["a"] = Point(x=1, y=2, visible=True)
+
+    labels.merge_nodes("A", "a")
+
+    assert labels.skeleton.node_names == ["A", "B"]
+
+    inst = labels[0][0]
+    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert len(inst.nodes) == 2
+    inst = labels[0][1]
+    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert len(inst.nodes) == 2
+
+
+def test_split(centered_pair_predictions):
+    labels_a, labels_b = centered_pair_predictions.split(0.8)
+    assert len(labels_a) == 880
+    assert len(labels_b) == 220
+
+    assert (
+        len(
+            np.intersect1d(
+                [lf.frame_idx for lf in labels_a], [lf.frame_idx for lf in labels_b]
+            )
+        )
+        == 0
+    )
+
+    labels_a, labels_b = centered_pair_predictions.extract([0]).split(0.8)
+    assert len(labels_a) == 1
+    assert len(labels_b) == 1
+    assert labels_a[0] != labels_b[0]
+    assert labels_a[0].frame_idx == labels_b[0].frame_idx
+
+    labels_a, labels_b = centered_pair_predictions.extract([0]).split(0.8, copy=False)
+    assert len(labels_a) == 1
+    assert len(labels_b) == 1
+    assert labels_a[0] == labels_b[0]

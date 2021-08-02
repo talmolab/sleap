@@ -142,7 +142,9 @@ class MainWindow(QMainWindow):
         self.state["color predicted"] = prefs["color predicted"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
+        self.state["node label size"] = prefs["node label size"]
         self.state.connect("marker size", self.plotFrame)
+        self.state.connect("node label size", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
 
@@ -188,6 +190,7 @@ class MainWindow(QMainWindow):
         # Save window state.
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
+        prefs["node label size"] = self.state["node label size"]
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
@@ -518,6 +521,13 @@ class MainWindow(QMainWindow):
             title="Node Marker Size",
             options=(1, 4, 6, 8, 12),
             key="marker size",
+        )
+
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Node Label Size",
+            options=(6, 12, 18, 24, 36),
+            key="node label size",
         )
 
         add_submenu_choices(

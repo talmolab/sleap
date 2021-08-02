@@ -976,9 +976,14 @@ class Video:
         return self.frames - 1
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
+    def shape(
+        self,
+    ) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
         """Return tuple of (frame count, height, width, channels)."""
-        return (self.frames, self.height, self.width, self.channels)
+        try:
+            return (self.frames, self.height, self.width, self.channels)
+        except:
+            return (None, None, None, None)
 
     def __str__(self) -> str:
         """Informal string representation (for print or format)."""

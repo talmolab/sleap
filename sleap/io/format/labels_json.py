@@ -396,16 +396,33 @@ class LabelsJsonAdaptor(Adaptor):
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:
-            for idx, sk in enumerate(skeletons):
-                for old_sk in match_to.skeletons:
-                    if sk.matches(old_sk):
-                        # use nodes from matched skeleton
-                        for (node, match_node) in zip(sk.nodes, old_sk.nodes):
-                            node_idx = nodes.index(node)
-                            nodes[node_idx] = match_node
-                        # use skeleton from match
-                        skeletons[idx] = old_sk
-                        break
+            if len(skeletons) > 1 or len(match_to.skeletons) > 1:
+                # Match full skeletons
+                for idx, sk in enumerate(skeletons):
+                    for old_sk in match_to.skeletons:
+                        if sk.matches(old_sk):
+                            # use nodes from matched skeleton
+                            for (node, match_node) in zip(sk.nodes, old_sk.nodes):
+                                node_idx = nodes.index(node)
+                                nodes[node_idx] = match_node
+                            # use skeleton from match
+                            skeletons[idx] = old_sk
+                            break
+            elif len(skeletons) == 1 and len(match_to.skeletons) == 1:
+                # Match by node names
+                old_skel = match_to.skeleton
+                new_skel = skeletons[0]
+
+                old_node_names = old_skel.node_names
+                for i, node in enumerate(nodes):
+                    if node.name in old_node_names:
+                        nodes[i] = old_skel.nodes[old_node_names.index(node.name)]
+                    else:
+                        old_skel._graph.add_node(node)
+
+                skeletons[0] = old_skel
+
+            # Match videos
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
 

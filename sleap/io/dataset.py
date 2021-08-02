@@ -58,6 +58,7 @@ import attr
 import cattr
 import h5py as h5
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 try:
     from typing import ForwardRef
@@ -699,16 +700,17 @@ class Labels(MutableSequence):
         except KeyError:
             return None
 
-    def extract(self, inds) -> "Labels":
+    def extract(self, inds, copy: bool = False) -> "Labels":
         """Extract labeled frames from indices and return a new `Labels` object.
-
         Args:
             inds: Any valid indexing keys, e.g., a range, slice, list of label indices,
                 numpy array, `Video`, etc. See `__getitem__` for full list.
-
+            copy: If `True`, create a new copy of all of the extracted labeled frames
+                and associated labels. If `False` (the default), a shallow copy with
+                references to the original labeled frames and other objects will be
+                returned.
         Returns:
             A new `Labels` object with the specified labeled frames.
-
             This will preserve the other data structures even if they are not found in
             the extracted labels, including:
                 - `Labels.videos`
@@ -726,7 +728,59 @@ class Labels(MutableSequence):
             suggestions=self.suggestions,
             provenance=self.provenance,
         )
+        if copy:
+            new_labels = new_labels.copy()
         return new_labels
+
+    def copy(self) -> "Labels":
+        """Return a full deep copy of the labels.
+        Notes:
+            All objects will be re-created by serializing and then deserializing the
+            labels. This may be slow and will create new instances of all data
+            structures.
+        """
+        return type(self).from_json(self.to_json())
+
+    def split(
+        self, n: Union[float, int], copy: bool = True
+    ) -> Tuple["Labels", "Labels"]:
+        """Split labels randomly.
+
+        Args:
+            n: Number or fraction of elements in the first split.
+            copy: If `True` (the default), return copies of the labels.
+
+        Returns:
+            A tuple of `(labels_a, labels_b)` where both are `sleap.Labels` instances
+            subsampled from these labels.
+
+        Notes:
+            If there is only 1 labeled frame, this will return two copies of the same
+            labels. For `len(labels) > 1`, splits are guaranteed to be mutually
+            exclusive.
+
+        Example:
+            You can generate multiple splits by calling this repeatedly:
+
+            ```py
+            # Generate a 0.8/0.1/0.1 train/val/test split.
+            labels_train, labels_val_test = labels.split(n=0.8)
+            labels_val, labels_test = labels_val_test.split(n=0.5)
+            ```
+        """
+        if len(self) == 1:
+            if copy:
+                return self.copy(), self.copy()
+            else:
+                return self, self
+
+        # Split indices.
+        if type(n) != int:
+            n = round(len(self) * n)
+        n = max(min(n, len(self) - 1), 1)
+        idx_a, idx_b = train_test_split(list(range(len(self))), train_size=n)
+
+        return self.extract(idx_a, copy=copy), self.extract(idx_b, copy=copy)
 
     def __setitem__(self, index, value: LabeledFrame):
         """Set labeled frame at given index."""
@@ -775,6 +829,23 @@ class Labels(MutableSequence):
         to_remove = set(lfs)
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
         self.update_cache()
+
+    def remove_empty_instances(self, keep_empty_frames: bool = True):
+        """Remove instances with no visible points.
+
+        Args:
+            keep_empty_frames: If True (the default), frames with no remaining instances
+                will not be removed.
+
+        Notes:
+            This will modify the labels in place. If a copy is desired, call
+            `labels.copy()` before this.
+        """
+        for lf in self.labeled_frames:
+            lf.remove_empty_instances()
+        self.update_cache()
+        if not keep_empty_frames:
+            self.remove_empty_frames()
 
     def remove_empty_frames(self):
         """Remove frames with no instances."""
@@ -2111,6 +2182,35 @@ class Labels(MutableSequence):
                     tracks[i, j] = inst.numpy()
 
         return tracks
+
+    def merge_nodes(self, base_node: str, merge_node: str):
+        """Merge two nodes and update data accordingly.
+
+        Args:
+            base_node: Name of skeleton node that will remain after merging.
+            merge_node: Name of skeleton node that will be merged into the base node.
+
+        Notes:
+            This method can be used to merge two nodes that might have been named
+            differently but that should be associated with the same node.
+
+            This is useful, for example, when merging a different set of labels where
+            a node was named differently.
+
+            If the `base_node` is visible and has data, it will not be updated.
+            Otherwise, it will be updated with the data from the `merge_node` on the
+            same instance.
+        """
+        # Update data on all instances.
+        for inst in self.instances():
+            inst._merge_nodes_data(base_node, merge_node)
+
+        # Remove merge node from skeleton.
+        self.skeleton.delete_node(merge_node)
+
+        # Fix instances.
+        for inst in self.instances():
+            inst._fix_array()
 
     @classmethod
     def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
