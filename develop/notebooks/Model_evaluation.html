@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Analysis examples" href="Analysis_examples.html" /><link rel="prev" title="Training and inference on your own data using Google Drive" href="Training_and_inference_using_Google_Drive.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/>
-        <title>Model evaluation - SLEAP (v1.1.4)</title>
+        <title>Model evaluation - SLEAP (v1.1.5)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="../_static/pygments.css">
     
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.4)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.4)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -232,6 +232,7 @@
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help.html">Help</a></li>
 </ul>
 
 </div>
@@ -246,13 +247,14 @@
         <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="model-evaluation">
+        <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Model_evaluation.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<div class="section" id="model-evaluation">
 <h1>Model evaluation<a class="headerlink" href="#model-evaluation" title="Permalink to this headline">¶</a></h1>
 <p>After you’ve trained several models, you may want to generate some accuracy metrics to compare between them. This notebook demonstrates how you’ll do that given a trained model.</p>
 <p>Let’s start by installing SLEAP and downloading the trained model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!pip install sleap
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!pip install sleap &gt; /dev/null 2&gt;&amp;1
 !apt install tree &gt; /dev/null 2&gt;&amp;1
 !wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip &gt; /dev/null 2&gt;&amp;1
 !unzip -o -d "td_fast.210505_012601.centered_instance.n=1800" "td_fast.210505_012601.centered_instance.n=1800.zip" &gt; /dev/null 2&gt;&amp;1
@@ -318,7 +320,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.1.4
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.1.5
 TensorFlow: 2.3.1
 Numpy: 1.19.5
 Python: 3.7.11
@@ -341,9 +343,10 @@ load_metrics(model_path: str, split: str = 'val') -&gt; typing.Dict[str, typing.
     Load metrics for a model.
     
     Args:
-        model_path: Path to a model folder.
+        model_path: Path to a model folder or metrics file (.npz).
         split: Name of the split to load the metrics for. Must be `"train"`, `"val"` or
-            `"test"` (default: `"val"`).
+            `"test"` (default: `"val"`). Ignored if a path to a metrics NPZ file is
+            provided.
     
     Returns:
         The loaded metrics as a dictionary with keys:
@@ -441,7 +444,7 @@ Error distance (95%): 3.0166608700891056
 <p>We can visualize the entire distribution like this:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">"w"</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"dist.dists"</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">binrange</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">kde</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kde_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">"clip"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">)},</span> <span class="n">stat</span><span class="o">=</span><span class="s2">"probability"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Localization error (px)"</span><span class="p">);</span>
 </pre></div>
@@ -451,7 +454,7 @@ Error distance (95%): 3.0166608700891056
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:numexpr.utils:NumExpr defaulting to 2 threads.
 </pre></div>
 </div>
-<img alt="../_images/Model_evaluation_13_1.png" src="../_images/Model_evaluation_13_1.png"/>
+<img alt="../_images/Model_evaluation_14_1.png" src="../_images/Model_evaluation_14_1.png"/>
 </div>
 </div>
 <p>This metric is intuitive, but it does not incorporate other sources of error like those stemming from poor instance detection and grouping, or missing points.</p>
@@ -459,14 +462,14 @@ Error distance (95%): 3.0166608700891056
 <p>First let’s plot the distribution of OKS scores:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">"w"</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"oks_voc.match_scores"</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">binrange</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">kde</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kde_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">"clip"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)},</span> <span class="n">stat</span><span class="o">=</span><span class="s2">"probability"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Object Keypoint Similarity"</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Model_evaluation_15_0.png" src="../_images/Model_evaluation_15_0.png"/>
+<img alt="../_images/Model_evaluation_16_0.png" src="../_images/Model_evaluation_16_0.png"/>
 </div>
 </div>
 <p>Since these range from 0 to 1, it seems like we’re doing pretty well!</p>
@@ -474,7 +477,7 @@ Error distance (95%): 3.0166608700891056
 <p>Here we plot this at different thresholds:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">"w"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">precision</span><span class="p">,</span> <span class="n">thresh</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"oks_voc.precisions"</span><span class="p">][::</span><span class="mi">2</span><span class="p">],</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">"oks_voc.match_score_thresholds"</span><span class="p">][::</span><span class="mi">2</span><span class="p">]):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"oks_voc.recall_thresholds"</span><span class="p">],</span> <span class="n">precision</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"OKS @ </span><span class="si">{</span><span class="n">thresh</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Recall"</span><span class="p">)</span>
@@ -484,7 +487,7 @@ Error distance (95%): 3.0166608700891056
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Model_evaluation_17_0.png" src="../_images/Model_evaluation_17_0.png"/>
+<img alt="../_images/Model_evaluation_18_0.png" src="../_images/Model_evaluation_18_0.png"/>
 </div>
 </div>
 <p>An easy way to summarize this analysis is to take the average over all of these thresholds to compute the <strong>mean Average Precision (mAP)</strong> and <strong>mean Average Recall (mAR)</strong> which are widely used in the pose estimation literature.</p>

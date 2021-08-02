@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Tutorial" href="tutorials/tutorial.html" /><link rel="prev" title="Overview" href="overview.html" />
 
     <link rel="shortcut icon" href="_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/>
-        <title>Installation - SLEAP (v1.1.4)</title>
+        <title>Installation - SLEAP (v1.1.5)</title>
       <link rel="stylesheet" href="_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="_static/pygments.css">
     
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">SLEAP (v1.1.4)</div></a>
+      <a href="index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.4)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -232,6 +232,7 @@
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Help</a></li>
 </ul>
 
 </div>
@@ -249,26 +250,35 @@
         <div class="section" id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p><strong>SLEAP</strong> is compatible with Python versions 3.6 and above, with support for Windows and Linux. Mac OS X works but without GPU support.</p>
-<div class="section" id="gpu-support">
-<h2>GPU Support<a class="headerlink" href="#gpu-support" title="Permalink to this headline">¶</a></h2>
-<p><strong>SLEAP</strong> relies on <a class="reference external" href="https://www.tensorflow.org">TensorFlow</a> for training and inference. TensorFlow can use an NVIDIA GPU on Windows and Linux. Other GPUs—AMD, Intel, or older NVIDA GPUs on Macs—are not supported. For more details, see the <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow GPU support</a> documentation.</p>
+<p>To find info on the latest version of SLEAP, check out <a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a>.</p>
+<div class="section" id="quick-install">
+<h2>Quick Install<a class="headerlink" href="#quick-install" title="Permalink to this headline">¶</a></h2>
+<p><strong>Windows or Linux:</strong> (requires <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> or <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda</a>)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="n">sleap</span>
+</pre></div>
+</div>
+<p><strong>Mac or Colab:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span>
+</pre></div>
+</div>
+<p>See the sections below for more detailed information.</p>
+</div>
+<div class="section" id="conda-windows-linux">
+<span id="conda-install"></span><h2>Conda (Windows/Linux)<a class="headerlink" href="#conda-windows-linux" title="Permalink to this headline">¶</a></h2>
+<p>Since <strong>SLEAP</strong> has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda</a> Python distribution to simplify installation. To make things easier, we provide SLEAP conda packages that come with built-in GPU support (CUDA and CuDNN).</p>
+<div class="section" id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It’s possible you can run TensorFlow on AMD GPUs using <a class="reference external" href="https://rocmdocs.amd.com/en/latest/Deep_learning/Deep-learning.html#tensorflow-installation">AMD ROCm</a>. We haven’t tried this but if you’re brave enough to try and you get it to work, let us know!</p>
+<p>You can also use the Linux instructions below if you are comfortable with the command line.</p>
 </div>
-<p>Without a supported GPU you’ll still be able to use <strong>SLEAP</strong> although training on your local machine will be very, very slow; inference will be  slower than it would be with a GPU but may be tolerable.</p>
-<p>If you don’t have a supported GPU installed, we suggest using your local computer for labeling your dataset and then training models using <a class="reference external" href="https://colab.research.google.com">Google Colab</a> (free!) or an HPC cluster (if you have access to one). See our <a class="reference internal" href="guides/index.html#guides"><span class="std std-ref">Guides</span></a> for more information about running <strong>SLEAP</strong> remotely.</p>
-</div>
-<div class="section" id="windows">
-<h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
-<p>Since <strong>SLEAP</strong> has a number of complex binary dependencies (TensorFlow, Keras, OpenCV), it is recommended to use the <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> Python distribution to simplify installation. Anaconda will also install the NVIDIA GPU drivers which TensorFlow needs for running on the GPU.</p>
-<p>If you don’t already have Anaconda installed, go to the <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> website and follow their installation instructions.</p>
-<p>Once <a class="reference external" href="https://www.anaconda.com/distribution/">Anaconda</a> has been installed, go to start menu and type in <em>Anaconda</em>, which should bring up a menu entry
+<p>If you don’t already have Anaconda installed, go to the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda</a> website and follow the installation instructions.</p>
+<p>Once <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda</a> has been installed, go to start menu and type in <em>Anaconda</em>, which should bring up a menu entry
 <strong>Anaconda Prompt</strong> which opens a command line with the base anaconda environment activated. One of the key
 advantages to using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">Anaconda Environments</a> is the ability to create separate Python installations (environments) for
 different projects, mitigating issues of managing complex dependencies. To create a new conda environment for
 <strong>SLEAP</strong> related development and use:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>  <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span><span class="o">=</span><span class="mf">1.1.4</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>  <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">y</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">defaults</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
 </pre></div>
 </div>
 <p>Once the environment is finished installing, it can be activated using the following command:</p>
@@ -276,30 +286,51 @@ different projects, mitigating issues of managing complex dependencies. To creat
 <span class="p">(</span><span class="n">sleap</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>Any Python installation commands (<code class="code docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span></code> or <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>) issued after activating an
+<p>Any Python installation commands (<code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>) issued after activating an
 environment will only affect the active environment. Thus it is important to make sure the environment is active when issuing
 any commands that deal with Python on the command line.</p>
-<p><strong>SLEAP</strong> is now installed in the <code class="code docutils literal notranslate"><span class="pre">sleap</span></code> conda environment. With the environment active,
+<p><strong>SLEAP</strong> is now installed in the <code class="docutils literal notranslate"><span class="pre">sleap</span></code> conda environment. With the environment active,
 you can run the labeling GUI by entering the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">sleap</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="o">&gt;</span> <span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="linux-and-macos-x">
-<h2>Linux and MacOS X<a class="headerlink" href="#linux-and-macos-x" title="Permalink to this headline">¶</a></h2>
-<p>Currently we don’t have an up-do-date conda package for Linux or MacOS X. It is easy to install SLEAP via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> on Linux and MacOS X.</p>
-<p>We recommend installing SLEAP into an environment with Python 3.6. If you are using conda, you can create an environment by running:</p>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<p>If you are a bit more comfortable with the command line and can manage your environment yourself, we recommend using <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a>.</p>
+<p>On Linux you can install it with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh -b -p $HOME/miniconda
+</pre></div>
+</div>
+<p>This will install <code class="docutils literal notranslate"><span class="pre">conda</span></code> to your home directory. To auto-start it when you open a new terminal so you can do <code class="docutils literal notranslate"><span class="pre">conda</span></code> commands more easily, run these lines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">eval</span> <span class="s2">"$($HOME/miniconda/bin/conda shell.bash hook)"</span>
+<span class="n">conda</span> <span class="n">init</span>
+</pre></div>
+</div>
+<p>Now you’ll be ready to install SLEAP in a new environment called <code class="docutils literal notranslate"><span class="pre">sleap</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">y</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="mac-os-x">
+<h3>Mac OS X<a class="headerlink" href="#mac-os-x" title="Permalink to this headline">¶</a></h3>
+<p>Currently we don’t have a conda package for Mac OS X, but it is easy to install SLEAP via <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
+<p>First, follow the instructions above to install Anaconda or Miniconda. Then, run these commands to create a compatible environment:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.6</span> <span class="o">-</span><span class="n">y</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">sleap</span>
 </pre></div>
 </div>
-<p>If you are on Linux and have a GPU supported by TensorFlow, you should follow official directions for installing <a class="reference external" href="https://www.tensorflow.org/install/gpu">TensorFlow with GPU support</a>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>There is no TensorFlow GPU support on MacOS X.</p>
+<p>Next, simply <code class="docutils literal notranslate"><span class="pre">pip</span></code> install it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span>
+</pre></div>
 </div>
-<p>You can then install SLEAP by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span><span class="o">==</span><span class="mf">1.1.4</span>
+</div>
+</div>
+<div class="section" id="pip-windows-linux-mac-colab">
+<span id="pip-install"></span><h2>Pip (Windows/Linux/Mac/Colab)<a class="headerlink" href="#pip-windows-linux-mac-colab" title="Permalink to this headline">¶</a></h2>
+<p>We strongly recommend installing SLEAP into a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment with Python 3.6. If you know what you’re doing and/or are running SLEAP in Colab or another virtual environment, simply run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span>
 </pre></div>
 </div>
 <p><strong>SLEAP</strong> is now installed, you can run the labeling GUI:</p>
@@ -307,9 +338,41 @@ you can run the labeling GUI by entering the following command:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="developer-installation">
-<h2>Developer Installation<a class="headerlink" href="#developer-installation" title="Permalink to this headline">¶</a></h2>
-<p>If you want to install a version of <strong>SLEAP</strong> which allows you to modify the code, see <a class="reference external" href="https://github.com/murthylab/sleap/wiki/Installation-methods">these instructions</a> for the developer installation.</p>
+<div class="section" id="installation-from-source">
+<h2>Installation from source<a class="headerlink" href="#installation-from-source" title="Permalink to this headline">¶</a></h2>
+<p>If you want to install a version of <strong>SLEAP</strong> which allows you to modify the code, follow these steps to check out the code and create a development environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">murthylab</span><span class="o">/</span><span class="n">sleap</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">sleap</span>
+<span class="n">conda</span> <span class="n">env</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap_dev</span> <span class="o">-</span><span class="n">f</span> <span class="n">environment</span><span class="o">.</span><span class="n">yml</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">sleap_dev</span>
+</pre></div>
+</div>
+<p>That’s it! You can now make changes to the code and they will be reflected automatically when you run any SLEAP commands or scripts that import SLEAP.</p>
+<p>To make sure everything’s working, you can run the test suite:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pytest</span> <span class="n">tests</span>
+</pre></div>
+</div>
+<p>For more advanced users, if you’d like to install a particular branch of SLEAP without needing to edit it, you can use this syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">murthylab</span><span class="o">/</span><span class="n">sleap</span><span class="o">.</span><span class="n">git</span><span class="nd">@develop</span>
+</pre></div>
+</div>
+<p>This will install the <code class="docutils literal notranslate"><span class="pre">develop</span></code> branch.</p>
+</div>
+<div class="section" id="uninstalling">
+<h2>Uninstalling<a class="headerlink" href="#uninstalling" title="Permalink to this headline">¶</a></h2>
+<p>If you installed via <code class="docutils literal notranslate"><span class="pre">conda</span></code>, just delete the environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">env</span> <span class="n">remove</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span>
+</pre></div>
+</div>
+<p>Installed SLEAP in more than one environment? You can check the list of environments on your system with <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">env</span> <span class="pre">list</span></code>.</p>
+<p>If you installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">uninstall</span> <span class="n">sleap</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
+<p>Running into installation issues? Open a new <a class="reference external" href="https://github.com/murthylab/sleap/issues">GitHub Issue</a> and let us know what you’ve tried so far.</p>
 </div>
 </div>
 
@@ -368,10 +431,17 @@ you can run the labeling GUI by entering the following command:</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#gpu-support">GPU Support</a></li>
+<li><a class="reference internal" href="#quick-install">Quick Install</a></li>
+<li><a class="reference internal" href="#conda-windows-linux">Conda (Windows/Linux)</a><ul>
 <li><a class="reference internal" href="#windows">Windows</a></li>
-<li><a class="reference internal" href="#linux-and-macos-x">Linux and MacOS X</a></li>
-<li><a class="reference internal" href="#developer-installation">Developer Installation</a></li>
+<li><a class="reference internal" href="#linux">Linux</a></li>
+<li><a class="reference internal" href="#mac-os-x">Mac OS X</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pip-windows-linux-mac-colab">Pip (Windows/Linux/Mac/Colab)</a></li>
+<li><a class="reference internal" href="#installation-from-source">Installation from source</a></li>
+<li><a class="reference internal" href="#uninstalling">Uninstalling</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
 </ul>

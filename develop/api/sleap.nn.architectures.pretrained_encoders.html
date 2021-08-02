@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.nn.architectures.resnet" href="sleap.nn.architectures.resnet.html" /><link rel="prev" title="sleap.nn.architectures.leap" href="sleap.nn.architectures.leap.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/>
-        <title>sleap.nn.architectures.pretrained_encoders - SLEAP (v1.1.4)</title>
+        <title>sleap.nn.architectures.pretrained_encoders - SLEAP (v1.1.5)</title>
       <link rel="stylesheet" href="../_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="../_static/pygments.css">
     
@@ -89,7 +89,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.4)</div></a>
+      <a href="../index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
     </div>
     <div class="header-right">
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
@@ -107,7 +107,7 @@
     <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">SLEAP (v1.1.4)</span>
+  <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html">
   <input class="sidebar-search" placeholder=Search name="q">
@@ -232,6 +232,7 @@
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help.html">Help</a></li>
 </ul>
 
 </div>
@@ -283,7 +284,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.</p>
 <dl class="py class">
 <dt id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.pretrained_encoders.</span></code><code class="sig-name descname"><span class="pre">UnetPretrainedEncoder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'efficientnetb0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_filters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">(256,</span> <span class="pre">256,</span> <span class="pre">128,</span> <span class="pre">128)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/nn/architectures/pretrained_encoders.py#L98-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.pretrained_encoders.</span></code><code class="sig-name descname"><span class="pre">UnetPretrainedEncoder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'efficientnetb0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_filters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">(256,</span> <span class="pre">256,</span> <span class="pre">128,</span> <span class="pre">128)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/nn/architectures/pretrained_encoders.py#L98-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="Permalink to this definition">¶</a></dt>
 <dd><p>UNet with an (optionally) pretrained encoder model.</p>
 <p>This backbone enables the use of a variety of popular neural network architectures
 for feature extraction in the backbone. These can be used with ImageNet-pretrained
@@ -352,7 +353,7 @@ weights will be randomly initialized.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig" title="sleap.nn.config.model.PretrainedEncoderConfig"><span class="pre">sleap.nn.config.model.PretrainedEncoderConfig</span></a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><span class="pre">sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/nn/architectures/pretrained_encoders.py#L142-L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig" title="sleap.nn.config.model.PretrainedEncoderConfig"><span class="pre">sleap.nn.config.model.PretrainedEncoderConfig</span></a></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><span class="pre">sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/nn/architectures/pretrained_encoders.py#L142-L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the backbone from a configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -366,7 +367,7 @@ configuration of the backbone.</p>
 </dd></dl>
 <dl class="py method">
 <dt id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone">
-<code class="sig-name descname"><span class="pre">make_backbone</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.4/sleap/nn/architectures/pretrained_encoders.py#L185-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">make_backbone</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> → <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/nn/architectures/pretrained_encoders.py#L185-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the backbone and return the output tensors for building a model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
