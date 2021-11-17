@@ -280,7 +280,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
                 # Otherwise, we need to read the JSON and append to the lists
                 old_labels = labels_json.LabelsJsonAdaptor.from_json_data(
-                    meta_group.attrs["json"].tostring().decode()
+                    meta_group.attrs["json"].tobytes().decode()
                 )
 
                 # A function to join to list but only include new non-dupe entries
