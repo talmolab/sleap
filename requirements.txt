@@ -1,6 +1,6 @@
 numpy==1.19.5
 attrs==21.2.0
-cattrs==1.8.0
+cattrs==1.1.1
 jsonpickle==1.2
 networkx
 tensorflow==2.7.0
