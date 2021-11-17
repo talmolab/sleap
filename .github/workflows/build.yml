@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-20.04", "windows-2019"]
+        os: ["ubuntu-18.04", "windows-2019"]
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -46,14 +46,14 @@ jobs:
 
       # Build pip wheel (Ubuntu)
       - name: Build pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
 
       # Upload pip wheel (Ubuntu)
       - name: Upload pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-18.04'
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         shell: bash -l {0}
@@ -62,7 +62,7 @@ jobs:
 
       # Build conda package
       - name: Build conda package (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
         run: |
           sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
@@ -80,7 +80,7 @@ jobs:
 
       # Upload conda package
       - name: Login to Anaconda (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-18.04'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: bash -l {0}
@@ -106,14 +106,14 @@ jobs:
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
       - name: Upload conda package (Ubuntu/main)
-        # if: matrix.os == 'ubuntu-20.04' && github.ref == 'refs/heads/main'
-        if: matrix.os == 'ubuntu-20.04' && !github.event.release.prerelease
+        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/main'
+        if: matrix.os == 'ubuntu-18.04' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2
       - name: Upload conda package (Ubuntu/dev)
-        # if: matrix.os == 'ubuntu-20.04' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'ubuntu-20.04' && github.event.release.prerelease
+        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
+        if: matrix.os == 'ubuntu-18.04' && github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
