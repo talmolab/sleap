@@ -231,7 +231,7 @@ class Model:
         x_main, x_mid = self.backbone.make_backbone(x_in=x_in)
 
         # Make sure main and intermediate feature outputs are lists.
-        if isinstance(x_main, tf.Tensor):
+        if type(x_main) != list:
             x_main = [x_main]
         if len(x_mid) > 0 and isinstance(x_mid[0], IntermediateFeature):
             x_mid = [x_mid]

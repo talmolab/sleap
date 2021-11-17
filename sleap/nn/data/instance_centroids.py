@@ -1,6 +1,7 @@
 """Transformers for finding instance centroids."""
 
 import tensorflow as tf
+import numpy as np
 import attr
 from typing import Optional, List, Text, Union
 import sleap
@@ -27,8 +28,8 @@ def find_points_bbox_midpoint(points: tf.Tensor) -> tf.Tensor:
                    = (2 * xy_min + xy_max - xy_min) / 2
                    = (xy_min + xy_max) / 2
     """
-    pts_min = tf.reduce_min(points, axis=-2)
-    pts_max = tf.reduce_max(points, axis=-2)
+    pts_min = tf.reduce_min(tf.where(tf.math.is_nan(points), np.inf, points), axis=-2)
+    pts_max = tf.reduce_max(tf.where(tf.math.is_nan(points), -np.inf, points), axis=-2)
     return (pts_max + pts_min) * 0.5
 
 
