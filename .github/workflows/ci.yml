@@ -6,6 +6,7 @@ on:
     paths:
       - 'sleap/**'
       - 'tests/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   type_check:
@@ -84,11 +85,12 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
         shell: bash -l {0}
         # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
+          # sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          # export DISPLAY=":99.0"
+          # /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+          # xvfb-run pytest --cov=sleap --cov-report=xml tests/
         run: |
-          sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          export DISPLAY=":99.0"
-          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
-          xvfb-run pytest --cov=sleap --cov-report=xml tests/
+          pytest --cov=sleap --cov-report=xml tests/
       - name: Upload coverage
         uses: codecov/codecov-action@v1
         if: matrix.os == 'ubuntu-20.04'
