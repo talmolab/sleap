@@ -90,8 +90,10 @@ jobs:
           # /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
           # xvfb-run pytest --cov=sleap --cov-report=xml tests/
         run: |
-          sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          pytest --cov=sleap --cov-report=xml tests/
+          sudo apt-get install xvfb libxkbcommon-x11-0
+          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+          export DISPLAY=":1"
+          xvfb-run pytest --cov=sleap --cov-report=xml tests/
       - name: Upload coverage
         uses: codecov/codecov-action@v1
         if: matrix.os == 'ubuntu-18.04'
