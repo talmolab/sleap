@@ -48,7 +48,9 @@ def make_confmaps(
         -((tf.reshape(xv, [1, -1, 1]) - x) ** 2 + (tf.reshape(yv, [-1, 1, 1]) - y) ** 2)
         / (2 * sigma ** 2)
     )
-    cm = tf.math.maximum(0.0, cm)  # Replaces NaNs with 0.
+
+    # Replace NaNs with 0.
+    cm = tf.where(tf.math.is_nan(cm), 0.0, cm)
     return cm
 
 

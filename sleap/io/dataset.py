@@ -39,7 +39,7 @@ default extension to use if none is provided in the filename.
 """
 import itertools
 import os
-from collections import MutableSequence
+from collections.abc import MutableSequence
 from typing import (
     Callable,
     List,

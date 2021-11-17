@@ -1,6 +1,7 @@
 pytest
 pytest-qt
 pytest-cov
+pytest-xvfb
 ipython
 sphinx
 furo

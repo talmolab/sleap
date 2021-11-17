@@ -238,7 +238,7 @@ class HDF5Video:
         try:
             return self.source_video.get_frame(idx)
         except:
-            raise ValueError(f"Frame index {idx} not in original index.")
+            raise IndexError(f"Frame index {idx} not in original index.")
 
     # The properties and methods below complete our contract with the higher level
     # Video interface.

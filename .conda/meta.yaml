@@ -24,16 +24,16 @@ source:
 
 requirements:
   host:
-    - python=3.6
-    - sleap::tensorflow=2.3.1
+    - python=3.7
+    - sleap::tensorflow=2.7.0
     - sleap::pyside2=5.14.1
     - pip
 
   run:
-    - python=3.6
-    - cudatoolkit=10.1
-    - cudnn=7.6
-    - sleap::tensorflow=2.3.1
+    - python=3.7
+    - cudatoolkit=11.3.1
+    - cudnn=8.2.1
+    - sleap::tensorflow=2.7.0
     - sleap::pyside2=5.14.1
     - Pillow
     - Shapely

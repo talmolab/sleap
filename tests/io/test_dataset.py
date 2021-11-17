@@ -798,7 +798,10 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
         filename=filename,
         save_frame_data=True,
         frame_data_format=format,
+        # compress=True,
     )
+
+    print(filename, os.path.exists(filename + ".zip"))
 
     # Load the data back in
     loaded_labels = Labels.load_json(f"{filename}.zip")

@@ -1,6 +1,7 @@
 """Miscellaneous utility functions for data processing."""
 
 import tensorflow as tf
+from keras.utils import tf_utils
 import numpy as np
 from typing import Any, List, Tuple, Dict, Text, Optional
 
@@ -133,7 +134,7 @@ def unrag_example(
         If `numpy` is `True`, the values will be `numpy.ndarray`s or Python primitives
         depending on their data type and shape.
 
-    See also: tf.python.keras.utils.tf_utils.to_numpy_or_python_type
+    See also: keras.utils.sync_to_numpy_or_python_type
     """
     for key in example:
         if isinstance(example[key], tf.RaggedTensor):
@@ -141,7 +142,7 @@ def unrag_example(
                 default_value=tf.cast(np.nan, example[key].dtype)
             )
     if numpy:
-        example = tf.python.keras.utils.tf_utils.to_numpy_or_python_type(example)
+        example = tf_utils.sync_to_numpy_or_python_type(example)
     return example
 
 

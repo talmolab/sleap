@@ -13,7 +13,7 @@ import os
 import numpy as np
 import math
 from collections import deque
-from time import time, clock
+from time import perf_counter
 from typing import List, Optional, Tuple
 
 from queue import Queue
@@ -57,7 +57,7 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
         frame_end = min(frame_start + chunk_size, total_count)
         frames_idx_chunk = frames[frame_start:frame_end]
 
-        t0 = clock()
+        t0 = perf_counter()
 
         # Safely load frames from video, skipping frames we can't load
         loaded_chunk_idxs, video_frame_images = video.get_frames_safely(
@@ -72,7 +72,7 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
         if scale != 1.0:
             video_frame_images = resize_images(video_frame_images, scale)
 
-        elapsed = clock() - t0
+        elapsed = perf_counter() - t0
         fps = len(loaded_chunk_idxs) / elapsed
         logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
         i += 1
@@ -110,7 +110,7 @@ def writer(
     writer_object = None
     total_elapsed = 0
     total_frames_written = 0
-    start_time = clock()
+    start_time = perf_counter()
     i = 0
     while True:
         data = in_q.get()
@@ -126,17 +126,17 @@ def writer(
                 filename, height=h, width=w, fps=fps
             )
 
-        t0 = clock()
+        t0 = perf_counter()
         for img in data:
             writer_object.add_frame(img, bgr=True)
 
-        elapsed = clock() - t0
+        elapsed = perf_counter() - t0
         fps = len(data) / elapsed
         logger.debug(f"writing chunk {i} in {elapsed} s = {fps} fps")
         i += 1
 
         total_frames_written += len(data)
-        total_elapsed = clock() - start_time
+        total_elapsed = perf_counter() - start_time
         progress_queue.put((total_frames_written, total_elapsed))
 
     writer_object.close()
@@ -228,14 +228,14 @@ class VideoMarkerThread(Thread):
 
             frames_idx_chunk, video_frame_images = data
 
-            t0 = clock()
+            t0 = perf_counter()
 
             imgs = self._mark_images(
                 frame_indices=frames_idx_chunk,
                 frame_images=video_frame_images,
             )
 
-            elapsed = clock() - t0
+            elapsed = perf_counter() - t0
             fps = len(imgs) / elapsed
             logger.debug(f"drawing chunk {chunk_i} in {elapsed} s = {fps} fps")
             chunk_i += 1
@@ -470,7 +470,7 @@ def save_labeled_video(
     """
     print(f"Writing video with {len(frames)} frame images...")
 
-    t0 = clock()
+    t0 = perf_counter()
 
     q1 = Queue(maxsize=10)
     q2 = Queue(maxsize=10)
@@ -523,7 +523,7 @@ def save_labeled_video(
                 f"Finished {frames_complete} frames in {elapsed} s, fps = {fps}, approx {remaining_time} s remaining"
             )
 
-    elapsed = clock() - t0
+    elapsed = perf_counter() - t0
     fps = len(frames) / elapsed
     print(f"Done in {elapsed} s, fps = {fps}.")
 

@@ -289,7 +289,7 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
     # Disable loading frames from the original source video
     hdf5_vid.backend.enable_source_video = False
 
-    with pytest.raises(ValueError):
+    with pytest.raises(IndexError):
         hdf5_vid.get_frames(frame_indices)
 
     # We have to close file before we can add another video dataset.
@@ -315,7 +315,7 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
 
     assert hdf5_vid2.last_frame_idx == max(frame_indices)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(IndexError):
         hdf5_vid2.get_frames([0, 1, 2])
 
 
