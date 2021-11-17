@@ -9,7 +9,7 @@ python-rapidjson
 opencv-python-headless==4.2.0.34
 pandas
 psutil
-PySide2==5.15.2
+PySide2==5.14.1
 pyzmq
 pyyaml
 imgaug==0.4.0
