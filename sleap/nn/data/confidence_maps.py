@@ -50,7 +50,7 @@ def make_confmaps(
     )
 
     # Replace NaNs with 0.
-    cm = tf.where(tf.math.is_nan(cm), 0., cm)
+    cm = tf.where(tf.math.is_nan(cm), 0.0, cm)
     return cm
 
 

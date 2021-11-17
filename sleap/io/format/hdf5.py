@@ -80,9 +80,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
         # Extract the Labels JSON metadata and create Labels object with just this
         # metadata.
-        dicts = json_loads(
-            f.require_group("metadata").attrs["json"].tobytes().decode()
-        )
+        dicts = json_loads(f.require_group("metadata").attrs["json"].tobytes().decode())
 
         # These items are stored in separate lists because the metadata group got to be
         # too big.
