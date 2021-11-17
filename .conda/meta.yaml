@@ -26,7 +26,7 @@ requirements:
   host:
     - python=3.7
     - sleap::tensorflow=2.7.0
-    - sleap::pyside2=5.15.2
+    - sleap::pyside2=5.14.1
     - pip
 
   run:
@@ -34,7 +34,7 @@ requirements:
     - cudatoolkit=11.3.1
     - cudnn=8.2.1
     - sleap::tensorflow=2.7.0
-    - sleap::pyside2=5.15.2
+    - sleap::pyside2=5.14.1
     - Pillow
     - Shapely
     - pip

@@ -9,6 +9,6 @@ dependencies:
 - pip
 - pip:
     - tensorflow==2.7.0
-    - pyside2==5.15.2
+    - pyside2==5.14.1
     - "--editable=./"
     - "--requirement=./dev_requirements.txt"
