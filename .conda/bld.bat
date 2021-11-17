@@ -13,21 +13,22 @@ rem # this out myself, ughhh.
 set PIP_NO_INDEX=False
 set PIP_NO_DEPENDENCIES=False
 set PIP_IGNORE_INSTALLED=False
-rem pip install "numpy>=1.18.1,<1.19.0"
-pip install attrs==19.3
-pip install cattrs==1.0.0rc
+
+rem pip install numpy==1.19.5
+pip install attrs==21.2.0
+pip install cattrs==1.1.1
 pip install jsonpickle==1.2
 pip install networkx
-rem pip install tensorflow==2.3.1
-rem pip install h5py==2.10.0
+rem pip install tensorflow==2.7.0
+rem pip install h5py==3.10.0
 pip install python-rapidjson
 rem pip install opencv-python-headless==4.2.0.34
 pip install pandas
 pip install psutil
-rem pip install "PySide2>=5.12.0,<=5.14.1"
+rem pip install PySide2==5.15.2
 pip install pyzmq
 pip install pyyaml
-pip install imgaug==0.3.0
+pip install imgaug==0.4.0
 pip install "scipy<=1.4.1"
 pip install scikit-image
 pip install scikit-learn
