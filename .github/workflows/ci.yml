@@ -84,7 +84,7 @@ jobs:
       - name: Test with pytest (Ubuntu)
         if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
-        # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
+          # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
           # sudo apt-get install xvfb libxkbcommon-x11-0
           # sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
           # export DISPLAY=":99.0"
