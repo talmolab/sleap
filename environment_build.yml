@@ -6,7 +6,7 @@ dependencies:
 - sleap::pyside2=5.14.1
 - Pillow
 - Shapely
-- conda-build=3.17
+- conda-build=3.21.6
 - anaconda-client
 - conda-verify
 - pip

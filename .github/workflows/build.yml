@@ -2,14 +2,16 @@
 name: Build
 
 on:
-  # push:
-  #   branches:  # Use this to trigger a build if the release build failed
-  #     - main
-  #     - develop
-
   release:
     types:
       - published
+
+  # Uncomment the following lines to trigger a build if the release build failed
+  push:
+    branches:
+      - main
+      - develop
+
 
 jobs:
   build:
@@ -65,9 +67,9 @@ jobs:
         if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
         run: |
-          sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          export DISPLAY=":99.0"
-          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+          sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+          export DISPLAY=":1"
           xvfb-run pytest tests/
           conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
       - name: Build conda package (Windows)
@@ -94,26 +96,26 @@ jobs:
         run: |
           echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
       - name: Upload conda package (Windows/main)
-        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/main'
-        if: matrix.os == 'windows-2019' && !github.event.release.prerelease
+        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/main'
+        # if: matrix.os == 'windows-2019' && !github.event.release.prerelease
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2"
       - name: Upload conda package (Windows/dev)
-        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'windows-2019' && github.event.release.prerelease
+        if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
+        # if: matrix.os == 'windows-2019' && github.event.release.prerelease
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
       - name: Upload conda package (Ubuntu/main)
-        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/main'
-        if: matrix.os == 'ubuntu-18.04' && !github.event.release.prerelease
+        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/main'
+        # if: matrix.os == 'ubuntu-18.04' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2
       - name: Upload conda package (Ubuntu/dev)
-        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'ubuntu-18.04' && github.event.release.prerelease
+        if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
+        # if: matrix.os == 'ubuntu-18.04' && github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
