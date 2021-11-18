@@ -20,7 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-18.04", "windows-2019"]
+        # os: ["ubuntu-18.04", "windows-2019"]
+        os: ["ubuntu-18.04"]
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -66,11 +67,11 @@ jobs:
       - name: Build conda package (Ubuntu)
         if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
+          # sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+          # export DISPLAY=":1"
+          # xvfb-run pytest tests/
         run: |
-          sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-          export DISPLAY=":1"
-          xvfb-run pytest tests/
           conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-2019'
