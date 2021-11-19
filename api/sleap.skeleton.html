@@ -2,53 +2,51 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.util" href="sleap.util.html" /><link rel="prev" title="sleap.message" href="sleap.message.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="sleap.util" href="sleap.util.html" /><link rel="prev" title="sleap.message" href="sleap.message.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-4.3.0, furo 2021.11.16"/>
         <title>sleap.skeleton - SLEAP (v1.1.5)</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
-    <link rel="stylesheet" href="../_static/pygments.css">
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=916d6ed8f59335acffa15474ff504849343d4c76" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
+    
     
 
 
 <style>
-  :root {
+  body {
     --color-code-background: #eeffcc;
   --color-code-foreground: black;
   
   }
+  body[data-theme="dark"] {
+    --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
+  
+  }
   @media (prefers-color-scheme: dark) {
-    :root {
+    body:not([data-theme="light"]) {
       --color-code-background: #272822;
   --color-code-foreground: #f8f8f2;
   
     }
   }
-
-  /* For allowing end-user-specific overrides */
-  .override-light {
-    --color-code-background: #eeffcc;
-  --color-code-foreground: black;
-  
-  }
-  .override-dark {
-    --color-code-background: #272822;
-  --color-code-foreground: #f8f8f2;
-  
-  }
-</style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
-    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
-    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=ee12cdd73c4bbac24afec78d92c4afd7c2d8ea7f"></head>
-  <body dir="">
+</style></head>
+  <body>
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="svg-toc" viewBox="0 0 24 24">
     <title>Contents</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" />
       <line x1="4" y1="6" x2="20" y2="6" />
       <line x1="10" y1="12" x2="20" y2="12" />
       <line x1="6" y1="18" x2="20" y2="18" />
@@ -56,9 +54,8 @@
   </symbol>
   <symbol id="svg-menu" viewBox="0 0 24 24">
     <title>Menu</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="feather feather-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
       <line x1="3" y1="12" x2="21" y2="12"></line>
       <line x1="3" y1="6" x2="21" y2="6"></line>
       <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -66,18 +63,57 @@
   </symbol>
   <symbol id="svg-arrow-right" viewBox="0 0 24 24">
     <title>Expand</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="feather feather-chevron-right">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
       <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
     </svg>
   </symbol>
 </svg>
 
 <input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
 <input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
-<label class="overlay sidebar-overlay" for="__navigation"></label>
-<label class="overlay toc-overlay" for="__toc"></label>
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
 
 
 
@@ -85,6 +121,7 @@
   <header class="mobile-header">
     <div class="header-left">
       <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
         <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
       </label>
     </div>
@@ -92,7 +129,16 @@
       <a href="../index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
     </div>
     <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
     </div>
@@ -109,16 +155,17 @@
   
   <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
   
-</a><form class="sidebar-search-container" method="get" action="../search.html">
-  <input class="sidebar-search" placeholder=Search name="q">
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
-</form><div class="sidebar-scroll"><div class="sidebar-tree">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">Initial Labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">Training and Inference</a></li>
@@ -128,7 +175,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../guides/gui.html">GUI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/cli.html">Command line interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/skeletons.html">Skeleton design</a></li>
@@ -140,46 +187,18 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Model_evaluation.html">Model evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Analysis_examples.html">Analysis examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">Developer API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">Developer API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sleap.instance.html">sleap.instance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">sleap.skeleton</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.util.html">sleap.util</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.heads.html">sleap.nn.heads</a></li>
@@ -205,12 +224,6 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -227,6 +240,40 @@
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sleap.io.format.text.html">sleap.io.format.text</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
@@ -241,21 +288,33 @@
       
     </div>
   </aside>
-  <main class="main">
+  <div class="main">
     <div class="content">
-      <article role="main">
-        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
-          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
-        </label>
-        <div class="section" id="module-sleap.skeleton">
+      <div class="article-container">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="module-sleap.skeleton">
 <span id="sleap-skeleton"></span><h1>sleap.skeleton<a class="headerlink" href="#module-sleap.skeleton" title="Permalink to this headline">¶</a></h1>
 <p>Implementation of skeleton data structure and API.</p>
 <p>This module implements and API for creating animal skeletons. The goal
 is to provide a common interface for defining the parts of the animal,
 their connection to each other, and needed meta-data.</p>
 <dl class="py class">
-<dt id="sleap.skeleton.EdgeType">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.skeleton.</span></code><code class="sig-name descname"><span class="pre">EdgeType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L31-L45"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.EdgeType" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.EdgeType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.skeleton.</span></span><span class="sig-name descname"><span class="pre">EdgeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L31-L45"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.EdgeType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Type of edge in the skeleton graph.</p>
 <p>The skeleton graph can store different types of edges to represent
 different things. All edges must specify one or more of the
@@ -270,13 +329,13 @@ between parts (e.g. left and right arms)</p></li>
 </div></blockquote>
 </dd></dl>
 <dl class="py class">
-<dt id="sleap.skeleton.Node">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.skeleton.</span></code><code class="sig-name descname"><span class="pre">Node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L49-L85"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Node">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.skeleton.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L49-L85"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class represents node in the skeleton graph, i.e., a body part.</p>
 <p>Note: Nodes can exist without being part of a skeleton.</p>
 <dl class="py attribute">
-<dt id="sleap.skeleton.Node.name">
-<code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#sleap.skeleton.Node.name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Node.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#sleap.skeleton.Node.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>String name of the node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -285,8 +344,8 @@ between parts (e.g. left and right arms)</p></li>
 </dl>
 </dd></dl>
 <dl class="py attribute">
-<dt id="sleap.skeleton.Node.weight">
-<code class="sig-name descname"><span class="pre">weight</span></code><a class="headerlink" href="#sleap.skeleton.Node.weight" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Node.weight">
+<span class="sig-name descname"><span class="pre">weight</span></span><a class="headerlink" href="#sleap.skeleton.Node.weight" title="Permalink to this definition">¶</a></dt>
 <dd><p>Weight of the node (not currently used).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -295,18 +354,18 @@ between parts (e.g. left and right arms)</p></li>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Node.as_node">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">as_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L70-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node.as_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Node.as_node">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L70-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node.as_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert given <code class="xref py py-obj docutils literal notranslate"><span class="pre">node</span></code> to <a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Node</span></code></a> object (if not already).</p>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Node.from_names">
-<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">from_names</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_list</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L62-L68"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node.from_names" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Node.from_names">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L62-L68"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node.from_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert list of node names to list of nodes objects.</p>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Node.matches">
-<code class="sig-name descname"><span class="pre">matches</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L75-L85"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node.matches" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Node.matches">
+<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L75-L85"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Node.matches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether all attributes match between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -319,16 +378,16 @@ between parts (e.g. left and right arms)</p></li>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
-<dt id="sleap.skeleton.Skeleton">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sleap.skeleton.</span></code><code class="sig-name descname"><span class="pre">Skeleton</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L88-L1232"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.skeleton.</span></span><span class="sig-name descname"><span class="pre">Skeleton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L88-L1232"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton" title="Permalink to this definition">¶</a></dt>
 <dd><p>The main object for representing animal skeletons.</p>
 <p>The skeleton represents the constituent parts of the animal whose
 pose is being estimated.</p>
 <p>An index variable used to give skeletons a default name that should
 be unique across all skeletons.</p>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.add_edge">
-<code class="sig-name descname"><span class="pre">add_edge</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L556-L606"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.add_edge">
+<span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L556-L606"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an edge between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -347,8 +406,8 @@ be unique across all skeletons.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.add_node">
-<code class="sig-name descname"><span class="pre">add_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L472-L488"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L472-L488"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a node representing an animal part to the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -361,8 +420,8 @@ This name must be unique within the skeleton.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.add_nodes">
-<code class="sig-name descname"><span class="pre">add_nodes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_list</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L490-L497"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_nodes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.add_nodes">
+<span class="sig-name descname"><span class="pre">add_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L490-L497"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a list of nodes representing animal parts to the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -371,8 +430,8 @@ This name must be unique within the skeleton.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.add_symmetry">
-<code class="sig-name descname"><span class="pre">add_symmetry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node2</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L658-L696"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_symmetry" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.add_symmetry">
+<span class="sig-name descname"><span class="pre">add_symmetry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L658-L696"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.add_symmetry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specify that two parts (nodes) in skeleton are symmetrical.</p>
 <p>Certain parts of an animal body can be related as symmetrical
 parts in a pair. For example, left and right hands of a person.</p>
@@ -393,13 +452,13 @@ parts in a pair. For example, left and right hands of a person.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.clear_edges">
-<code class="sig-name descname"><span class="pre">clear_edges</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L653-L656"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.clear_edges" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.clear_edges">
+<span class="sig-name descname"><span class="pre">clear_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L653-L656"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.clear_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete all edges in skeleton.</p>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.delete_edge">
-<code class="sig-name descname"><span class="pre">delete_edge</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L608-L651"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.delete_edge">
+<span class="sig-name descname"><span class="pre">delete_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L608-L651"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete an edge between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -418,8 +477,8 @@ parts in a pair. For example, left and right hands of a person.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.delete_node">
-<code class="sig-name descname"><span class="pre">delete_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L499-L520"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.delete_node">
+<span class="sig-name descname"><span class="pre">delete_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L499-L520"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a node from the skeleton.</p>
 <p>The method removes a node from the skeleton and any edge that is
 connected to it.</p>
@@ -436,8 +495,8 @@ connected to it.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.delete_symmetry">
-<code class="sig-name descname"><span class="pre">delete_symmetry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node2</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L698-L727"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_symmetry" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.delete_symmetry">
+<span class="sig-name descname"><span class="pre">delete_symmetry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L698-L727"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.delete_symmetry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete a previously established symmetry between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -454,9 +513,9 @@ connected to it.</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.edge_inds">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">edge_inds</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_inds" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.edge_inds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edge_inds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_inds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edges as node indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -465,9 +524,9 @@ the Skeleton.nodes list.</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.edge_names">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">edge_names</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_names" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.edge_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edge_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edge name tuples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -476,13 +535,13 @@ the Skeleton.nodes list.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.edge_to_index">
-<code class="sig-name descname"><span class="pre">edge_to_index</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">int</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L462-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_to_index" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.edge_to_index">
+<span class="sig-name descname"><span class="pre">edge_to_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L462-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.edge_to_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the index of edge from source to destination.</p>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.edges">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">edges</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.edges" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.edges">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edges</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edge tuples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -490,9 +549,9 @@ the Skeleton.nodes list.</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.edges_full">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">edges_full</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.edges_full" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.edges_full">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edges_full</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.edges_full" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of edge tuples with keys and attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -501,8 +560,8 @@ the Skeleton.nodes list.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.find_neighbors">
-<code class="sig-name descname"><span class="pre">find_neighbors</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L544-L554"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_neighbors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.find_neighbors">
+<span class="sig-name descname"><span class="pre">find_neighbors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L544-L554"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_neighbors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find nodes that are predecessors or successors from a node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -514,8 +573,8 @@ the Skeleton.nodes list.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.find_node">
-<code class="sig-name descname"><span class="pre">find_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L522-L542"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.find_node">
+<span class="sig-name descname"><span class="pre">find_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L522-L542"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find node in skeleton by name of node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -527,8 +586,8 @@ the Skeleton.nodes list.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.find_unique_nodes">
-<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">find_unique_nodes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skeletons</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L211-L221"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_unique_nodes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.find_unique_nodes">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_unique_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skeletons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L211-L221"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.find_unique_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find all unique nodes from a list of skeletons.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -540,8 +599,8 @@ the Skeleton.nodes list.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.from_dict">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_dict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L911-L931"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_dict" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L911-L931"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create skeleton from dict; used for loading from JSON.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -563,8 +622,8 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.from_json">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_json</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_str</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_to_node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1011-L1039"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_json" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.from_json">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_to_node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1011-L1039"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><code class="xref py py-class docutils literal notranslate"><span class="pre">Skeleton</span></code></a> from JSON string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -584,8 +643,8 @@ left in the <a class="reference internal" href="#sleap.skeleton.Skeleton" title=
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.from_names_and_edge_inds">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_names_and_edge_inds</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_names</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_inds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L933-L953"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_names_and_edge_inds" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.from_names_and_edge_inds">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_names_and_edge_inds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L933-L953"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.from_names_and_edge_inds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create skeleton from a list of node names and edge indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -601,8 +660,8 @@ specified, the resulting skeleton will have no edges.</p></li>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.get_symmetry">
-<code class="sig-name descname"><span class="pre">get_symmetry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L729-L754"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.get_symmetry">
+<span class="sig-name descname"><span class="pre">get_symmetry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L729-L754"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the node symmetric with the specified node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -617,8 +676,8 @@ specified, the resulting skeleton will have no edges.</p></li>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.get_symmetry_name">
-<code class="sig-name descname"><span class="pre">get_symmetry_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L756-L766"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry_name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.get_symmetry_name">
+<span class="sig-name descname"><span class="pre">get_symmetry_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L756-L766"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.get_symmetry_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the name of the node symmetric with the specified node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -629,19 +688,19 @@ specified, the resulting skeleton will have no edges.</p></li>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.graph">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">graph</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.graph" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.graph">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph</span></span><a class="headerlink" href="#sleap.skeleton.Skeleton.graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return subgraph of BODY edges for skeleton.</p>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.graph_symmetry">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">graph_symmetry</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.graph_symmetry" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.graph_symmetry">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph_symmetry</span></span><a class="headerlink" href="#sleap.skeleton.Skeleton.graph_symmetry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return subgraph of symmetric edges for skeleton.</p>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.has_edge">
-<code class="sig-name descname"><span class="pre">has_edge</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L870-L886"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.has_edge">
+<span class="sig-name descname"><span class="pre">has_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L870-L886"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether the skeleton has an edge.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -656,8 +715,8 @@ specified, the resulting skeleton will have no edges.</p></li>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.has_node">
-<code class="sig-name descname"><span class="pre">has_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L839-L850"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.has_node">
+<span class="sig-name descname"><span class="pre">has_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L839-L850"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether the skeleton has a node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -669,8 +728,8 @@ specified, the resulting skeleton will have no edges.</p></li>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.has_nodes">
-<code class="sig-name descname"><span class="pre">has_nodes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L852-L868"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_nodes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.has_nodes">
+<span class="sig-name descname"><span class="pre">has_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L852-L868"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.has_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether the skeleton has a list of nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -681,14 +740,14 @@ specified, the resulting skeleton will have no edges.</p></li>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.is_arborescence">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">is_arborescence</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.is_arborescence" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.is_arborescence">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_arborescence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.is_arborescence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return whether this skeleton graph forms an arborescence.</p>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.load_all_hdf5">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">load_all_hdf5</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dict</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> → <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1090-L1117"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_all_hdf5" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.load_all_hdf5">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_all_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1090-L1117"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_all_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load all skeletons found in the HDF5 file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -707,8 +766,8 @@ Either in List or Dict form.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.load_hdf5">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">load_hdf5</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1070-L1088"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_hdf5" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.load_hdf5">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1070-L1088"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a specific skeleton (by name) from the HDF5 file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -723,8 +782,8 @@ Either in List or Dict form.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.load_json">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">load_json</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_to_node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1041-L1068"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_json" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.load_json">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_to_node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1041-L1068"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a skeleton from a JSON file.</p>
 <p>This method will load the Skeleton from JSON file saved
 with; <a class="reference internal" href="#sleap.skeleton.Skeleton.save_json" title="sleap.skeleton.Skeleton.save_json"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_json()</span></code></a></p>
@@ -746,8 +805,8 @@ left in the <a class="reference internal" href="#sleap.skeleton.Skeleton" title=
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.load_mat">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">load_mat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1194-L1226"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_mat" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.load_mat">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_mat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1194-L1226"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.load_mat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load the skeleton from a Matlab MAT file.</p>
 <p>This is to support backwards compatibility with old LEAP
 MATLAB code and datasets.</p>
@@ -761,8 +820,8 @@ MATLAB code and datasets.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.make_cattr">
-<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">make_cattr</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx_to_node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <span class="pre">cattr.converters.Converter</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L223-L250"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.make_cattr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.make_cattr">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_cattr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx_to_node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">cattr.converters.Converter</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L223-L250"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.make_cattr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make cattr.Convert() for <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Skeleton</span></code></a>.</p>
 <p>Make a cattr.Converter() that registers structure/unstructure
 hooks for Skeleton objects to handle serialization of skeletons.</p>
@@ -777,8 +836,8 @@ and deserialization.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.matches">
-<code class="sig-name descname"><span class="pre">matches</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">bool</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L143-L169"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.matches" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.matches">
+<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L143-L169"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.matches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compare this <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Skeleton</span></code></a> to another, ignoring name and node identities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -789,9 +848,9 @@ and deserialization.</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.name">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.name" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the name of the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -799,9 +858,9 @@ and deserialization.</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.node_names">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">node_names</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.node_names" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.node_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">node_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.node_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of node names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -810,8 +869,8 @@ and deserialization.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.node_to_index">
-<code class="sig-name descname"><span class="pre">node_to_index</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> → <span class="pre">int</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L444-L460"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.node_to_index" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.node_to_index">
+<span class="sig-name descname"><span class="pre">node_to_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L444-L460"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.node_to_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the index of the node, accepts either <a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Node</span></code></a> or name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -825,9 +884,9 @@ and deserialization.</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.nodes">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">nodes</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.nodes" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.nodes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nodes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>Node`s.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -836,8 +895,8 @@ and deserialization.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.relabel_node">
-<code class="sig-name descname"><span class="pre">relabel_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L802-L813"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.relabel_node">
+<span class="sig-name descname"><span class="pre">relabel_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L802-L813"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relabel a single node to a new name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -852,8 +911,8 @@ and deserialization.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.relabel_nodes">
-<code class="sig-name descname"><span class="pre">relabel_nodes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L815-L835"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_nodes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.relabel_nodes">
+<span class="sig-name descname"><span class="pre">relabel_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L815-L835"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.relabel_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relabel the nodes of the skeleton.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -869,8 +928,8 @@ labels as values. A partial mapping is allowed.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.rename_skeleton">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">rename_skeleton</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skeleton</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> → <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L287-L307"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.rename_skeleton" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.rename_skeleton">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rename_skeleton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skeleton</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L287-L307"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.rename_skeleton" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make copy of skeleton with new name.</p>
 <p>This property is immutable because it is used to hash skeletons.
 If you want to rename a Skeleton you must use this class method.</p>
@@ -891,8 +950,8 @@ If you want to rename a Skeleton you must use this class method.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.save_all_hdf5">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">save_all_hdf5</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeletons</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1128-L1154"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_all_hdf5" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.save_all_hdf5">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save_all_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeletons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1128-L1154"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_all_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience method to save a list of skeletons to HDF5 file.</p>
 <p>Skeletons are saved as attributes of a /skeleton group in the
 file.</p>
@@ -912,8 +971,8 @@ file.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.save_hdf5">
-<code class="sig-name descname"><span class="pre">save_hdf5</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1156-L1171"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_hdf5" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.save_hdf5">
+<span class="sig-name descname"><span class="pre">save_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L1156-L1171"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for HDF5 saving which takes either filename or h5py.File.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -925,8 +984,8 @@ file.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.save_json">
-<code class="sig-name descname"><span class="pre">save_json</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L985-L1009"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_json" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.save_json">
+<span class="sig-name descname"><span class="pre">save_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L985-L1009"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.save_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><code class="xref py py-class docutils literal notranslate"><span class="pre">Skeleton</span></code></a> as JSON file.</p>
 <p>Output the complete skeleton to a file in JSON format.</p>
 <dl class="field-list simple">
@@ -948,14 +1007,14 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.symmetric_inds">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">symmetric_inds</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetric_inds" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.symmetric_inds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symmetric_inds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetric_inds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the symmetric nodes as an array of indices.</p>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.symmetries">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">symmetries</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.symmetries">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symmetries</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of all symmetries without duplicates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -963,9 +1022,9 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.symmetries_full">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">symmetries_full</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries_full" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.symmetries_full">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symmetries_full</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetries_full" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of all symmetries with keys and attributes.</p>
 <p>Note: The returned list will contain duplicates (node1, node2)
 and (node2, node1).</p>
@@ -975,14 +1034,14 @@ and (node2, node1).</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="py method">
-<dt id="sleap.skeleton.Skeleton.symmetry_names">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">symmetry_names</span></code><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetry_names" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.symmetry_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symmetry_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.skeleton.Skeleton.symmetry_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of symmetry edges as tuples of node names.</p>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.to_dict">
-<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">to_dict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <span class="pre">Dict</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L888-L909"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.to_dict" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.to_dict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L888-L909"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.to_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert skeleton to dict; used for saving as JSON.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1004,8 +1063,8 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="sleap.skeleton.Skeleton.to_json">
-<code class="sig-name descname"><span class="pre">to_json</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <span class="pre">str</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L955-L983"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.to_json" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="sleap.skeleton.Skeleton.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_to_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.skeleton.Node" title="sleap.skeleton.Node"><span class="pre">sleap.skeleton.Node</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.1.5/sleap/skeleton.py#L955-L983"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.skeleton.Skeleton.to_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><code class="xref py py-class docutils literal notranslate"><span class="pre">Skeleton</span></code></a> to a JSON representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1024,9 +1083,10 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
+</section>
 
-      </article>
+        </article>
+      </div>
       <footer>
         
         <div class="related-pages">
@@ -1053,14 +1113,10 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
         </div>
 
         <div class="related-information">
-              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University
-            |
-            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
-              and
-              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
-              <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
-            |
-            <a class="muted-link" href="../_sources/api/sleap.skeleton.rst.txt"
+              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University |
+          Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            | <a class="muted-link" href="../_sources/api/sleap.skeleton.rst.txt"
                rel="nofollow">
               Show Source
             </a>
@@ -1073,15 +1129,15 @@ the <a class="reference internal" href="#sleap.skeleton.Skeleton" title="sleap.s
       
       
     </aside>
-  </main>
-</div>
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+  </div>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></body>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    </body>
 </html>

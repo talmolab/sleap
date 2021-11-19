@@ -4,50 +4,47 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
 
-    <link rel="shortcut icon" href="_static/favicon.ico"/><meta name="generator" content="sphinx-3.5.4, furo 2021.06.18.beta36"/><title>Index - SLEAP (v1.1.5)</title>
-<link rel="stylesheet" href="_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
-    <link rel="stylesheet" href="_static/pygments.css">
+    <link rel="shortcut icon" href="_static/favicon.ico"/><meta name="generator" content="sphinx-4.3.0, furo 2021.11.16"/><title>Index - SLEAP (v1.1.5)</title>
+<link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=916d6ed8f59335acffa15474ff504849343d4c76" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
+    
     
 
 
 <style>
-  :root {
+  body {
     --color-code-background: #eeffcc;
   --color-code-foreground: black;
   
   }
+  body[data-theme="dark"] {
+    --color-code-background: #272822;
+  --color-code-foreground: #f8f8f2;
+  
+  }
   @media (prefers-color-scheme: dark) {
-    :root {
+    body:not([data-theme="light"]) {
       --color-code-background: #272822;
   --color-code-foreground: #f8f8f2;
   
     }
   }
-
-  /* For allowing end-user-specific overrides */
-  .override-light {
-    --color-code-background: #eeffcc;
-  --color-code-foreground: black;
-  
-  }
-  .override-dark {
-    --color-code-background: #272822;
-  --color-code-foreground: #f8f8f2;
-  
-  }
-</style><link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
-    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="_static/pygments_dark.css">
-    <link rel="stylesheet" href="_static/styles/furo-extensions.css?digest=ee12cdd73c4bbac24afec78d92c4afd7c2d8ea7f"></head>
-  <body dir="">
+</style></head>
+  <body>
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="svg-toc" viewBox="0 0 24 24">
     <title>Contents</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" />
       <line x1="4" y1="6" x2="20" y2="6" />
       <line x1="10" y1="12" x2="20" y2="12" />
       <line x1="6" y1="18" x2="20" y2="18" />
@@ -55,9 +52,8 @@
   </symbol>
   <symbol id="svg-menu" viewBox="0 0 24 24">
     <title>Menu</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="feather feather-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
       <line x1="3" y1="12" x2="21" y2="12"></line>
       <line x1="3" y1="6" x2="21" y2="6"></line>
       <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -65,18 +61,57 @@
   </symbol>
   <symbol id="svg-arrow-right" viewBox="0 0 24 24">
     <title>Expand</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="feather feather-chevron-right">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
       <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
     </svg>
   </symbol>
 </svg>
 
 <input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
 <input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
-<label class="overlay sidebar-overlay" for="__navigation"></label>
-<label class="overlay toc-overlay" for="__toc"></label>
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
 
 
 
@@ -84,6 +119,7 @@
   <header class="mobile-header">
     <div class="header-left">
       <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
         <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
       </label>
     </div>
@@ -91,7 +127,16 @@
       <a href="index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
     </div>
     <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
       <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
     </div>
@@ -108,16 +153,17 @@
   
   <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
   
-</a><form class="sidebar-search-container" method="get" action="search.html">
-  <input class="sidebar-search" placeholder=Search name="q">
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
-</form><div class="sidebar-scroll"><div class="sidebar-tree">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label for="toctree-checkbox-1"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/new-project.html">Creating a project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/initial-labeling.html">Initial Labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html">Training and Inference</a></li>
@@ -127,7 +173,7 @@
 <li class="toctree-l2"><a class="reference internal" href="tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label for="toctree-checkbox-2"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/gui.html">GUI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/cli.html">Command line interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/skeletons.html">Skeleton design</a></li>
@@ -139,46 +185,18 @@
 <li class="toctree-l2"><a class="reference internal" href="guides/remote.html">Running SLEAP remotely</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label for="toctree-checkbox-3"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Model_evaluation.html">Model evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Analysis_examples.html">Analysis examples</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label for="toctree-checkbox-4"><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.instance.html">sleap.instance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.message.html">sleap.message</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.skeleton.html">sleap.skeleton</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.util.html">sleap.util</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.convert.html">sleap.io.convert</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.dataset.html">sleap.io.dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.legacy.html">sleap.io.legacy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.pathutils.html">sleap.io.pathutils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.video.html">sleap.io.video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.videowriter.html">sleap.io.videowriter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.visuals.html">sleap.io.visuals</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.coco.html">sleap.io.format.coco</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.main.html">sleap.io.format.main</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.text.html">sleap.io.format.text</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.evals.html">sleap.nn.evals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.heads.html">sleap.nn.heads</a></li>
@@ -204,12 +222,6 @@
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
@@ -226,6 +238,40 @@
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.align.html">sleap.info.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.labels.html">sleap.info.labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.metrics.html">sleap.info.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.summary.html">sleap.info.summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.convert.html">sleap.io.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.dataset.html">sleap.io.dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.legacy.html">sleap.io.legacy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.pathutils.html">sleap.io.pathutils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.video.html">sleap.io.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.videowriter.html">sleap.io.videowriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.visuals.html">sleap.io.visuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.coco.html">sleap.io.format.coco</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.main.html">sleap.io.format.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sleap.io.format.text.html">sleap.io.format.text</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
@@ -240,13 +286,25 @@
       
     </div>
   </aside>
-  <main class="main">
+  <div class="main">
     <div class="content">
-      <article role="main">
-        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
-          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
-        </label>
-        
+      <div class="article-container">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          
 <section class="genindex-section">
   <h1 id="index">Index</h1>
   <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#J"><strong>J</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#W"><strong>W</strong></a> | <a href="#Z"><strong>Z</strong></a></div>
@@ -293,7 +351,7 @@
 </li>
         <li><a href="api/sleap.info.align.html#sleap.info.align.align_instances_on_most_stable">align_instances_on_most_stable() (in module sleap.info.align)</a>
 </li>
-        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.all_exts">all_exts() (sleap.io.format.adaptor.Adaptor property)</a>
+        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.all_exts">all_exts (sleap.io.format.adaptor.Adaptor property)</a>
 
         <ul>
           <li><a href="api/sleap.io.format.coco.html#sleap.io.format.coco.LabelsCocoAdaptor.all_exts">(sleap.io.format.coco.LabelsCocoAdaptor property)</a>
@@ -319,11 +377,13 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances">all_instances (sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator attribute)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.all_instances">all_instances (sleap.io.dataset.Labels property)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances">(sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator attribute)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.all_instances">all_instances() (sleap.io.dataset.Labels property)</a>
-</li>
-        <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.all_items">all_items() (sleap.info.feature_suggestions.FrameGroupSet property)</a>
+        </ul></li>
+        <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.all_items">all_items (sleap.info.feature_suggestions.FrameGroupSet property)</a>
 </li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.anchor_part">anchor_part (sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig attribute)</a>
 
@@ -435,7 +495,7 @@
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor">BottomUpPredictor (class in sleap.nn.inference)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.bounding_box">bounding_box() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.bounding_box">bounding_box (sleap.instance.Instance property)</a>
 </li>
         <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.AugmentationConfig.brightness">brightness (sleap.nn.config.optimization.AugmentationConfig attribute)</a>
 </li>
@@ -487,7 +547,7 @@
           <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.OHKMLoss.call">(sleap.nn.losses.OHKMLoss method)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.callbacks">callbacks() (sleap.nn.training.Trainer property)</a>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.callbacks">callbacks (sleap.nn.training.Trainer property)</a>
 </li>
         <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.can_read_file">can_read_file() (sleap.io.format.adaptor.Adaptor method)</a>
 
@@ -553,10 +613,12 @@
 </li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig">CenteredInstanceConfmapsHeadConfig (class in sleap.nn.config.model)</a>
 </li>
-        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.centroid">centroid (sleap.nn.config.model.HeadsConfig attribute)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.centroid">centroid (sleap.instance.Instance property)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.centroid">(sleap.nn.config.model.HeadsConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.centroid">centroid() (sleap.instance.Instance property)</a>
-</li>
+        </ul></li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.centroid_config">centroid_config (sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.centroid_confmap_head">centroid_confmap_head (sleap.nn.data.pipelines.CentroidConfmapsPipeline attribute)</a>
@@ -585,7 +647,7 @@
 </li>
         <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.PartLoss.channel_ind">channel_ind (sleap.nn.losses.PartLoss attribute)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.channels">channels() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.channels">channels (sleap.io.video.HDF5Video property)</a>
 
         <ul>
           <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.channels">(sleap.io.video.ImgStoreVideo property)</a>
@@ -625,7 +687,7 @@
 </li>
         <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig">CheckpointingConfig (class in sleap.nn.config.outputs)</a>
 </li>
-        <li><a href="api/sleap.io.asyncvideo.html#sleap.io.asyncvideo.AsyncVideo.chunks">chunks() (sleap.io.asyncvideo.AsyncVideo property)</a>
+        <li><a href="api/sleap.io.asyncvideo.html#sleap.io.asyncvideo.AsyncVideo.chunks">chunks (sleap.io.asyncvideo.AsyncVideo property)</a>
 </li>
         <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.cleaner">cleaner (sleap.nn.tracking.Tracker attribute)</a>
 </li>
@@ -777,7 +839,7 @@
 </li>
         <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.cull_instances">cull_instances() (in module sleap.nn.tracker.components)</a>
 </li>
-        <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.current_groupset">current_groupset() (sleap.info.feature_suggestions.ItemStack property)</a>
+        <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.current_groupset">current_groupset (sleap.info.feature_suggestions.ItemStack property)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -809,7 +871,7 @@
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders">DataReaders (class in sleap.nn.training)</a>
 </li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_features_stride">decoder_features_stride() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_features_stride">decoder_features_stride (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 </li>
         <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.decoder_filters">decoder_filters (sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder attribute)</a>
 
@@ -819,7 +881,7 @@
         </ul></li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig.decoder_filters_rate">decoder_filters_rate (sleap.nn.config.model.PretrainedEncoderConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack">decoder_stack() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack">decoder_stack (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.decoder_stack">(sleap.nn.architectures.hourglass.Hourglass property)</a>
@@ -833,7 +895,7 @@
 </li>
         <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.deconv_filters">deconv_filters (sleap.nn.architectures.hrnet.HigherHRNet attribute)</a>
 </li>
-        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.default_ext">default_ext() (sleap.io.format.adaptor.Adaptor property)</a>
+        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.default_ext">default_ext (sleap.io.format.adaptor.Adaptor property)</a>
 
         <ul>
           <li><a href="api/sleap.io.format.coco.html#sleap.io.format.coco.LabelsCocoAdaptor.default_ext">(sleap.io.format.coco.LabelsCocoAdaptor property)</a>
@@ -881,10 +943,10 @@
 </li>
         <li><a href="api/sleap.nn.system.html#sleap.nn.system.disable_preallocation">disable_preallocation() (in module sleap.nn.system)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.distance_to_edge">distance_to_edge() (in module sleap.nn.data.edge_maps)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.does_match_ext">does_match_ext() (sleap.io.format.adaptor.Adaptor method)</a>
 </li>
         <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.does_read">does_read() (sleap.io.format.adaptor.Adaptor method)</a>
@@ -938,17 +1000,15 @@
         <li><a href="api/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.down_blocks">down_blocks (sleap.nn.architectures.hourglass.Hourglass attribute)</a>
 
         <ul>
+          <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.down_blocks">(sleap.nn.architectures.hrnet.HigherHRNet property)</a>
+</li>
           <li><a href="api/sleap.nn.architectures.leap.html#sleap.nn.architectures.leap.LeapCNN.down_blocks">(sleap.nn.architectures.leap.LeapCNN attribute)</a>
 </li>
-          <li><a href="api/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet.down_blocks">(sleap.nn.architectures.unet.UNet attribute)</a>
-</li>
-        </ul></li>
-        <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.down_blocks">down_blocks() (sleap.nn.architectures.hrnet.HigherHRNet property)</a>
-
-        <ul>
           <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.down_blocks">(sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder property)</a>
 </li>
           <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.down_blocks">(sleap.nn.architectures.resnet.ResNetv1 property)</a>
+</li>
+          <li><a href="api/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet.down_blocks">(sleap.nn.architectures.unet.UNet attribute)</a>
 </li>
         </ul></li>
         <li><a href="api/sleap.nn.architectures.leap.html#sleap.nn.architectures.leap.LeapCNN.down_convs_per_block">down_convs_per_block (sleap.nn.architectures.leap.LeapCNN attribute)</a>
@@ -961,9 +1021,13 @@
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.EdgeConnection.dst_peak_ind">dst_peak_ind (sleap.nn.paf_grouping.EdgeConnection attribute)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.dtype">dtype() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Point.dtype">dtype (sleap.instance.Point attribute)</a>
 
         <ul>
+          <li><a href="api/sleap.instance.html#sleap.instance.PredictedPoint.dtype">(sleap.instance.PredictedPoint attribute)</a>
+</li>
+          <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.dtype">(sleap.io.video.HDF5Video property)</a>
+</li>
           <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.dtype">(sleap.io.video.ImgStoreVideo property)</a>
 </li>
           <li><a href="api/sleap.io.video.html#sleap.io.video.MediaVideo.dtype">(sleap.io.video.MediaVideo property)</a>
@@ -988,10 +1052,12 @@
         <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.EarlyStoppingConfig">EarlyStoppingConfig (class in sleap.nn.config.optimization)</a>
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.edge_inds">edge_inds (sleap.nn.paf_grouping.PAFScorer attribute)</a>
+
+        <ul>
+          <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edge_inds">(sleap.skeleton.Skeleton property)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edge_inds">edge_inds() (sleap.skeleton.Skeleton property)</a>
-</li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edge_names">edge_names() (sleap.skeleton.Skeleton property)</a>
+        </ul></li>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edge_names">edge_names (sleap.skeleton.Skeleton property)</a>
 </li>
         <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edge_to_index">edge_to_index() (sleap.skeleton.Skeleton method)</a>
 </li>
@@ -1006,10 +1072,10 @@
 </li>
           <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.edges">(sleap.nn.paf_grouping.PAFScorer attribute)</a>
 </li>
-        </ul></li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edges">edges() (sleap.skeleton.Skeleton property)</a>
+          <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edges">(sleap.skeleton.Skeleton property)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edges_full">edges_full() (sleap.skeleton.Skeleton property)</a>
+        </ul></li>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.edges_full">edges_full (sleap.skeleton.Skeleton property)</a>
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.EdgeType">EdgeType (class in sleap.nn.paf_grouping)</a>
 
@@ -1017,11 +1083,11 @@
           <li><a href="api/sleap.skeleton.html#sleap.skeleton.EdgeType">(class in sleap.skeleton)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.embedded_frame_inds">embedded_frame_inds() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.embedded_frame_inds">embedded_frame_inds (sleap.io.video.HDF5Video property)</a>
 </li>
         <li><a href="api/sleap.nn.system.html#sleap.nn.system.enable_preallocation">enable_preallocation() (in module sleap.nn.system)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.enable_source_video">enable_source_video() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.enable_source_video">enable_source_video (sleap.io.video.HDF5Video property)</a>
 </li>
         <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.encoder">encoder (sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder attribute)</a>
 
@@ -1029,9 +1095,9 @@
           <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig.encoder">(sleap.nn.config.model.PretrainedEncoderConfig attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_features_stride">encoder_features_stride() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_features_stride">encoder_features_stride (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 </li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack">encoder_stack() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack">encoder_stack (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.encoder_stack">(sleap.nn.architectures.hourglass.Hourglass property)</a>
@@ -1131,7 +1197,7 @@
           <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.features_output_stride">(sleap.nn.architectures.resnet.ResNetv1 attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.file">file() (sleap.io.format.filehandle.FileHandle property)</a>
+        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.file">file (sleap.io.format.filehandle.FileHandle property)</a>
 </li>
         <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle">FileHandle (class in sleap.io.format.filehandle)</a>
 </li>
@@ -1293,17 +1359,19 @@
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.format_id">format_id() (sleap.io.format.filehandle.FileHandle property)</a>
+        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.format_id">format_id (sleap.io.format.filehandle.FileHandle property)</a>
 </li>
-        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.formatted_ext_options">formatted_ext_options() (sleap.io.format.adaptor.Adaptor property)</a>
+        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.formatted_ext_options">formatted_ext_options (sleap.io.format.adaptor.Adaptor property)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.forward_pass">forward_pass() (sleap.nn.inference.BottomUpInferenceLayer method)</a>
 </li>
-        <li><a href="api/sleap.io.videowriter.html#sleap.io.videowriter.VideoWriterSkvideo.fps">fps (sleap.io.videowriter.VideoWriterSkvideo attribute)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.MediaVideo.fps">fps (sleap.io.video.MediaVideo property)</a>
+
+        <ul>
+          <li><a href="api/sleap.io.videowriter.html#sleap.io.videowriter.VideoWriterSkvideo.fps">(sleap.io.videowriter.VideoWriterSkvideo attribute)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.MediaVideo.fps">fps() (sleap.io.video.MediaVideo property)</a>
-</li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.frame_idx">frame_idx() (sleap.instance.Instance property)</a>
+        </ul></li>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.frame_idx">frame_idx (sleap.instance.Instance property)</a>
 </li>
         <li><a href="api/sleap.util.html#sleap.util.frame_list">frame_list() (in module sleap.util)</a>
 </li>
@@ -1313,11 +1381,9 @@
 </li>
         <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.FrameMatches">FrameMatches (class in sleap.nn.tracker.components)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.frames">frames() (sleap.io.dataset.Labels method)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.frames">frames (sleap.io.video.HDF5Video property)</a>
 
         <ul>
-          <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.frames">(sleap.io.video.HDF5Video property)</a>
-</li>
           <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.frames">(sleap.io.video.ImgStoreVideo property)</a>
 </li>
           <li><a href="api/sleap.io.video.html#sleap.io.video.MediaVideo.frames">(sleap.io.video.MediaVideo property)</a>
@@ -1327,6 +1393,8 @@
           <li><a href="api/sleap.io.video.html#sleap.io.video.SingleImageVideo.frames">(sleap.io.video.SingleImageVideo property)</a>
 </li>
         </ul></li>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.frames">frames() (sleap.io.dataset.Labels method)</a>
+</li>
         <li><a href="api/sleap.instance.html#sleap.instance.PointArray.from_array">from_array() (sleap.instance.PointArray class method)</a>
 </li>
         <li><a href="api/sleap.instance.html#sleap.instance.PredictedInstance.from_arrays">from_arrays() (sleap.instance.PredictedInstance class method)</a>
@@ -1607,9 +1675,9 @@
 </li>
         <li><a href="api/sleap.nn.data.inference.html#sleap.nn.data.inference.GlobalPeakFinder">GlobalPeakFinder (class in sleap.nn.data.inference)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.graph">graph() (sleap.skeleton.Skeleton property)</a>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.graph">graph (sleap.skeleton.Skeleton property)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.graph_symmetry">graph_symmetry() (sleap.skeleton.Skeleton property)</a>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.graph_symmetry">graph_symmetry (sleap.skeleton.Skeleton property)</a>
 </li>
         <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.greedy_matching">greedy_matching() (in module sleap.nn.tracker.components)</a>
 </li>
@@ -1629,7 +1697,7 @@
 </li>
         <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.group_sets">group_sets (sleap.info.feature_suggestions.ItemStack attribute)</a>
 </li>
-        <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.groups">groups() (sleap.info.feature_suggestions.FrameGroupSet property)</a>
+        <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.groups">groups (sleap.info.feature_suggestions.FrameGroupSet property)</a>
 </li>
         <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.groupset_data">groupset_data (sleap.info.feature_suggestions.FrameGroupSet attribute)</a>
 </li>
@@ -1641,7 +1709,7 @@
   <h2>H</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.handles">handles() (sleap.io.format.adaptor.Adaptor property)</a>
+        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.handles">handles (sleap.io.format.adaptor.Adaptor property)</a>
 
         <ul>
           <li><a href="api/sleap.io.format.coco.html#sleap.io.format.coco.LabelsCocoAdaptor.handles">(sleap.io.format.coco.LabelsCocoAdaptor property)</a>
@@ -1677,17 +1745,17 @@
 </li>
         <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.has_edge">has_edge() (sleap.skeleton.Skeleton method)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.has_embedded_images">has_embedded_images() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.has_embedded_images">has_embedded_images (sleap.io.video.HDF5Video property)</a>
 </li>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.has_frame">has_frame() (sleap.io.dataset.Labels method)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.has_missing_videos">has_missing_videos() (sleap.io.dataset.Labels property)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.has_missing_videos">has_missing_videos (sleap.io.dataset.Labels property)</a>
 </li>
         <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.has_node">has_node() (sleap.skeleton.Skeleton method)</a>
 </li>
         <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.has_nodes">has_nodes() (sleap.skeleton.Skeleton method)</a>
 </li>
-        <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpModelTrainer.has_offsets">has_offsets() (sleap.nn.training.BottomUpModelTrainer property)</a>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpModelTrainer.has_offsets">has_offsets (sleap.nn.training.BottomUpModelTrainer property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.training.html#sleap.nn.training.CentroidConfmapsModelTrainer.has_offsets">(sleap.nn.training.CentroidConfmapsModelTrainer property)</a>
@@ -1699,11 +1767,11 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.FrameMatches.has_only_first_choice_matches">has_only_first_choice_matches() (sleap.nn.tracker.components.FrameMatches property)</a>
+        <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.FrameMatches.has_only_first_choice_matches">has_only_first_choice_matches (sleap.nn.tracker.components.FrameMatches property)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.has_predicted_instances">has_predicted_instances() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.has_predicted_instances">has_predicted_instances (sleap.instance.LabeledFrame property)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.has_user_instances">has_user_instances() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.has_user_instances">has_user_instances (sleap.instance.LabeledFrame property)</a>
 </li>
         <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video">HDF5Video (class in sleap.io.video)</a>
 </li>
@@ -1715,9 +1783,7 @@
         </ul></li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig">HeadsConfig (class in sleap.nn.config.model)</a>
 </li>
-        <li><a href="api/sleap.io.videowriter.html#sleap.io.videowriter.VideoWriterSkvideo.height">height (sleap.io.videowriter.VideoWriterSkvideo attribute)</a>
-</li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.height">height() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.height">height (sleap.io.video.HDF5Video property)</a>
 
         <ul>
           <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.height">(sleap.io.video.ImgStoreVideo property)</a>
@@ -1727,6 +1793,8 @@
           <li><a href="api/sleap.io.video.html#sleap.io.video.NumpyVideo.height">(sleap.io.video.NumpyVideo property)</a>
 </li>
           <li><a href="api/sleap.io.video.html#sleap.io.video.SingleImageVideo.height">(sleap.io.video.SingleImageVideo property)</a>
+</li>
+          <li><a href="api/sleap.io.videowriter.html#sleap.io.videowriter.VideoWriterSkvideo.height">(sleap.io.videowriter.VideoWriterSkvideo attribute)</a>
 </li>
         </ul></li>
         <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet">HigherHRNet (class in sleap.nn.architectures.hrnet)</a>
@@ -1751,7 +1819,7 @@
   <h2>I</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.image">image() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.image">image (sleap.instance.LabeledFrame property)</a>
 </li>
         <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.image_key">image_key (sleap.nn.data.augmentation.ImgaugAugmenter attribute)</a>
 
@@ -1779,7 +1847,7 @@
 </li>
         <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.imgfig">imgfig() (in module sleap.nn.viz)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.imgstore">imgstore() (sleap.io.video.ImgStoreVideo property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.imgstore">imgstore (sleap.io.video.ImgStoreVideo property)</a>
 </li>
         <li><a href="api/sleap.io.video.html#sleap.io.video.Video.imgstore_from_filenames">imgstore_from_filenames() (sleap.io.video.Video class method)</a>
 </li>
@@ -1815,7 +1883,7 @@
 </li>
         <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap.input_key_names">input_key_names (sleap.nn.data.general.LambdaMap attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.input_keys">input_keys() (sleap.nn.data.augmentation.ImgaugAugmenter property)</a>
+        <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.input_keys">input_keys (sleap.nn.data.augmentation.ImgaugAugmenter property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.input_keys">(sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator property)</a>
@@ -1919,12 +1987,10 @@
 </li>
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.InstanceCroppingConfig">InstanceCroppingConfig (class in sleap.nn.config.data)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.instances">instances() (sleap.instance.LabeledFrame property)</a>
-
-        <ul>
-          <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.instances">(sleap.io.dataset.Labels method)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.instances">instances (sleap.instance.LabeledFrame property)</a>
 </li>
-        </ul></li>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.instances">instances() (sleap.io.dataset.Labels method)</a>
+</li>
         <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.instances_key">instances_key (sleap.nn.data.augmentation.ImgaugAugmenter attribute)</a>
 
         <ul>
@@ -1933,7 +1999,7 @@
           <li><a href="api/sleap.nn.data.instance_cropping.html#sleap.nn.data.instance_cropping.InstanceCropper.instances_key">(sleap.nn.data.instance_cropping.InstanceCropper attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.instances_to_show">instances_to_show() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.instances_to_show">instances_to_show (sleap.instance.LabeledFrame property)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.integral_patch_size">integral_patch_size (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
@@ -1973,27 +2039,27 @@
         </ul></li>
         <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.TrackCleaner.iou_threshold">iou_threshold (sleap.nn.tracking.TrackCleaner attribute)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.is_arborescence">is_arborescence() (sleap.skeleton.Skeleton property)</a>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.is_arborescence">is_arborescence (sleap.skeleton.Skeleton property)</a>
 </li>
-        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.is_from_multi_size_videos">is_from_multi_size_videos() (sleap.nn.data.providers.LabelsReader property)</a>
+        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.is_from_multi_size_videos">is_from_multi_size_videos (sleap.nn.data.providers.LabelsReader property)</a>
 </li>
         <li><a href="api/sleap.nn.system.html#sleap.nn.system.is_gpu_system">is_gpu_system() (in module sleap.nn.system)</a>
 </li>
-        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.is_hdf5">is_hdf5() (sleap.io.format.filehandle.FileHandle property)</a>
+        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.is_hdf5">is_hdf5 (sleap.io.format.filehandle.FileHandle property)</a>
 </li>
         <li><a href="api/sleap.nn.system.html#sleap.nn.system.is_initialized">is_initialized() (in module sleap.nn.system)</a>
 </li>
-        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.is_json">is_json() (sleap.io.format.filehandle.FileHandle property)</a>
+        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.is_json">is_json (sleap.io.format.filehandle.FileHandle property)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.NumpyVideo.is_missing">is_missing() (sleap.io.video.NumpyVideo property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.NumpyVideo.is_missing">is_missing (sleap.io.video.NumpyVideo property)</a>
 
         <ul>
           <li><a href="api/sleap.io.video.html#sleap.io.video.Video.is_missing">(sleap.io.video.Video property)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.is_multi_instance">is_multi_instance() (sleap.io.dataset.Labels property)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.is_multi_instance">is_multi_instance (sleap.io.dataset.Labels property)</a>
 </li>
-        <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.KalmanTracker.is_valid">is_valid() (sleap.nn.tracking.KalmanTracker property)</a>
+        <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.KalmanTracker.is_valid">is_valid (sleap.nn.tracking.KalmanTracker property)</a>
 </li>
         <li><a href="api/sleap.instance.html#sleap.instance.Point.isnan">isnan() (sleap.instance.Point method)</a>
 </li>
@@ -2011,7 +2077,7 @@
   <h2>J</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.json">json() (sleap.io.format.filehandle.FileHandle property)</a>
+        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.json">json (sleap.io.format.filehandle.FileHandle property)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
@@ -2050,11 +2116,11 @@
 </li>
           <li><a href="api/sleap.nn.model.html#sleap.nn.model.Model.keras_model">(sleap.nn.model.Model attribute)</a>
 </li>
+          <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.keras_model">(sleap.nn.training.Trainer property)</a>
+</li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.keras_model">keras_model() (sleap.nn.training.Trainer property)</a>
-</li>
         <li><a href="api/sleap.nn.data.inference.html#sleap.nn.data.inference.KerasModelPredictor">KerasModelPredictor (class in sleap.nn.data.inference)</a>
 </li>
         <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.kernel_size">kernel_size (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
@@ -2089,10 +2155,12 @@
 </li>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels">Labels (class in sleap.io.dataset)</a>
 </li>
-        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.labels">labels (sleap.nn.data.providers.LabelsReader attribute)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.labels">labels (sleap.io.dataset.Labels property)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.labels">(sleap.nn.data.providers.LabelsReader attribute)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.labels">labels() (sleap.io.dataset.Labels property)</a>
-</li>
+        </ul></li>
         <li><a href="api/sleap.io.format.coco.html#sleap.io.format.coco.LabelsCocoAdaptor">LabelsCocoAdaptor (class in sleap.io.format.coco)</a>
 </li>
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig">LabelsConfig (class in sleap.nn.config.data)</a>
@@ -2117,7 +2185,7 @@
 </li>
         <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap">LambdaMap (class in sleap.nn.data.general)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.last_frame_idx">last_frame_idx() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.last_frame_idx">last_frame_idx (sleap.io.video.HDF5Video property)</a>
 
         <ul>
           <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.last_frame_idx">(sleap.io.video.ImgStoreVideo property)</a>
@@ -2407,7 +2475,7 @@
           <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.OHKMLoss.max_hard_keypoints">(sleap.nn.losses.OHKMLoss attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.max_height_and_width">max_height_and_width() (sleap.nn.data.providers.LabelsReader property)</a>
+        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.max_height_and_width">max_height_and_width (sleap.nn.data.providers.LabelsReader property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader.max_height_and_width">(sleap.nn.data.providers.VideoReader property)</a>
@@ -2427,7 +2495,7 @@
           <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.UNetConfig.max_stride">(sleap.nn.config.model.UNetConfig attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.maximum_stride">maximum_stride() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.maximum_stride">maximum_stride (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.maximum_stride">(sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder property)</a>
@@ -2463,7 +2531,7 @@
           <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.UNetConfig.middle_block">(sleap.nn.config.model.UNetConfig attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.midpoint">midpoint() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.midpoint">midpoint (sleap.instance.Instance property)</a>
 </li>
         <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch">min_batches_per_epoch (sleap.nn.config.optimization.OptimizationConfig attribute)</a>
 </li>
@@ -2694,17 +2762,9 @@
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.n_points">n_points (sleap.nn.paf_grouping.PAFScorer attribute)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.n_visible_points">n_visible_points() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.n_visible_points">n_visible_points (sleap.instance.Instance property)</a>
 </li>
-        <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig.name">name (sleap.nn.config.training_job.TrainingJobConfig attribute)</a>
-
-        <ul>
-          <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.PartLoss.name">(sleap.nn.losses.PartLoss attribute)</a>
-</li>
-          <li><a href="api/sleap.skeleton.html#sleap.skeleton.Node.name">(sleap.skeleton.Node attribute)</a>
-</li>
-        </ul></li>
-        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.name">name() (sleap.io.format.adaptor.Adaptor property)</a>
+        <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.name">name (sleap.io.format.adaptor.Adaptor property)</a>
 
         <ul>
           <li><a href="api/sleap.io.format.coco.html#sleap.io.format.coco.LabelsCocoAdaptor.name">(sleap.io.format.coco.LabelsCocoAdaptor property)</a>
@@ -2727,6 +2787,12 @@
 </li>
           <li><a href="api/sleap.io.format.text.html#sleap.io.format.text.TextAdaptor.name">(sleap.io.format.text.TextAdaptor property)</a>
 </li>
+          <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig.name">(sleap.nn.config.training_job.TrainingJobConfig attribute)</a>
+</li>
+          <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.PartLoss.name">(sleap.nn.losses.PartLoss attribute)</a>
+</li>
+          <li><a href="api/sleap.skeleton.html#sleap.skeleton.Node.name">(sleap.skeleton.Node attribute)</a>
+</li>
           <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.name">(sleap.skeleton.Skeleton property)</a>
 </li>
         </ul></li>
@@ -2740,19 +2806,19 @@
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PeakID.node_ind">node_ind (sleap.nn.paf_grouping.PeakID attribute)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.node_names">node_names() (sleap.skeleton.Skeleton property)</a>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.node_names">node_names (sleap.skeleton.Skeleton property)</a>
 </li>
         <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.node_to_index">node_to_index() (sleap.skeleton.Skeleton method)</a>
 </li>
         <li><a href="api/sleap.info.metrics.html#sleap.info.metrics.nodeless_point_dist">nodeless_point_dist() (in module sleap.info.metrics)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.nodes">nodes() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.nodes">nodes (sleap.instance.Instance property)</a>
 
         <ul>
           <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.nodes">(sleap.skeleton.Skeleton property)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.nodes_points">nodes_points() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.nodes_points">nodes_points (sleap.instance.Instance property)</a>
 </li>
         <li><a href="api/sleap.nn.data.instance_cropping.html#sleap.nn.data.instance_cropping.normalize_bboxes">normalize_bboxes() (in module sleap.nn.data.instance_cropping)</a>
 </li>
@@ -2760,7 +2826,7 @@
 </li>
         <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.num_convs">num_convs (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.Video.num_frames">num_frames() (sleap.io.video.Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.Video.num_frames">num_frames (sleap.io.video.Video property)</a>
 </li>
         <li><a href="api/sleap.instance.html#sleap.instance.Instance.numpy">numpy() (sleap.instance.Instance method)</a>
 
@@ -2894,7 +2960,7 @@
 </li>
         <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap.output_key_names">output_key_names (sleap.nn.data.general.LambdaMap attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.output_keys">output_keys() (sleap.nn.data.augmentation.ImgaugAugmenter property)</a>
+        <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.output_keys">output_keys (sleap.nn.data.augmentation.ImgaugAugmenter property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_keys">(sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator property)</a>
@@ -2962,15 +3028,21 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.output_scale">output_scale() (sleap.nn.architectures.hrnet.HigherHRNet property)</a>
+        <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.output_scale">output_scale (sleap.nn.architectures.hrnet.HigherHRNet property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.output_scale">(sleap.nn.architectures.resnet.ResNetv1 property)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack.output_stride">output_stride (sleap.nn.architectures.upsampling.UpsamplingStack attribute)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.output_stride">output_stride (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 
         <ul>
+          <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.output_stride">(sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder property)</a>
+</li>
+          <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.output_stride">(sleap.nn.architectures.resnet.ResNetv1 property)</a>
+</li>
+          <li><a href="api/sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack.output_stride">(sleap.nn.architectures.upsampling.UpsamplingStack attribute)</a>
+</li>
           <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.output_stride">(sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig attribute)</a>
 </li>
           <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig.output_stride">(sleap.nn.config.model.CentroidsHeadConfig attribute)</a>
@@ -3004,14 +3076,6 @@
           <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.output_stride">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
           <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.output_stride">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
-</li>
-        </ul></li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.output_stride">output_stride() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
-
-        <ul>
-          <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.output_stride">(sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder property)</a>
-</li>
-          <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.output_stride">(sleap.nn.architectures.resnet.ResNetv1 property)</a>
 </li>
         </ul></li>
         <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig.outputs">outputs (sleap.nn.config.training_job.TrainingJobConfig attribute)</a>
@@ -3172,11 +3236,11 @@
 </li>
         <li><a href="api/sleap.instance.html#sleap.instance.PointArray">PointArray (class in sleap.instance)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.points">points() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.points">points (sleap.instance.Instance property)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.PredictedInstance.points_and_scores_array">points_and_scores_array() (sleap.instance.PredictedInstance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.PredictedInstance.points_and_scores_array">points_and_scores_array (sleap.instance.PredictedInstance property)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.points_array">points_array() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.points_array">points_array (sleap.instance.Instance property)</a>
 </li>
         <li><a href="api/sleap.nn.data.resizing.html#sleap.nn.data.resizing.Resizer.points_key">points_key (sleap.nn.data.resizing.Resizer attribute)</a>
 
@@ -3220,7 +3284,7 @@
           <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.predict">(sleap.nn.paf_grouping.PAFScorer method)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.predicted_instances">predicted_instances() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.predicted_instances">predicted_instances (sleap.instance.LabeledFrame property)</a>
 
         <ul>
           <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.predicted_instances">(sleap.io.dataset.Labels property)</a>
@@ -3442,7 +3506,7 @@
 </li>
         <li><a href="api/sleap.nn.evals.html#sleap.nn.evals.replace_path">replace_path() (in module sleap.nn.evals)</a>
 </li>
-        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.Predictor.report_period">report_period() (sleap.nn.inference.Predictor property)</a>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.Predictor.report_period">report_period (sleap.nn.inference.Predictor property)</a>
 </li>
         <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.reset">reset() (sleap.io.video.HDF5Video method)</a>
 
@@ -3516,10 +3580,12 @@
 </li>
         <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.run_name_suffix">run_name_suffix (sleap.nn.config.outputs.OutputsConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.run_path">run_path (sleap.nn.training.Trainer attribute)</a>
+        <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.run_path">run_path (sleap.nn.config.outputs.OutputsConfig property)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.run_path">(sleap.nn.training.Trainer attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.run_path">run_path() (sleap.nn.config.outputs.OutputsConfig property)</a>
-</li>
+        </ul></li>
         <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.run_tracker">run_tracker() (in module sleap.nn.tracking)</a>
 </li>
         <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.runs_folder">runs_folder (sleap.nn.config.outputs.OutputsConfig attribute)</a>
@@ -3570,14 +3636,14 @@
 </li>
         <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.save_visualizations">save_visualizations (sleap.nn.config.outputs.OutputsConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.AugmentationConfig.scale">scale (sleap.nn.config.optimization.AugmentationConfig attribute)</a>
+        <li><a href="api/sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature.scale">scale (sleap.nn.architectures.common.IntermediateFeature property)</a>
 
         <ul>
+          <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.AugmentationConfig.scale">(sleap.nn.config.optimization.AugmentationConfig attribute)</a>
+</li>
           <li><a href="api/sleap.nn.data.resizing.html#sleap.nn.data.resizing.Resizer.scale">(sleap.nn.data.resizing.Resizer attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature.scale">scale() (sleap.nn.architectures.common.IntermediateFeature property)</a>
-</li>
         <li><a href="api/sleap.nn.data.normalization.html#sleap.nn.data.normalization.scale_image_range">scale_image_range() (in module sleap.nn.data.normalization)</a>
 </li>
         <li><a href="api/sleap.nn.data.resizing.html#sleap.nn.data.resizing.Resizer.scale_key">scale_key (sleap.nn.data.resizing.Resizer attribute)</a>
@@ -3606,7 +3672,7 @@
         </ul></li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.score_paf_lines_batch">score_paf_lines_batch() (in module sleap.nn.paf_grouping)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.PredictedInstance.scores">scores() (sleap.instance.PredictedInstance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.PredictedInstance.scores">scores (sleap.instance.PredictedInstance property)</a>
 </li>
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.search_path_hints">search_path_hints (sleap.nn.config.data.LabelsConfig attribute)</a>
 </li>
@@ -3642,7 +3708,7 @@
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.setup_zmq_callbacks">setup_zmq_callbacks() (in module sleap.nn.training)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.Video.shape">shape() (sleap.io.video.Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.Video.shape">shape (sleap.io.video.Video property)</a>
 </li>
         <li><a href="api/sleap.nn.data.dataset_ops.html#sleap.nn.data.dataset_ops.Shuffler.shuffle">shuffle (sleap.nn.data.dataset_ops.Shuffler attribute)</a>
 </li>
@@ -3712,7 +3778,7 @@
 </li>
         <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton">Skeleton (class in sleap.skeleton)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.skeleton">skeleton() (sleap.io.dataset.Labels property)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.skeleton">skeleton (sleap.io.dataset.Labels property)</a>
 </li>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.skeletons">skeletons (sleap.io.dataset.Labels attribute)</a>
 
@@ -4307,9 +4373,9 @@
 </li>
         <li><a href="api/sleap.nn.peak_finding.html#sleap.nn.peak_finding.smooth_imgs">smooth_imgs() (in module sleap.nn.peak_finding)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.source_video">source_video() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.source_video">source_video (sleap.io.video.HDF5Video property)</a>
 </li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.source_video_available">source_video_available() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.source_video_available">source_video_available (sleap.io.video.HDF5Video property)</a>
 </li>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.split">split() (sleap.io.dataset.Labels method)</a>
 </li>
@@ -4345,13 +4411,13 @@
 </li>
         <li><a href="api/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet.stem_blocks">stem_blocks (sleap.nn.architectures.unet.UNet attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_features_stride">stem_features_stride() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_features_stride">stem_features_stride (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 </li>
         <li><a href="api/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.stem_filters">stem_filters (sleap.nn.architectures.hourglass.Hourglass attribute)</a>
 </li>
         <li><a href="api/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet.stem_kernel_size">stem_kernel_size (sleap.nn.architectures.unet.UNet attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack">stem_stack() (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
+        <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack">stem_stack (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 
         <ul>
           <li><a href="api/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.stem_stack">(sleap.nn.architectures.hourglass.Hourglass property)</a>
@@ -4382,14 +4448,16 @@
         <li><a href="api/sleap.nn.system.html#sleap.nn.system.summary">summary() (in module sleap.nn.system)</a>
 </li>
         <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.RandomFlipper.symmetric_inds">symmetric_inds (sleap.nn.data.augmentation.RandomFlipper attribute)</a>
+
+        <ul>
+          <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetric_inds">(sleap.skeleton.Skeleton property)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetric_inds">symmetric_inds() (sleap.skeleton.Skeleton property)</a>
+        </ul></li>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetries">symmetries (sleap.skeleton.Skeleton property)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetries">symmetries() (sleap.skeleton.Skeleton property)</a>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetries_full">symmetries_full (sleap.skeleton.Skeleton property)</a>
 </li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetries_full">symmetries_full() (sleap.skeleton.Skeleton property)</a>
-</li>
-        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetry_names">symmetry_names() (sleap.skeleton.Skeleton property)</a>
+        <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.symmetry_names">symmetry_names (sleap.skeleton.Skeleton property)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -4418,12 +4486,14 @@
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.test_inds">test_inds (sleap.nn.config.data.LabelsConfig attribute)</a>
 </li>
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.test_labels">test_labels (sleap.nn.config.data.LabelsConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.test_labels">(sleap.nn.training.DataReaders property)</a>
 </li>
-        <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.test_labels">test_labels() (sleap.nn.training.DataReaders property)</a>
-</li>
+        </ul></li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.test_labels_reader">test_labels_reader (sleap.nn.training.DataReaders attribute)</a>
 </li>
-        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.text">text() (sleap.io.format.filehandle.FileHandle property)</a>
+        <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.text">text (sleap.io.format.filehandle.FileHandle property)</a>
 </li>
         <li><a href="api/sleap.io.format.text.html#sleap.io.format.text.TextAdaptor">TextAdaptor (class in sleap.io.format.text)</a>
 </li>
@@ -4494,21 +4564,25 @@
 </li>
         </ul></li>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.tracks">tracks (sleap.io.dataset.Labels attribute)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.tracks">(sleap.nn.data.providers.LabelsReader property)</a>
 </li>
-        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.tracks">tracks() (sleap.nn.data.providers.LabelsReader property)</a>
-</li>
+        </ul></li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.train">train() (sleap.nn.training.Trainer method)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer">Trainer (class in sleap.nn.training)</a>
 </li>
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.training_inds">training_inds (sleap.nn.config.data.LabelsConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.training_instances">training_instances() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.training_instances">training_instances (sleap.instance.LabeledFrame property)</a>
 </li>
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.training_labels">training_labels (sleap.nn.config.data.LabelsConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.training_labels">(sleap.nn.training.DataReaders property)</a>
 </li>
-        <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.training_labels">training_labels() (sleap.nn.training.DataReaders property)</a>
-</li>
+        </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.training_labels_reader">training_labels_reader (sleap.nn.training.DataReaders attribute)</a>
@@ -4645,11 +4719,11 @@
 </li>
         <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.AugmentationConfig.uniform_noise_min_val">uniform_noise_min_val (sleap.nn.config.optimization.AugmentationConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.unique_tracks_in_queue">unique_tracks_in_queue() (sleap.nn.tracking.Tracker property)</a>
+        <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.unique_tracks_in_queue">unique_tracks_in_queue (sleap.nn.tracking.Tracker property)</a>
 </li>
         <li><a href="api/sleap.util.html#sleap.util.uniquify">uniquify() (in module sleap.util)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.unlabeled_suggestions">unlabeled_suggestions() (sleap.io.dataset.Labels property)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.unlabeled_suggestions">unlabeled_suggestions (sleap.io.dataset.Labels property)</a>
 </li>
         <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.FrameMatches.unmatched_instances">unmatched_instances (sleap.nn.tracker.components.FrameMatches attribute)</a>
 </li>
@@ -4661,18 +4735,18 @@
 </li>
         <li><a href="api/sleap.nn.data.utils.html#sleap.nn.data.utils.unrag_tensor">unrag_tensor() (in module sleap.nn.data.utils)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.unused_predictions">unused_predictions() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.unused_predictions">unused_predictions (sleap.instance.LabeledFrame property)</a>
 </li>
         <li><a href="api/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.Hourglass.up_blocks">up_blocks (sleap.nn.architectures.hourglass.Hourglass attribute)</a>
 
         <ul>
           <li><a href="api/sleap.nn.architectures.leap.html#sleap.nn.architectures.leap.LeapCNN.up_blocks">(sleap.nn.architectures.leap.LeapCNN attribute)</a>
 </li>
+          <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.up_blocks">(sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder property)</a>
+</li>
           <li><a href="api/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet.up_blocks">(sleap.nn.architectures.unet.UNet attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/sleap.nn.architectures.pretrained_encoders.html#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.up_blocks">up_blocks() (sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder property)</a>
-</li>
         <li><a href="api/sleap.nn.architectures.leap.html#sleap.nn.architectures.leap.LeapCNN.up_convs_per_block">up_convs_per_block (sleap.nn.architectures.leap.LeapCNN attribute)</a>
 </li>
         <li><a href="api/sleap.nn.architectures.leap.html#sleap.nn.architectures.leap.LeapCNN.up_interpolate">up_interpolate (sleap.nn.architectures.leap.LeapCNN attribute)</a>
@@ -4731,7 +4805,7 @@
 </li>
         <li><a href="api/sleap.nn.system.html#sleap.nn.system.use_last_gpu">use_last_gpu() (in module sleap.nn.system)</a>
 </li>
-        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.user_instances">user_instances() (sleap.instance.LabeledFrame property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.user_instances">user_instances (sleap.instance.LabeledFrame property)</a>
 
         <ul>
           <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.user_instances">(sleap.io.dataset.Labels property)</a>
@@ -4739,9 +4813,9 @@
         </ul></li>
         <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.user_instances_only">user_instances_only (sleap.nn.data.providers.LabelsReader attribute)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.user_labeled_frame_inds">user_labeled_frame_inds() (sleap.io.dataset.Labels property)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.user_labeled_frame_inds">user_labeled_frame_inds (sleap.io.dataset.Labels property)</a>
 </li>
-        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.user_labeled_frames">user_labeled_frames() (sleap.io.dataset.Labels property)</a>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.user_labeled_frames">user_labeled_frames (sleap.io.dataset.Labels property)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -4760,9 +4834,11 @@
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.validation_inds">validation_inds (sleap.nn.config.data.LabelsConfig attribute)</a>
 </li>
         <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.validation_labels">validation_labels (sleap.nn.config.data.LabelsConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.validation_labels">(sleap.nn.training.DataReaders property)</a>
 </li>
-        <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.validation_labels">validation_labels() (sleap.nn.training.DataReaders property)</a>
-</li>
+        </ul></li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.validation_labels_reader">validation_labels_reader (sleap.nn.training.DataReaders attribute)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.validation_pipeline">validation_pipeline (sleap.nn.training.Trainer attribute)</a>
@@ -4773,12 +4849,12 @@
 </li>
         <li><a href="api/sleap.io.video.html#sleap.io.video.Video">Video (class in sleap.io.video)</a>
 </li>
-        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader.video">video (sleap.nn.data.providers.VideoReader attribute)</a>
-</li>
-        <li><a href="api/sleap.instance.html#sleap.instance.Instance.video">video() (sleap.instance.Instance property)</a>
+        <li><a href="api/sleap.instance.html#sleap.instance.Instance.video">video (sleap.instance.Instance property)</a>
 
         <ul>
           <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.video">(sleap.io.dataset.Labels property)</a>
+</li>
+          <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader.video">(sleap.nn.data.providers.VideoReader attribute)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -4790,10 +4866,10 @@
         <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader">VideoReader (class in sleap.nn.data.providers)</a>
 </li>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.videos">videos (sleap.io.dataset.Labels attribute)</a>
-</li>
-        <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.videos">videos() (sleap.nn.data.providers.LabelsReader property)</a>
 
         <ul>
+          <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.videos">(sleap.nn.data.providers.LabelsReader property)</a>
+</li>
           <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.VideoReader.videos">(sleap.nn.data.providers.VideoReader property)</a>
 </li>
         </ul></li>
@@ -4823,9 +4899,7 @@
 </li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ResNetConfig.weights">weights (sleap.nn.config.model.ResNetConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.io.videowriter.html#sleap.io.videowriter.VideoWriterSkvideo.width">width (sleap.io.videowriter.VideoWriterSkvideo attribute)</a>
-</li>
-        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.width">width() (sleap.io.video.HDF5Video property)</a>
+        <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.width">width (sleap.io.video.HDF5Video property)</a>
 
         <ul>
           <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.width">(sleap.io.video.ImgStoreVideo property)</a>
@@ -4835,6 +4909,8 @@
           <li><a href="api/sleap.io.video.html#sleap.io.video.NumpyVideo.width">(sleap.io.video.NumpyVideo property)</a>
 </li>
           <li><a href="api/sleap.io.video.html#sleap.io.video.SingleImageVideo.width">(sleap.io.video.SingleImageVideo property)</a>
+</li>
+          <li><a href="api/sleap.io.videowriter.html#sleap.io.videowriter.VideoWriterSkvideo.width">(sleap.io.videowriter.VideoWriterSkvideo attribute)</a>
 </li>
         </ul></li>
         <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.with_offsets">with_offsets (sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator attribute)</a>
@@ -4892,7 +4968,8 @@
 </section>
 
 
-      </article>
+        </article>
+      </div>
       <footer>
         
         <div class="related-pages">
@@ -4901,12 +4978,9 @@
         </div>
 
         <div class="related-information">
-              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University
-            |
-            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
-              and
-              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
-              <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University |
+          Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
         </div>
         
       </footer>
@@ -4916,15 +4990,15 @@
       
       
     </aside>
-  </main>
-</div>
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/furo.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
     <script src="_static/togglebutton.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></body>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    </body>
 </html>
