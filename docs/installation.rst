@@ -14,7 +14,7 @@ Quick Install
 
 ::
 
-    conda install -c sleap -n sleap sleap
+    conda create -c sleap -n sleap sleap
 
 **Mac or Colab:**
 
