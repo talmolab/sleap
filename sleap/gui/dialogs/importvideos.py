@@ -160,9 +160,36 @@ class ImportParamDialog(QDialog):
         outer_layout.addWidget(scroll_widget)
 
         button_layout = QHBoxLayout()
+
+        if any(
+            [
+                widget.import_type["video_type"] == "mp4"
+                for widget in self.import_widgets
+            ]
+        ):
+            all_grayscale_button = QPushButton("All grayscale")
+            all_rgb_button = QPushButton("All RGB")
+            button_layout.addWidget(all_grayscale_button)
+            button_layout.addWidget(all_rgb_button)
+            all_grayscale_button.clicked.connect(self.set_all_grayscale)
+            all_rgb_button.clicked.connect(self.set_all_rgb)
+        if any(
+            [
+                widget.import_type["video_type"] == "hdf5"
+                for widget in self.import_widgets
+            ]
+        ):
+            all_channels_last_button = QPushButton("All channels last")
+            all_channels_first_button = QPushButton("All channels first")
+            button_layout.addWidget(all_channels_last_button)
+            button_layout.addWidget(all_channels_first_button)
+            all_channels_last_button.clicked.connect(self.set_all_channels_last)
+            all_channels_first_button.clicked.connect(self.set_all_channels_first)
+
         cancel_button = QPushButton("Cancel")
         import_button = QPushButton("Import")
         import_button.setDefault(True)
+
         button_layout.addStretch()
         button_layout.addWidget(cancel_button)
         button_layout.addWidget(import_button)
@@ -198,6 +225,38 @@ class ImportParamDialog(QDialog):
     def paint(self, painter, option, widget=None):
         """Method required by Qt."""
         pass
+
+    def set_all_grayscale(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+            if "grayscale" in widget_elements:
+                widget_elements["grayscale"].setChecked(True)
+
+    def set_all_rgb(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+            if "grayscale" in widget_elements:
+                widget_elements["grayscale"].setChecked(False)
+
+    def set_all_channels_last(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+
+            if "input_format" in widget_elements:
+                for btn in widget_elements["input_format"].buttons():
+                    if btn.text() == "channels_last":
+                        btn.click()
+                        break
+
+    def set_all_channels_first(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+
+            if "input_format" in widget_elements:
+                for btn in widget_elements["input_format"].buttons():
+                    if btn.text() == "channels_first":
+                        btn.click()
+                        break
 
 
 class ImportItemWidget(QFrame):
@@ -405,6 +464,7 @@ class ImportParamWidget(QWidget):
 
     def set_values_from_video(self, video):
         """Set the form fields using attributes on video."""
+        # XXX
         param_list = self.import_type["params"]
         for param in param_list:
             name = param["name"]
@@ -537,7 +597,17 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
-    import_list = ImportVideos().ask()
+    # import_list = ImportVideos().ask()
+
+    filenames = [
+        "tests/data/videos/centered_pair_small.mp4",
+        "tests/data/videos/small_robot.mp4",
+    ]
+
+    import_list = []
+    importer = ImportParamDialog(filenames)
+    importer.accepted.connect(lambda: importer.get_data(import_list))
+    importer.exec_()
 
     for import_item in import_list:
         vid = import_item["video_class"](**import_item["params"])
