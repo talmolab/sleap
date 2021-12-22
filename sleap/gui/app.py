@@ -134,6 +134,7 @@ class MainWindow(QMainWindow):
 
         self.state["skeleton"] = Skeleton()
         self.state["labeled_frame"] = None
+        self.state["last_interacted_frame"] = None
         self.state["filename"] = None
         self.state["show labels"] = True
         self.state["show edges"] = True
@@ -413,6 +414,12 @@ class MainWindow(QMainWindow):
             "goto prev labeled",
             "Previous Labeled Frame",
             self.commands.previousLabeledFrame,
+        )
+        add_menu_item(
+            goMenu,
+            "goto last interacted",
+            "Last Interacted Frame",
+            self.commands.lastInteractedFrame,
         )
         add_menu_item(
             goMenu,
@@ -1231,6 +1238,9 @@ class MainWindow(QMainWindow):
                     f"{labeled_count}/{len(suggestion_list)} labeled ({prc:.1f}%)"
                 )
             self.suggested_count_label.setText(suggestion_status_text)
+
+        if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
+            self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""

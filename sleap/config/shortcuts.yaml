@@ -1,5 +1,5 @@
 add instance: Ctrl+I
-add videos: Ctrl+A
+add videos: 
 clear selection: Esc
 close: Ctrl+Q
 color predicted: 
@@ -11,6 +11,7 @@ export clip:
 fit: Ctrl+=
 goto frame: Ctrl+J
 goto marked: Ctrl+Shift+M
+goto last interacted: Ctrl+A
 goto next suggestion: Space
 goto next track spawn: Ctrl+E
 goto next user: Ctrl+U
