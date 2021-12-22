@@ -16,7 +16,7 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: 2
+  number: 3
 
 source:
   path: ../
@@ -32,11 +32,11 @@ requirements:
     - python=3.7
     - sleap::tensorflow=2.7.0
     - sleap::pyside2=5.14.1
+    - cudatoolkit=11.3.1
+    - cudnn=8.2.1
     - pillow
     - shapely=1.7.1
     - pip
-    # - cudatoolkit=11.3.1
-    # - cudnn=8.2.1
 
   run_constrained:
     - pyqt==9999999999
