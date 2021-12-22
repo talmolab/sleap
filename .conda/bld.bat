@@ -39,7 +39,7 @@ pip install jsmin
 pip install seaborn
 pip install pykalman==0.9.5
 pip install segmentation-models==1.0.1
-pip install rich==9.10.0
+pip install rich==10.16.1
 
 rem # Use and update environment.yml call to install pip dependencies. This is slick.
 rem # While environment.yml contains the non pip dependencies, the only thing left
