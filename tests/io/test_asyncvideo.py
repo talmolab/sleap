@@ -1,7 +1,12 @@
+import pytest
+import sys
 from sleap import Video
 from sleap.io.asyncvideo import AsyncVideo
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="ZMQ testing breaks locally on Windows"
+)
 def test_async_video(centered_pair_vid, small_robot_mp4_vid):
     async_video = AsyncVideo.from_video(centered_pair_vid, frames_per_chunk=23)
 
