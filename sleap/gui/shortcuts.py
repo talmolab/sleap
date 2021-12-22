@@ -36,6 +36,7 @@ class Shortcuts(object):
         "clear selection",
         "goto next labeled",
         "goto prev labeled",
+        "goto last interacted",
         "goto next user",
         "goto next suggestion",
         "goto prev suggestion",

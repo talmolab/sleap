@@ -321,6 +321,10 @@ class CommandContext:
         """Goes to next labeled frame with user instances."""
         self.execute(GoNextUserLabeledFrame)
 
+    def lastInteractedFrame(self):
+        """Goes to last frame that user interacted with."""
+        self.execute(GoLastInteractedFrame)
+
     def nextSuggestedFrame(self):
         """Goes to next suggested frame."""
         self.execute(GoNextSuggestedFrame)
@@ -1215,6 +1219,17 @@ class NavCommand(AppCommand):
         if video is not None:
             context.state["video"] = video
         context.state["frame_idx"] = frame_idx
+
+
+class GoLastInteractedFrame(NavCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        if context.state["last_interacted_frame"] is not None:
+            cls.go_to(
+                context,
+                frame_idx=context.state["last_interacted_frame"].frame_idx,
+                video=context.state["last_interacted_frame"].video,
+            )
 
 
 class GoNextSuggestedFrame(NavCommand):
