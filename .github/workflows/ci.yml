@@ -7,7 +7,7 @@ on:
       - 'sleap/**'
       - 'tests/**'
       - '.github/workflows/ci.yml'
-      - 'environment.yml'
+      - 'environment_no_cuda.yml'
 
 jobs:
   type_check:
@@ -55,18 +55,18 @@ jobs:
       - name: Cache conda
         uses: actions/cache@v1
         env:
-          # Increase this value to reset cache if environment.yml has not changed
+          # Increase this value to reset cache if environment_no_cuda.yml has not changed
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml', 'requirements.txt') }}
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_no_cuda.yml', 'requirements.txt') }}
       - name: Setup Miniconda
         # https://github.com/conda-incubator/setup-miniconda
         uses: conda-incubator/setup-miniconda@v2.0.1
         with:
           python-version: 3.7
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment.yml
+          environment-file: environment_no_cuda.yml
           activate-environment: sleap
       - name: Print environment info
         shell: bash -l {0}
