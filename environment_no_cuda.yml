@@ -2,10 +2,12 @@ name: sleap
 
 dependencies:
 - python=3.7
+# - cudatoolkit=11.3.1
+# - cudnn=8.2.1
 # - sleap::tensorflow=2.7.0
 # - sleap::pyside2=5.14.1
 - pillow
-- shapely
+- shapely=1.7.1
 - pip
 - pip:
     - "--editable=./"
