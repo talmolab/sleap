@@ -5,7 +5,7 @@ name: Build (manual)
 on:
   push:
     paths:
-      - '.conda/meta.yml'
+      - '.conda/meta.yaml'
 
   # Uncomment the following lines to trigger a build if the release build failed
   # push:
@@ -49,20 +49,20 @@ jobs:
           conda info
 
       # Build pip wheel (Ubuntu)
-      # - name: Build pip wheel (Ubuntu)
-      #   if: matrix.os == 'ubuntu-18.04'
-      #   shell: bash -l {0}
-      #   run: |
-      #     python setup.py bdist_wheel
+      - name: Build pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        shell: bash -l {0}
+        run: |
+          python setup.py bdist_wheel
 
       # Upload pip wheel (Ubuntu)
-      # - name: Upload pip wheel (Ubuntu)
-      #   if: matrix.os == 'ubuntu-18.04'
-      #   env:
-      #     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      #   shell: bash -l {0}
-      #   run: |
-      #     twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
+      - name: Upload pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-18.04'
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        shell: bash -l {0}
+        run: |
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       # Build conda package
       - name: Build conda package (Ubuntu)
