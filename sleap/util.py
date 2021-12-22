@@ -216,8 +216,8 @@ def weak_filename_match(filename_a: str, filename_b: str) -> bool:
     filename_b = filename_b.replace("\\", "/")
 
     # remove unique pid so we can match tmp directories for same zip
-    filename_a = re.sub("/tmp_\d+_", "tmp_", filename_a)
-    filename_b = re.sub("/tmp_\d+_", "tmp_", filename_b)
+    filename_a = re.sub(r"/tmp_\d+_", "tmp_", filename_a)
+    filename_b = re.sub(r"/tmp_\d+_", "tmp_", filename_b)
 
     # check if last three parts of path match
     return filename_a.split("/")[-3:] == filename_b.split("/")[-3:]
