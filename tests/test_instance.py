@@ -412,3 +412,27 @@ def test_merge_nodes_data(min_labels):
     )
     inst._merge_nodes_data("A", "a")
     assert inst["A"].x == 2 and inst["A"].y == 3 and inst["A"].score == 0.9
+
+
+def test_instance_fill_missing():
+    skeleton = Skeleton.from_names_and_edge_inds(["a", "b", "c"], [])
+
+    for _ in range(10):
+        inst = Instance.from_numpy(
+            [[1, 1], [10, 10], [np.nan, np.nan]], skeleton=skeleton
+        )
+        inst.fill_missing()
+        assert inst.points[2].x >= 0
+        assert inst.points[2].y >= 0
+        assert inst.points[2].x <= 10
+        assert inst.points[2].y <= 10
+
+    for _ in range(10):
+        inst = Instance.from_numpy(
+            [[1, 1], [10, 10], [np.nan, np.nan]], skeleton=skeleton
+        )
+        inst.fill_missing(max_x=7, max_y=5)
+        assert inst.points[2].x >= 0
+        assert inst.points[2].y >= 0
+        assert inst.points[2].x <= 7
+        assert inst.points[2].y <= 5
