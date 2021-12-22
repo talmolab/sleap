@@ -10,8 +10,7 @@ on:
   # Uncomment the following lines to trigger a build if the release build failed
   # push:
     branches:
-      # - develop
-      - talmo/120_fixes
+      - develop
 
 
 jobs:
