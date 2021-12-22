@@ -1,22 +1,22 @@
-# PyPI and conda package builds on release.
-name: Build
+# Conda package builds triggered manually.
+# To trigger a build, bump the build number in .conda/meta.yaml.
+name: Build (manual)
 
 on:
-  release:
-    types:
-      - published
+  push:
+    paths:
+      - '.conda/meta.yml'
 
   # Uncomment the following lines to trigger a build if the release build failed
   # push:
-    # branches:
-    #   - main
-    #   - develop
-    #   - talmo/120_fixes
+    branches:
+      # - develop
+      - talmo/120_fixes
 
 
 jobs:
   build:
-    name: Build package from release (${{ matrix.os }})
+    name: Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -49,20 +49,20 @@ jobs:
           conda info
 
       # Build pip wheel (Ubuntu)
-      - name: Build pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-18.04'
-        shell: bash -l {0}
-        run: |
-          python setup.py bdist_wheel
+      # - name: Build pip wheel (Ubuntu)
+      #   if: matrix.os == 'ubuntu-18.04'
+      #   shell: bash -l {0}
+      #   run: |
+      #     python setup.py bdist_wheel
 
       # Upload pip wheel (Ubuntu)
-      - name: Upload pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-18.04'
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        shell: bash -l {0}
-        run: |
-          twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
+      # - name: Upload pip wheel (Ubuntu)
+      #   if: matrix.os == 'ubuntu-18.04'
+      #   env:
+      #     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      #   shell: bash -l {0}
+      #   run: |
+      #     twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       # Build conda package
       - name: Build conda package (Ubuntu)
@@ -97,27 +97,13 @@ jobs:
         shell: powershell
         run: |
           echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
-      - name: Upload conda package (Windows/main)
-        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/main'
-        if: matrix.os == 'windows-2019' && !github.event.release.prerelease
-        shell: powershell
-        run: |
-          anaconda -v upload "build\win-64\*.tar.bz2"
       - name: Upload conda package (Windows/dev)
-        # if: matrix.os == 'windows-2019' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'windows-2019' && github.event.release.prerelease
+        if: matrix.os == 'windows-2019'
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
-      - name: Upload conda package (Ubuntu/main)
-        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/main'
-        if: matrix.os == 'ubuntu-18.04' && !github.event.release.prerelease
-        shell: bash -l {0}
-        run: |
-          anaconda -v upload build/linux-64/*.tar.bz2
       - name: Upload conda package (Ubuntu/dev)
-        # if: matrix.os == 'ubuntu-18.04' && github.ref == 'refs/heads/develop'
-        if: matrix.os == 'ubuntu-18.04' && github.event.release.prerelease
+        if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
