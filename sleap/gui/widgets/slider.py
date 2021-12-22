@@ -835,7 +835,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         step = max(step, 1)
         count = series_frame_max // step * step
 
-        sampled = np.full((count), 0.0, dtype=np.float)
+        sampled = np.full((count), 0.0, dtype=float)
 
         for key, val in self._header_series_items:
             if key < count:
