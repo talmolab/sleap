@@ -1,4 +1,4 @@
-numpy==1.19.5
+numpy<=1.21.2,>=1.19.5
 attrs==21.2.0
 cattrs==1.1.1
 jsonpickle==1.2
