@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
         self.state["labeled_frame"] = None
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
+        self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
         self.state["show labels"] = True
         self.state["show edges"] = True
         self.state["edge style"] = prefs["edge style"]
@@ -146,6 +147,7 @@ class MainWindow(QMainWindow):
         self.state["node label size"] = prefs["node label size"]
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
+        self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
 
@@ -191,6 +193,7 @@ class MainWindow(QMainWindow):
         # Save window state.
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
+        prefs["show non-visible nodes"] = self.state["show non-visible nodes"]
         prefs["node label size"] = self.state["node label size"]
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
@@ -513,6 +516,9 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
 
+        add_menu_check_item(
+            viewMenu, "show non-visible nodes", "Show Non-Visible Nodes"
+        )
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
 
