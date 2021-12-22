@@ -1715,7 +1715,9 @@ class QtInstance(QGraphicsObject):
 
         if not self.predicted:
             # Initialize missing nodes with random points marked as non-visible.
-            self.instance.fill_missing()
+            self.instance.fill_missing(
+                max_x=self.player.video.width, max_y=self.player.video.height
+            )
 
         # Add box to go around instance for selection
         self.box = QGraphicsRectItem(parent=self)

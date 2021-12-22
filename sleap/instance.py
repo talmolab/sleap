@@ -791,19 +791,36 @@ class Instance:
 
             return parray
 
-    def fill_missing(self):
+    def fill_missing(
+        self, max_x: Optional[float] = None, max_y: Optional[float] = None
+    ):
         """Add points for skeleton nodes that are missing in the instance.
 
         This is useful when modifying the skeleton so the nodes appears in the GUI.
+
+        Args:
+            max_x: If specified, make sure points are not added outside of valid range.
+            max_y: If specified, make sure points are not added outside of valid range.
         """
         self._fix_array()
         y1, x1, y2, x2 = self.bounding_box
+        y1, x1 = max(y1, 0), max(x1, 0)
+        if max_x is not None:
+            x2 = min(x2, max_x)
+        if max_y is not None:
+            y2 = min(y2, max_y)
         w, h = y2 - y1, x2 - x1
+
         for node in self.skeleton.nodes:
             if node not in self.nodes or self[node].isnan():
-                x, y = np.random.rand(2) * np.array([w + 2, h + 2]) + np.array(
-                    [x1 - 2, y1 - 2]
-                )
+                off = np.array([w, h]) * np.random.rand(2)
+                x, y = off + np.array([x1, y1])
+                y, x = max(y, 0), max(x, 0)
+                if max_x is not None:
+                    x = min(x, max_x)
+                if max_y is not None:
+                    y = min(y, max_y)
+
                 self[node] = Point(x=x, y=y, visible=False)
 
     @property
