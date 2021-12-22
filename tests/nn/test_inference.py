@@ -131,6 +131,50 @@ def test_instance_peaks_gt_layer(test_labels, test_pipeline):
     assert (out["instance_peaks"][1][0].numpy() == test_labels[1][0].numpy()).all()
 
 
+def test_instance_peaks_gt_layer_nans():
+    # Covers nasty edge case when evaluating centroid models and
+    # GT instances have NaNs
+    flat_values = tf.cast(
+        [
+            [0, 0],
+            [0, 0],
+            [1, 1],
+            [1, 1],
+            [0, 0],
+            [np.nan, np.nan],
+            [1, 1],
+            [np.nan, np.nan],
+        ],
+        tf.float32,
+    )
+    nested_value_rowids = (
+        tf.cast([0, 0, 1, 1], tf.int64),
+        tf.cast([0, 0, 1, 1, 2, 2, 3, 3], tf.int64),
+    )
+    instances = tf.RaggedTensor.from_nested_value_rowids(
+        flat_values, nested_value_rowids
+    )
+
+    flat_values = tf.cast([[0, 0], [1, 1], [0, 0], [1, 1]], tf.float32)
+    nested_value_rowids = (tf.cast([0, 0, 1, 1], tf.int32),)
+    centroids = tf.RaggedTensor.from_nested_value_rowids(
+        flat_values, nested_value_rowids
+    )
+
+    flat_values = tf.cast([1, 1, 1, 1], tf.float32)
+    nested_value_rowids = (tf.cast([0, 0, 1, 1], tf.int32),)
+    centroid_vals = tf.RaggedTensor.from_nested_value_rowids(
+        flat_values, nested_value_rowids
+    )
+
+    example_gt = {"instances": instances}
+    crop_output = {"centroids": centroids, "centroid_vals": centroid_vals}
+
+    layer = FindInstancePeaksGroundTruth()
+    peaks_gt = layer(example_gt, crop_output)
+    assert tuple(peaks_gt["instance_peaks"].bounding_shape()) == (2, 2, 2, 2)
+
+
 def test_centroid_crop_layer():
     xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
     points = tf.cast([[[1.75, 2.75]], [[3.75, 4.75]], [[5.75, 6.75]]], tf.float32)

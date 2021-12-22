@@ -673,7 +673,7 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
             tf.stack([match_sample_inds, valid_matches], axis=1),
         )
         instance_peaks = tf.RaggedTensor.from_value_rowids(
-            instance_peaks, match_sample_inds
+            instance_peaks, match_sample_inds, nrows=example_gt["instances"].nrows()
         )  # (batch_size, n_centroids, n_nodes, 2)
 
         # Set all peak values to 1.
