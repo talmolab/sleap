@@ -26,7 +26,7 @@ pip install psutil
 pip install pyzmq
 pip install pyyaml
 pip install imgaug==0.4.0
-pip install "scipy<=1.4.1"
+pip install scipy==1.7.1
 pip install scikit-image
 pip install scikit-learn
 pip install scikit-video
