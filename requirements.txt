@@ -23,4 +23,4 @@ jsmin
 seaborn
 pykalman==0.9.5
 segmentation-models==1.0.1
-rich==9.10.0
+rich==10.16.1
