@@ -438,11 +438,11 @@ class QtVideoPlayer(QWidget):
             instance = QtInstance(instance=instance, player=self, **kwargs)
         if type(instance) != QtInstance:
             return
+        if instance.instance.n_visible_points > 0:
+            self.view.scene.addItem(instance)
 
-        self.view.scene.addItem(instance)
-
-        # connect signal so we can adjust QtNodeLabel positions after zoom
-        self.view.updatedViewer.connect(instance.updatePoints)
+            # connect signal so we can adjust QtNodeLabel positions after zoom
+            self.view.updatedViewer.connect(instance.updatePoints)
 
     def plot(self, *args):
         """
@@ -1867,12 +1867,17 @@ class QtInstance(QGraphicsObject):
         points = [
             (node.scenePos().x(), node.scenePos().y()) for node in self.nodes.values()
         ]
-        top_left = QPointF(
-            min((point[0] for point in points)), min((point[1] for point in points))
-        )
-        bottom_right = QPointF(
-            max((point[0] for point in points)), max((point[1] for point in points))
-        )
+
+        if len(points) == 0:
+            # Check this condition with rect.isValid()
+            top_left, bottom_right = QPointF(np.nan, np.nan), QPointF(np.nan, np.nan)
+        else:
+            top_left = QPointF(
+                min((point[0] for point in points)), min((point[1] for point in points))
+            )
+            bottom_right = QPointF(
+                max((point[0] for point in points)), max((point[1] for point in points))
+            )
         rect = QRectF(top_left, bottom_right)
         return rect
 
