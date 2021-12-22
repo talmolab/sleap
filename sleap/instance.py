@@ -883,6 +883,8 @@ class Instance:
     def bounding_box(self) -> np.ndarray:
         """Return bounding box containing all points in `[y1, x1, y2, x2]` format."""
         points = self.points_array
+        if np.isnan(points).all():
+            return np.array([np.nan, np.nan, np.nan, np.nan])
         bbox = np.concatenate(
             [np.nanmin(points, axis=0)[::-1], np.nanmax(points, axis=0)[::-1]]
         )

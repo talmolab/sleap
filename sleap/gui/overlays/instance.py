@@ -47,6 +47,7 @@ class InstanceOverlay(BaseOverlay):
                 instance=instance,
                 markerRadius=self.state.get("marker size", 4),
                 nodeLabelSize=self.state.get("node label size", 12),
+                show_non_visible=self.state.get("show non-visible nodes", default=True),
             )
 
         self.player.showLabels(self.state.get("show labels", default=True))

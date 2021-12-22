@@ -438,11 +438,11 @@ class QtVideoPlayer(QWidget):
             instance = QtInstance(instance=instance, player=self, **kwargs)
         if type(instance) != QtInstance:
             return
+        if instance.instance.n_visible_points > 0:
+            self.view.scene.addItem(instance)
 
-        self.view.scene.addItem(instance)
-
-        # connect signal so we can adjust QtNodeLabel positions after zoom
-        self.view.updatedViewer.connect(instance.updatePoints)
+            # connect signal so we can adjust QtNodeLabel positions after zoom
+            self.view.updatedViewer.connect(instance.updatePoints)
 
     def plot(self, *args):
         """
@@ -1139,12 +1139,14 @@ class QtNodeLabel(QGraphicsTextItem):
         parent: QGraphicsObject,
         predicted: bool = False,
         fontSize: float = 12,
+        show_non_visible: bool = True,
         *args,
         **kwargs,
     ):
         self.node = node
         self.text = node.name
         self.predicted = predicted
+        self.show_non_visible = show_non_visible
         self._parent_instance = parent
         super(QtNodeLabel, self).__init__(self.text, parent=parent, *args, **kwargs)
 
@@ -1253,8 +1255,11 @@ class QtNodeLabel(QGraphicsTextItem):
     def paint(self, painter, option, widget):
         """Paint overload."""
         if not self.node.point.visible:
-            # Add background box for missing nodes
-            painter.fillRect(option.rect, self.missing_bg_color)
+            if self.show_non_visible:
+                # Add background box for missing nodes
+                painter.fillRect(option.rect, self.missing_bg_color)
+            else:
+                self.hide()
         super(QtNodeLabel, self).paint(painter, option, widget)
 
     def mousePressEvent(self, event):
@@ -1759,17 +1764,18 @@ class QtInstance(QGraphicsObject):
 
         # Add nodes
         for (node, point) in self.instance.nodes_points:
-            node_item = QtNode(
-                parent=self,
-                player=player,
-                node=node,
-                point=point,
-                predicted=self.predicted,
-                radius=self.markerRadius,
-                show_non_visible=self.show_non_visible,
-            )
+            if point.visible or self.show_non_visible:
+                node_item = QtNode(
+                    parent=self,
+                    player=player,
+                    node=node,
+                    point=point,
+                    predicted=self.predicted,
+                    radius=self.markerRadius,
+                    show_non_visible=self.show_non_visible,
+                )
 
-            self.nodes[node.name] = node_item
+                self.nodes[node.name] = node_item
 
         # Add edges
         for (src, dst) in self.skeleton.edge_names:
@@ -1790,18 +1796,20 @@ class QtInstance(QGraphicsObject):
         # We do this after adding edges so that we can position labels to avoid overlap
         if not self.predicted:
             for node in self.nodes.values():
-                node_label = QtNodeLabel(
-                    node,
-                    predicted=self.predicted,
-                    parent=self,
-                    fontSize=self.nodeLabelSize,
-                )
-                node_label.adjustPos()
+                if node.point.visible or self.show_non_visible:
+                    node_label = QtNodeLabel(
+                        node,
+                        predicted=self.predicted,
+                        parent=self,
+                        fontSize=self.nodeLabelSize,
+                        show_non_visible=self.show_non_visible,
+                    )
+                    node_label.adjustPos()
 
-                self.labels[node.name] = node_label
-                # add callback to adjust position of label after node has moved
-                node.callbacks.append(node_label.adjustPos)
-                node.callbacks.append(self.updateBox)
+                    self.labels[node.name] = node_label
+                    # add callback to adjust position of label after node has moved
+                    node.callbacks.append(node_label.adjustPos)
+                    node.callbacks.append(self.updateBox)
 
         # Update size of box so it includes all the nodes/edges
         self.updateBox()
@@ -1859,12 +1867,17 @@ class QtInstance(QGraphicsObject):
         points = [
             (node.scenePos().x(), node.scenePos().y()) for node in self.nodes.values()
         ]
-        top_left = QPointF(
-            min((point[0] for point in points)), min((point[1] for point in points))
-        )
-        bottom_right = QPointF(
-            max((point[0] for point in points)), max((point[1] for point in points))
-        )
+
+        if len(points) == 0:
+            # Check this condition with rect.isValid()
+            top_left, bottom_right = QPointF(np.nan, np.nan), QPointF(np.nan, np.nan)
+        else:
+            top_left = QPointF(
+                min((point[0] for point in points)), min((point[1] for point in points))
+            )
+            bottom_right = QPointF(
+                max((point[0] for point in points)), max((point[1] for point in points))
+            )
         rect = QRectF(top_left, bottom_right)
         return rect
 

@@ -25,6 +25,7 @@ class Preferences(object):
         "edge style": "Line",
         "window state": b"",
         "node label size": 12,
+        "show non-visible nodes": True,
     }
     _filename = "preferences.yaml"
 

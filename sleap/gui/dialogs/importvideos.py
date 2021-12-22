@@ -464,7 +464,6 @@ class ImportParamWidget(QWidget):
 
     def set_values_from_video(self, video):
         """Set the form fields using attributes on video."""
-        # XXX
         param_list = self.import_type["params"]
         for param in param_list:
             name = param["name"]
