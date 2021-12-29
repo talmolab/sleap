@@ -44,7 +44,7 @@
             "centered_instance": {
                 "anchor_part": null,
                 "part_names": null,
-                "sigma": 5.0,
+                "sigma": 3.0,
                 "output_stride": 4
             },
             "multi_instance": null
@@ -54,8 +54,8 @@
         "preload_data": true,
         "augmentation_config": {
             "rotate": true,
-            "rotation_min_angle": -180,
-            "rotation_max_angle": 180,
+            "rotation_min_angle": -15,
+            "rotation_min_angle": 15,
             "translate": false,
             "translate_min": -5,
             "translate_max": 5,
@@ -91,7 +91,7 @@
         "learning_rate_schedule": {
             "reduce_on_plateau": true,
             "reduction_factor": 0.5,
-            "plateau_min_delta": 1e-06,
+            "plateau_min_delta": 1e-08,
             "plateau_patience": 5,
             "plateau_cooldown": 3,
             "min_learning_rate": 1e-08
@@ -105,7 +105,7 @@
         },
         "early_stopping": {
             "stop_training_on_plateau": true,
-            "plateau_min_delta": 1e-06,
+            "plateau_min_delta": 1e-08,
             "plateau_patience": 10
         }
     },
