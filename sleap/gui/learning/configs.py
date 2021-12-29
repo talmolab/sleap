@@ -7,6 +7,7 @@ import h5py
 import os
 import re
 import numpy as np
+from pathlib import Path
 
 from sleap import Labels, Skeleton
 from sleap import util as sleap_utils
@@ -368,19 +369,32 @@ class TrainingConfigsGetter:
                 config_dir, ".json", depth=self.search_depth
             )
 
-            # Sort files, starting with most recently modified
-            json_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+            if Path(config_dir).as_posix().endswith("sleap/training_profiles"):
+                # Use hardcoded sort.
+                BUILTIN_ORDER = [
+                    "baseline.centroid.json",
+                    "baseline_medium_rf.bottomup.json",
+                    "baseline_medium_rf.single.json",
+                    "baseline_medium_rf.topdown.json",
+                    "baseline_large_rf.bottomup.json",
+                    "baseline_large_rf.single.json",
+                    "baseline_large_rf.topdown.json",
+                    "pretrained.bottomup.json",
+                    "pretrained.centroid.json",
+                    "pretrained.single.json",
+                    "pretrained.topdown.json",
+                ]
+                json_files.sort(key=lambda f: BUILTIN_ORDER.index(f.name))
+
+            else:
+                # Sort files, starting with most recently modified
+                json_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
 
             # Load the configs from files
             for json_path in [file.path for file in json_files]:
                 cfg_info = self.try_loading_path(json_path)
                 if cfg_info:
                     configs.append(cfg_info)
-
-        # Push old configs to the end of the list, while preserving the time-based order otherwise
-        configs = [c for c in configs if not c.filename.startswith("old.")] + [
-            c for c in configs if c.filename.startswith("old.")
-        ]
 
         return configs
 
